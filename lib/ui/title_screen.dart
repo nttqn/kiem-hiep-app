@@ -173,6 +173,10 @@ class _SlotCard extends StatelessWidget {
       return;
     }
     SaveService.instance.active = index;
+    if (h.savedAt > 0) {
+      SaveService.instance.pendingAway =
+          DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(h.savedAt));
+    }
     Navigator.of(context).pushReplacement(fadeRoute(const TownScreen()));
   }
 

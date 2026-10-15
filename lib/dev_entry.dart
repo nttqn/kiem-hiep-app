@@ -11,6 +11,7 @@ import 'ui/character_screen.dart';
 import 'ui/create_screen.dart';
 import 'ui/lists.dart';
 import 'ui/play_screen.dart';
+import 'ui/rewards_ui.dart';
 import 'ui/shop_screen.dart';
 import 'ui/theme.dart';
 import 'ui/title_screen.dart';
@@ -69,6 +70,8 @@ Future<void> main() async {
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
     SaveService.instance.autoFight = q['auto'] != '0';
+    final away = int.tryParse(q['away'] ?? '');
+    if (away != null) SaveService.instance.pendingAway = Duration(minutes: away);
   }
   final Widget home = switch (screen) {
     'title' => const TitleScreen(),
@@ -82,6 +85,7 @@ Future<void> main() async {
     'quests' => const QuestScreen(),
     'maps' => const MapListScreen(),
     'dungeons' => const DungeonListScreen(),
+    'ach' => const AchievementsScreen(),
     _ => const TownScreen(),
   };
   runApp(MaterialApp(

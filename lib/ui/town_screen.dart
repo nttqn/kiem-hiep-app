@@ -7,7 +7,9 @@ import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'backdrop.dart';
+import '../core/rewards.dart';
 import 'character_screen.dart';
+import 'rewards_ui.dart';
 import 'cloud_panel.dart';
 import 'lists.dart';
 import 'play_screen.dart';
@@ -33,9 +35,24 @@ class _TownScreenState extends State<TownScreen> {
     SaveService.instance.save();
     // Play screens replace the list that opened them, so refresh on saves.
     SaveService.instance.addListener(_refresh);
+    final away = SaveService.instance.pendingAway;
+    SaveService.instance.pendingAway = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _welcome(away));
+  }
+
+  /// Guide for a new hero; otherwise the closed-door training payout and
+  /// today's login gift, one after the other.
+  Future<void> _welcome(Duration? away) async {
     if (widget.firstVisit) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => showGuide(context));
+      showGuide(context);
+      return;
     }
+    if (away != null) {
+      final r = offlineReward(h, away);
+      if (r != null && mounted) await showOfflineDialog(context, h, r);
+    }
+    if (mounted && h.lastLoginDate != todayKey()) await showLoginGiftDialog(context, h);
+    if (mounted) setState(() {});
   }
 
   void _refresh() {
@@ -154,6 +171,8 @@ class _TownScreenState extends State<TownScreen> {
             ),
           ),
           Text(h.name, style: titleStyle(20, color: cream)),
+          if (h.title.isNotEmpty)
+            Text('« ${h.title} »', style: small.copyWith(color: goldLight, fontStyle: FontStyle.italic)),
           Text('${h.sect.name} · Cấp ${h.level}', style: body.copyWith(color: hanhColor(h.hanh))),
           const SizedBox(height: 6),
           Bar(
@@ -228,10 +247,16 @@ class _TownScreenState extends State<TownScreen> {
           badge: 0),
       _Tile('Tiệm thuốc', Icons.storefront, () => _go(const ShopScreen())),
       _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 2, forge: true))),
+      _Tile('Thành tựu', Icons.emoji_events, () => _go(const AchievementsScreen()),
+          badge: claimableCount(h)),
+      _Tile('Quà đăng nhập', Icons.card_giftcard, () async {
+        await showLoginGiftDialog(context, h);
+        if (mounted) setState(() {});
+      }, badge: h.lastLoginDate == todayKey() ? 0 : 1),
     ];
     return LayoutBuilder(
       builder: (context, c) {
-        final w = (c.maxWidth - 3 * 8) / 4;
+        final w = (c.maxWidth - 4 * 8) / 5;
         return Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -258,15 +283,17 @@ class _Tile extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Panel(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: goldLight, size: 28),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(label,
-                        style: bold.copyWith(fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ),
+                  Icon(icon, color: goldLight, size: 26),
+                  const SizedBox(height: 2),
+                  Text(label,
+                      style: bold.copyWith(fontSize: 12.5),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center),
                 ],
               ),
             ),

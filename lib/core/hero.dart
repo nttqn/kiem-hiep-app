@@ -137,6 +137,15 @@ class HeroData {
   int savedAt = 0;
 
   /// The last dungeon payout, so a rewarded ad can pay it again.
+  // Retention: login gift cycle, records for achievements, worn title.
+  String lastLoginDate = '';
+  int loginDay = 0;
+  int bossKills = 0;
+  int bestPlus = 0;
+  bool ownedLegend = false;
+  final Set<String> achClaimed = {};
+  String title = '';
+
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
 
@@ -316,6 +325,7 @@ class HeroData {
   /// Puts [it] in the bag, or sells it if the bag is full or it is a
   /// common item and auto-sell is on. Returns false if sold.
   bool addItem(Item it) {
+    if (it.rarity == Rarity.legend) ownedLegend = true;
     if ((autoSellCommon && it.rarity == Rarity.common) ||
         bag.length >= bagSize) {
       gold += it.sellPrice;
@@ -405,6 +415,7 @@ class HeroData {
 
   void onKill(MobDef m, math.Random rng) {
     kills++;
+    if (m.boss) bossKills++;
     final q = currentMain;
     if (q != null && !mainLocked && q.target == m.id &&
         (q.type == QuestType.kill || q.type == QuestType.boss)) {
@@ -512,6 +523,13 @@ class HeroData {
         'autoSell': autoSellCommon,
         'seed': seed,
         'savedAt': savedAt,
+        'loginDate': lastLoginDate,
+        'loginDay': loginDay,
+        'bossKills': bossKills,
+        'bestPlus': bestPlus,
+        'legend': ownedLegend,
+        'ach': achClaimed.toList(),
+        'title': title,
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -555,6 +573,14 @@ class HeroData {
     h.autoSellCommon = m['autoSell'] as bool? ?? false;
     h.seed = m['seed'] as int? ?? 0;
     h.savedAt = m['savedAt'] as int? ?? 0;
+    h.lastLoginDate = m['loginDate'] as String? ?? '';
+    h.loginDay = (m['loginDay'] as int? ?? 0) % 7;
+    h.bossKills = m['bossKills'] as int? ?? 0;
+    h.bestPlus = m['bestPlus'] as int? ??
+        [...h.bag, ...h.equip.values].fold<int>(0, (b, i) => math.max(b, i.plus));
+    h.ownedLegend = m['legend'] as bool? ?? false;
+    h.achClaimed.addAll([for (final a in m['ach'] as List? ?? const []) '$a']);
+    h.title = m['title'] as String? ?? '';
     h.recompute();
     return h;
   }

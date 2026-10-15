@@ -16,6 +16,10 @@ class SaveService extends ChangeNotifier {
 
   final List<HeroData?> slots = List.filled(slotCount, null);
   int active = -1;
+
+  /// Time since the opened hero was last saved, for the closed-door
+  /// training payout; set when a slot is opened, taken by the town.
+  Duration? pendingAway;
   bool autoFight = true;
 
   HeroData get hero => slots[active]!;

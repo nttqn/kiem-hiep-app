@@ -47,7 +47,8 @@ class HeroFrame extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(h.name, style: bold.copyWith(fontSize: 13, shadows: const [Shadow(color: Colors.black, blurRadius: 3)])),
+              Text(h.title.isEmpty ? h.name : '${h.name} · ${h.title}',
+                  style: bold.copyWith(fontSize: 13, shadows: const [Shadow(color: Colors.black, blurRadius: 3)])),
               const SizedBox(height: 2),
               Bar(
                 width: 190,

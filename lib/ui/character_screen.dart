@@ -569,7 +569,10 @@ class _ItemDialogState extends State<_ItemDialog> {
     if (h.gold < cost || it.plus >= maxPlus) return;
     h.gold -= cost;
     final ok = math.Random().nextDouble() < enhanceChance(it.plus);
-    if (ok) it.plus++;
+    if (ok) {
+      it.plus++;
+      h.bestPlus = math.max(h.bestPlus, it.plus);
+    }
     h.recompute();
     SaveService.instance.save();
     setState(() {
