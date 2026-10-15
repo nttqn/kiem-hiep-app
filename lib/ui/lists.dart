@@ -1,0 +1,301 @@
+import 'package:flutter/material.dart';
+
+import '../core/content.dart';
+import '../core/hanh.dart';
+import '../core/hero.dart';
+import '../services/save.dart';
+import 'play_screen.dart';
+import 'sub_screen.dart';
+import 'theme.dart';
+
+class MapListScreen extends StatelessWidget {
+  const MapListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = SaveService.instance.hero;
+    return SubScreen(
+      title: 'Luyện công',
+      child: ListView.separated(
+        itemCount: maps.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 8),
+        itemBuilder: (context, i) {
+          final m = maps[i];
+          final open = h.level >= m.entryLv;
+          final fit = h.level >= m.minLv && h.level <= m.maxLv + 2;
+          return Opacity(
+            opacity: open ? 1 : 0.55,
+            child: Panel(
+              border: fit ? jade : gold,
+              padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
+              child: Row(
+                children: [
+                  _ThemeSwatch(theme: m.theme),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(m.name, style: titleStyle(18, color: cream)),
+                            const SizedBox(width: 10),
+                            Text('Cấp ${m.minLv}–${m.maxLv}', style: bold.copyWith(color: goldLight)),
+                            if (fit) ...[
+                              const SizedBox(width: 8),
+                              Text('Phù hợp', style: small.copyWith(color: const Color(0xFF8CE07A))),
+                            ],
+                          ],
+                        ),
+                        Text(m.desc, style: small),
+                        const SizedBox(height: 2),
+                        Wrap(
+                          spacing: 10,
+                          children: [
+                            for (final id in [...m.mobs, m.boss]) _MobTag(def: mobById[id]!),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  open
+                      ? LButton(
+                          label: 'Vào',
+                          small: true,
+                          color: fit ? jade : seal,
+                          onTap: () => Navigator.of(context)
+                              .pushReplacement(fadeRoute(PlayScreen.field(m))),
+                        )
+                      : Text('Cần cấp ${m.entryLv}', style: small),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MobTag extends StatelessWidget {
+  const _MobTag({required this.def});
+  final MobDef def;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: hanhColor(def.hanh), shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          def.boss ? '${def.name} (đầu lĩnh)' : def.name,
+          style: small.copyWith(color: def.boss ? const Color(0xFFFFB08A) : cream, fontSize: 11.5),
+        ),
+      ],
+    );
+  }
+}
+
+class _ThemeSwatch extends StatelessWidget {
+  const _ThemeSwatch({required this.theme});
+  final MapTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    const colors = {
+      MapTheme.grass: [Color(0xFF86B25A), Color(0xFF3E7A30)],
+      MapTheme.bamboo: [Color(0xFF748F58), Color(0xFF6A4A6E)],
+      MapTheme.cave: [Color(0xFF5E5348), Color(0xFF1A1612)],
+      MapTheme.desert: [Color(0xFFE8CC90), Color(0xFFB08850)],
+      MapTheme.snow: [Color(0xFFF6FAFC), Color(0xFF7A90A6)],
+      MapTheme.volcano: [Color(0xFFFF6A2A), Color(0xFF33241F)],
+      MapTheme.fortress: [Color(0xFF8A0F1A), Color(0xFF1A1A20)],
+    };
+    final c = colors[theme]!;
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: c),
+        border: Border.all(color: goldLight.withValues(alpha: 0.6)),
+      ),
+    );
+  }
+}
+
+class DungeonListScreen extends StatelessWidget {
+  const DungeonListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = SaveService.instance.hero;
+    return SubScreen(
+      title: 'Vượt ải',
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 270,
+          mainAxisExtent: 112,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: dungeons.length,
+        itemBuilder: (context, i) {
+          final d = dungeons[i];
+          final stars = h.dungeonStars[d.id] ?? 0;
+          final open = h.level >= d.level - 2;
+          final quest = h.currentMain?.type == QuestType.dungeon && h.currentMain?.target == d.id;
+          return Opacity(
+            opacity: open ? 1 : 0.5,
+            child: GestureDetector(
+              onTap: open
+                  ? () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d)))
+                  : null,
+              child: Panel(
+                border: quest ? goldLight : gold,
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text('Ải ${i + 1}: ${d.name}',
+                              style: bold.copyWith(color: goldLight), overflow: TextOverflow.ellipsis),
+                        ),
+                        if (quest) const Icon(Icons.auto_stories, size: 16, color: goldLight),
+                      ],
+                    ),
+                    Text('Cấp ${d.level} · ${d.map.name}', style: small),
+                    Text('${d.waves.length} đợt quái + ${mobById[d.map.boss]!.name}',
+                        style: small.copyWith(color: cream)),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        for (var s = 0; s < 3; s++)
+                          Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
+                        const Spacer(),
+                        Text(open ? '${d.timeLimit.round()} giây' : 'Cần cấp ${d.level - 2}', style: small),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class QuestScreen extends StatelessWidget {
+  const QuestScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = SaveService.instance.hero;
+    final q = h.currentMain;
+    return SubScreen(
+      title: 'Nhiệm vụ',
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Panel(
+              child: q == null
+                  ? Center(child: Text('Đã hoàn thành toàn bộ chính tuyến!', style: titleStyle(18)))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Chính tuyến · ${h.mainQuest + 1}/${mainQuests.length}', style: small),
+                        Text(q.title, style: titleStyle(22)),
+                        const SizedBox(height: 6),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Text(q.story,
+                                style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
+                          ),
+                        ),
+                        const Divider(color: gold),
+                        Text(
+                          h.mainLocked ? 'Cần đạt cấp ${q.minLv}' : 'Mục tiêu: ${q.goal}',
+                          style: bold.copyWith(color: h.mainLocked ? const Color(0xFFFF8A7A) : cream),
+                        ),
+                        if (q.type == QuestType.kill && !h.mainLocked)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Bar(
+                              value: h.mainProgress / q.count,
+                              color: jade,
+                              label: '${h.mainProgress}/${q.count}',
+                              height: 14,
+                            ),
+                          ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Thưởng: ${fmt(expToNext(q.minLv) * q.expFactor)} kinh nghiệm · '
+                          '${fmt(q.gold)} lượng${q.item ? ' · trang bị Quý' : ''}',
+                          style: small.copyWith(color: goldLight),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 4,
+            child: Panel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Hằng ngày', style: titleStyle(20)),
+                  Text('Làm mới mỗi ngày · thưởng theo cấp', style: small),
+                  const SizedBox(height: 6),
+                  for (final d in h.daily)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Icon(d.done ? Icons.check_circle : Icons.radio_button_unchecked,
+                              color: d.done ? const Color(0xFF8CE07A) : creamDim, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(d.goal, style: body.copyWith(fontSize: 13)),
+                                if (!d.done)
+                                  Bar(
+                                    value: d.progress / d.count,
+                                    color: jade,
+                                    height: 10,
+                                    label: '${d.progress}/${d.count}',
+                                  ),
+                                Text('+${fmt(d.exp)} kinh nghiệm · +${fmt(d.gold)} lượng',
+                                    style: small.copyWith(fontSize: 11)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const Spacer(),
+                  Text('Ngũ hành: Kim → Mộc → Thổ → Thủy → Hỏa → Kim', style: small),
+                  Text('Phái của bạn: ${h.sect.name} (${h.hanh.label})', style: small),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
