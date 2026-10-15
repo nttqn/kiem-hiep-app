@@ -7,6 +7,7 @@ import 'core/hanh.dart';
 import 'core/hero.dart';
 import 'core/items.dart';
 import 'services/save.dart';
+import 'services/sound.dart';
 import 'ui/character_screen.dart';
 import 'ui/create_screen.dart';
 import 'ui/lists.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
   final level = int.tryParse(q['level'] ?? '') ?? 1;
   final female = q['female'] == '1';
   await SaveService.instance.load();
+  SoundService.instance.init();
   var map = maps.first;
   for (final m in maps) {
     if (m.minLv <= level) map = m;

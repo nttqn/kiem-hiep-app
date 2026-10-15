@@ -66,6 +66,8 @@ class _PlayScreenState extends State<PlayScreen> {
     world.auto = SaveService.instance.autoFight;
     game = BattleGame(world: world, onEvent: _onEvent, onSound: SoundService.instance.cue);
     SoundService.instance.setBattle(true);
+    // Each map has its own tune; every dungeon shares the battle theme.
+    SoundService.instance.playMusic(widget.dungeon != null ? 'battle' : widget.map!.theme.name);
     HardwareKeyboard.instance.addHandler(_onKey);
     _autosave = Timer.periodic(const Duration(seconds: 20), (_) => SaveService.instance.save());
     game.hudTick.addListener(_pruneToasts);
@@ -79,7 +81,6 @@ class _PlayScreenState extends State<PlayScreen> {
     _autosave?.cancel();
     _bannerTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
-    SoundService.instance.setBattle(false);
     SaveService.instance.save();
     super.dispose();
   }
@@ -154,6 +155,10 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _leave() {
     SaveService.instance.save();
+    // Not in dispose: "Đánh lại" builds the next play screen before this
+    // one is disposed, and must keep its own music.
+    SoundService.instance.setBattle(false);
+    SoundService.instance.playMusic('menu');
     Navigator.of(context).pop();
     // A full-screen ad only ever on the walk back to town, and rarely.
     AdsService.instance.maybeShowInterstitial();
@@ -532,16 +537,33 @@ class _PlayScreenState extends State<PlayScreen> {
               const SizedBox(height: 8),
               LButton(label: 'Về thành', width: 240, onTap: _leave),
               const SizedBox(height: 8),
-              ValueListenableBuilder<bool>(
-                valueListenable: SoundService.instance.enabled,
-                builder: (_, on, _) => LButton(
-                  label: on ? 'Âm thanh: Bật' : 'Âm thanh: Tắt',
-                  width: 240,
-                  small: true,
-                  color: const Color(0xFF5A4A3A),
-                  icon: on ? Icons.volume_up : Icons.volume_off,
-                  onTap: SoundService.instance.toggle,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ValueListenableBuilder<bool>(
+                    valueListenable: SoundService.instance.musicOn,
+                    builder: (_, on, _) => LButton(
+                      label: on ? 'Nhạc: Bật' : 'Nhạc: Tắt',
+                      width: 116,
+                      small: true,
+                      color: const Color(0xFF5A4A3A),
+                      icon: on ? Icons.music_note : Icons.music_off,
+                      onTap: SoundService.instance.toggleMusic,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: SoundService.instance.sfxOn,
+                    builder: (_, on, _) => LButton(
+                      label: on ? 'Tiếng: Bật' : 'Tiếng: Tắt',
+                      width: 116,
+                      small: true,
+                      color: const Color(0xFF5A4A3A),
+                      icon: on ? Icons.volume_up : Icons.volume_off,
+                      onTap: SoundService.instance.toggleSfx,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Text('Bàn phím: WASD đi · J/Space đánh · 1-4 chiêu · Q/E thuốc · T tự động',

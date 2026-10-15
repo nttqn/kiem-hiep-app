@@ -119,10 +119,18 @@ class _TownScreenState extends State<TownScreen> {
                             const Spacer(),
                             const CloudButton(),
                             ValueListenableBuilder<bool>(
-                              valueListenable: SoundService.instance.enabled,
+                              valueListenable: SoundService.instance.musicOn,
                               builder: (_, on, _) => IconButton(
-                                tooltip: 'Âm thanh',
-                                onPressed: SoundService.instance.toggle,
+                                tooltip: on ? 'Tắt nhạc nền' : 'Bật nhạc nền',
+                                onPressed: SoundService.instance.toggleMusic,
+                                icon: Icon(on ? Icons.music_note : Icons.music_off, color: goldLight),
+                              ),
+                            ),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: SoundService.instance.sfxOn,
+                              builder: (_, on, _) => IconButton(
+                                tooltip: on ? 'Tắt tiếng hiệu ứng' : 'Bật tiếng hiệu ứng',
+                                onPressed: SoundService.instance.toggleSfx,
                                 icon: Icon(on ? Icons.volume_up : Icons.volume_off, color: goldLight),
                               ),
                             ),

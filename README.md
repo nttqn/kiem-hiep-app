@@ -29,7 +29,12 @@ sound synthesised.
 - `flutter test` — core tests plus `balance_test.dart`, which plays every
   sect on autopilot and prints levels reached over time
   (`--dart-define=SIM_MIN=480 --dart-define=SIM_LOG=true` for a long run).
-- `node tool/gen_audio.js` — regenerates `assets/audio/*.wav`.
+- `node tool/gen_audio.js` — regenerates the sound effects in `assets/audio/*.wav`.
+- `node tool/gen_music.js [name]` — composes the 9 music tracks into
+  `build/music/*.wav`; then `FFMPEG=<ffmpeg with libvorbis> node tool/encode_music.js`
+  writes `assets/audio/music/*.ogg` (Android, gapless) and `*.m4a` (iOS).
+  Note: audioplayers' web plugin does not register with this Flutter, so
+  sound cannot be checked in the web build; test music on a phone.
 - `flutter test tool/gen_icon_test.dart` then `dart run flutter_launcher_icons`.
 - Screenshots: `flutter build web -t lib/dev_entry.dart -o build/web_dev`,
   `node tool/shots/serve.js build/web_dev 8765`, then

@@ -5,9 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// One-shot effects plus the looping theme, all synthesised by
-/// `tool/gen_audio.js`. Every call is a safe no-op until loading is done,
-/// when muted, or if an asset fails to load.
+/// One-shot effects (`tool/gen_audio.js`) and background music, one track
+/// per map plus menu and battle (`tool/gen_music.js`), each with its own
+/// on/off switch. Every call is a safe no-op until loading is done, when
+/// muted, or if an asset fails to load.
 class SoundService {
   SoundService._();
   static final SoundService instance = SoundService._();
@@ -52,21 +53,41 @@ class SoundService {
     'heroDie': 'herodie',
   };
 
-  final ValueNotifier<bool> enabled = ValueNotifier<bool>(true);
+  /// Sound effects on/off.
+  final ValueNotifier<bool> sfxOn = ValueNotifier<bool>(true);
+
+  /// Background music on/off, separate from the effects.
+  final ValueNotifier<bool> musicOn = ValueNotifier<bool>(true);
+
   final Map<String, AudioPool> _pools = {};
   final Map<String, DateTime> _last = {};
-  AudioPlayer? _music;
   bool _battle = false;
   bool _foreground = true;
   AppLifecycleListener? _lifecycle;
 
+  // Two players so one track can fade out while the next fades in.
+  final List<AudioPlayer?> _players = [null, null];
+  int _cur = 0;
+  String? _track;
+  String? _wanted = 'menu';
+  Timer? _fade;
+  bool _ready = false;
+
+  /// iOS cannot play Ogg; everything else gets the gapless Ogg loops.
+  static String get _ext =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS ? 'm4a' : 'ogg';
+
+  double get _musicVolume => _battle ? 0.42 : 0.55;
+
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      enabled.value = prefs.getBool(_key) ?? true;
+      final old = prefs.getBool(_key);
+      sfxOn.value = prefs.getBool('sfx_on') ?? old ?? true;
+      musicOn.value = prefs.getBool('music_on') ?? old ?? true;
     } catch (_) {}
     // Nothing here needs audio focus; taking it would let each effect pause
-    // the theme on Android. The web plugin has no global context at all.
+    // the music on Android. The web plugin has no global context at all.
     if (!kIsWeb) {
       try {
         await AudioPlayer.global.setAudioContext(AudioContext(
@@ -75,6 +96,21 @@ class SoundService {
         ));
       } catch (_) {}
     }
+    // Music first, so the menu theme is not held up by twenty effects
+    // loading one by one.
+    for (var i = 0; i < 2; i++) {
+      try {
+        final p = AudioPlayer();
+        await p.setReleaseMode(ReleaseMode.loop);
+        _players[i] = p;
+      } catch (_) {}
+    }
+    _ready = true;
+    _lifecycle ??= AppLifecycleListener(onStateChange: (s) {
+      _foreground = s == AppLifecycleState.resumed;
+      _applyMusic();
+    });
+    if (_wanted != null) playMusic(_wanted!);
     for (final f in _files) {
       try {
         _pools[f] = await FlameAudio.createPool(
@@ -84,35 +120,71 @@ class SoundService {
         ).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
-    try {
-      final player = AudioPlayer();
-      await player.setReleaseMode(ReleaseMode.loop);
-      await player.setVolume(0.5);
-      await player
-          .setSource(AssetSource('audio/theme.wav'))
-          .timeout(const Duration(seconds: 10));
-      _music = player;
-    } catch (_) {}
-    _lifecycle ??= AppLifecycleListener(onStateChange: (s) {
-      _foreground = s == AppLifecycleState.resumed;
-      _applyMusic();
-    });
-    _applyMusic();
   }
 
-  /// Quieter theme during fights.
+  /// Switches the background music: 'menu', 'battle', or a map theme
+  /// name (grass, bamboo, cave, desert, snow, volcano, fortress).
+  void playMusic(String track) {
+    _wanted = track;
+    if (!_ready || !musicOn.value || !_foreground) return;
+    if (track == _track) {
+      _applyMusic();
+      return;
+    }
+    final next = 1 - _cur;
+    final incoming = _players[next];
+    final outgoing = _players[_cur];
+    if (incoming == null) return;
+    _track = track;
+    _cur = next;
+    () async {
+      try {
+        await incoming.setVolume(0);
+        await incoming
+            .setSource(AssetSource('audio/music/$track.$_ext'))
+            .timeout(const Duration(seconds: 8));
+        // A newer request may have arrived while this one was loading.
+        if (_track != track) return;
+        await incoming.resume();
+        _crossfade(incoming, outgoing);
+      } catch (_) {}
+    }();
+  }
+
+  void _crossfade(AudioPlayer incoming, AudioPlayer? outgoing) {
+    _fade?.cancel();
+    var step = 0;
+    const steps = 16;
+    final target = _musicVolume;
+    _fade = Timer.periodic(const Duration(milliseconds: 50), (t) {
+      step++;
+      final k = step / steps;
+      _guard(incoming.setVolume(target * k));
+      if (outgoing != null) _guard(outgoing.setVolume(target * (1 - k)));
+      if (step >= steps) {
+        t.cancel();
+        if (outgoing != null) _guard(outgoing.stop());
+      }
+    });
+  }
+
+  /// Slightly quieter music while fighting, so hits read clearly.
   void setBattle(bool v) {
     _battle = v;
-    _guard(_music?.setVolume(v ? 0.22 : 0.5));
-    _applyMusic();
+    if (_fade?.isActive ?? false) return;
+    _guard(_players[_cur]?.setVolume(_musicVolume));
   }
 
   void _applyMusic() {
-    final m = _music;
-    if (m == null) return;
-    final should = enabled.value && _foreground;
+    final m = _players[_cur];
+    if (m == null || !_ready) return;
+    final should = musicOn.value && _foreground;
+    if (should && _track == null && _wanted != null) {
+      playMusic(_wanted!);
+      return;
+    }
     final playing = m.state == PlayerState.playing;
-    if (should && !playing) {
+    if (should && !playing && _track != null) {
       _guard(m.resume());
     } else if (!should && playing) {
       _guard(m.pause());
@@ -122,9 +194,9 @@ class SoundService {
   /// Plays a world cue or a file name directly.
   void cue(String name, {double volume = 1}) {
     // Browsers refuse audio before the first tap; cues follow taps, so
-    // this is where a blocked theme gets going.
+    // this is where blocked music gets going.
     _applyMusic();
-    if (!enabled.value) return;
+    if (!sfxOn.value) return;
     final file = _cues[name] ?? name;
     final now = DateTime.now();
     final last = _last[file];
@@ -136,12 +208,26 @@ class SoundService {
     } catch (_) {}
   }
 
-  Future<void> toggle() async {
-    enabled.value = !enabled.value;
-    _applyMusic();
+  Future<void> toggleSfx() async {
+    sfxOn.value = !sfxOn.value;
+    await _store('sfx_on', sfxOn.value);
+  }
+
+  Future<void> toggleMusic() async {
+    musicOn.value = !musicOn.value;
+    if (musicOn.value) {
+      _track = null;
+      if (_wanted != null) playMusic(_wanted!);
+    } else {
+      _applyMusic();
+    }
+    await _store('music_on', musicOn.value);
+  }
+
+  static Future<void> _store(String k, bool v) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_key, enabled.value);
+      await prefs.setBool(k, v);
     } catch (_) {}
   }
 

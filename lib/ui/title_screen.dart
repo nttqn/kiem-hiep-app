@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/hero.dart';
 import '../services/cloud.dart';
 import '../services/save.dart';
+import '../services/sound.dart';
 import 'cloud_panel.dart';
 import 'backdrop.dart';
 import 'create_screen.dart';
@@ -22,6 +23,7 @@ class _TitleScreenState extends State<TitleScreen> {
   @override
   void initState() {
     super.initState();
+    SoundService.instance.playMusic('menu');
     // A newer save played on another phone shows up here after sync.
     CloudSave.instance.addListener(_checkConflicts);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkConflicts());
