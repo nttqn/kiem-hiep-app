@@ -724,3 +724,474 @@ void drawQuadChibi(Canvas c, MobDef d,
   }
   c.restore();
 }
+
+// ------------------------------------------------------------------ helpers
+
+/// Overlapping circles outlined only on their combined silhouette.
+void _blob(Canvas c, List<(Offset, double)> parts, List<Paint> fills, {double ow = 2.2}) {
+  final ink = Paint()
+    ..isAntiAlias = true
+    ..color = col(_ink);
+  for (final (p, r) in parts) {
+    c.drawCircle(p, r + ow / 2, ink);
+  }
+  for (var i = 0; i < parts.length; i++) {
+    c.drawCircle(parts[i].$1, parts[i].$2, fills[i % fills.length]);
+  }
+}
+
+/// A fierce little eye with a slanted lid and a glint.
+void _beastEye(Canvas c, Offset at, double s, int iris, {bool slit = false}) {
+  final eye = Path()
+    ..moveTo(at.dx - 2.6 * s, at.dy - 0.6 * s)
+    ..lineTo(at.dx + 2.8 * s, at.dy - 1.8 * s)
+    ..quadraticBezierTo(at.dx + 2.4 * s, at.dy + 2.2 * s, at.dx - 1.4 * s, at.dy + 1.8 * s)
+    ..close();
+  _shape(c, eye, _flat(iris), ow: 1.1);
+  if (slit) {
+    c.drawLine(Offset(at.dx + 0.4 * s, at.dy - 1.2 * s), Offset(at.dx + 0.2 * s, at.dy + 1.6 * s),
+        _o
+          ..color = col(_ink)
+          ..strokeWidth = 1.1 * s);
+  } else {
+    c.drawCircle(Offset(at.dx + 0.4 * s, at.dy + 0.2 * s), 1.1 * s, _flat(_ink));
+  }
+  c.drawCircle(Offset(at.dx - 0.4 * s, at.dy - 0.5 * s), 0.5 * s, _flat(0xFFFFFFFF));
+}
+
+// ------------------------------------------------------------------ serpent
+
+void drawSerpentChibi(Canvas c, MobDef d,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  final wave = walk * 2.5 + t * 2.2;
+  final rise = attack > 0 ? math.sin(attack * math.pi) * 9 : 0.0;
+  final parts = <(Offset, double)>[];
+  for (var i = 0; i < 12; i++) {
+    final f = i / 11;
+    // Coiled low at the tail, rearing up toward the head like a cobra.
+    final x = -26 + f * 34 + (f > 0.7 ? (f - 0.7) * 12 : 0);
+    final y = -5 + math.sin(wave + f * 5.5) * 4 * (1 - f) - math.pow(f, 2.6) * (30 + rise);
+    parts.add((Offset(x, y), 2.6 + f * 4.6));
+  }
+  _blob(c, parts, [_lit(d.c1, const Rect.fromLTRB(-30, -30, 18, 0))]);
+  // Belly scales and back diamonds.
+  for (var i = 1; i < parts.length - 1; i++) {
+    final (p, r) = parts[i];
+    c.drawOval(Rect.fromCenter(center: p + Offset(0, r * 0.45), width: r * 1.3, height: r * 0.6),
+        _flat(shade(d.c2, 0.1)));
+    if (i.isEven) {
+      final dm = Path()
+        ..moveTo(p.dx, p.dy - r * 0.75)
+        ..lineTo(p.dx + r * 0.4, p.dy - r * 0.35)
+        ..lineTo(p.dx, p.dy + 0.05)
+        ..lineTo(p.dx - r * 0.4, p.dy - r * 0.35)
+        ..close();
+      c.drawPath(dm, _flat(shade(d.c1, -0.3)));
+    }
+  }
+  final hp = parts.last.$1;
+  final hx = hp.dx + 4, hy = hp.dy - 5;
+  if (d.boss) {
+    // Cobra hood behind the head.
+    final hood = Path()
+      ..moveTo(hx - 3, hy - 9)
+      ..quadraticBezierTo(hx - 16, hy - 4, hx - 8, hy + 12)
+      ..quadraticBezierTo(hx - 3, hy + 6, hx, hy + 2)
+      ..close();
+    _shape(c, hood, _lit(d.c2, Rect.fromLTRB(hx - 16, hy - 9, hx, hy + 12)));
+    c.drawCircle(Offset(hx - 8, hy + 1), 2, _flat(d.c3));
+  }
+  final hr = Rect.fromCenter(center: Offset(hx, hy), width: 20, height: 14);
+  _shape(c, Path()..addOval(hr), _lit(d.c1, hr));
+  c.drawOval(Rect.fromCenter(center: Offset(hx + 3, hy + 3.5), width: 11, height: 3.5),
+      _flat(shade(d.c2, 0.15)));
+  _beastEye(c, Offset(hx + 3, hy - 2), 1.1, d.boss ? d.c3 : 0xFFFFE04A, slit: true);
+  if ((t * 3).floor().isEven || attack > 0) {
+    final tg = Path()
+      ..moveTo(hx + 9, hy + 1.5)
+      ..lineTo(hx + 15, hy + 1.5)
+      ..lineTo(hx + 17, hy - 0.5)
+      ..moveTo(hx + 15, hy + 1.5)
+      ..lineTo(hx + 17, hy + 3.5);
+    c.drawPath(
+        tg,
+        _o
+          ..color = col(0xFFE84B3A)
+          ..strokeWidth = 1.2);
+  }
+}
+
+// ------------------------------------------------------------------ bugs
+
+void drawSpiderChibi(Canvas c, MobDef d,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  final step = moving ? walk * 3 : t * 0.5;
+  for (var side = 0; side < 2; side++) {
+    for (var i = 0; i < 4; i++) {
+      final ph = math.sin(step + i * 1.4 + side * math.pi) * 3;
+      final bx = -3.0 + i * 3.5, by = -11.0;
+      final kx = bx + (i - 1.5) * 7 + ph, ky = by - 10;
+      final fx = bx + (i - 1.5) * 11.5 + ph;
+      final colr = side == 0 ? shade(d.c1, -0.25) : d.c1;
+      _limb(c, Offset(bx, by), Offset(kx, ky), colr, 2.4);
+      _limb(c, Offset(kx, ky), Offset(fx, -1), colr, 2);
+    }
+  }
+  const abdR = Rect.fromLTRB(-20, -24, 2, -6);
+  _shape(c, Path()..addOval(abdR), _lit(d.c1, abdR, light: 0.3));
+  // Hourglass mark.
+  final mark = Path()
+    ..moveTo(-12, -20)
+    ..lineTo(-6, -20)
+    ..lineTo(-9, -15)
+    ..lineTo(-6, -10)
+    ..lineTo(-12, -10)
+    ..lineTo(-9, -15)
+    ..close();
+  c.drawPath(mark, _flat(d.c2));
+  const headR = Rect.fromLTRB(-2.5, -19.5, 12.5, -4.5);
+  _shape(c, Path()..addOval(headR), _lit(shade(d.c1, 0.12), headR));
+  // Eyes: two big, two small.
+  for (final e in const [(7.5, -14.5, 2.4), (3.8, -14.8, 2.0), (9.5, -11.0, 1.2), (6.0, -10.5, 1.1)]) {
+    c.drawCircle(Offset(e.$1, e.$2), e.$3 + 0.6, _flat(_ink));
+    c.drawCircle(Offset(e.$1, e.$2), e.$3, _flat(0xFFE8303A));
+    c.drawCircle(Offset(e.$1 - e.$3 * 0.3, e.$2 - e.$3 * 0.3), e.$3 * 0.35, _flat(0xFFFFFFFF));
+  }
+  // Fangs, spread on the bite.
+  final open = attack > 0 ? 1.5 : 0.0;
+  for (final s in const [-1.0, 1.0]) {
+    final f = Path()
+      ..moveTo(9 + s * 1.5, -7.5)
+      ..lineTo(10.5 + s * (2 + open), -3.5)
+      ..lineTo(11 + s * 0.6, -7)
+      ..close();
+    _shape(c, f, _flat(0xFFEDE6D0), ow: 1);
+  }
+}
+
+void drawScorpionChibi(Canvas c, MobDef d,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  final step = moving ? walk * 3 : 0.0;
+  for (var i = 0; i < 3; i++) {
+    final ph = math.sin(step + i * 1.7) * 3;
+    _limb(c, Offset(-7.0 + i * 6, -8), Offset(-11.0 + i * 7 + ph, -1), shade(d.c1, -0.25), 2.2);
+  }
+  // Segmented body as one outlined blob.
+  _blob(c, [
+    for (var i = 0; i < 4; i++) (Offset(-8.0 + i * 6, -10), i == 0 ? 4.5 : 5.5),
+  ], [
+    _lit(d.c1, const Rect.fromLTRB(-14, -16, 14, -4))
+  ]);
+  for (var i = 0; i < 3; i++) {
+    c.drawArc(Rect.fromCircle(center: Offset(-5.0 + i * 6, -10), radius: 5), -2.2, 1.4, false,
+        _o
+          ..color = col(shade(d.c1, -0.3))
+          ..strokeWidth = 1);
+  }
+  // Tail arching over the back; strikes forward on attack.
+  final strike = attack > 0 ? math.sin(attack * math.pi) : 0.0;
+  final tail = <(Offset, double)>[];
+  var px = -11.0, py = -12.0;
+  for (var i = 0; i < 5; i++) {
+    final a = -math.pi * 0.5 - i * 0.48 + strike * 0.7;
+    px += math.cos(a) * -6.8;
+    py += math.sin(a) * 6.8;
+    tail.add((Offset(px, py), 4.8 - i * 0.4));
+  }
+  _blob(c, tail, [_flat(d.c1), _flat(shade(d.c1, 0.12))], ow: 2);
+  final sting = Path()
+    ..moveTo(px - 2, py - 2)
+    ..quadraticBezierTo(px + 7, py - 2, px + 5, py + 6)
+    ..quadraticBezierTo(px + 3, py + 1, px - 2, py + 2)
+    ..close();
+  _shape(c, sting, _flat(d.boss ? d.c3 : shade(d.c2, -0.2)), ow: 1.6);
+  // Claws.
+  final open = math.sin(t * 5) * 0.2 + 0.3 + strike * 0.3;
+  for (final s in const [-1.0, 1.0]) {
+    _limb(c, Offset(11, -10 + s * 2), Offset(17, -12 + s * 3), s < 0 ? shade(d.c1, -0.2) : d.c1, 2.6);
+    c.save();
+    c.translate(17, -12 + s * 3);
+    final upper = Path()
+      ..moveTo(0, -1)
+      ..quadraticBezierTo(5, -6 - open * 6, 10, -1)
+      ..lineTo(4, 0)
+      ..close();
+    final lower = Path()
+      ..moveTo(0, 1)
+      ..quadraticBezierTo(5, 5 + open * 5, 9, 2)
+      ..lineTo(3, 1)
+      ..close();
+    _shape(c, upper, _lit(d.c1, const Rect.fromLTRB(0, -8, 10, 0)), ow: 1.6);
+    _shape(c, lower, _flat(shade(d.c1, -0.12)), ow: 1.6);
+    c.restore();
+  }
+  _beastEye(c, const Offset(13, -12.5), 0.8, d.boss ? d.c3 : 0xFFFFE04A);
+}
+
+// ------------------------------------------------------------------ flyers
+
+void drawFlyerChibi(Canvas c, MobDef d,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  final hover = -38 + math.sin(t * 3 + walk * 0.3) * 4;
+  c.save();
+  c.translate(0, hover);
+  switch (d.variant) {
+    case 'bat':
+      final flap = math.sin(t * 16);
+      for (final s in const [-1.0, 1.0]) {
+        final up = -10 - flap * 9;
+        final wing = Path()
+          ..moveTo(s * 3, -2)
+          ..quadraticBezierTo(s * 12, up, s * 24, up + 4)
+          ..quadraticBezierTo(s * 21, 0, s * 18, 3)
+          ..quadraticBezierTo(s * 15, -1, s * 12, 3)
+          ..quadraticBezierTo(s * 9, 0, s * 4, 4)
+          ..close();
+        _shape(c, wing, _flat(s < 0 ? shade(d.c1, -0.25) : d.c1), ow: 1.8);
+        for (final k in const [12.0, 18.0]) {
+          c.drawLine(Offset(s * 3, -2), Offset(s * k, k == 12 ? 3 : 2),
+              _o
+                ..color = col(shade(d.c1, -0.4))
+                ..strokeWidth = 0.9);
+        }
+      }
+      for (final s in const [-1.0, 1.0]) {
+        final ear = Path()
+          ..moveTo(s * 2, -6)
+          ..lineTo(s * 5.5, -13)
+          ..lineTo(s * 6, -4)
+          ..close();
+        _shape(c, ear, _flat(d.c1), ow: 1.4);
+      }
+      const br = Rect.fromLTRB(-7, -7.5, 7, 7.5);
+      _shape(c, Path()..addOval(br), _lit(d.c1, br, light: 0.3));
+      c.drawOval(Rect.fromCenter(center: const Offset(0, 3), width: 8, height: 6), _flat(shade(d.c1, 0.2)));
+      for (final s in const [-1.0, 1.0]) {
+        c.drawCircle(Offset(s * 2.8, -1.5), 2.2, _flat(_ink));
+        c.drawCircle(Offset(s * 2.8, -1.5), 1.6, _flat(d.c2));
+        c.drawCircle(Offset(s * 2.8 - 0.5, -2), 0.5, _flat(0xFFFFFFFF));
+        final fang = Path()
+          ..moveTo(s * 1.4, 3)
+          ..lineTo(s * 1.9, 5.5)
+          ..lineTo(s * 2.6, 3)
+          ..close();
+        c.drawPath(fang, _flat(0xFFFFFFFF));
+      }
+    case 'ghost':
+      final sway = math.sin(t * 4) * 3;
+      c.drawCircle(
+          const Offset(0, -4),
+          16,
+          Paint()
+            ..color = col(d.c2).withValues(alpha: 0.25)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+      final body = Path()
+        ..moveTo(-11, 0)
+        ..quadraticBezierTo(-12, -22, 0, -21)
+        ..quadraticBezierTo(12, -22, 11, 0)
+        ..quadraticBezierTo(9 + sway, 10, 4 + sway * 1.5, 18)
+        ..lineTo(1 + sway, 11)
+        ..lineTo(-2 + sway * 2, 20)
+        ..lineTo(-5 + sway, 10)
+        ..quadraticBezierTo(-9, 8, -11, 0)
+        ..close();
+      c.drawPath(
+          body,
+          _o
+            ..color = col(shade(d.c1, -0.5))
+            ..strokeWidth = 2);
+      c.drawPath(
+          body,
+          _g
+            ..shader = Gradient.linear(const Offset(0, -22), const Offset(0, 20),
+                [col(shade(d.c1, 0.3)), col(d.c1).withValues(alpha: 0.55 * col(d.c1).a)]));
+      c.drawOval(Rect.fromCenter(center: const Offset(1, -10), width: 15, height: 11), _flat(0xCC1A1428));
+      for (final s in const [-1.0, 1.0]) {
+        c.drawCircle(
+            Offset(1 + s * 3.2, -10),
+            2.4,
+            Paint()
+              ..color = col(d.c2)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+        c.drawCircle(Offset(1 + s * 3.2, -10), 1.2, _flat(0xFFFFFFFF));
+      }
+      final reach = attack > 0 ? 5.0 : 0.0;
+      c.drawPath(
+          Path()
+            ..moveTo(9, -4)
+            ..quadraticBezierTo(15 + reach, -2, 17 + reach, 4),
+          _o
+            ..color = col(shade(d.c1, 0.2))
+            ..strokeWidth = 3);
+    default:
+      // Wisp: a living flame with a grumpy little face.
+      c.drawCircle(
+          const Offset(0, -4),
+          18,
+          Paint()
+            ..color = col(d.c1).withValues(alpha: 0.4)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+      final flick = math.sin(t * 9) * 3, flick2 = math.cos(t * 7) * 2;
+      final flame = Path()
+        ..moveTo(-11, 2)
+        ..quadraticBezierTo(-13, -12, -5, -16)
+        ..quadraticBezierTo(-4, -22, -1 + flick, -27)
+        ..quadraticBezierTo(2, -18, 5, -17 + flick2)
+        ..quadraticBezierTo(8, -21, 9 + flick2, -23)
+        ..quadraticBezierTo(14, -10, 11, 2)
+        ..quadraticBezierTo(0, 13, -11, 2)
+        ..close();
+      c.drawPath(
+          flame,
+          _o
+            ..color = col(shade(d.c1, -0.45))
+            ..strokeWidth = 2);
+      c.drawPath(
+          flame,
+          _g
+            ..shader = Gradient.linear(const Offset(0, -26), const Offset(0, 10),
+                [col(d.c2), col(d.c1), col(shade(d.c1, -0.2))], const [0, 0.55, 1]));
+      c.drawOval(Rect.fromCenter(center: const Offset(0, -1), width: 13, height: 12), _flat(shade(d.c2, 0.3)));
+      for (final s in const [-1.0, 1.0]) {
+        c.drawOval(Rect.fromCenter(center: Offset(s * 2.8, -2.5), width: 2.6, height: 3.6), _flat(0xFF1A1A2A));
+        c.drawCircle(Offset(s * 2.8 - 0.4, -3.3), 0.55, _flat(0xFFFFFFFF));
+        c.drawLine(Offset(s * 1.5, -5.6), Offset(s * 4.4, -6.4),
+            _o
+              ..color = col(0xFF1A1A2A)
+              ..strokeWidth = 1);
+      }
+      c.drawArc(Rect.fromCenter(center: const Offset(0, 2), width: 4, height: 3), 0.2, math.pi - 0.4, false,
+          _o
+            ..color = col(0xFF1A1A2A)
+            ..strokeWidth = 1);
+  }
+  c.restore();
+}
+
+// ------------------------------------------------------------------ brutes
+
+void drawBruteChibi(Canvas c, MobDef d,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  final step = moving ? math.sin(walk * 1.6) * 4 : 0.0;
+  final golem = d.variant == 'golem';
+  final yeti = d.variant == 'yeti';
+  final smash = attack > 0 ? math.sin(attack * math.pi) : 0.0;
+  final breathe = math.sin(t * 2.4) * 0.8;
+  final fur = golem ? shade(d.c1, -0.1) : d.c1;
+
+  // Legs and feet.
+  _limb(c, const Offset(-6, -16), Offset(-6 - step, -3), shade(fur, -0.25), 7.5);
+  _limb(c, const Offset(6, -16), Offset(6 + step, -3), fur, 7.5);
+  for (final x in [-6 - step, 6 + step]) {
+    final foot = Path()..addOval(Rect.fromCenter(center: Offset(x + 1.5, -1.5), width: 11, height: 5));
+    _shape(c, foot, _flat(golem ? shade(d.c1, -0.3) : shade(d.c2, -0.1)), ow: 1.6);
+  }
+  // Back arm.
+  _limb(c, const Offset(-11, -38), Offset(-15, -15 + step), shade(fur, -0.25), 8.5);
+  final bFist = Path()..addOval(Rect.fromCircle(center: Offset(-15, -13 + step), radius: 5.5));
+  _shape(c, bFist, _flat(shade(golem ? d.c1 : d.c2, -0.25)), ow: 1.8);
+
+  // Torso.
+  if (golem) {
+    for (final r in [
+      Rect.fromLTRB(-16, -50 + breathe, 2, -32),
+      Rect.fromLTRB(-2, -51 + breathe, 16, -34),
+      const Rect.fromLTRB(-15, -34, 15, -15),
+    ]) {
+      _shape(c, Path()..addRRect(RRect.fromRectAndRadius(r, const Radius.circular(5))),
+          _lit(d.c1, r, light: 0.25, dark: 0.35));
+    }
+    // Glowing lava seams.
+    final glow = 0.6 + 0.4 * math.sin(t * 3);
+    final seam = Path()
+      ..moveTo(-10, -45)
+      ..lineTo(-4, -37)
+      ..lineTo(-7, -27)
+      ..lineTo(2, -21)
+      ..moveTo(7, -45)
+      ..lineTo(10, -36)
+      ..lineTo(6, -26);
+    c.drawPath(
+        seam,
+        Paint()
+          ..color = col(d.c2).withValues(alpha: 0.6 * glow)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+    c.drawPath(
+        seam,
+        _o
+          ..color = col(shade(d.c2, 0.3))
+          ..strokeWidth = 1.8);
+  } else {
+    final torso = Rect.fromLTRB(-17, -51 + breathe, 17, -14);
+    _shape(c, Path()..addOval(torso), _lit(fur, torso));
+    if (yeti) {
+      // Fur tufts along the outline.
+      for (var i = 0; i < 7; i++) {
+        final a = math.pi * (0.75 + i * 0.22);
+        final p = Offset(math.cos(a) * 17, -33 + math.sin(a) * 18);
+        final tuft = Path()
+          ..moveTo(p.dx - 3, p.dy)
+          ..lineTo(p.dx + math.cos(a) * 5, p.dy + math.sin(a) * 5)
+          ..lineTo(p.dx + 3, p.dy)
+          ..close();
+        _shape(c, tuft, _flat(fur), ow: 1.4);
+      }
+    }
+    c.drawOval(Rect.fromLTRB(-9, -42 + breathe, 11, -19), _flat(d.c2));
+  }
+
+  // Head.
+  const hx = 5.0, hy = -53.0;
+  if (d.boss || yeti) {
+    for (final s in const [-1.0, 1.0]) {
+      final horn = Path()
+        ..moveTo(hx + s * 4 - 2, hy - 6)
+        ..quadraticBezierTo(hx + s * 10, hy - 14, hx + s * 8, hy - 20)
+        ..quadraticBezierTo(hx + s * 6, hy - 12, hx + s * 4 + 2, hy - 6)
+        ..close();
+      _shape(c, horn,
+          _lit(d.boss ? d.c3 : 0xFFDCD0B8, const Rect.fromLTRB(hx - 10, hy - 20, hx + 10, hy - 6)),
+          ow: 1.6);
+    }
+  }
+  final headR = Rect.fromCircle(center: const Offset(hx, hy), radius: golem ? 9 : 10);
+  _shape(
+      c,
+      golem
+          ? (Path()..addRRect(RRect.fromRectAndRadius(headR, const Radius.circular(4))))
+          : (Path()..addOval(headR)),
+      _lit(golem ? shade(d.c1, 0.1) : fur, headR));
+  if (!golem) {
+    // Muzzle, nose, mouth, eye and a heavy brow.
+    _shape(c, Path()..addOval(Rect.fromCenter(center: const Offset(hx + 4, hy + 2.5), width: 12, height: 10)),
+        _flat(d.c2),
+        ow: 1.4);
+    c.drawOval(Rect.fromCenter(center: const Offset(hx + 8, hy + 1), width: 3, height: 2), _flat(_ink));
+    if (attack > 0.3) {
+      c.drawOval(Rect.fromCenter(center: const Offset(hx + 6, hy + 5.5), width: 5, height: 3.5),
+          _flat(0xFF6A1A1A));
+    } else {
+      c.drawLine(const Offset(hx + 3, hy + 5), const Offset(hx + 8, hy + 5), _outline(1.2));
+    }
+    _beastEye(c, const Offset(hx + 4.5, hy - 3.5), 1, yeti ? 0xFF7FD4FF : 0xFFFFD34A);
+    c.drawLine(const Offset(hx + 1, hy - 6.5), const Offset(hx + 8.5, hy - 5.5), _outline(2));
+  } else {
+    for (final x in const [hx + 1.5, hx + 6.5]) {
+      c.drawCircle(
+          Offset(x, hy - 1),
+          2.6,
+          Paint()
+            ..color = col(d.c2)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+      c.drawCircle(Offset(x, hy - 1), 1.3, _flat(0xFFFFF0A0));
+    }
+  }
+
+  // Front arm, raised for the smash.
+  final fist = Offset(13 + smash * 8, -15 - smash * 32);
+  _limb(c, const Offset(10, -40), fist, fur, 9);
+  final fr = Rect.fromCircle(center: fist, radius: 6.5);
+  _shape(c, Path()..addOval(fr), _lit(golem ? d.c1 : d.c2, fr));
+}

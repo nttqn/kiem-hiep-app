@@ -12,6 +12,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/hanh.dart';
+import 'package:kiem_hiep/render/art_chibi.dart';
 import 'package:kiem_hiep/render/art_figures.dart';
 
 void main() {
@@ -66,12 +67,32 @@ void main() {
         ..strokeWidth = 6);
     }
 
-    // The swordsman mid-strike in front of the moon.
+    // A fiery slash arc behind the blade.
+    final slash = Path()
+      ..addArc(Rect.fromCircle(center: const Offset(s * 0.5, s * 0.5), radius: 330), -1.9, 2.3)
+      ..arcTo(Rect.fromCircle(center: const Offset(s * 0.52, s * 0.52), radius: 250), 0.4, -2.3, false)
+      ..close();
+    c.drawPath(
+        slash,
+        Paint()
+          ..color = const Color(0xCCFF5A1A)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22));
+    c.drawPath(slash, Paint()..color = const Color(0xEEFF7A2A));
+    c.drawArc(Rect.fromCircle(center: const Offset(s * 0.5, s * 0.5), radius: 330), -1.9, 2.3,
+        false,
+        Paint()
+          ..color = const Color(0xFFFFF0C0)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 14
+          ..strokeCap = StrokeCap.round);
+
+    // The chibi swordsman mid-strike in front of the moon.
     c.save();
-    c.translate(s * 0.47, s * 0.8);
+    c.translate(s * 0.44, s * 0.8);
+    c.drawOval(Rect.fromCenter(center: Offset.zero, width: 300, height: 60),
+        Paint()..color = const Color(0x66000000));
     c.scale(10.5);
-    drawHuman(c, heroLook(Hanh.hoa, glow: 0xFFFFB03A),
-        attack: 0.35, t: 0.6);
+    drawChibi(c, heroLook(Hanh.hoa, glow: 0xFFFFB03A), attack: 0.4, t: 0.6);
     c.restore();
 
     final img = await recorder.endRecording().toImage(s.toInt(), s.toInt());

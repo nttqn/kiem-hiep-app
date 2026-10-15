@@ -417,17 +417,27 @@ void drawMob(Canvas c, MobDef d,
       (chibi ? drawChibi : drawHuman)(c, _humanFor(d),
           walk: walk, moving: moving, attack: attack, cast: d.ranged, t: t);
     case Body.serpent:
-      _serpent(c, d, walk, moving, attack, t);
+      chibi
+          ? drawSerpentChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
+          : _serpent(c, d, walk, moving, attack, t);
     case Body.bug:
       if (d.variant == 'scorpion') {
-        _scorpion(c, d, walk, moving, attack, t);
+        chibi
+            ? drawScorpionChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
+            : _scorpion(c, d, walk, moving, attack, t);
       } else {
-        _spider(c, d, walk, moving, attack, t);
+        chibi
+            ? drawSpiderChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
+            : _spider(c, d, walk, moving, attack, t);
       }
     case Body.flyer:
-      _flyer(c, d, walk, moving, attack, t);
+      chibi
+          ? drawFlyerChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
+          : _flyer(c, d, walk, moving, attack, t);
     case Body.brute:
-      _brute(c, d, walk, moving, attack, t);
+      chibi
+          ? drawBruteChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
+          : _brute(c, d, walk, moving, attack, t);
   }
 }
 
