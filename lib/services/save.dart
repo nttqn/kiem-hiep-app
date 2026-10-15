@@ -4,10 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/hero.dart';
+import 'cloud.dart';
 
 const int slotCount = 3;
 
-/// Three character slots plus small settings, in shared preferences.
+/// Three character slots plus small settings, in shared preferences, with
+/// every save mirrored to [CloudSave] when the player is signed in.
 class SaveService extends ChangeNotifier {
   SaveService._();
   static final SaveService instance = SaveService._();
@@ -37,13 +39,29 @@ class SaveService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Saves the active slot, stamps it and queues the cloud upload.
   Future<void> save() async {
     if (active < 0 || slots[active] == null) return;
+    slots[active]!.savedAt = DateTime.now().millisecondsSinceEpoch;
+    await writeSlot(active);
+    CloudSave.instance.queueUpload(active);
+  }
+
+  /// Writes [slot] to the device as it is, without touching its stamp.
+  Future<void> writeSlot(int slot) async {
     notifyListeners();
+    final h = slots[slot];
+    if (h == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_key(active), jsonEncode(slots[active]!.toJson()));
+      await prefs.setString(_key(slot), jsonEncode(h.toJson()));
     } catch (_) {}
+  }
+
+  /// Puts a hero from the cloud into [slot].
+  Future<void> replaceSlot(int slot, HeroData h) async {
+    slots[slot] = h;
+    await writeSlot(slot);
   }
 
   Future<void> create(int slot, HeroData h) async {
@@ -57,6 +75,7 @@ class SaveService extends ChangeNotifier {
     slots[slot] = null;
     if (active == slot) active = -1;
     notifyListeners();
+    CloudSave.instance.deleteSlot(slot);
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_key(slot));

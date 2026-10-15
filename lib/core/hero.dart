@@ -132,6 +132,10 @@ class HeroData {
   bool autoSellCommon = false;
   int seed = 0;
 
+  /// When this save was last written (ms since epoch); cloud sync keeps
+  /// whichever copy is newer.
+  int savedAt = 0;
+
   final Stats stats = Stats();
 
   SectDef get sect => sectOf(hanh);
@@ -501,6 +505,7 @@ class HeroData {
         'time': playSeconds,
         'autoSell': autoSellCommon,
         'seed': seed,
+        'savedAt': savedAt,
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -543,6 +548,7 @@ class HeroData {
     h.playSeconds = (m['time'] as num).toDouble();
     h.autoSellCommon = m['autoSell'] as bool? ?? false;
     h.seed = m['seed'] as int? ?? 0;
+    h.savedAt = m['savedAt'] as int? ?? 0;
     h.recompute();
     return h;
   }

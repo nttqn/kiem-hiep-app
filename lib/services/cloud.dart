@@ -1,0 +1,262 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import '../core/hero.dart';
+import 'save.dart';
+import 'sync_plan.dart';
+
+/// Online save: the three slots mirrored to Firestore under the signed-in
+/// player (`users/{uid}/slots/{0..2}`), so reinstalling or changing phone
+/// (Android or iPhone) keeps progress.
+///
+/// Everything degrades to offline play: no Firebase config, no network or
+/// a failed sign-in just leaves [available] or [user] unset.
+class CloudSave extends ChangeNotifier {
+  CloudSave._();
+  static final CloudSave instance = CloudSave._();
+
+  bool available = false;
+  bool busy = false;
+  User? user;
+  String? message;
+  DateTime? lastSync;
+
+  /// Slots whose newer cloud copy waits for the player to choose.
+  final List<int> conflicts = [];
+  final Map<int, SlotInfo> cloudSlots = {};
+
+  bool _googleReady = false;
+  Timer? _debounce;
+  final Set<int> _dirty = {};
+  AppLifecycleListener? _lifecycle;
+
+  bool get isApplePlatform => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  Future<void> init() async {
+    if (kIsWeb) return;
+    try {
+      // Reads google-services.json / GoogleService-Info.plist; throws when
+      // the game was built without them.
+      await Firebase.initializeApp().timeout(const Duration(seconds: 8));
+      available = true;
+    } catch (e) {
+      debugPrint('cloud save off: $e');
+      return;
+    }
+    user = FirebaseAuth.instance.currentUser;
+    FirebaseAuth.instance.authStateChanges().listen((u) {
+      user = u;
+      notifyListeners();
+    });
+    _lifecycle ??= AppLifecycleListener(onPause: flush, onDetach: flush);
+    notifyListeners();
+    if (user != null) unawaited(sync());
+  }
+
+  // ------------------------------------------------------------ sign-in
+
+  Future<bool> signInGoogle() => _signIn(() async {
+        final g = GoogleSignIn.instance;
+        if (!_googleReady) {
+          await g.initialize();
+          _googleReady = true;
+        }
+        final account = await g.authenticate();
+        final idToken = account.authentication.idToken;
+        if (idToken == null) throw StateError('no id token');
+        await FirebaseAuth.instance.signInWithCredential(GoogleAuthProvider.credential(idToken: idToken));
+      });
+
+  Future<bool> signInApple() => _signIn(() async {
+        final apple = AppleAuthProvider()..addScope('email');
+        await FirebaseAuth.instance.signInWithProvider(apple);
+      });
+
+  Future<bool> _signIn(Future<void> Function() how) async {
+    if (!available || busy) return false;
+    busy = true;
+    message = null;
+    notifyListeners();
+    try {
+      await how();
+      user = FirebaseAuth.instance.currentUser;
+      busy = false;
+      await sync();
+      return user != null;
+    } on GoogleSignInException catch (e) {
+      message = e.code == GoogleSignInExceptionCode.canceled ? null : 'Đăng nhập Google thất bại';
+    } catch (e) {
+      debugPrint('sign-in failed: $e');
+      message = 'Không đăng nhập được, thử lại sau';
+    }
+    busy = false;
+    notifyListeners();
+    return false;
+  }
+
+  Future<void> signOut() async {
+    await flush();
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (_googleReady) await GoogleSignIn.instance.signOut();
+    } catch (_) {}
+    user = null;
+    conflicts.clear();
+    cloudSlots.clear();
+    lastSync = null;
+    notifyListeners();
+  }
+
+  /// Shown in the UI: email, else the provider's display name.
+  String get who => user?.email ?? user?.displayName ?? 'Đã đăng nhập';
+
+  // ------------------------------------------------------------ data
+
+  CollectionReference<Map<String, dynamic>> get _slots =>
+      FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('slots');
+
+  static SlotInfo _info(HeroData h) => SlotInfo(
+        savedAt: h.savedAt,
+        data: jsonEncode(h.toJson()),
+        name: h.name,
+        level: h.level,
+        sect: h.sect.name,
+        playSeconds: h.playSeconds,
+      );
+
+  /// Pulls the cloud copies, uploads what is newer here, restores slots
+  /// that are empty here, and lists the rest in [conflicts].
+  Future<void> sync() async {
+    if (!available || user == null || busy) return;
+    busy = true;
+    message = null;
+    notifyListeners();
+    try {
+      final snap = await _slots.get().timeout(const Duration(seconds: 15));
+      cloudSlots.clear();
+      for (final d in snap.docs) {
+        final i = int.tryParse(d.id);
+        final m = d.data();
+        if (i == null || i < 0 || i >= slotCount || m['data'] is! String) continue;
+        cloudSlots[i] = SlotInfo(
+          savedAt: (m['savedAt'] as num?)?.toInt() ?? 0,
+          data: m['data'] as String,
+          name: m['name'] as String? ?? '',
+          level: (m['level'] as num?)?.toInt() ?? 0,
+          sect: m['sect'] as String? ?? '',
+          playSeconds: (m['playSeconds'] as num?)?.toDouble() ?? 0,
+        );
+      }
+      final save = SaveService.instance;
+      final local = [for (final h in save.slots) h == null ? null : _info(h)];
+      final plan = planSync(local, [for (var i = 0; i < slotCount; i++) cloudSlots[i]]);
+      conflicts.clear();
+      for (var i = 0; i < slotCount; i++) {
+        switch (plan[i]) {
+          case SlotAction.upload:
+            await _upload(i, save.slots[i]!);
+          case SlotAction.restore:
+            _apply(i, cloudSlots[i]!);
+          case SlotAction.ask:
+            conflicts.add(i);
+          case SlotAction.none:
+            break;
+        }
+      }
+      lastSync = DateTime.now();
+    } catch (e) {
+      debugPrint('sync failed: $e');
+      message = 'Không kết nối được máy chủ, sẽ thử lại sau';
+    }
+    busy = false;
+    notifyListeners();
+  }
+
+  /// The player picked the cloud copy of [slot].
+  Future<void> takeCloud(int slot) async {
+    final c = cloudSlots[slot];
+    if (c != null) _apply(slot, c);
+    conflicts.remove(slot);
+    notifyListeners();
+  }
+
+  /// The player kept this device's copy of [slot].
+  Future<void> keepLocal(int slot) async {
+    conflicts.remove(slot);
+    final h = SaveService.instance.slots[slot];
+    if (h != null) {
+      // Make it the newest so other devices see it as such.
+      h.savedAt = DateTime.now().millisecondsSinceEpoch;
+      await SaveService.instance.writeSlot(slot);
+      await _upload(slot, h);
+    }
+    notifyListeners();
+  }
+
+  void _apply(int slot, SlotInfo c) {
+    try {
+      final h = HeroData.fromJson(jsonDecode(c.data) as Map<String, dynamic>);
+      SaveService.instance.replaceSlot(slot, h);
+    } catch (e) {
+      debugPrint('cloud slot $slot unreadable: $e');
+    }
+  }
+
+  Future<void> _upload(int slot, HeroData h) async {
+    final info = _info(h);
+    await _slots.doc('$slot').set({
+      'data': info.data,
+      'savedAt': info.savedAt,
+      'name': info.name,
+      'level': info.level,
+      'sect': info.sect,
+      'playSeconds': info.playSeconds,
+      'updated': FieldValue.serverTimestamp(),
+    });
+    cloudSlots[slot] = info;
+  }
+
+  /// Called after every local save; uploads at most every 20 seconds.
+  void queueUpload(int slot) {
+    if (!available || user == null || conflicts.contains(slot)) return;
+    _dirty.add(slot);
+    _debounce ??= Timer(const Duration(seconds: 20), flush);
+  }
+
+  /// Uploads pending slots now (also on app pause).
+  Future<void> flush() async {
+    _debounce?.cancel();
+    _debounce = null;
+    if (!available || user == null || _dirty.isEmpty) return;
+    final slots = List<int>.of(_dirty);
+    _dirty.clear();
+    try {
+      for (final i in slots) {
+        final h = SaveService.instance.slots[i];
+        if (h != null) await _upload(i, h);
+      }
+      lastSync = DateTime.now();
+      notifyListeners();
+    } catch (e) {
+      // Firestore queues writes offline; anything else retries next save.
+      _dirty.addAll(slots);
+      debugPrint('upload failed: $e');
+    }
+  }
+
+  Future<void> deleteSlot(int slot) async {
+    _dirty.remove(slot);
+    cloudSlots.remove(slot);
+    if (!available || user == null) return;
+    try {
+      await _slots.doc('$slot').delete();
+    } catch (_) {}
+  }
+}

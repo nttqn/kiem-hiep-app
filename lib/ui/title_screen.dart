@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../core/hero.dart';
+import '../services/cloud.dart';
 import '../services/save.dart';
+import 'cloud_panel.dart';
 import 'backdrop.dart';
 import 'create_screen.dart';
 import 'theme.dart';
@@ -9,8 +11,34 @@ import 'town_screen.dart';
 
 const gameTitle = 'Kiếm Hiệp Ngũ Hành';
 
-class TitleScreen extends StatelessWidget {
+class TitleScreen extends StatefulWidget {
   const TitleScreen({super.key});
+
+  @override
+  State<TitleScreen> createState() => _TitleScreenState();
+}
+
+class _TitleScreenState extends State<TitleScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // A newer save played on another phone shows up here after sync.
+    CloudSave.instance.addListener(_checkConflicts);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkConflicts());
+  }
+
+  @override
+  void dispose() {
+    CloudSave.instance.removeListener(_checkConflicts);
+    super.dispose();
+  }
+
+  void _checkConflicts() {
+    if (!mounted || CloudSave.instance.conflicts.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) resolveConflicts(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,29 +47,42 @@ class TitleScreen extends StatelessWidget {
         child: SafeArea(
           child: ListenableBuilder(
             listenable: SaveService.instance,
-            builder: (context, _) => Column(
+            builder: (context, _) => Stack(
               children: [
-                const SizedBox(height: 14),
-                Text(gameTitle.toUpperCase(), style: titleStyle(34)),
-                const SizedBox(height: 4),
-                Text('Ngũ hành tương khắc · Ngũ phái tranh hùng',
-                    style: body.copyWith(color: goldLight.withValues(alpha: 0.85))),
-                const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < slotCount; i++)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: _SlotCard(index: i),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 18),
+                const Positioned(right: 8, top: 4, child: CloudButton()),
+                Positioned.fill(child: _body()),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _body() {
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          const SizedBox(height: 14),
+          Text(gameTitle.toUpperCase(), style: titleStyle(34)),
+          const SizedBox(height: 4),
+          Text(
+            'Ngũ hành tương khắc · Ngũ phái tranh hùng',
+            style: body.copyWith(color: goldLight.withValues(alpha: 0.85)),
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < slotCount; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _SlotCard(index: i),
+                ),
+            ],
+          ),
+          const SizedBox(height: 18),
+        ],
       ),
     );
   }
@@ -66,9 +107,16 @@ class _SlotCard extends StatelessWidget {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_circle_outline, size: 44, color: gold.withValues(alpha: 0.8)),
+                    Icon(
+                      Icons.add_circle_outline,
+                      size: 44,
+                      color: gold.withValues(alpha: 0.8),
+                    ),
                     const SizedBox(height: 8),
-                    Text('Tạo nhân vật', style: bold.copyWith(color: goldLight)),
+                    Text(
+                      'Tạo nhân vật',
+                      style: bold.copyWith(color: goldLight),
+                    ),
                     Text('Ô ${index + 1}', style: small),
                   ],
                 )
@@ -76,24 +124,42 @@ class _SlotCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Center(
-                        child: FigurePreview(hanh: h.hanh, female: h.female, scale: 1.25),
+                        child: FigurePreview(
+                          hanh: h.hanh,
+                          female: h.female,
+                          scale: 1.25,
+                        ),
                       ),
                     ),
-                    Text(h.name, style: bold.copyWith(fontSize: 16), overflow: TextOverflow.ellipsis),
+                    Text(
+                      h.name,
+                      style: bold.copyWith(fontSize: 16),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
                           width: 10,
                           height: 10,
-                          decoration: BoxDecoration(color: hanhColor(h.hanh), shape: BoxShape.circle),
+                          decoration: BoxDecoration(
+                            color: hanhColor(h.hanh),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                         const SizedBox(width: 5),
-                        Text('${h.sect.name} · Cấp ${h.level}', style: small.copyWith(color: cream)),
+                        Text(
+                          '${h.sect.name} · Cấp ${h.level}',
+                          style: small.copyWith(color: cream),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    LButton(label: 'Vào game', small: true, onTap: () => _open(context, h)),
+                    LButton(
+                      label: 'Vào game',
+                      small: true,
+                      onTap: () => _open(context, h),
+                    ),
                   ],
                 ),
         ),
@@ -116,12 +182,21 @@ class _SlotCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
         title: Text('Xóa nhân vật?', style: titleStyle(20)),
-        content: Text('${h.name} (${h.sect.name}, cấp ${h.level}) sẽ bị xóa vĩnh viễn.', style: body),
+        content: Text(
+          '${h.name} (${h.sect.name}, cấp ${h.level}) sẽ bị xóa vĩnh viễn.',
+          style: body,
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xóa', style: TextStyle(color: Color(0xFFFF7A6A))),
+            child: const Text(
+              'Xóa',
+              style: TextStyle(color: Color(0xFFFF7A6A)),
+            ),
           ),
         ],
       ),

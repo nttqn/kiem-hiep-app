@@ -7,6 +7,7 @@ import '../services/save.dart';
 import '../services/sound.dart';
 import 'backdrop.dart';
 import 'character_screen.dart';
+import 'cloud_panel.dart';
 import 'lists.dart';
 import 'play_screen.dart';
 import 'shop_screen.dart';
@@ -98,6 +99,7 @@ class _TownScreenState extends State<TownScreen> {
                           children: [
                             Text('Thành Lạc An', style: titleStyle(24)),
                             const Spacer(),
+                            const CloudButton(),
                             ValueListenableBuilder<bool>(
                               valueListenable: SoundService.instance.enabled,
                               builder: (_, on, _) => IconButton(

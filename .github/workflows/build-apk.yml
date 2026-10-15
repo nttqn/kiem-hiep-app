@@ -28,13 +28,40 @@ jobs:
       - name: Run tests
         run: flutter test
 
-      # No signing secrets yet: Gradle signs with the debug key, which is
-      # fine for sideloading onto a phone but not for the Play Store.
+      # With the four keystore secrets set, builds are signed with the real
+      # upload key (needed for Google sign-in and the Play Store). Without
+      # them Gradle falls back to the debug key.
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::KEYSTORE_BASE64 secret not set, building a debug-signed APK. Google sign-in will not work with it."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+
       - name: Build release APK
         run: flutter build apk --release
+
+      # Play Console only accepts App Bundles.
+      - name: Build release App Bundle
+        run: flutter build appbundle --release
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: kiem-hiep-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload App Bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiem-hiep-aab
+          path: build/app/outputs/bundle/release/app-release.aab
