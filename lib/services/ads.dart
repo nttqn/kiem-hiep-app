@@ -7,9 +7,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// dungeon reward, free potions) and a rare interstitial when walking back
 /// to town.
 ///
-/// The unit ids below are Google's public test units until the game's own
-/// AdMob app exists; the App IDs live in android/app/build.gradle.kts and
-/// ios/Runner/Info.plist. Everything is a no-op on web and in tests, and
+/// Android uses the game's own AdMob units; iOS keeps Google's public test
+/// units until its AdMob app exists. The App IDs live in
+/// android/app/build.gradle.kts and ios/Runner/Info.plist. Everything is a no-op on web and in tests, and
 /// any ad failure just means "no ad", never a blocked game.
 class AdsService {
   AdsService._();
@@ -24,11 +24,11 @@ class AdsService {
 
   static String get rewardedUnit => _ios
       ? 'ca-app-pub-3940256099942544/1712485313'
-      : 'ca-app-pub-3940256099942544/5224354917';
+      : 'ca-app-pub-9078637596840810/7500446917';
 
   static String get interstitialUnit => _ios
       ? 'ca-app-pub-3940256099942544/4411468910'
-      : 'ca-app-pub-3940256099942544/1033173712';
+      : 'ca-app-pub-9078637596840810/6558066189';
 
   /// No interstitial within this long of any other full-screen ad, or of
   /// the app starting.
