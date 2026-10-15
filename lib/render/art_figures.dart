@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../core/content.dart';
 import '../core/hanh.dart';
+import 'art_chibi.dart';
 
 /// Figures are drawn in local units with the feet at (0, 0), facing right;
 /// the caller flips and scales the canvas. A humanoid is about 64 tall.
@@ -398,14 +399,23 @@ void _weapon(Canvas c, HumanLook k, double x, double y, double ang, double attac
 
 /// Draws any monster at local origin (feet), facing right, unscaled
 /// (the caller applies [MobDef.size]).
+/// [chibi] picks the new outlined style where a body plan has one.
 void drawMob(Canvas c, MobDef d,
-    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+    {double walk = 0,
+    bool moving = false,
+    double attack = 0,
+    double t = 0,
+    bool chibi = true}) {
   switch (d.body) {
     case Body.quad:
-      _quad(c, d, walk, moving, attack, t);
+      if (chibi) {
+        drawQuadChibi(c, d, walk: walk, moving: moving, attack: attack, t: t);
+      } else {
+        _quad(c, d, walk, moving, attack, t);
+      }
     case Body.human:
-      drawHuman(c, _humanFor(d), walk: walk, moving: moving, attack: attack,
-          cast: d.ranged, t: t);
+      (chibi ? drawChibi : drawHuman)(c, _humanFor(d),
+          walk: walk, moving: moving, attack: attack, cast: d.ranged, t: t);
     case Body.serpent:
       _serpent(c, d, walk, moving, attack, t);
     case Body.bug:

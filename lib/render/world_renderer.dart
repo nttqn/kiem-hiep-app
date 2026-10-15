@@ -7,6 +7,7 @@ import '../core/hanh.dart';
 import '../core/items.dart';
 import '../core/scenery.dart';
 import '../core/world.dart';
+import 'art_chibi.dart';
 import 'art_figures.dart';
 import 'art_fx.dart';
 import 'art_scenery.dart';
@@ -245,12 +246,13 @@ class WorldRenderer {
           ..strokeWidth = 2);
     c.scale(p.face, 1);
     setTint(flash: p.hurt > 0 ? p.hurt / 0.18 * 0.6 : 0, alpha: p.alive ? 1 : 0.5);
-    drawHuman(c, heroLook(h.hanh, female: h.female, glow: glow),
+    drawChibi(c, heroLook(h.hanh, female: h.female, glow: glow),
         walk: p.walk,
         moving: p.moving,
         attack: p.attackAnim,
         cast: h.sect.basic.name == 'ranged',
-        t: t);
+        t: t,
+        hurt: p.hurt > 0.05 || !p.alive);
     setTint();
     c.restore();
   }

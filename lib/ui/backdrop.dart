@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../core/hanh.dart';
+import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 
 /// Ink-wash mountains at dusk, with drifting mist. [town] adds a city gate.
@@ -236,7 +237,7 @@ class _FigurePainter extends CustomPainter {
         Paint()..color = Color(hanh.color).withValues(alpha: 0.35));
     drawShadow(c, 16);
     setClock(time);
-    drawHuman(c, heroLook(hanh, female: female, glow: glow),
+    drawChibi(c, heroLook(hanh, female: female, glow: glow),
         attack: attack, cast: hanh == Hanh.moc || hanh == Hanh.thuy || hanh == Hanh.tho, t: time);
     c.restore();
   }
