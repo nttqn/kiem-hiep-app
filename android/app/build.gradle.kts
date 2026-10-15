@@ -57,6 +57,13 @@ android {
             signingConfig = signingConfigs.getByName(
                 if (hasReleaseKey) "release" else "debug",
             )
+            isMinifyEnabled = true
+            isShrinkResources = true
+            // Keeps WorkManager's database (pulled in by AdMob) alive under R8.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
