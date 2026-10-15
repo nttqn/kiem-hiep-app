@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "567144551092",
+    "project_id": "kiem-hiep-4da54",
+    "storage_bucket": "kiem-hiep-4da54.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567144551092:android:cada3a153fd33063a9bde1",
+        "android_client_info": {
+          "package_name": "com.trungsmail.kiemhiep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567144551092-ls75b66i6mtrkdoe48fota329ksgm30l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.trungsmail.kiemhiep",
+            "certificate_hash": "246063fd99b895a0bfd6abedbea6159317064dd7"
+          }
+        },
+        {
+          "client_id": "567144551092-m5850s33atgjjmffl6cjtgggoel2p6om.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeb7cyAdcTBJMPux88bduQj2efy_ITGfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567144551092-m5850s33atgjjmffl6cjtgggoel2p6om.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
