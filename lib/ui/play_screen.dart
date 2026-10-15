@@ -9,6 +9,7 @@ import '../core/content.dart';
 import '../core/hero.dart';
 import '../core/world.dart';
 import '../game/battle_game.dart';
+import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'hud.dart';
@@ -76,6 +77,7 @@ class _PlayScreenState extends State<PlayScreen> {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onKey);
     _autosave?.cancel();
+    _bannerTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
     SoundService.instance.setBattle(false);
     SaveService.instance.save();
@@ -94,7 +96,14 @@ class _PlayScreenState extends State<PlayScreen> {
       _bannerColor = c;
       _bannerAt = _now;
     });
+    // The HUD tick does not rebuild the banner, so clear it on time.
+    _bannerTimer?.cancel();
+    _bannerTimer = Timer(const Duration(milliseconds: 2700), () {
+      if (mounted) setState(() => _banner = null);
+    });
   }
+
+  Timer? _bannerTimer;
 
   void _toast(String text, Color c) {
     setState(() {
@@ -146,6 +155,39 @@ class _PlayScreenState extends State<PlayScreen> {
   void _leave() {
     SaveService.instance.save();
     Navigator.of(context).pop();
+    // A full-screen ad only ever on the walk back to town, and rarely.
+    AdsService.instance.maybeShowInterstitial();
+  }
+
+  bool _doubled = false;
+  bool _adBusy = false;
+
+  /// Plays a rewarded ad and runs [reward] if it was watched through.
+  Future<void> _watchAd(VoidCallback reward) async {
+    if (_adBusy) return;
+    setState(() => _adBusy = true);
+    final earned = await AdsService.instance.showRewarded();
+    if (!mounted) return;
+    setState(() => _adBusy = false);
+    if (earned) {
+      reward();
+    } else {
+      _toast('Chưa xem hết quảng cáo, chưa nhận thưởng', const Color(0xFFFF8A7A));
+    }
+  }
+
+  Widget _adButton(String label, VoidCallback reward) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: AdsService.instance.rewardedReady,
+      builder: (_, ready, _) => LButton(
+        label: ready ? label : 'Quảng cáo đang tải…',
+        icon: Icons.ondemand_video,
+        width: 280,
+        color: const Color(0xFF8A5A10),
+        enabled: ready && !_adBusy,
+        onTap: () => _watchAd(reward),
+      ),
+    );
   }
 
   // ------------------------------------------------------------ input
@@ -511,36 +553,67 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  void _resume() {
+    setState(() => _dead = false);
+    game.halted = _paused;
+  }
+
   Widget _deadOverlay() {
     game.halted = true;
+    final inDungeon = widget.dungeon != null;
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
         child: SizedBox(
-          width: 360,
+          width: 380,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Trọng thương!', style: titleStyle(28, color: const Color(0xFFFF7A6A))),
               const SizedBox(height: 6),
-              Text('Bạn bị đánh bại. Hồi sinh sẽ mất 3% kinh nghiệm của cấp hiện tại.',
-                  style: body, textAlign: TextAlign.center),
-              const SizedBox(height: 14),
-              LButton(
-                label: 'Hồi sinh ở cổng',
-                width: 240,
-                color: jade,
-                onTap: () {
-                  world.revive();
-                  setState(() => _dead = false);
-                  game.halted = _paused;
-                },
+              Text(
+                inDungeon
+                    ? 'Bạn ngã xuống giữa ải. Có thể hồi sinh tại chỗ một lần.'
+                    : 'Bạn bị đánh bại. Hồi sinh ở cổng sẽ mất 3% kinh nghiệm của cấp hiện tại.',
+                style: body,
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              LButton(label: 'Về thành', width: 240, onTap: () {
-                world.revive();
-                _leave();
+              const SizedBox(height: 14),
+              _adButton('Hồi sinh tại chỗ', () {
+                world.reviveHere();
+                _resume();
               }),
+              const SizedBox(height: 8),
+              if (inDungeon)
+                LButton(
+                  label: 'Bỏ cuộc',
+                  width: 280,
+                  onTap: () {
+                    setState(() => _dead = false);
+                    world.giveUp();
+                    game.halted = false;
+                  },
+                )
+              else ...[
+                LButton(
+                  label: 'Hồi sinh ở cổng',
+                  width: 280,
+                  color: jade,
+                  onTap: () {
+                    world.revive();
+                    _resume();
+                  },
+                ),
+                const SizedBox(height: 8),
+                LButton(
+                  label: 'Về thành',
+                  width: 280,
+                  onTap: () {
+                    world.revive();
+                    _leave();
+                  },
+                ),
+              ],
             ],
           ),
         ),
@@ -575,6 +648,18 @@ class _PlayScreenState extends State<PlayScreen> {
                     style: small),
                 const SizedBox(height: 6),
                 for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
+                const SizedBox(height: 10),
+                if (!_doubled)
+                  _adButton('Nhân đôi lượng & kinh nghiệm', () {
+                    hero.gold += hero.lastDungeonGold;
+                    hero.gainExp(hero.lastDungeonExp);
+                    SaveService.instance.save();
+                    setState(() => _doubled = true);
+                    _toast('+${hero.lastDungeonGold} lượng · +${hero.lastDungeonExp.round()} kinh nghiệm',
+                        goldLight);
+                  })
+                else
+                  Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
               ] else
                 Text('Hãy luyện thêm cấp, nâng trang bị rồi quay lại.', style: body),
               const SizedBox(height: 14),

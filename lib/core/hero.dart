@@ -136,6 +136,10 @@ class HeroData {
   /// whichever copy is newer.
   int savedAt = 0;
 
+  /// The last dungeon payout, so a rewarded ad can pay it again.
+  int lastDungeonGold = 0;
+  double lastDungeonExp = 0;
+
   final Stats stats = Stats();
 
   SectDef get sect => sectOf(hanh);
@@ -420,6 +424,8 @@ class HeroData {
     final g = ((150 + d.level * 30) * (first ? 1 : 0.4) * (0.7 + stars * 0.1))
         .round();
     final lines = <String>['+${xp.round()} kinh nghiệm', '+$g lượng'];
+    lastDungeonGold = g;
+    lastDungeonExp = xp;
     gold += g;
     if (first) {
       final it = makeItem(

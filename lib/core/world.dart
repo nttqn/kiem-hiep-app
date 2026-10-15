@@ -1191,13 +1191,48 @@ class World {
     if (p.hp <= 0) {
       p.hp = 0;
       _sfx('heroDie');
-      if (mode == WorldMode.dungeon) {
+      if (mode == WorldMode.dungeon && dungeonRevived) {
         finished = true;
         events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));
       } else {
+        // The screen offers a revive (an ad in dungeons) or a way out.
         events.add(GameEvent(EvKind.heroDied));
       }
     }
+  }
+
+  /// A dungeon run may be revived once.
+  bool dungeonRevived = false;
+
+  /// Back up where the hero fell, at full strength, with a moment of
+  /// safety: monsters close by are knocked away and dazed.
+  void reviveHere() {
+    final p = player;
+    p.hp = p.maxHp;
+    p.mp = st.maxMp;
+    p.dots.clear();
+    p.stunUntil = 0;
+    if (mode == WorldMode.dungeon) dungeonRevived = true;
+    for (final m in mobs) {
+      if (!m.alive) continue;
+      final d = _dist(m.x, m.y, p.x, p.y);
+      if (d < 260) {
+        m.stunUntil = time + 2;
+        if (!m.def.boss && d > 1) {
+          m.kx = (m.x - p.x) / d * 500;
+          m.ky = (m.y - p.y) / d * 500;
+        }
+      }
+    }
+    fx.add(Fx('buddha', p.x, p.y, life: 0.8, radius: 260));
+    _text(p.x, p.y - 70, 'Hồi sinh!', 0xFFFFD34A, big: true);
+  }
+
+  /// Leaving a dungeon after falling: the run counts as failed.
+  void giveUp() {
+    if (finished) return;
+    finished = true;
+    events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));
   }
 
   /// Field death: back on your feet at the map entrance, EXP docked.

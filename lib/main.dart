@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'services/ads.dart';
 import 'services/cloud.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
   await SaveService.instance.load();
   // Not awaited either: the game starts offline and syncs when it can.
   CloudSave.instance.init();
+  AdsService.instance.init();
   runApp(const KiemHiepApp());
 }
 

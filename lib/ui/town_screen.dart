@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/content.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
+import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'backdrop.dart';
@@ -317,6 +318,11 @@ void showGuide(BuildContext context) {
         ),
       ),
       actions: [
+        if (AdsService.instance.privacyOptionsRequired.value)
+          TextButton(
+            onPressed: AdsService.instance.showPrivacyOptions,
+            child: const Text('Tùy chọn quảng cáo'),
+          ),
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đã hiểu')),
       ],
     ),

@@ -251,6 +251,60 @@ class CloudSave extends ChangeNotifier {
     }
   }
 
+  /// Deletes every cloud save and the account itself (Play Store policy:
+  /// players must be able to do this in the app). Saves on this device
+  /// stay. Firebase may ask the player to confirm their sign-in first.
+  Future<bool> deleteAccount() async {
+    final u = user;
+    if (!available || u == null || busy) return false;
+    busy = true;
+    message = null;
+    _debounce?.cancel();
+    _debounce = null;
+    _dirty.clear();
+    notifyListeners();
+    try {
+      final snap = await _slots.get();
+      for (final d in snap.docs) {
+        await d.reference.delete();
+      }
+      try {
+        await u.delete();
+      } on FirebaseAuthException catch (e) {
+        if (e.code != 'requires-recent-login') rethrow;
+        // Old sign-in: confirm it, then try again.
+        if (u.providerData.any((p) => p.providerId == 'apple.com')) {
+          await u.reauthenticateWithProvider(AppleAuthProvider());
+        } else {
+          final g = GoogleSignIn.instance;
+          if (!_googleReady) {
+            await g.initialize();
+            _googleReady = true;
+          }
+          final account = await g.authenticate();
+          await u.reauthenticateWithCredential(
+              GoogleAuthProvider.credential(idToken: account.authentication.idToken));
+        }
+        await u.delete();
+      }
+      if (_googleReady) await GoogleSignIn.instance.signOut();
+      user = null;
+      cloudSlots.clear();
+      conflicts.clear();
+      lastSync = null;
+      message = 'Đã xóa tài khoản và dữ liệu trên mây.';
+      busy = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('delete account failed: $e');
+      message = 'Chưa xóa được tài khoản, thử lại sau.';
+      busy = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> deleteSlot(int slot) async {
     _dirty.remove(slot);
     cloudSlots.remove(slot);

@@ -138,6 +138,13 @@ class _CloudPanel extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: cloud.busy ? null : () => _confirmDelete(context),
+                    icon: const Icon(Icons.delete_forever, color: Color(0xFFFF7A6A), size: 18),
+                    label: const Text('Xóa tài khoản và dữ liệu trên mây',
+                        style: TextStyle(color: Color(0xFFFF7A6A), fontSize: 13)),
+                  ),
                 ],
                 if (cloud.busy) ...[
                   const SizedBox(height: 10),
@@ -156,6 +163,29 @@ class _CloudPanel extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Xóa tài khoản?', style: titleStyle(20)),
+        content: Text(
+          'Mọi bản lưu trên mây và tài khoản đăng nhập của game sẽ bị xóa vĩnh viễn. '
+          'Nhân vật đang có trong máy này vẫn còn, nhưng nếu gỡ game sẽ mất hẳn.',
+          style: body,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Xóa vĩnh viễn', style: TextStyle(color: Color(0xFFFF7A6A))),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await CloudSave.instance.deleteAccount();
   }
 
   String _clock(DateTime t) =>

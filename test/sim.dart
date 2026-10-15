@@ -79,11 +79,18 @@ SimReport simulate(Hanh hanh, {int minutes = 120, int seed = 1}) {
         w.update(dt);
         clock += dt;
         mark();
+        var fell = false;
         for (final e in w.events) {
           if (e.kind == EvKind.cleared) result = 'clear ${e.value.toInt()}*';
           if (e.kind == EvKind.failed) result = 'fail ${e.text}';
+          if (e.kind == EvKind.heroDied) fell = true;
         }
         w.events.clear();
+        // The bot never watches ads: a fall ends the run.
+        if (fell) {
+          w.giveUp();
+          result = 'fail Trọng thương!';
+        }
       }
       if (result.startsWith('clear')) rep.dungeonsCleared++;
       rep.log.add('${(clock / 60).toStringAsFixed(1)}m lv${h.level} '

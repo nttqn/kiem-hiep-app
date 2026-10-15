@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/hero.dart';
 import '../core/items.dart';
+import '../services/ads.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -37,6 +38,36 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   int _price(Item it) => it.sellPrice * 5;
+
+  /// Last time free potions were taken this session.
+  static DateTime? _lastFree;
+  static const _freeGap = Duration(minutes: 10);
+
+  Widget _freePots() {
+    final wait = _lastFree == null ? Duration.zero : _freeGap - DateTime.now().difference(_lastFree!);
+    if (wait > Duration.zero) {
+      return Text('Thuốc miễn phí: quay lại sau ${wait.inMinutes + 1} phút', style: small);
+    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: AdsService.instance.rewardedReady,
+      builder: (_, ready, _) => LButton(
+        label: ready ? 'Xem quảng cáo: +5 mỗi loại thuốc' : 'Quảng cáo đang tải…',
+        icon: Icons.ondemand_video,
+        small: true,
+        color: const Color(0xFF8A5A10),
+        enabled: ready,
+        onTap: () async {
+          final earned = await AdsService.instance.showRewarded();
+          if (!earned || !mounted) return;
+          h.hpPots += 5;
+          h.mpPots += 5;
+          _lastFree = DateTime.now();
+          SaveService.instance.save();
+          setState(() {});
+        },
+      ),
+    );
+  }
 
   void _buyPots(bool hp, int n) {
     final price = potionPrice(h.level);
@@ -73,6 +104,8 @@ class _ShopScreenState extends State<ShopScreen> {
                   _potRow('Kim Sang Dược', 'Hồi sinh lực', const Color(0xFFE84B4A), h.hpPots, true),
                   const SizedBox(height: 10),
                   _potRow('Ngưng Thần Đan', 'Hồi nội lực', const Color(0xFF4A7AE8), h.mpPots, false),
+                  const SizedBox(height: 12),
+                  _freePots(),
                   const Spacer(),
                   Text('Mẹo: bật Tự động trong trận, nhân vật sẽ tự uống thuốc khi máu dưới 42%.',
                       style: small),

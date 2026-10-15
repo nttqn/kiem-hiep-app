@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiếm Hiệp Ngũ Hành</title>
+<meta name="description" content="Game nhập vai kiếm hiệp offline: 5 môn phái theo ngũ hành, luyện công, vượt ải, làm nhiệm vụ.">
+<link rel="icon" href="img/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root { --lacquer: #2a1c17; --deep: #170f0c; --gold: #d9a93b; --gold-light: #f3d27a; --cream: #f3e6c8; --seal: #a3271f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--deep); color: var(--cream); font-family: 'Be Vietnam Pro', system-ui, sans-serif; line-height: 1.6; }
+  header { background: linear-gradient(#2a1a2e, #7a3a3a 70%, #d8945a); text-align: center; padding: 48px 16px 0; }
+  header img.icon { width: 112px; height: 112px; border-radius: 24px; border: 3px solid var(--gold-light); box-shadow: 0 8px 24px #0008; }
+  h1 { font-family: 'Playfair Display', serif; color: var(--gold-light); font-size: clamp(32px, 7vw, 56px); margin: 16px 0 4px; text-shadow: 2px 3px 0 #0009; }
+  .tag { font-size: 18px; margin: 0 0 24px; }
+  .stores { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding-bottom: 28px; }
+  .stores span { background: #0006; border: 1.5px solid var(--gold); border-radius: 10px; padding: 10px 18px; font-weight: 800; color: var(--gold-light); }
+  header img.banner { width: min(1024px, 100%); display: block; margin: 0 auto; border-top: 3px solid var(--gold); }
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
+  h2 { font-family: 'Playfair Display', serif; color: var(--gold-light); font-size: 30px; margin: 40px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: linear-gradient(#3d2a22, var(--lacquer)); border: 1.5px solid #d9a93bcc; border-radius: 12px; padding: 16px 18px; }
+  .card b { color: var(--gold-light); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .shots img { width: 100%; border-radius: 10px; border: 1.5px solid var(--gold); }
+  .sects span { display: inline-block; margin: 4px 6px 4px 0; padding: 4px 12px; border-radius: 16px; font-weight: 700; color: #fff; }
+  footer { text-align: center; padding: 24px 16px 40px; color: #b8a888; font-size: 14px; }
+  footer a { color: var(--gold-light); }
+</style>
+</head>
+<body>
+<header>
+  <img class="icon" src="img/icon.png" alt="Biểu tượng Kiếm Hiệp Ngũ Hành">
+  <h1>Kiếm Hiệp Ngũ Hành</h1>
+  <p class="tag">Ngũ phái tranh hùng · Ngũ hành tương khắc · Chơi offline</p>
+  <div class="stores"><span>Google Play · sắp ra mắt</span><span>App Store · sắp ra mắt</span></div>
+  <img class="banner" src="img/banner.png" alt="Năm môn phái đứng trước vầng trăng">
+</header>
+<main>
+  <h2>Năm môn phái, năm hệ ngũ hành</h2>
+  <p class="sects">
+    <span style="background:#b8962e">Kim Cang Tự · Kim</span>
+    <span style="background:#3c8f40">Bách Độc Môn · Mộc</span>
+    <span style="background:#2f86b8">Bích Thủy Am · Thủy</span>
+    <span style="background:#c0402e">Liệt Hỏa Bang · Hỏa</span>
+    <span style="background:#8f6634">Huyền Thổ Quán · Thổ</span>
+  </p>
+  <p>Côn pháp cương mãnh, ám khí độc dược, băng pháp hồi phục, đao lửa bùng nổ hay kiếm khí
+  khống chế: mỗi phái có lối đánh riêng với 4 chiêu thức và 2 nội công. Kim khắc Mộc, Mộc khắc
+  Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim: chọn đúng đối thủ để gây thêm 25% sát thương.</p>
+
+  <div class="grid">
+    <div class="card"><b>Luyện công</b><br>7 bản đồ từ đồng cỏ Lạc An tới Ma Giáo Tổng Đàn, gần 30 loại quái và đầu lĩnh.</div>
+    <div class="card"><b>Vượt ải</b><br>14 ải nhiều đợt quái, chấm sao theo thời gian, đầu lĩnh có chiêu đánh lan phải né.</div>
+    <div class="card"><b>Nhiệm vụ</b><br>43 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo, cùng nhiệm vụ hằng ngày.</div>
+    <div class="card"><b>Build nhân vật</b><br>Cộng điểm tiềm năng, nâng kỹ năng, nhặt trang bị 5 độ hiếm và cường hóa tới +10.</div>
+    <div class="card"><b>Tự động đánh</b><br>Bật tự động: nhân vật tự tìm quái nhiệm vụ, ra chiêu và uống thuốc.</div>
+    <div class="card"><b>Lưu trữ đám mây</b><br>Đăng nhập để giữ nhân vật khi cài lại hay đổi máy, cả Android lẫn iPhone.</div>
+  </div>
+
+  <h2>Hình ảnh</h2>
+  <div class="shots">
+    <img src="img/01-chien-dau.png" alt="Liệt Hỏa Bang chiến đấu ở Hoàng Sa Mạc">
+    <img src="img/02-hang-dong.png" alt="Bích Thủy Am trong Hắc Phong Động">
+    <img src="img/04-nui-lua.png" alt="Kim Cang Tự giữa Hỏa Diệm Sơn">
+    <img src="img/05-chon-phai.png" alt="Màn chọn môn phái">
+  </div>
+</main>
+<footer>
+  <a href="privacy.html">Chính sách bảo mật</a> · <a href="support.html">Hỗ trợ</a> ·
+  <a href="mailto:trungsmail@gmail.com">trungsmail@gmail.com</a>
+</footer>
+</body>
+</html>

@@ -34,6 +34,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // AdMob App ID. Not secret (it ships in every APK). Google's sample
+        // ID until the game's own AdMob app exists.
+        manifestPlaceholders["admobAppId"] =
+            System.getenv("ADMOB_APP_ID")?.takeIf { it.isNotBlank() }
+                ?: "ca-app-pub-3940256099942544~3347511713"
     }
 
     signingConfigs {

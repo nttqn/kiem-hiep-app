@@ -26,6 +26,11 @@ Future<void> main() async {
   final level = int.tryParse(q['level'] ?? '') ?? 1;
   final female = q['female'] == '1';
   await SaveService.instance.load();
+  var map = maps.first;
+  for (final m in maps) {
+    if (m.minLv <= level) map = m;
+  }
+  if (q['map'] != null) map = mapById[q['map']] ?? map;
   if (screen != 'title' && screen != 'create') {
     final h = HeroData(name: q['name'] ?? 'Tiểu Hiệp', hanh: Hanh.values[sect], female: female);
     final rng = math.Random(level * 7 + sect);
@@ -57,17 +62,14 @@ Future<void> main() async {
       }
       h.gold = 1200 * level;
     }
-    h.mainQuest = int.tryParse(q['quest'] ?? '') ?? 0;
+    // By default, the main quest that hunts on the chosen map.
+    final onMap = mainQuests.indexWhere((x) => map.mobs.contains(x.target) || x.target == map.boss);
+    h.mainQuest = int.tryParse(q['quest'] ?? '') ?? (onMap < 0 ? 0 : onMap);
     h.refreshDaily(todayKey());
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
     SaveService.instance.autoFight = q['auto'] != '0';
   }
-  var map = maps.first;
-  for (final m in maps) {
-    if (m.minLv <= level) map = m;
-  }
-  if (q['map'] != null) map = mapById[q['map']] ?? map;
   final Widget home = switch (screen) {
     'title' => const TitleScreen(),
     'create' => const CreateScreen(slot: 0),
