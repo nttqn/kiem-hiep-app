@@ -64,7 +64,12 @@ Nhập vai, Hành động, Offline, Kiếm hiệp, Tự động đánh
 ## Hình ảnh
 - Biểu tượng 512×512: store/icon-512.png
 - Ảnh nổi bật 1024×500: store/feature-graphic.png
-- Ảnh chụp màn hình điện thoại 1920×1080: store/phone/*.png (8 ảnh)
+- Ảnh chụp màn hình (8 ảnh mỗi cỡ, ngang), tạo bằng tool/shots/store_shots.js:
+  - Google Play điện thoại 1920×1080: store/phone/
+  - Google Play máy tính bảng 7" 1920×1200: store/tablet-7in/
+  - Google Play máy tính bảng 10" 2560×1600: store/tablet-10in/
+  - App Store iPhone 6,9" 2868×1320: store/iphone-6.9in/
+  - App Store iPad 13" 2752×2064: store/ipad-13in/
 
 ---
 
