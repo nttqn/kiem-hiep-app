@@ -37,6 +37,19 @@ class CloudSave extends ChangeNotifier {
   final Set<int> _dirty = {};
   AppLifecycleListener? _lifecycle;
 
+  /// From ios/Runner/GoogleService-Info.plist (Firebase app for iOS).
+  static const _iosClientId =
+      '567144551092-ovrpcjdcms2ab9kncugbkp3semi0v73s.apps.googleusercontent.com';
+  static const _iosOptions = FirebaseOptions(
+    apiKey: 'AIzaSyDRySooHWft6bOtj5b3J4cO5hpgySWpd1U',
+    appId: '1:567144551092:ios:070c1348ea16a330a9bde1',
+    messagingSenderId: '567144551092',
+    projectId: 'kiem-hiep-4da54',
+    storageBucket: 'kiem-hiep-4da54.firebasestorage.app',
+    iosBundleId: 'com.trungsmail.kiemhiep',
+    iosClientId: _iosClientId,
+  );
+
   bool get isApplePlatform => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   Future<void> init() async {
@@ -44,7 +57,10 @@ class CloudSave extends ChangeNotifier {
     try {
       // Reads google-services.json / GoogleService-Info.plist; throws when
       // the game was built without them.
-      await Firebase.initializeApp().timeout(const Duration(seconds: 8));
+      // Android reads google-services.json through Gradle; on iOS the
+      // options are given here, so the plist need not be in the bundle.
+      await Firebase.initializeApp(options: isApplePlatform ? _iosOptions : null)
+          .timeout(const Duration(seconds: 8));
       available = true;
     } catch (e) {
       debugPrint('cloud save off: $e');
@@ -65,7 +81,7 @@ class CloudSave extends ChangeNotifier {
   Future<bool> signInGoogle() => _signIn(() async {
         final g = GoogleSignIn.instance;
         if (!_googleReady) {
-          await g.initialize();
+          await g.initialize(clientId: isApplePlatform ? _iosClientId : null);
           _googleReady = true;
         }
         final account = await g.authenticate();
@@ -278,7 +294,7 @@ class CloudSave extends ChangeNotifier {
         } else {
           final g = GoogleSignIn.instance;
           if (!_googleReady) {
-            await g.initialize();
+            await g.initialize(clientId: isApplePlatform ? _iosClientId : null);
             _googleReady = true;
           }
           final account = await g.authenticate();
