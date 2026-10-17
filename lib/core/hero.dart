@@ -644,6 +644,9 @@ class HeroData {
 
   /// Rolls today's three daily quests if the date changed.
   void refreshDaily(String today) {
+    // Also settles a level quest already met, e.g. after an update re-ordered
+    // the story.
+    _checkLevelQuests();
     if (dailyDate == today && daily.isNotEmpty) return;
     dailyDate = today;
     final rng = math.Random(today.hashCode ^ hanh.index ^ name.hashCode);

@@ -177,6 +177,7 @@ class _TownScreenState extends State<TownScreen> {
                 female: h.female,
                 scale: 2,
                 glow: glowItem != null && glowItem.rarity.index >= 2 ? glowItem.rarity.color : 0,
+                rebirths: h.rebirths,
               ),
             ),
           ),

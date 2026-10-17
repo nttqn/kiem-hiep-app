@@ -6,6 +6,67 @@ import '../core/items.dart';
 import '../core/world.dart';
 import 'art_figures.dart';
 
+/// Colour of the rebirth aura after [n] rebirths: jade, sky, violet,
+/// crimson, then gold.
+int rebirthColor(int n) => const [
+      0xFF5AE0A0,
+      0xFF5AC8FF,
+      0xFFB06AFF,
+      0xFFFF5A6A,
+      0xFFFFD34A,
+    ][(n - 1).clamp(0, 4)];
+
+/// The aura under a reborn hero, drawn at the feet before the figure: a
+/// pillar of soft light, a turning ring of runes and rising motes. It grows
+/// with each rebirth.
+void drawRebirthAura(Canvas c, int n, double t) {
+  if (n <= 0) return;
+  final colr = Color(rebirthColor(n));
+  final k = 0.85 + n * 0.06;
+  // Light pillar behind the body.
+  c.drawOval(
+      Rect.fromCenter(center: const Offset(0, -34), width: 46 * k, height: 84),
+      Paint()
+        ..color = colr.withValues(alpha: 0.16 + 0.05 * math.sin(t * 2))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14));
+  // Ground glow and ring.
+  c.drawOval(Rect.fromCenter(center: Offset.zero, width: 62 * k, height: 22 * k),
+      Paint()
+        ..color = colr.withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+  final ring = Paint()
+    ..color = colr.withValues(alpha: 0.85)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.4;
+  c.drawOval(Rect.fromCenter(center: Offset.zero, width: 56 * k, height: 19 * k), ring);
+  // Runes turning on the ring; a second, counter-turning ring from the
+  // third rebirth on.
+  for (var r = 0; r < (n >= 3 ? 2 : 1); r++) {
+    final dir = r == 0 ? 1.0 : -1.0;
+    final rw = (r == 0 ? 28 : 20) * k, rh = (r == 0 ? 9.5 : 6.8) * k;
+    final count = 6 + n;
+    for (var i = 0; i < count; i++) {
+      final a = dir * t * 0.8 + i * math.pi * 2 / count;
+      final p = Offset(math.cos(a) * rw, math.sin(a) * rh);
+      final s = 1.6 + (math.sin(a) + 1) * 0.6;
+      final d = Path()
+        ..moveTo(p.dx, p.dy - s * 1.6)
+        ..lineTo(p.dx + s, p.dy)
+        ..lineTo(p.dx, p.dy + s * 1.6)
+        ..lineTo(p.dx - s, p.dy)
+        ..close();
+      c.drawPath(d, Paint()..color = colr.withValues(alpha: 0.6 + 0.4 * (math.sin(a) + 1) / 2));
+    }
+  }
+  // Motes drifting up.
+  for (var i = 0; i < 4 + n * 2; i++) {
+    final ph = (t * 0.45 + i * 0.37) % 1;
+    final x = math.sin(i * 2.3 + t * 0.7) * 20 * k;
+    c.drawCircle(Offset(x, -ph * 70), 1.6 * (1 - ph) + 0.6,
+        Paint()..color = colr.withValues(alpha: 0.8 * (1 - ph)));
+  }
+}
+
 const _gold = 0xFFFFD34A;
 const _fire = 0xFFFF7A2A;
 const _ice = 0xFF9FE3FF;

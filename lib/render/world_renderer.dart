@@ -241,6 +241,7 @@ class WorldRenderer {
         : 0;
     c.save();
     c.translate(p.x, p.y);
+    drawRebirthAura(c, h.rebirths, t);
     drawShadow(c, 16);
     // Hero halo so they stand out in a crowd.
     c.drawOval(Rect.fromCenter(center: Offset.zero, width: 44, height: 16),

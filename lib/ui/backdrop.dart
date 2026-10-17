@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import '../core/hanh.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
+import '../render/art_fx.dart';
 
 /// Ink-wash mountains at dusk, with drifting mist. [town] adds a city gate.
 class Backdrop extends StatefulWidget {
@@ -182,11 +183,13 @@ class _BackdropPainter extends CustomPainter {
 
 /// An animated standing hero: idles, and strikes every few seconds.
 class FigurePreview extends StatefulWidget {
-  const FigurePreview({super.key, required this.hanh, this.female = false, this.scale = 2.4, this.glow = 0});
+  const FigurePreview(
+      {super.key, required this.hanh, this.female = false, this.scale = 2.4, this.glow = 0, this.rebirths = 0});
   final Hanh hanh;
   final bool female;
   final double scale;
   final int glow;
+  final int rebirths;
 
   @override
   State<FigurePreview> createState() => _FigurePreviewState();
@@ -212,18 +215,19 @@ class _FigurePreviewState extends State<FigurePreview> with SingleTickerProvider
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size(76 * widget.scale, 92 * widget.scale),
-      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.glow),
+      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.glow, widget.rebirths),
     );
   }
 }
 
 class _FigurePainter extends CustomPainter {
-  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.glow) : super(repaint: t);
+  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.glow, this.rebirths) : super(repaint: t);
   final ValueNotifier<double> t;
   final Hanh hanh;
   final bool female;
   final double scale;
   final int glow;
+  final int rebirths;
 
   @override
   void paint(Canvas c, Size s) {
@@ -235,6 +239,7 @@ class _FigurePainter extends CustomPainter {
     c.scale(scale);
     c.drawOval(Rect.fromCenter(center: Offset.zero, width: 44, height: 14),
         Paint()..color = Color(hanh.color).withValues(alpha: 0.35));
+    drawRebirthAura(c, rebirths, time);
     drawShadow(c, 16);
     setClock(time);
     drawChibi(c, heroLook(hanh, female: female, glow: glow),
@@ -244,5 +249,5 @@ class _FigurePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FigurePainter old) =>
-      old.hanh != hanh || old.female != female || old.glow != glow;
+      old.hanh != hanh || old.female != female || old.glow != glow || old.rebirths != rebirths;
 }
