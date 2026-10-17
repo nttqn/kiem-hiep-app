@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "567144551092-qcsp7159cm0db1bn0ugjj421k8kue6dp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.trungsmail.kiemhiep",
+            "certificate_hash": "821d8660c0f83e6185617e4aa83f0988d3647a68"
+          }
+        },
+        {
           "client_id": "567144551092-m5850s33atgjjmffl6cjtgggoel2p6om.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -37,6 +45,13 @@
             {
               "client_id": "567144551092-m5850s33atgjjmffl6cjtgggoel2p6om.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "567144551092-ovrpcjdcms2ab9kncugbkp3semi0v73s.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.trungsmail.kiemhiep"
+              }
             }
           ]
         }
