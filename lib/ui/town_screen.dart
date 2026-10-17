@@ -9,6 +9,7 @@ import '../services/sound.dart';
 import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
+import 'pet_screen.dart';
 import 'rewards_ui.dart';
 import 'cloud_panel.dart';
 import 'lists.dart';
@@ -249,12 +250,11 @@ class _TownScreenState extends State<TownScreen> {
           badge: h.daily.where((d) => !d.done).length),
       _Tile('Nhân vật', Icons.person, () => _go(const CharacterScreen(tab: 0)),
           badge: pending ? h.freePoints + h.skillPoints : 0),
-      _Tile('Kỹ năng', Icons.auto_fix_high, () => _go(const CharacterScreen(tab: 1)),
-          badge: h.skillPoints),
+      _Tile('Linh thú', Icons.pets, () => _go(const PetScreen())),
       _Tile('Hành trang', Icons.backpack, () => _go(const CharacterScreen(tab: 2)),
           badge: 0),
       _Tile('Tiệm thuốc', Icons.storefront, () => _go(const ShopScreen())),
-      _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 2, forge: true))),
+      _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
       _Tile('Thành tựu', Icons.emoji_events, () => _go(const AchievementsScreen()),
           badge: claimableCount(h)),
       _Tile('Quà đăng nhập', Icons.card_giftcard, () async {

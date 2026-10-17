@@ -121,12 +121,16 @@ class WorldRenderer {
       if (pad.contains(Offset(m.x, m.y))) items.add(_Drawable(m.y, mob: m));
     }
     if (p.alive || p.hurt > 0) items.add(_Drawable(p.y, hero: true));
+    final pt = w.pet;
+    if (pt != null) items.add(_Drawable(pt.y, pet: true));
     items.sort((a, b) => a.y.compareTo(b.y));
     for (final it in items) {
       if (it.prop != null) {
         _drawProp(c, it.prop!, p, t);
       } else if (it.mob != null) {
         _drawMob(c, it.mob!, t);
+      } else if (it.pet) {
+        _drawPet(c, pt!, t);
       } else {
         _drawHero(c, w, t);
       }
@@ -257,6 +261,21 @@ class WorldRenderer {
     c.restore();
   }
 
+  void _drawPet(Canvas c, PetActor pt, double t) {
+    c.save();
+    c.translate(pt.x, pt.y);
+    drawShadow(c, 11);
+    // A soft ring in the pet's phase colour marks it as the hero's.
+    c.drawOval(Rect.fromCenter(center: Offset.zero, width: 30, height: 10),
+        Paint()
+          ..color = Color(pt.def.hanh.color).withValues(alpha: 0.4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5);
+    c.scale(pt.face * 0.7, 0.7);
+    drawPetChibi(c, pt.def.look, walk: pt.walk, moving: pt.moving, attack: pt.attackAnim, t: t);
+    c.restore();
+  }
+
   void _mobBar(Canvas c, Mob m, bool targeted) {
     final d = m.def;
     final wdt = d.boss ? 70.0 : 40.0;
@@ -277,9 +296,10 @@ class WorldRenderer {
 }
 
 class _Drawable {
-  _Drawable(this.y, {this.prop, this.mob, this.hero = false});
+  _Drawable(this.y, {this.prop, this.mob, this.hero = false, this.pet = false});
   final double y;
   final Prop? prop;
   final Mob? mob;
   final bool hero;
+  final bool pet;
 }

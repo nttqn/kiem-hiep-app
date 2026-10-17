@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'gems.dart';
 import 'sects.dart';
 
 enum Slot { weapon, hat, armor, belt, boots, amulet, ring }
@@ -74,7 +75,9 @@ class Item {
     required this.bonus,
     required this.name,
     this.plus = 0,
-  });
+    List<Gem?>? gems,
+  }) : gems = List<Gem?>.generate(
+            socketsFor(rarity), (i) => gems != null && i < gems.length ? gems[i] : null);
 
   final Slot slot;
   final int level;
@@ -85,6 +88,9 @@ class Item {
 
   /// Cường hóa level, 0..[maxPlus].
   int plus;
+
+  /// Socketed ngũ hành gems; length is the item's socket count.
+  final List<Gem?> gems;
 
   String get title => plus > 0 ? '$name +$plus' : name;
 
@@ -113,6 +119,7 @@ class Item {
         'r': rarity.index,
         'p': plus,
         'n': name,
+        if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
         'b': {for (final e in base.entries) '${e.key.index}': e.value},
         'x': {for (final e in bonus.entries) '${e.key.index}': e.value},
       };
@@ -137,6 +144,7 @@ class Item {
       rarity:
           Rarity.values[(m['r'] as int).clamp(0, Rarity.values.length - 1)],
       plus: (m['p'] as int? ?? 0).clamp(0, maxPlus),
+      gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       base: stats(m['b']),
       bonus: stats(m['x']),

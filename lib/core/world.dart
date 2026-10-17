@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'gems.dart';
 import 'hanh.dart';
 import 'hero.dart';
 import 'items.dart';
+import 'pets.dart';
 import 'scenery.dart';
 import 'sects.dart';
 
@@ -41,6 +43,18 @@ abstract class Actor {
 }
 
 enum MobState { idle, wander, chase, leash }
+
+/// The hero's spirit beast following them around.
+class PetActor {
+  PetActor(this.def, this.x, this.y);
+  final PetDef def;
+  double x, y;
+  double face = 1;
+  double walk = 0;
+  bool moving = false;
+  double cd = 1;
+  double attackAnim = 0;
+}
 
 class Mob extends Actor {
   Mob(this.uid, this.def, this.level, double x, double y)
@@ -85,9 +99,13 @@ class Proj {
     this.statusTime = 0,
     this.skill = false,
     this.knock = 0,
+    this.hanh,
   });
 
   final bool fromHero;
+
+  /// Phase used for khắc bonuses; null means the hero's (pets use their own).
+  final Hanh? hanh;
   double x, y;
   final double vx, vy;
   final double maxDist;
@@ -173,10 +191,11 @@ class FloatText {
 }
 
 class Drop {
-  Drop(this.x, this.y, {this.item, this.gold = 0, this.potion = 0});
+  Drop(this.x, this.y, {this.item, this.gold = 0, this.potion = 0, this.gem});
   double x, y;
   final Item? item;
   final int gold;
+  final Gem? gem;
 
   /// 1 HP potion, 2 MP potion.
   final int potion;
@@ -302,6 +321,69 @@ class World {
     player.maxHp = st.maxHp;
     player.hp = st.maxHp;
     player.mp = st.maxMp;
+    _spawnPet();
+  }
+
+  // ------------------------------------------------------------ pet
+
+  /// The companion out with the hero, if any.
+  PetActor? pet;
+
+  void _spawnPet() {
+    final def = petById[hero.activePet];
+    pet = def == null ? null : PetActor(def, player.x - 40, player.y + 10);
+  }
+
+  void _updatePet(double dt) {
+    final pt = pet;
+    if (pt == null) return;
+    final p = player;
+    if (pt.attackAnim > 0) pt.attackAnim = math.max(0, pt.attackAnim - dt * 3);
+    // Trail a little behind the hero; jump to them if left far behind.
+    final tx = p.x - 42 * p.face, ty = p.y + 14;
+    final d = _dist(pt.x, pt.y, tx, ty);
+    if (d > 420) {
+      pt.x = tx;
+      pt.y = ty;
+    } else if (d > 8) {
+      final sp = math.min(d, (st.move * 1.15 + d) * dt);
+      pt.x += (tx - pt.x) / d * sp;
+      pt.y += (ty - pt.y) / d * sp;
+      if ((tx - pt.x).abs() > 2) pt.face = (tx - pt.x).sign;
+      pt.walk += sp / 20;
+      pt.moving = true;
+    } else {
+      pt.moving = false;
+    }
+    pt.cd -= dt;
+    if (pt.cd > 0 || !p.alive) return;
+    Mob? best;
+    var bd = petRange * petRange;
+    for (final m in mobs) {
+      if (!m.alive) continue;
+      final dd = _d2(m.x, m.y, pt.x, pt.y);
+      if (dd < bd) {
+        bd = dd;
+        best = m;
+      }
+    }
+    if (best == null) return;
+    pt.cd = petAttackInterval;
+    pt.attackAnim = 1;
+    pt.face = (best.x - pt.x).sign == 0 ? pt.face : (best.x - pt.x).sign;
+    final a = math.atan2(best.y - pt.y, best.x - pt.x);
+    projs.add(Proj(
+      fromHero: true,
+      x: pt.x,
+      y: pt.y - 22,
+      vx: math.cos(a) * 480,
+      vy: math.sin(a) * 480,
+      maxDist: petRange + 60,
+      radius: 11,
+      fx: 'pet_${pt.def.hanh.name}',
+      power: petPower(hero.petLevels[pt.def.id] ?? 1),
+      hanh: pt.def.hanh,
+    ));
   }
 
   // ------------------------------------------------------------ setup
@@ -418,6 +500,7 @@ class World {
     _updateProjs(dt);
     _updateZones(dt);
     _updateDrops(dt);
+    _updatePet(dt);
     _tickDots(player, dt, null);
     for (final f in fx) {
       f.t += dt;
@@ -1060,10 +1143,11 @@ class World {
       Status status = Status.none,
       double statusPower = 0,
       double statusTime = 0,
-      double knock = 0}) {
+      double knock = 0,
+      Hanh? as}) {
     if (!m.alive) return;
     var dmg = st.atk * mult * (skill ? 1 + st.skillDmg : 1);
-    dmg *= hanhFactor(hero.hanh, m.def.hanh);
+    dmg *= hanhFactor(as ?? hero.hanh, m.def.hanh);
     final crit = rng.nextDouble() < st.crit;
     if (crit) dmg *= st.critDmg;
     dmg *= 1 - mitigation(m.defense, hero.level);
@@ -1129,6 +1213,14 @@ class World {
     _text(m.x, m.y - 70, '+${xp.round()} EXP', 0xFFB8E0FF, small: true);
     hero.onKill(m.def, rng);
     hero.gainExp(xp);
+    if (m.def.boss) {
+      final tamed = hero.rollPet(m.def.id, rng);
+      if (tamed != null) {
+        events.add(GameEvent(EvKind.notice,
+            text: 'Thu phục linh thú: ${tamed.name}!', color: 0xFFFFD34A, big: true));
+        if (pet == null) _spawnPet();
+      }
+    }
     if (mode == WorldMode.field) {
       if (m == boss) {
         bossRespawnAt = time + 150;
@@ -1163,6 +1255,11 @@ class World {
     }
     if (rng.nextDouble() < 0.04) {
       drops.add(Drop(m.x + jx(), m.y + jx(), potion: rng.nextBool() ? 1 : 2));
+    }
+    // Gems take the monster's phase; bosses always drop one, a tier up.
+    if (m.def.boss || rng.nextDouble() < gemDropChance) {
+      drops.add(Drop(m.x + jx(), m.y + jx(),
+          gem: Gem(m.def.hanh, dropTier(m.level, boss: m.def.boss))));
     }
   }
 
@@ -1432,7 +1529,8 @@ class World {
                 status: pr.status,
                 statusPower: pr.statusPower,
                 statusTime: pr.statusTime,
-                knock: pr.knock);
+                knock: pr.knock,
+                as: pr.hanh);
             fx.add(Fx('spark_${pr.fx}', pr.x, pr.y, life: 0.25));
             if (!pr.pierce) {
               pr.dead = true;
@@ -1534,6 +1632,13 @@ class World {
     if (d.potion == 2) {
       hero.mpPots++;
       _text(player.x, player.y - 80, '+1 Ngưng Thần Đan', 0xFF8AB8FF);
+    }
+    final gem = d.gem;
+    if (gem != null) {
+      hero.addGem(gem);
+      events.add(GameEvent(EvKind.loot,
+          text: 'Nhặt được ${gem.name}', color: gem.hanh.color));
+      _sfx('loot');
     }
     final it = d.item;
     if (it != null) {

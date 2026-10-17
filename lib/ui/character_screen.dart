@@ -2,11 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/gems.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
 import '../core/sects.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
+import 'gem_tab.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -30,11 +32,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang'];
+    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc'];
     return SubScreen(
-      title: widget.forge && _tab == 2 ? 'Thợ rèn' : 'Nhân vật',
+      title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
       actions: [
-        for (var i = 0; i < 3; i++)
+        for (final i in widget.forge ? const [2, 3] : const [0, 1, 2, 3])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: _TabChip(
@@ -48,7 +50,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
       child: switch (_tab) {
         0 => _attrs(),
         1 => _skills(),
-        _ => _bag(),
+        2 => _bag(),
+        _ => GemTab(onChanged: () => setState(() {}), openItem: _itemDialog),
       },
     );
   }
@@ -594,6 +597,22 @@ class _ItemDialogState extends State<_ItemDialog> {
         for (final e in it.bonus.entries)
           Text('${e.key.label} ${e.key.format(e.value)}',
               style: body.copyWith(fontSize: 13, color: const Color(0xFF8AC8FF))),
+        if (it.gems.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          for (final g in it.gems)
+            Row(
+              children: [
+                GemIcon(gem: g, size: 18),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    g == null ? 'Lỗ khảm trống' : '${g.name}: ${gemEffectText(g, banMenh: g.hanh == h.hanh)}',
+                    style: small.copyWith(fontSize: 11.5, color: g == null ? creamDim : hanhColor(g.hanh)),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ],
     );
   }
@@ -611,7 +630,7 @@ class _TabChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
         decoration: BoxDecoration(
           color: on ? seal : lacquer,
           borderRadius: BorderRadius.circular(16),

@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
+import 'pets.dart';
 import 'sects.dart';
 
 const int maxLevel = 80;
@@ -146,6 +148,13 @@ class HeroData {
   final Set<String> achClaimed = {};
   String title = '';
 
+  // Gems in the bag by Gem.key, pets owned with their level, the pet out,
+  // and kills per boss (for the pet drop pity).
+  final Map<String, int> gemBag = {};
+  final Map<String, int> petLevels = {};
+  String activePet = '';
+  final Map<String, int> bossKillsById = {};
+
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
 
@@ -173,13 +182,120 @@ class HeroData {
     return out;
   }
 
+  /// Distinct phases among gems socketed in worn gear.
+  int get gemPhases => {
+        for (final it in equip.values)
+          for (final g in it.gems)
+            if (g != null) g.hanh,
+      }.length;
+
+  /// Passives plus socketed gems, the gem set bonus and the pet's bonus.
+  Map<Bonus, double> allBonuses() {
+    final out = passiveBonuses();
+    void add(Map<Bonus, double> m, [double mul = 1]) =>
+        m.forEach((k, v) => out[k] = (out[k] ?? 0) + v * mul);
+    for (final it in equip.values) {
+      for (final g in it.gems) {
+        if (g != null) add(gemEffect(g), g.hanh == hanh ? banMenhBonus : 1);
+      }
+    }
+    add(setBonus(gemPhases));
+    final pet = petById[activePet];
+    if (pet != null) add({pet.bonus: pet.bonusAt(petLevels[pet.id] ?? 1)});
+    return out;
+  }
+
+  // ------------------------------------------------------------- gems
+
+  int gemCount(Gem g) => gemBag[g.key] ?? 0;
+
+  void addGem(Gem g, [int n = 1]) => gemBag[g.key] = gemCount(g) + n;
+
+  bool _takeGem(Gem g, [int n = 1]) {
+    final c = gemCount(g);
+    if (c < n) return false;
+    if (c == n) {
+      gemBag.remove(g.key);
+    } else {
+      gemBag[g.key] = c - n;
+    }
+    return true;
+  }
+
+  /// Puts a gem from the bag into socket [i] of [it] (returning any gem
+  /// already there).
+  bool socketGem(Item it, int i, Gem g) {
+    if (i < 0 || i >= it.gems.length || !_takeGem(g)) return false;
+    final old = it.gems[i];
+    if (old != null) addGem(old);
+    it.gems[i] = g;
+    recompute();
+    return true;
+  }
+
+  void unsocketGem(Item it, int i) {
+    final g = it.gems[i];
+    if (g == null) return;
+    addGem(g);
+    it.gems[i] = null;
+    recompute();
+  }
+
+  /// Three gems of a tier become one of the next tier, for gold.
+  bool fuseGem(Gem g) {
+    if (g.tier >= maxGemTier || gold < fuseCost(g.tier) || gemCount(g) < 3) return false;
+    gold -= fuseCost(g.tier);
+    _takeGem(g, 3);
+    addGem(Gem(g.hanh, g.tier + 1));
+    return true;
+  }
+
+  // ------------------------------------------------------------- pets
+
+  bool ownsPet(String id) => petLevels.containsKey(id);
+
+  bool buyPet(PetDef p) {
+    if (p.price <= 0 || ownsPet(p.id) || gold < p.price) return false;
+    gold -= p.price;
+    petLevels[p.id] = 1;
+    if (activePet.isEmpty) activePet = p.id;
+    recompute();
+    return true;
+  }
+
+  bool levelPet(PetDef p) {
+    final lv = petLevels[p.id];
+    if (lv == null || lv >= maxPetLevel || gold < petLevelCost(lv)) return false;
+    gold -= petLevelCost(lv);
+    petLevels[p.id] = lv + 1;
+    recompute();
+    return true;
+  }
+
+  void setActivePet(String id) {
+    activePet = activePet == id ? '' : id;
+    recompute();
+  }
+
+  /// Rolls the boss's pet drop after a kill; returns it when tamed.
+  PetDef? rollPet(String bossId, math.Random rng) {
+    final p = petFromBoss(bossId);
+    if (p == null || ownsPet(p.id)) return null;
+    final kills = bossKillsById[bossId] ?? 0;
+    if (kills < petPity && rng.nextDouble() >= petDropChance) return null;
+    petLevels[p.id] = 1;
+    if (activePet.isEmpty) activePet = p.id;
+    recompute();
+    return p;
+  }
+
   void recompute() {
     final gear = <Stat, double>{};
     for (final it in equip.values) {
       it.totals.forEach((k, v) => gear[k] = (gear[k] ?? 0) + v);
     }
     double g(Stat s) => gear[s] ?? 0;
-    final p = passiveBonuses();
+    final p = allBonuses();
     double b(Bonus k) => p[k] ?? 0;
     final a = [
       for (var i = 0; i < 4; i++)
@@ -349,8 +465,13 @@ class HeroData {
     recompute();
   }
 
+  /// Selling never loses gems: they go back to the gem bag.
   void sell(Item it) {
-    if (bag.remove(it)) gold += it.sellPrice;
+    if (!bag.remove(it)) return;
+    gold += it.sellPrice;
+    for (final g in it.gems) {
+      if (g != null) addGem(g);
+    }
   }
 
   /// Equips every bag item that scores higher than what is worn.
@@ -415,7 +536,10 @@ class HeroData {
 
   void onKill(MobDef m, math.Random rng) {
     kills++;
-    if (m.boss) bossKills++;
+    if (m.boss) {
+      bossKills++;
+      bossKillsById[m.id] = (bossKillsById[m.id] ?? 0) + 1;
+    }
     final q = currentMain;
     if (q != null && !mainLocked && q.target == m.id &&
         (q.type == QuestType.kill || q.type == QuestType.boss)) {
@@ -530,6 +654,10 @@ class HeroData {
         'legend': ownedLegend,
         'ach': achClaimed.toList(),
         'title': title,
+        'gemBag': gemBag,
+        'pets': petLevels,
+        'pet': activePet,
+        'bossKillsById': bossKillsById,
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -581,6 +709,17 @@ class HeroData {
     h.ownedLegend = m['legend'] as bool? ?? false;
     h.achClaimed.addAll([for (final a in m['ach'] as List? ?? const []) '$a']);
     h.title = m['title'] as String? ?? '';
+    (m['gemBag'] as Map? ?? const {}).forEach((k, v) {
+      if (Gem.parse(k) != null && v is int && v > 0) h.gemBag['$k'] = v;
+    });
+    (m['pets'] as Map? ?? const {}).forEach((k, v) {
+      if (petById.containsKey(k) && v is int) h.petLevels['$k'] = v.clamp(1, maxPetLevel);
+    });
+    final pet = m['pet'] as String? ?? '';
+    h.activePet = h.petLevels.containsKey(pet) ? pet : '';
+    (m['bossKillsById'] as Map? ?? const {}).forEach((k, v) {
+      if (v is int) h.bossKillsById['$k'] = v;
+    });
     h.recompute();
     return h;
   }

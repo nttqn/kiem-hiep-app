@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../core/content.dart';
+import '../core/hanh.dart';
 import 'art_figures.dart';
 
 /// Chibi-style figures: big heads, dark outlines, two-tone shading, wide
@@ -612,6 +613,19 @@ void drawQuadChibi(Canvas c, MobDef d,
             ..strokeWidth = 1.2);
     }
   }
+  if (v == 'tiger') {
+    // Stripes across the back.
+    for (var i = 0; i < 4; i++) {
+      final x = -11 + i * 6.0;
+      c.drawPath(
+          Path()
+            ..moveTo(x, by - 9)
+            ..quadraticBezierTo(x + 2.5, by - 3, x, by + 3),
+          _o
+            ..color = col(d.c3)
+            ..strokeWidth = 2.2);
+    }
+  }
   if (kylin) {
     for (var i = 0; i < 4; i++) {
       final s = Path()..addArc(Rect.fromCircle(center: Offset(-10 + i * 6.0, by - 1), radius: 3.2), 0, math.pi);
@@ -1194,4 +1208,143 @@ void drawBruteChibi(Canvas c, MobDef d,
   _limb(c, const Offset(10, -40), fist, fur, 9);
   final fr = Rect.fromCircle(center: fist, radius: 6.5);
   _shape(c, Path()..addOval(fr), _lit(golem ? d.c1 : d.c2, fr));
+}
+
+// ------------------------------------------------------------------ pets
+
+// Stand-in monster definitions so the four-legged pets reuse the beast art.
+const _petTiger = MobDef(
+    id: 'petTiger', name: 'Hắc Hổ', hanh: Hanh.moc, body: Body.quad,
+    c1: 0xFF2E2A2A, c2: 0xFFE8DCC8, c3: 0xFFE8A030, variant: 'tiger');
+const _petFox = MobDef(
+    id: 'petFox', name: 'Tuyết Hồ', hanh: Hanh.thuy, body: Body.quad,
+    c1: 0xFFF4F8FC, c2: 0xFFC8E4F4, variant: 'wolf');
+const _petKylin = MobDef(
+    id: 'petKylin', name: 'Kỳ Lân Con', hanh: Hanh.hoa, body: Body.quad,
+    c1: 0xFFD8402E, c2: 0xFFFFC34A, c3: 0xFF3AD0C0, variant: 'kylin');
+
+/// Draws a pet by its look at the local origin, facing right.
+void drawPetChibi(Canvas c, String look,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  switch (look) {
+    case 'tiger':
+      drawQuadChibi(c, _petTiger, walk: walk, moving: moving, attack: attack, t: t);
+    case 'fox':
+      drawQuadChibi(c, _petFox, walk: walk, moving: moving, attack: attack, t: t);
+    case 'kylin':
+      drawQuadChibi(c, _petKylin, walk: walk, moving: moving, attack: attack, t: t);
+    case 'crane':
+      _crane(c, walk, moving, attack, t);
+    case 'turtle':
+      _turtle(c, walk, moving, attack, t);
+  }
+}
+
+void _crane(Canvas c, double walk, bool moving, double attack, double t) {
+  final step = moving ? math.sin(walk * 2) * 3 : 0.0;
+  final flap = moving ? math.sin(t * 9) * 0.5 + 0.5 : 0.15 + math.sin(t * 2) * 0.05;
+  // Thin legs.
+  for (final s in const [-1.0, 1.0]) {
+    c.drawLine(Offset(-2 + s * 2, -16), Offset(-2 + s * 2 + s * step, 0), _outline(2.6));
+    c.drawLine(Offset(-2 + s * 2, -16), Offset(-2 + s * 2 + s * step, 0),
+        _o
+          ..color = col(0xFF3A3A3A)
+          ..strokeWidth = 1.2);
+  }
+  // Back wing, raised when flapping.
+  final wing = Path()
+    ..moveTo(-6, -24)
+    ..quadraticBezierTo(-20, -30 - flap * 14, -30, -22 - flap * 18)
+    ..quadraticBezierTo(-20, -18, -6, -18)
+    ..close();
+  _shape(c, wing, _flat(0xFFE8ECF0), ow: 1.6);
+  c.drawPath(
+      Path()
+        ..moveTo(-30, -22 - flap * 18)
+        ..quadraticBezierTo(-25, -21 - flap * 10, -20, -19),
+      _o
+        ..color = col(0xFF1A1A1A)
+        ..strokeWidth = 3);
+  // Body.
+  const body = Rect.fromLTRB(-14, -28, 8, -14);
+  _shape(c, Path()..addOval(body), _lit(0xFFFFFFFF, body, light: 0.0, dark: 0.12));
+  // Black tail feathers.
+  _shape(
+      c,
+      Path()
+        ..moveTo(-12, -24)
+        ..lineTo(-20, -18)
+        ..lineTo(-11, -17)
+        ..close(),
+      _flat(0xFF1A1A1A),
+      ow: 1.2);
+  // S-shaped neck up to the head; it lunges on attack.
+  final lunge = attack > 0 ? math.sin(attack * math.pi) * 6 : 0.0;
+  final neck = Path()
+    ..moveTo(4, -24)
+    ..quadraticBezierTo(14 + lunge, -30, 8 + lunge, -40)
+    ..quadraticBezierTo(4 + lunge, -48, 10 + lunge, -50);
+  c.drawPath(neck, _outline(5));
+  c.drawPath(
+      neck,
+      _o
+        ..color = col(0xFFFFFFFF)
+        ..strokeWidth = 3.2);
+  final hx = 11 + lunge, hy = -50.0;
+  c.drawCircle(Offset(hx, hy), 4.6, _outline(1.6));
+  c.drawCircle(Offset(hx, hy), 4.6, _flat(0xFFFFFFFF));
+  c.drawCircle(Offset(hx - 1, hy - 3.6), 2.4, _flat(0xFFD8302A)); // red crown
+  c.drawCircle(Offset(hx + 1.6, hy - 0.6), 1.1, _flat(_ink));
+  // Long beak.
+  _shape(
+      c,
+      Path()
+        ..moveTo(hx + 3.5, hy - 1.2)
+        ..lineTo(hx + 13, hy + 0.6)
+        ..lineTo(hx + 3.5, hy + 1.6)
+        ..close(),
+      _flat(0xFFC8A040),
+      ow: 1.1);
+}
+
+void _turtle(Canvas c, double walk, bool moving, double attack, double t) {
+  final step = moving ? math.sin(walk * 2.4) * 2.5 : 0.0;
+  // Stubby legs.
+  for (final lx in const [-9.0, 7.0]) {
+    final dx = lx < 0 ? step : -step;
+    final leg = Path()..addOval(Rect.fromCenter(center: Offset(lx + dx, -3), width: 7, height: 6));
+    _shape(c, leg, _flat(0xFF6A8A4A), ow: 1.4);
+  }
+  // Head pokes out further on attack.
+  final out = attack > 0 ? math.sin(attack * math.pi) * 5 : math.sin(t * 1.5) * 0.8;
+  final head = Path()..addOval(Rect.fromCenter(center: Offset(15 + out, -10), width: 11, height: 9));
+  _shape(c, head, _lit(0xFF7A9A5A, Rect.fromCenter(center: Offset(15 + out, -10), width: 11, height: 9)), ow: 1.6);
+  c.drawCircle(Offset(18 + out, -11.5), 1.2, _flat(_ink));
+  c.drawCircle(Offset(17.6 + out, -12), 0.45, _flat(0xFFFFFFFF));
+  // Domed shell with a hex pattern and a gold rim.
+  const shell = Rect.fromLTRB(-16, -22, 12, -3);
+  final dome = Path()
+    ..moveTo(-16, -5)
+    ..quadraticBezierTo(-16, -23, -2, -23)
+    ..quadraticBezierTo(12, -23, 12, -5)
+    ..close();
+  _shape(c, dome, _lit(0xFF3A5A3A, shell, light: 0.25, dark: 0.3));
+  final hexP = _o
+    ..color = col(0xFF8AB06A)
+    ..strokeWidth = 1.1;
+  for (final cx in const [-9.0, -2.0, 5.0]) {
+    final hex = Path();
+    for (var k = 0; k < 6; k++) {
+      final a = k * math.pi / 3;
+      final p = Offset(cx + math.cos(a) * 3.6, -13 + math.sin(a) * 3.2);
+      k == 0 ? hex.moveTo(p.dx, p.dy) : hex.lineTo(p.dx, p.dy);
+    }
+    hex.close();
+    c.drawPath(hex, hexP);
+  }
+  c.drawLine(const Offset(-16, -5), const Offset(12, -5), _outline(3.4));
+  c.drawLine(const Offset(-16, -5), const Offset(12, -5),
+      _o
+        ..color = col(0xFFE8C547)
+        ..strokeWidth = 2);
 }

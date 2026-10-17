@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'core/content.dart';
+import 'core/gems.dart';
 import 'core/hanh.dart';
 import 'core/hero.dart';
 import 'core/items.dart';
@@ -11,6 +12,7 @@ import 'services/sound.dart';
 import 'ui/character_screen.dart';
 import 'ui/create_screen.dart';
 import 'ui/lists.dart';
+import 'ui/pet_screen.dart';
 import 'ui/play_screen.dart';
 import 'ui/rewards_ui.dart';
 import 'ui/shop_screen.dart';
@@ -64,6 +66,20 @@ Future<void> main() async {
         ));
       }
       h.gold = 1200 * level;
+      // Some gems and pets to show off the gem and pet screens.
+      for (final hn in Hanh.values) {
+        h.addGem(Gem(hn, 1 + rng.nextInt(3)), 1 + rng.nextInt(4));
+      }
+      final w = h.equip[Slot.weapon];
+      if (w != null && w.gems.isNotEmpty) {
+        final g = Gem(h.hanh, 2);
+        h.addGem(g);
+        h.socketGem(w, 0, g);
+      }
+      h.petLevels['crane'] = 3;
+      h.petLevels['tiger'] = 6;
+      h.activePet = q['pet'] ?? 'tiger';
+      h.recompute();
     }
     // By default, the main quest that hunts on the chosen map.
     final onMap = mainQuests.indexWhere((x) => map.mobs.contains(x.target) || x.target == map.boss);
@@ -88,6 +104,8 @@ Future<void> main() async {
     'maps' => const MapListScreen(),
     'dungeons' => const DungeonListScreen(),
     'ach' => const AchievementsScreen(),
+    'pets' => const PetScreen(),
+    'gems' => const CharacterScreen(tab: 3, forge: true),
     _ => const TownScreen(),
   };
   runApp(MaterialApp(

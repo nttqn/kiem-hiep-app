@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import '../core/hanh.dart';
 import '../core/items.dart';
 import '../core/world.dart';
 import 'art_figures.dart';
@@ -194,7 +195,7 @@ Rect _flat(double x, double y, double r) =>
     Rect.fromCenter(center: Offset(x, y), width: r * 2, height: r);
 
 int _projColor(String kind) {
-  if (kind.startsWith('mob_')) {
+  if (kind.startsWith('mob_') || kind.startsWith('pet_')) {
     return switch (kind.substring(4)) {
       'kim' => 0xFFF0D060,
       'moc' => 0xFF8CE05A,
@@ -385,6 +386,22 @@ void drawDrop(Canvas c, Drop d, double t) {
       c.drawOval(Rect.fromCenter(center: Offset(d.x - 3.0 + i * 3, d.y - 2 - i * 2.0 + bob),
           width: 10, height: 5), _a(i.isEven ? 0xFFFFD34A : 0xFFE8B030, 1));
     }
+    return;
+  }
+  final gem = d.gem;
+  if (gem != null) {
+    final colr = gem.hanh.color;
+    final y = d.y - 8 + bob;
+    c.drawCircle(Offset(d.x, y), 12, _glow(colr, 0.6, 7));
+    final p = Path()
+      ..moveTo(d.x, y - 8)
+      ..lineTo(d.x + 6, y - 2)
+      ..lineTo(d.x, y + 7)
+      ..lineTo(d.x - 6, y - 2)
+      ..close();
+    c.drawPath(p, _a(colr, 1));
+    c.drawPath(p, _stroke(0xFFFFFFFF, 0.9, 1.2));
+    c.drawLine(Offset(d.x - 6, y - 2), Offset(d.x + 6, y - 2), _stroke(0xFFFFFFFF, 0.6, 1));
     return;
   }
   if (d.potion > 0) {
