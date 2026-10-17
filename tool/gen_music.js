@@ -494,6 +494,48 @@ track('fortress', 12, 72, (mix, spb) => {
   }
 }, { wet: 0.4, size: 1.4 });
 
+// Vân Vụ Sơn: floating above the clouds, dizi over rippling zheng, F zhi,
+// soft pads and mountain wind, a temple bell now and then.
+track('cloud', 12, 64, (mix, spb) => {
+  const key = { root: 65, mode: 'zhi', spb };
+  const A = '2:2 4:1 5:1 | 4:3 2:1 | 1:2 2:1 4:1 | 2:4 | 5:2 7:1 8:1 | 7:2 5:2 | 4:1 5:1 4:1 2:1 | 1:4';
+  const B = '4:2 5:1 7:1 | 8:3 7:1 | 5:2 4:1 2:1 | 0:4';
+  const chords = [0, 3, 1, 0, 2, 3, 1, 4, 3, 2, 1, 0];
+  melody(mix, A + ' ' + B, { ...key, inst: 'dizi', amp: 0.3, send: 0.65 });
+  arpeggio(mix, chords, { ...key, amp: 0.2, pattern: [0, 2, 4, 7, 4, 2], per: 0.5, oct: -1, pan: 0.35 });
+  for (let b = 0; b < 12; b++) {
+    const a = degreeToMidi(53, 'zhi', chords[b]);
+    pad(mix, b * 4 * spb, [a, a + 7, a + 12], 4 * spb + 1, 0.1, { send: 0.7 });
+  }
+  for (let b = 0; b < 12; b += 4) gong(mix, b * 4 * spb, 86, 0.25, { len: 4, pan: -0.3 });
+  windNoise(mix, 0, 12 * 4 * spb + 2, 0.25);
+}, { wet: 0.45, size: 1.5 });
+
+// Hoa Sơn Tuyệt Đỉnh: the final summit, proud erhu and pipa over war drums,
+// C gong, gongs on every phrase.
+track('summit', 16, 92, (mix, spb) => {
+  const key = { root: 60, mode: 'gong', spb };
+  const A = '4:1.5 5:.5 7:2 | 8:1 7:1 5:2 | 4:1 5:1 7:1 9:1 | 8:4 | 9:1.5 8:.5 7:1 5:1 | 4:2 5:2 | 7:1 5:1 4:1 2:1 | 4:4';
+  const B = '9:1.5 10:.5 9:1 7:1 | 8:2 7:2 | 5:1 7:1 8:1 9:1 | 10:3 r:1 | 9:1 8:1 7:1 5:1 | 7:2 4:2 | 5:1 4:1 2:1 1:1 | 2:4';
+  const chords = [0, 3, 1, 3, 0, 2, 1, 0, 3, 2, 1, 4, 3, 2, 1, 0];
+  gong(mix, 0, 86, 0.8);
+  melody(mix, A + ' ' + B, { ...key, inst: 'erhu', amp: 0.38, pan: 0.05 });
+  melody(mix, 'r:32 ' + '9:2 8:2 | 7:4 | 5:2 7:2 | 9:4 | 8:2 7:2 | 5:4 | 4:2 2:2 | 4:4', { ...key, inst: 'pipa', amp: 0.18, oct: 0, pan: -0.35 });
+  arpeggio(mix, chords, { ...key, amp: 0.24 });
+  drone(mix, chords, { ...key, amp: 0.12, oct: -1 });
+  for (let b = 0; b < 16; b++) {
+    const t = b * 4 * spb;
+    drum(mix, t, 0.8, { f0: 120, f1: 42, dec: 5, len: 0.7 });
+    drum(mix, t + 1.5 * spb, 0.4);
+    drum(mix, t + 2 * spb, 0.6, { f0: 120, f1: 42, dec: 5, len: 0.7 });
+    drum(mix, t + 3 * spb, 0.45);
+    drum(mix, t + 3.5 * spb, 0.35, { f0: 200 });
+    block(mix, t + 1 * spb, 0.1);
+    if (b % 4 === 0) cymbal(mix, t, 0.3);
+    if (b % 8 === 7) gong(mix, t + 3 * spb, 98, 0.45);
+  }
+}, { wet: 0.3, size: 1.2 });
+
 // Vượt ải: fast battle, pipa tremolo lead, erhu countermelody, drum ostinato.
 track('battle', 16, 136, (mix, spb) => {
   const key = { root: 57, mode: 'yu', spb };

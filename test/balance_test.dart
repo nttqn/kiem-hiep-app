@@ -12,7 +12,7 @@ void main() {
     for (final h in Hanh.values) {
       final sw = Stopwatch()..start();
       final r = simulate(h, minutes: minutes);
-      final marks = [5, 15, 30, 60, 120, 240, 480]
+      final marks = [5, 15, 30, 60, 120, 240, 480, 720, 960, 1200, 1500, 1800]
           .where((m) => r.levelAtMinute.containsKey(m))
           .map((m) => '${m}m:${r.levelAtMinute[m]}')
           .join(' ');

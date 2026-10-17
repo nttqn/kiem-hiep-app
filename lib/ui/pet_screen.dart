@@ -58,7 +58,7 @@ class _PetScreenState extends State<PetScreen> {
                   decoration: BoxDecoration(color: hanhColor(p.hanh), shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 5),
-                Expanded(child: Text(p.name, style: titleStyle(16, color: owned ? goldLight : creamDim))),
+                Expanded(child: Text(p.name, style: titleStyle(p.name.length > 12 ? 13.5 : 16, color: owned ? goldLight : creamDim), maxLines: 1, overflow: TextOverflow.ellipsis)),
               ],
             ),
             Expanded(
@@ -162,7 +162,7 @@ class _PetPainter extends CustomPainter {
     c.save();
     c.translate(s.width * 0.48, s.height * 0.86);
     drawShadow(c, s.width * 0.22);
-    final k = s.width / (look == 'crane' ? 80 : 62);
+    final k = s.width / (look == 'crane' || look == 'dragon' ? 80 : 62);
     c.scale(k);
     setClock(time);
     drawPetChibi(c, look, t: time, attack: cycle < 0.3 ? 1 - cycle / 0.3 : 0);

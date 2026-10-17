@@ -24,6 +24,8 @@ const palettes = <MapTheme, Palette>{
       night: 0.1),
   MapTheme.fortress: Palette(0xFF4C4A52, 0xFF5C5A62, 0xFF3A3840, 0xFF1A1A20,
       night: 0.12),
+  MapTheme.cloud: Palette(0xFF7E9A8C, 0xFF98B2A4, 0xFF66806F, 0xFF2E3E3A),
+  MapTheme.summit: Palette(0xFF9A928A, 0xFFB0A89E, 0xFF807870, 0xFF3A3430),
 };
 
 void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
@@ -139,6 +141,23 @@ void _decal(Canvas c, Decal d, Palette pal, double t) {
     case 'blood':
       c.drawOval(Rect.fromCenter(center: Offset(x, y), width: 18 * s, height: 8 * s),
           fillOf(0x885A0A0A));
+    case 'mist':
+      // A slow drifting wisp of cloud lying on the ground.
+      final dx = math.sin(t * 0.25 + d.v) * 18;
+      c.drawOval(
+          Rect.fromCenter(center: Offset(x + dx, y), width: 150 * s, height: 40 * s),
+          Paint()
+            ..color = Color.fromRGBO(240, 246, 248, 0.3 + 0.08 * math.sin(t * 0.5 + d.v))
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16));
+    case 'petal':
+      for (var i = 0; i < 3; i++) {
+        c.save();
+        c.translate(x + i * 6 * s, y + (i - 1) * 3 * s);
+        c.rotate(d.v * 0.5 + i);
+        c.drawOval(Rect.fromCenter(center: Offset.zero, width: 5 * s, height: 3 * s),
+            fillOf(i.isEven ? 0xFFF4A8BC : 0xFFFFD0DC));
+        c.restore();
+      }
   }
 }
 
@@ -299,6 +318,85 @@ void drawProp(Canvas c, Prop p, double t) {
               ..close(),
             fillOf(0xFF9A948A));
       }
+    case 'mistPine':
+      drawShadow(c, 24);
+      c.drawRect(const Rect.fromLTRB(-4, -16, 4, 0), fillOf(0xFF4A3220));
+      for (var i = 0; i < 3; i++) {
+        final y = -14.0 - i * 20;
+        final wdt = 28.0 - i * 7;
+        c.drawPath(
+            Path()
+              ..moveTo(-wdt, y)
+              ..lineTo(0, y - 32)
+              ..lineTo(wdt, y)
+              ..close(),
+            fillOf(i.isEven ? 0xFF2A4A3E : 0xFF345A4A));
+        c.drawPath(
+            Path()
+              ..moveTo(-wdt * 0.2, y - 6)
+              ..lineTo(0, y - 32)
+              ..lineTo(wdt * 0.9, y - 2)
+              ..close(),
+            fillOf(0x332A1A10));
+      }
+      // A ribbon of cloud around the trunk.
+      final drift = math.sin(t * 0.4 + v) * 6;
+      c.drawOval(
+          Rect.fromCenter(center: Offset(drift, -22), width: 70, height: 14),
+          Paint()
+            ..color = const Color(0x55F2F6F8)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+    case 'plum':
+      drawShadow(c, 26);
+      final bark = lineOf(0xFF3A2620, 6);
+      c.drawLine(Offset.zero, const Offset(-4, -30), bark);
+      bark.strokeWidth = 4;
+      c.drawLine(const Offset(-4, -30), const Offset(10, -52), bark);
+      c.drawLine(const Offset(-4, -30), const Offset(-20, -46), bark);
+      bark.strokeWidth = 2.5;
+      c.drawLine(const Offset(10, -52), const Offset(4, -70), bark);
+      c.drawLine(const Offset(10, -52), const Offset(26, -62), bark);
+      c.drawLine(const Offset(-20, -46), const Offset(-26, -62), bark);
+      final sway = math.sin(t * 0.8 + v) * 1.2;
+      const spots = [
+        Offset(4, -72), Offset(26, -64), Offset(-26, -64), Offset(12, -56),
+        Offset(-14, -50), Offset(-2, -62), Offset(18, -70), Offset(-20, -58),
+      ];
+      for (var i = 0; i < spots.length; i++) {
+        final o = spots[i] + Offset(sway, 0);
+        c.drawCircle(o, 6.5, fillOf(i.isEven ? 0xFFF08AA6 : 0xFFF8B8C8));
+        c.drawCircle(o + const Offset(-1.5, -1.5), 2.2, fillOf(0xFFFFE6EC));
+      }
+    case 'swordStone':
+      drawShadow(c, 22);
+      final p = Path()
+        ..moveTo(-20, 0)
+        ..lineTo(-15, -14)
+        ..lineTo(-2, -20)
+        ..lineTo(14, -14)
+        ..lineTo(20, 0)
+        ..close();
+      c.drawPath(p, fillOf(0xFF7A746E));
+      c.drawPath(
+          Path()
+            ..moveTo(-15, -14)
+            ..lineTo(-2, -20)
+            ..lineTo(0, -12)
+            ..close(),
+          fillOf(0xFF9A948E));
+      // The blade sunk in the rock, hilt up.
+      c.drawRect(const Rect.fromLTRB(-2, -56, 2, -16), fillOf(0xFFCFD6DE));
+      c.drawLine(const Offset(0, -56), const Offset(0, -18), lineOf(0xFFFFFFFF, 0.8));
+      c.drawRect(const Rect.fromLTRB(-9, -60, 9, -56), fillOf(0xFFC8962A));
+      c.drawRect(const Rect.fromLTRB(-1.8, -72, 1.8, -60), fillOf(0xFF5A2A1A));
+      c.drawCircle(const Offset(0, -74), 3, fillOf(0xFFC8962A));
+      final glint = 0.5 + 0.5 * math.sin(t * 2.5 + v);
+      c.drawCircle(
+          const Offset(0, -40),
+          10,
+          Paint()
+            ..color = Color.fromRGBO(200, 230, 255, 0.25 * glint)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
     case 'pine':
       drawShadow(c, 24);
       c.drawRect(const Rect.fromLTRB(-4, -16, 4, 0), fillOf(0xFF5A3A22));
@@ -412,12 +510,12 @@ void drawProp(Canvas c, Prop p, double t) {
 
 /// Rough visual height of a prop, used to fade ones in front of the hero.
 double propHeight(Prop p) => switch (p.kind) {
-      'tree' || 'tree2' || 'bamboo' || 'banner' || 'pillar' || 'pine' => 90 * p.s,
-      'rockSpire' || 'stalagmite' || 'deadTree' || 'burntTree' => 60 * p.s,
+      'tree' || 'tree2' || 'bamboo' || 'banner' || 'pillar' || 'pine' || 'mistPine' || 'plum' => 90 * p.s,
+      'rockSpire' || 'stalagmite' || 'deadTree' || 'burntTree' || 'swordStone' => 60 * p.s,
       _ => 30 * p.s,
     };
 
 double propHalfWidth(Prop p) => switch (p.kind) {
-      'tree' || 'tree2' || 'pine' => 34 * p.s,
+      'tree' || 'tree2' || 'pine' || 'mistPine' || 'plum' => 34 * p.s,
       _ => 20 * p.s,
     };

@@ -207,6 +207,8 @@ const _tiers = [
   'Long Văn',
   'Thiên Tinh',
   'Hỗn Nguyên',
+  'Thái Cực',
+  'Tiên Thiên',
 ];
 
 String tierName(int level) =>

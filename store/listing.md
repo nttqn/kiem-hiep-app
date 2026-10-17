@@ -18,20 +18,22 @@ Bước chân vào giang hồ, bái sư một trong năm môn phái, luyện cô
 Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim: đánh đúng hệ gây thêm 25% sát thương.
 
 🗺️ LUYỆN CÔNG – VƯỢT ẢI – LÀM NHIỆM VỤ
-• 7 bản đồ: đồng cỏ Lạc An, rừng trúc tím, hang Hắc Phong, sa mạc Hoàng Sa, băng nguyên tuyết phủ, núi lửa Hỏa Diệm Sơn và Ma Giáo Tổng Đàn.
-• Gần 30 loại quái: sói, rắn hổ mang, cương thi, nhện độc, bọ cạp, tuyết quái, thạch nhân dung nham, kỳ lân lửa… cùng các đầu lĩnh có chiêu đánh lan phải né.
-• 14 ải nhiều đợt quái, chấm 3 sao theo thời gian.
-• 43 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo, cùng nhiệm vụ hằng ngày.
+• 9 bản đồ: đồng cỏ Lạc An, rừng trúc tím, hang Hắc Phong, sa mạc Hoàng Sa, băng nguyên tuyết phủ, núi lửa Hỏa Diệm Sơn, Ma Giáo Tổng Đàn, Vân Vụ Sơn mây phủ và Hoa Sơn Tuyệt Đỉnh.
+• Hơn 35 loại quái: sói, rắn hổ mang, cương thi, nhện độc, bọ cạp, tuyết quái, thạch nhân dung nham, kỳ lân lửa, bạch long, kiếm hồn… cùng các đầu lĩnh có chiêu đánh lan phải né.
+• 18 ải nhiều đợt quái, chấm 3 sao theo thời gian.
+• 56 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo và Thiên Ma Lão Tổ, cùng nhiệm vụ hằng ngày.
 
 🧙 BUILD NHÂN VẬT THEO Ý MÌNH
-• Mỗi cấp nhận điểm tiềm năng và điểm kỹ năng, tối đa cấp 80.
+• Mỗi cấp nhận điểm tiềm năng và điểm kỹ năng, tối đa cấp 99.
 • 4 chiêu chủ động và 2 nội công cho mỗi phái, nâng tới cấp 10.
 • Trang bị 7 ô, 5 độ hiếm từ Thường đến Truyền thuyết; thợ rèn cường hóa tới +10.
+• Khảm ngọc Ngũ Hành vào trang bị, khảm đủ các hệ để kích hoạt thưởng bộ, hợp 3 viên thành 1 viên cao cấp.
+• 6 linh thú đồng hành: Bạch Hạc, Hắc Hổ, Huyền Quy, Tuyết Hồ, Kỳ Lân Con, Tiểu Bạch Long; tự ra chiêu và tăng chỉ số cho chủ.
 
 🎁 NGÀY NÀO CŨNG CÓ QUÀ
 • Bế quan tu luyện: tắt game vẫn nhận kinh nghiệm và lượng, tới 8 giờ.
 • Quà đăng nhập 7 ngày, ngày 7 tặng trang bị Hiếm.
-• 18 thành tựu mở khóa danh hiệu: Thiếu Hiệp, Đại Hiệp, Tông Sư, Võ Lâm Chí Tôn…
+• 20 thành tựu mở khóa danh hiệu: Thiếu Hiệp, Đại Hiệp, Tông Sư, Võ Lâm Chí Tôn, Võ Thánh…
 
 🤖 CHƠI NHẸ NHÀNG, CHƠI MỌI LÚC
 • Đánh thời gian thực bằng joystick và nút chiêu, hoặc bật TỰ ĐỘNG để nhân vật tự tìm quái nhiệm vụ, ra chiêu, uống thuốc.
@@ -46,6 +48,9 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự chọn xem để nhận thưởng: hồi sinh tại chỗ, nhân đôi phần thưởng, thuốc miễn phí.
 
 Hỗ trợ: trungsmail@gmail.com
+
+## Có gì mới (bản 1.0.3, ≤ 500 ký tự)
+Mở giới hạn cấp 99! Thêm 2 bản đồ mới Vân Vụ Sơn và Hoa Sơn Tuyệt Đỉnh, 4 ải mới, 13 nhiệm vụ chính tuyến đối đầu Thiên Ma Lão Tổ, 2 bản nhạc nền mới. Thêm khảm ngọc Ngũ Hành và 6 linh thú đồng hành. Sửa lỗi đăng nhập Google để lưu trữ đám mây.
 
 ## Có gì mới (bản 1.0.0, ≤ 500 ký tự)
 Phiên bản đầu tiên: 5 môn phái ngũ hành, 7 bản đồ, 14 ải, 43 nhiệm vụ chính tuyến, tự động đánh, bế quan tu luyện, quà đăng nhập, thành tựu – danh hiệu và lưu trữ đám mây.
@@ -93,20 +98,22 @@ Step into the martial world, join one of five sects, train, clear dungeons and b
 Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire beats Metal: hit the right element for 25% extra damage.
 
 🗺️ TRAIN, CLEAR DUNGEONS, FOLLOW THE STORY
-• 7 regions from grassland and purple bamboo forests to a dark cave, a desert, snowfields, a volcano and the Demon Cult's fortress.
-• Nearly 30 monsters — wolves, cobras, jiangshi, spiders, scorpions, yetis, lava golems, a fire qilin — and bosses with telegraphed area attacks.
-• 14 multi-wave dungeons with 3-star time ratings.
-• 43 story quests against the Blood Demon Cult, plus daily quests.
+• 9 regions from grassland and purple bamboo forests to a dark cave, a desert, snowfields, a volcano, the Demon Cult's fortress, the misty Cloud Mountain and the summit of Mount Hua.
+• Over 35 monsters — wolves, cobras, jiangshi, spiders, scorpions, yetis, lava golems, a fire qilin — and bosses with telegraphed area attacks.
+• 18 multi-wave dungeons with 3-star time ratings.
+• 56 story quests against the Blood Demon Cult and the Heavenly Demon, plus daily quests.
 
 🧙 BUILD YOUR HERO
-• Attribute and skill points every level, up to level 80.
+• Attribute and skill points every level, up to level 99.
 • 4 active skills and 2 passives per sect, each up to level 10.
 • 7 gear slots, 5 rarities from Common to Legendary, and forging up to +10.
+• Five-element gems to socket into gear, with set bonuses and gem fusion.
+• 6 spirit-beast companions that fight beside you and boost your stats.
 
 🎁 REWARDS EVERY DAY
 • Closed-door training: earn EXP and gold while the game is closed, up to 8 hours.
 • 7-day login gifts with an Epic item on day 7.
-• 18 achievements that unlock titles to wear.
+• 20 achievements that unlock titles to wear.
 
 🤖 EASY TO PLAY ANYTIME
 • Real-time combat with joystick and skill buttons, or switch on AUTO to hunt quest monsters, cast skills and drink potions for you.

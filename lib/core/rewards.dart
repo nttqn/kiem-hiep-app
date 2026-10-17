@@ -114,6 +114,8 @@ final achievements = <AchDef>[
   AchDef('lv30', 'Đại thành', 'Đạt cấp 30', 'Đại Hiệp', 30, 4000, (h) => h.level),
   AchDef('lv50', 'Nhất đại tông sư', 'Đạt cấp 50', 'Tông Sư', 50, 12000, (h) => h.level),
   AchDef('lv80', 'Võ lâm chí tôn', 'Đạt cấp 80', 'Võ Lâm Chí Tôn', 80, 50000, (h) => h.level),
+  AchDef('lv90', 'Thiên hạ vô song', 'Đạt cấp 90', 'Vô Song', 90, 80000, (h) => h.level),
+  AchDef('lv99', 'Phá toái hư không', 'Đạt cấp 99', 'Võ Thánh', 99, 150000, (h) => h.level),
   AchDef('boss1', 'Hạ đầu lĩnh', 'Đánh bại 1 đầu lĩnh', 'Dũng Sĩ', 1, 400, (h) => h.bossKills),
   AchDef('boss25', 'Săn đầu lĩnh', 'Đánh bại 25 đầu lĩnh', 'Thợ Săn Đầu Lĩnh', 25, 8000, (h) => h.bossKills),
   AchDef('dungeon5', 'Vượt ải', 'Vượt 5 ải khác nhau', 'Phá Trận Sư', 5, 2500, _cleared),

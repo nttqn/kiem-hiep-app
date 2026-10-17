@@ -175,11 +175,47 @@ const mobs = <MobDef>[
       body: Body.human, c1: 0xFF8A0F1A, c2: 0xFF1A0A0A, c3: 0xFFFFD34A,
       variant: 'demonLord', size: 1.7, hp: 20, atk: 1.8, def: 1.7,
       speed: 100, exp: 15, boss: true),
+  // Vân Vụ Sơn
+  MobDef(
+      id: 'renegade', name: 'Phản Đồ Kiếm Khách', hanh: Hanh.kim,
+      body: Body.human, c1: 0xFFD8DCE4, c2: 0xFF3A4A6A, c3: 0xFF5A7AB8,
+      variant: 'swordsman', hp: 1.15, atk: 1.2, def: 1.1, speed: 110),
+  MobDef(
+      id: 'whiteApe', name: 'Bạch Viên', hanh: Hanh.moc, body: Body.brute,
+      c1: 0xFFE8E4DC, c2: 0xFF9A8A78, variant: 'ape', size: 1.25,
+      hp: 1.4, atk: 1.15, speed: 110),
+  MobDef(
+      id: 'cloudSpirit', name: 'Vân Linh', hanh: Hanh.thuy, body: Body.flyer,
+      c1: 0xFFA8E8E0, c2: 0xFFFFFFFF, variant: 'wisp', ranged: true,
+      range: 260, hp: 0.8, atk: 1.1, attackCd: 1.8),
+  MobDef(
+      id: 'whiteDragon', name: 'Bạch Long Vương', hanh: Hanh.kim,
+      body: Body.serpent, c1: 0xFFF0F2F4, c2: 0xFFC8D8E8, c3: 0xFFFFC34A,
+      variant: 'dragon', size: 2.2, hp: 22, atk: 1.85, def: 1.7, speed: 90,
+      exp: 16, boss: true),
+  // Hoa Sơn Tuyệt Đỉnh
+  MobDef(
+      id: 'goldTiger', name: 'Kim Mao Hổ', hanh: Hanh.kim, body: Body.quad,
+      c1: 0xFFE8B040, c2: 0xFFF8ECD0, c3: 0xFF3A2A1A, variant: 'tiger',
+      size: 1.15, speed: 130, hp: 1.1, atk: 1.25),
+  MobDef(
+      id: 'swordGolem', name: 'Kiếm Khôi', hanh: Hanh.tho, body: Body.brute,
+      c1: 0xFF6A6E78, c2: 0xFF5AD0F0, variant: 'golem', size: 1.4,
+      hp: 1.7, atk: 1.15, def: 1.7, speed: 75),
+  MobDef(
+      id: 'swordSoul', name: 'Kiếm Hồn', hanh: Hanh.hoa, body: Body.flyer,
+      c1: 0xFFFF8A5A, c2: 0xFFFFE0C8, variant: 'ghost', ranged: true,
+      range: 270, hp: 0.85, atk: 1.2, attackCd: 1.7),
+  MobDef(
+      id: 'heavenDemon', name: 'Thiên Ma Lão Tổ', hanh: Hanh.moc,
+      body: Body.human, c1: 0xFF3A1A4A, c2: 0xFF120A18, c3: 0xFFB04AFF,
+      variant: 'ancient', size: 1.8, hp: 25, atk: 1.95, def: 1.8,
+      speed: 105, exp: 18, boss: true),
 ];
 
 final Map<String, MobDef> mobById = {for (final m in mobs) m.id: m};
 
-enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress }
+enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit }
 
 class MapDef {
   const MapDef({
@@ -244,6 +280,16 @@ const maps = <MapDef>[
       desc: 'Sào huyệt Huyết Ma Giáo, nguồn cơn mọi tai ương võ lâm.',
       minLv: 55, maxLv: 70, theme: MapTheme.fortress,
       mobs: ['cultist', 'assassin', 'ghost'], boss: 'demonLord'),
+  MapDef(
+      id: 'vanvu', name: 'Vân Vụ Sơn',
+      desc: 'Núi cao mây phủ, dư đảng ma giáo ẩn náu cùng phản đồ các phái.',
+      minLv: 70, maxLv: 84, theme: MapTheme.cloud,
+      mobs: ['renegade', 'whiteApe', 'cloudSpirit'], boss: 'whiteDragon'),
+  MapDef(
+      id: 'hoason', name: 'Hoa Sơn Tuyệt Đỉnh',
+      desc: 'Đỉnh núi luận kiếm, nơi Thiên Ma Lão Tổ chờ thách đấu thiên hạ.',
+      minLv: 84, maxLv: 99, theme: MapTheme.summit,
+      mobs: ['goldTiger', 'swordGolem', 'swordSoul'], boss: 'heavenDemon'),
 ];
 
 final Map<String, MapDef> mapById = {for (final m in maps) m.id: m};
@@ -306,6 +352,14 @@ const dungeons = <DungeonDef>[
       level: 62, waves: [10, 12, 13]),
   DungeonDef(id: 'a14', name: 'Giáo Chủ Mật Thất', mapId: 'magiao',
       level: 70, waves: [10, 12, 14]),
+  DungeonDef(id: 'a15', name: 'Vân Hải Kiếm Trận', mapId: 'vanvu',
+      level: 76, waves: [10, 12, 14]),
+  DungeonDef(id: 'a16', name: 'Bạch Long Đàm', mapId: 'vanvu',
+      level: 82, waves: [11, 12, 14]),
+  DungeonDef(id: 'a17', name: 'Hoa Sơn Kiếm Trủng', mapId: 'hoason',
+      level: 90, waves: [11, 13, 15]),
+  DungeonDef(id: 'a18', name: 'Luận Kiếm Đài', mapId: 'hoason',
+      level: 97, waves: [12, 14, 16]),
 ];
 
 final Map<String, DungeonDef> dungeonById = {
@@ -585,9 +639,75 @@ const mainQuests = <QuestDef>[
       type: QuestType.dungeon, target: 'a14', minLv: 70, gold: 8000,
       expFactor: 0.5, item: true),
   QuestDef(
+      title: 'Dư đảng ma giáo',
+      story: 'Giáo chủ đã đền tội, nhưng dư đảng mang theo bí kíp trốn lên '
+          'núi cao. Hãy tu luyện thêm trước khi truy đuổi.',
+      type: QuestType.level, count: 72, minLv: 70, gold: 8500,
+      expFactor: 0.4),
+  QuestDef(
+      title: 'Vân Vụ Sơn',
+      story: 'Dư đảng cấu kết với phản đồ các phái, ẩn trong mây mù Vân Vụ Sơn.',
+      type: QuestType.kill, target: 'renegade', count: 30, minLv: 72,
+      gold: 9000, expFactor: 0.32),
+  QuestDef(
+      title: 'Bạch viên trộm kiếm',
+      story: 'Bầy vượn trắng cướp bảo kiếm của tiều phu dâng cho phản đồ.',
+      type: QuestType.kill, target: 'whiteApe', count: 30, minLv: 74,
+      gold: 9600, expFactor: 0.32),
+  QuestDef(
+      title: 'Vân linh',
+      story: 'Mây núi kết thành linh thể, bị ma khí sai khiến.',
+      type: QuestType.kill, target: 'cloudSpirit', count: 32, minLv: 76,
+      gold: 10200, expFactor: 0.32),
+  QuestDef(
+      title: 'Vân hải kiếm trận',
+      story: 'Phản đồ bày kiếm trận trên biển mây để ngăn truy binh.',
+      type: QuestType.dungeon, target: 'a15', minLv: 76, gold: 11000,
+      expFactor: 0.32, item: true),
+  QuestDef(
+      title: 'Bạch Long Vương',
+      story: 'Rồng trắng giữ đầm bị ma giáo dùng bí kíp khống chế.',
+      type: QuestType.boss, target: 'whiteDragon', minLv: 79, gold: 12000,
+      expFactor: 0.4),
+  QuestDef(
+      title: 'Bạch Long Đàm',
+      story: 'Dưới đáy đầm có mật đạo dẫn lên Hoa Sơn.',
+      type: QuestType.dungeon, target: 'a16', minLv: 82, gold: 13000,
+      expFactor: 0.32),
+  QuestDef(
+      title: 'Hoa Sơn tuyệt đỉnh',
+      story: 'Thiên Ma Lão Tổ, sư tổ của ma giáo, đã xuất quan trên đỉnh Hoa Sơn.',
+      type: QuestType.kill, target: 'goldTiger', count: 32, minLv: 85,
+      gold: 14000, expFactor: 0.3),
+  QuestDef(
+      title: 'Kiếm khôi',
+      story: 'Lão Tổ luyện kiếm khôi từ đá núi để canh giữ đường lên đỉnh.',
+      type: QuestType.kill, target: 'swordGolem', count: 34, minLv: 87,
+      gold: 15000, expFactor: 0.3),
+  QuestDef(
+      title: 'Kiếm hồn',
+      story: 'Kiếm hồn của các cao thủ tử trận vẫn lang thang trên núi.',
+      type: QuestType.kill, target: 'swordSoul', count: 34, minLv: 89,
+      gold: 16000, expFactor: 0.3),
+  QuestDef(
+      title: 'Hoa Sơn kiếm trủng',
+      story: 'Mộ kiếm của võ lâm tiền bối cất giữ thanh kiếm có thể phá ma công.',
+      type: QuestType.dungeon, target: 'a17', minLv: 90, gold: 18000,
+      expFactor: 0.3, item: true),
+  QuestDef(
+      title: 'Thiên Ma Lão Tổ',
+      story: 'Trận quyết đấu với kẻ đứng sau mọi tai ương của võ lâm.',
+      type: QuestType.boss, target: 'heavenDemon', minLv: 93, gold: 22000,
+      expFactor: 0.4),
+  QuestDef(
+      title: 'Luận kiếm đài',
+      story: 'Các phái mời đại hiệp lên luận kiếm đài phân định ngôi chí tôn.',
+      type: QuestType.dungeon, target: 'a18', minLv: 97, gold: 30000,
+      expFactor: 0.4, item: true),
+  QuestDef(
       title: 'Võ lâm chí tôn',
       story: 'Giang hồ đã yên bình. Hãy tiếp tục tu luyện để đạt cảnh giới '
           'tối thượng.',
-      type: QuestType.level, count: 80, minLv: 70, gold: 20000,
+      type: QuestType.level, count: 99, minLv: 97, gold: 60000,
       expFactor: 0.5),
 ];

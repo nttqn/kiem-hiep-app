@@ -466,6 +466,16 @@ HumanLook _humanFor(MobDef d) => _humanCache.putIfAbsent(d.id, () {
               skin: 0xFFC8946A, robe: d.c1, trim: d.c2, pants: 0xFF2A2018,
               hair: Hair.topknot, band: d.c2, weapon: Weapon.bigSaber,
               blade: d.c3, cape: 0xFF5A1A14, longRobe: false);
+        case 'swordsman':
+          return HumanLook(
+              skin: 0xFFE0B48A, robe: d.c1, trim: d.c3, pants: d.c2,
+              hair: Hair.long, band: d.c3, weapon: Weapon.sword,
+              blade: 0xFFE8EEF4);
+        case 'ancient':
+          return HumanLook(
+              skin: 0xFFD8C8C0, robe: d.c1, trim: d.c3, pants: d.c2,
+              hairColor: 0xFFF2F2F6, hair: Hair.long, weapon: Weapon.sword,
+              blade: d.c3, cape: 0xFF120A18, glow: d.c3);
         case 'demonLord':
           return HumanLook(
               skin: 0xFFE0C0B0, robe: d.c1, trim: d.c3, pants: d.c2,

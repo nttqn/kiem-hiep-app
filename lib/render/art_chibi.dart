@@ -805,7 +805,43 @@ void drawSerpentChibi(Canvas c, MobDef d,
   }
   final hp = parts.last.$1;
   final hx = hp.dx + 4, hy = hp.dy - 5;
-  if (d.boss) {
+  final dragon = d.variant == 'dragon';
+  if (dragon) {
+    // Mane fins down the back, antlers and long whiskers.
+    for (var i = 3; i < parts.length - 1; i += 2) {
+      final (p, r) = parts[i];
+      final fin = Path()
+        ..moveTo(p.dx - r * 0.6, p.dy - r * 0.7)
+        ..lineTo(p.dx - r * 0.2, p.dy - r * 1.6)
+        ..lineTo(p.dx + r * 0.5, p.dy - r * 0.8)
+        ..close();
+      _shape(c, fin, _flat(d.c3), ow: 1.4);
+    }
+    final horn = _o
+      ..color = col(d.c3)
+      ..strokeWidth = 2.2;
+    for (final k in [-1.0, 1.0]) {
+      final bx = hx - 3 + k * 2;
+      c.drawPath(
+          Path()
+            ..moveTo(bx, hy - 5)
+            ..lineTo(bx - 6, hy - 15)
+            ..moveTo(bx - 3, hy - 10)
+            ..lineTo(bx + 1, hy - 14),
+          horn);
+    }
+    final whisk = math.sin(t * 3) * 2;
+    c.drawPath(
+        Path()
+          ..moveTo(hx + 8, hy + 2)
+          ..quadraticBezierTo(hx + 16, hy + 6 + whisk, hx + 20, hy + 1 + whisk)
+          ..moveTo(hx + 8, hy + 3)
+          ..quadraticBezierTo(hx + 12, hy + 10 - whisk, hx + 18, hy + 11 - whisk),
+        _o
+          ..color = col(d.c3)
+          ..strokeWidth = 1.2);
+  }
+  if (d.boss && !dragon) {
     // Cobra hood behind the head.
     final hood = Path()
       ..moveTo(hx - 3, hy - 9)
@@ -819,8 +855,8 @@ void drawSerpentChibi(Canvas c, MobDef d,
   _shape(c, Path()..addOval(hr), _lit(d.c1, hr));
   c.drawOval(Rect.fromCenter(center: Offset(hx + 3, hy + 3.5), width: 11, height: 3.5),
       _flat(shade(d.c2, 0.15)));
-  _beastEye(c, Offset(hx + 3, hy - 2), 1.1, d.boss ? d.c3 : 0xFFFFE04A, slit: true);
-  if ((t * 3).floor().isEven || attack > 0) {
+  _beastEye(c, Offset(hx + 3, hy - 2), 1.1, d.boss ? d.c3 : 0xFFFFE04A, slit: !dragon);
+  if (!dragon && ((t * 3).floor().isEven || attack > 0)) {
     final tg = Path()
       ..moveTo(hx + 9, hy + 1.5)
       ..lineTo(hx + 15, hy + 1.5)
@@ -1222,6 +1258,9 @@ const _petFox = MobDef(
 const _petKylin = MobDef(
     id: 'petKylin', name: 'Kỳ Lân Con', hanh: Hanh.hoa, body: Body.quad,
     c1: 0xFFD8402E, c2: 0xFFFFC34A, c3: 0xFF3AD0C0, variant: 'kylin');
+const _petDragon = MobDef(
+    id: 'petDragon', name: 'Tiểu Bạch Long', hanh: Hanh.kim, body: Body.serpent,
+    c1: 0xFFF0F2F4, c2: 0xFFC8D8E8, c3: 0xFFFFC34A, variant: 'dragon');
 
 /// Draws a pet by its look at the local origin, facing right.
 void drawPetChibi(Canvas c, String look,
@@ -1233,6 +1272,8 @@ void drawPetChibi(Canvas c, String look,
       drawQuadChibi(c, _petFox, walk: walk, moving: moving, attack: attack, t: t);
     case 'kylin':
       drawQuadChibi(c, _petKylin, walk: walk, moving: moving, attack: attack, t: t);
+    case 'dragon':
+      drawSerpentChibi(c, _petDragon, walk: walk, moving: moving, attack: attack, t: t);
     case 'crane':
       _crane(c, walk, moving, attack, t);
     case 'turtle':

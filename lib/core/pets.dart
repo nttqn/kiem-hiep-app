@@ -27,7 +27,7 @@ class PetDef {
   final Bonus bonus;
   final double base, perLv;
 
-  /// Drawing style: crane, tiger, turtle, fox, kylin.
+  /// Drawing style: crane, tiger, turtle, fox, kylin, dragon.
   final String look;
 
   /// Gold price in the shop, or 0 when it only drops from [boss].
@@ -42,6 +42,7 @@ class PetDef {
         Bonus.defPct => 'Phòng thủ',
         Bonus.skillDmg => 'Uy lực kỹ năng',
         Bonus.atkPct => 'Công lực',
+        Bonus.aspd => 'Tốc đánh',
         _ => bonus.name,
       };
 
@@ -71,6 +72,10 @@ const pets = <PetDef>[
       id: 'kylin', name: 'Kỳ Lân Con', hanh: Hanh.hoa, look: 'kylin',
       desc: 'Hậu duệ Hỏa Kỳ Lân, hơi thở nóng như dung nham.',
       bonus: Bonus.atkPct, base: 0.05, perLv: 0.005, boss: 'kylin'),
+  PetDef(
+      id: 'dragon', name: 'Tiểu Bạch Long', hanh: Hanh.kim, look: 'dragon',
+      desc: 'Rồng con của Bạch Long Vương, ra đòn nhanh như chớp.',
+      bonus: Bonus.aspd, base: 0.04, perLv: 0.003, boss: 'whiteDragon'),
 ];
 
 final Map<String, PetDef> petById = {for (final p in pets) p.id: p};

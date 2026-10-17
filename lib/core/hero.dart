@@ -7,7 +7,7 @@ import 'items.dart';
 import 'pets.dart';
 import 'sects.dart';
 
-const int maxLevel = 80;
+const int maxLevel = 99;
 const int pointsPerLevel = 5;
 const int bagSize = 60;
 

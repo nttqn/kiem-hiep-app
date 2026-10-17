@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/content.dart';
@@ -14,68 +16,105 @@ class MapListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
+    final last = maps.lastIndexWhere((m) => h.level >= m.entryLv);
     return SubScreen(
       title: 'Luyện công',
-      child: ListView.separated(
-        itemCount: maps.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 8),
-        itemBuilder: (context, i) {
-          final m = maps[i];
-          final open = h.level >= m.entryLv;
-          final fit = h.level >= m.minLv && h.level <= m.maxLv + 2;
-          return Opacity(
-            opacity: open ? 1 : 0.55,
-            child: Panel(
-              border: fit ? jade : gold,
-              padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
-              child: Row(
-                children: [
-                  _ThemeSwatch(theme: m.theme),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(m.name, style: titleStyle(18, color: cream)),
-                            const SizedBox(width: 10),
-                            Text('Cấp ${m.minLv}–${m.maxLv}', style: bold.copyWith(color: goldLight)),
-                            if (fit) ...[
-                              const SizedBox(width: 8),
-                              Text('Phù hợp', style: small.copyWith(color: const Color(0xFF8CE07A))),
+      child: _OpenAt(
+        fraction: maps.length < 2 ? 0 : math.max(0, last) / (maps.length - 1),
+        builder: (ctl) => ListView.separated(
+          controller: ctl,
+          itemCount: maps.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
+          itemBuilder: (context, i) {
+            final m = maps[i];
+            final open = h.level >= m.entryLv;
+            final fit = h.level >= m.minLv && h.level <= m.maxLv + 2;
+            return Opacity(
+              opacity: open ? 1 : 0.55,
+              child: Panel(
+                border: fit ? jade : gold,
+                padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
+                child: Row(
+                  children: [
+                    _ThemeSwatch(theme: m.theme),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(m.name, style: titleStyle(18, color: cream)),
+                              const SizedBox(width: 10),
+                              Text('Cấp ${m.minLv}–${m.maxLv}', style: bold.copyWith(color: goldLight)),
+                              if (fit) ...[
+                                const SizedBox(width: 8),
+                                Text('Phù hợp', style: small.copyWith(color: const Color(0xFF8CE07A))),
+                              ],
                             ],
-                          ],
-                        ),
-                        Text(m.desc, style: small),
-                        const SizedBox(height: 2),
-                        Wrap(
-                          spacing: 10,
-                          children: [
-                            for (final id in [...m.mobs, m.boss]) _MobTag(def: mobById[id]!),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Text(m.desc, style: small),
+                          const SizedBox(height: 2),
+                          Wrap(
+                            spacing: 10,
+                            children: [
+                              for (final id in [...m.mobs, m.boss]) _MobTag(def: mobById[id]!),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  open
-                      ? LButton(
-                          label: 'Vào',
-                          small: true,
-                          color: fit ? jade : seal,
-                          onTap: () => Navigator.of(context)
-                              .pushReplacement(fadeRoute(PlayScreen.field(m))),
-                        )
-                      : Text('Cần cấp ${m.entryLv}', style: small),
-                ],
+                    const SizedBox(width: 8),
+                    open
+                        ? LButton(
+                            label: 'Vào',
+                            small: true,
+                            color: fit ? jade : seal,
+                            onTap: () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.field(m))),
+                          )
+                        : Text('Cần cấp ${m.entryLv}', style: small),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
+}
+
+/// Builds a scrollable and, after the first frame, scrolls it to [fraction]
+/// of its extent so the entries that fit the hero's level are in view.
+class _OpenAt extends StatefulWidget {
+  const _OpenAt({required this.fraction, required this.builder});
+  final double fraction;
+  final Widget Function(ScrollController) builder;
+
+  @override
+  State<_OpenAt> createState() => _OpenAtState();
+}
+
+class _OpenAtState extends State<_OpenAt> {
+  final _ctl = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_ctl.hasClients) return;
+      _ctl.jumpTo(_ctl.position.maxScrollExtent * widget.fraction.clamp(0.0, 1.0));
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_ctl);
 }
 
 class _MobTag extends StatelessWidget {
@@ -116,6 +155,8 @@ class _ThemeSwatch extends StatelessWidget {
       MapTheme.snow: [Color(0xFFF6FAFC), Color(0xFF7A90A6)],
       MapTheme.volcano: [Color(0xFFFF6A2A), Color(0xFF33241F)],
       MapTheme.fortress: [Color(0xFF8A0F1A), Color(0xFF1A1A20)],
+      MapTheme.cloud: [Color(0xFFC8DCDC), Color(0xFF3E5A54)],
+      MapTheme.summit: [Color(0xFFF4A8BC), Color(0xFF4A4240)],
     };
     final c = colors[theme]!;
     return Container(
@@ -136,60 +177,68 @@ class DungeonListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
+    final last = dungeons.lastIndexWhere((d) => h.level >= d.level - 2);
     return SubScreen(
       title: 'Vượt ải',
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 270,
-          mainAxisExtent: 112,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-        ),
-        itemCount: dungeons.length,
-        itemBuilder: (context, i) {
-          final d = dungeons[i];
-          final stars = h.dungeonStars[d.id] ?? 0;
-          final open = h.level >= d.level - 2;
-          final quest = h.currentMain?.type == QuestType.dungeon && h.currentMain?.target == d.id;
-          return Opacity(
-            opacity: open ? 1 : 0.5,
-            child: GestureDetector(
-              onTap: open
-                  ? () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d)))
-                  : null,
-              child: Panel(
-                border: quest ? goldLight : gold,
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text('Ải ${i + 1}: ${d.name}',
-                              style: bold.copyWith(color: goldLight), overflow: TextOverflow.ellipsis),
-                        ),
-                        if (quest) const Icon(Icons.auto_stories, size: 16, color: goldLight),
-                      ],
-                    ),
-                    Text('Cấp ${d.level} · ${d.map.name}', style: small),
-                    Text('${d.waves.length} đợt quái + ${mobById[d.map.boss]!.name}',
-                        style: small.copyWith(color: cream)),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        for (var s = 0; s < 3; s++)
-                          Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
-                        const Spacer(),
-                        Text(open ? '${d.timeLimit.round()} giây' : 'Cần cấp ${d.level - 2}', style: small),
-                      ],
-                    ),
-                  ],
+      child: _OpenAt(
+        fraction: math.max(0, last) / (dungeons.length - 1),
+        builder: (ctl) => GridView.builder(
+          controller: ctl,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 270,
+            mainAxisExtent: 112,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: dungeons.length,
+          itemBuilder: (context, i) {
+            final d = dungeons[i];
+            final stars = h.dungeonStars[d.id] ?? 0;
+            final open = h.level >= d.level - 2;
+            final quest = h.currentMain?.type == QuestType.dungeon && h.currentMain?.target == d.id;
+            return Opacity(
+              opacity: open ? 1 : 0.5,
+              child: GestureDetector(
+                onTap: open ? () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d))) : null,
+                child: Panel(
+                  border: quest ? goldLight : gold,
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Ải ${i + 1}: ${d.name}',
+                              style: bold.copyWith(color: goldLight),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (quest) const Icon(Icons.auto_stories, size: 16, color: goldLight),
+                        ],
+                      ),
+                      Text('Cấp ${d.level} · ${d.map.name}', style: small),
+                      Text(
+                        '${d.waves.length} đợt quái + ${mobById[d.map.boss]!.name}',
+                        style: small.copyWith(color: cream),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          for (var s = 0; s < 3; s++)
+                            Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
+                          const Spacer(),
+                          Text(open ? '${d.timeLimit.round()} giây' : 'Cần cấp ${d.level - 2}', style: small),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -220,8 +269,7 @@ class QuestScreen extends StatelessWidget {
                         const SizedBox(height: 6),
                         Expanded(
                           child: SingleChildScrollView(
-                            child: Text(q.story,
-                                style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
+                            child: Text(q.story, style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
                           ),
                         ),
                         const Divider(color: gold),
@@ -264,8 +312,11 @@ class QuestScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          Icon(d.done ? Icons.check_circle : Icons.radio_button_unchecked,
-                              color: d.done ? const Color(0xFF8CE07A) : creamDim, size: 20),
+                          Icon(
+                            d.done ? Icons.check_circle : Icons.radio_button_unchecked,
+                            color: d.done ? const Color(0xFF8CE07A) : creamDim,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -279,8 +330,10 @@ class QuestScreen extends StatelessWidget {
                                     height: 10,
                                     label: '${d.progress}/${d.count}',
                                   ),
-                                Text('+${fmt(d.exp)} kinh nghiệm · +${fmt(d.gold)} lượng',
-                                    style: small.copyWith(fontSize: 11)),
+                                Text(
+                                  '+${fmt(d.exp)} kinh nghiệm · +${fmt(d.gold)} lượng',
+                                  style: small.copyWith(fontSize: 11),
+                                ),
                               ],
                             ),
                           ),
