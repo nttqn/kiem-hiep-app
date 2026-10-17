@@ -49,6 +49,9 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.0.5, ≤ 500 ký tự)
+Mở giới hạn cấp 99 và tính năng CHUYỂN SINH: đầy kinh nghiệm cấp 99 thì chuyển sinh về cấp 10, giữ nguyên trang bị, nhận thưởng sinh lực, công lực, phòng thủ, kinh nghiệm vĩnh viễn (tối đa 5 lần). Thêm 2 bản đồ Vân Vụ Sơn, Hoa Sơn Tuyệt Đỉnh, 4 ải, 13 nhiệm vụ mới, khảm ngọc Ngũ Hành và 6 linh thú đồng hành. Bảo vệ dữ liệu: mỗi ô nhân vật có bản dự phòng, khôi phục được ở màn chọn nhân vật; đồng bộ đám mây hỏi lại trước khi ghi đè bản có cấp cao hơn.
+
 ## Có gì mới (bản 1.0.4, ≤ 500 ký tự)
 Mở giới hạn cấp 99 và tính năng CHUYỂN SINH: đầy kinh nghiệm cấp 99 thì chuyển sinh về cấp 10, giữ nguyên trang bị, nhận thưởng sinh lực, công lực, phòng thủ, kinh nghiệm vĩnh viễn (tối đa 5 lần). Thêm 2 bản đồ Vân Vụ Sơn, Hoa Sơn Tuyệt Đỉnh, 4 ải, 13 nhiệm vụ mới, khảm ngọc Ngũ Hành và 6 linh thú đồng hành.
 

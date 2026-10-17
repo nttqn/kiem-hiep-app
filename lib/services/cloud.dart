@@ -14,7 +14,9 @@ import 'sync_plan.dart';
 
 /// Online save: the three slots mirrored to Firestore under the signed-in
 /// player (`users/{uid}/slots/{0..2}`), so reinstalling or changing phone
-/// (Android or iPhone) keeps progress.
+/// (Android or iPhone) keeps progress. A cloud copy about to be replaced by
+/// one that is behind it (or another character) is first kept in
+/// `users/{uid}/backups/{slot}`.
 ///
 /// Everything degrades to offline play: no Firebase config, no network or
 /// a failed sign-in just leaves [available] or [user] unset.
@@ -31,6 +33,7 @@ class CloudSave extends ChangeNotifier {
   /// Slots whose newer cloud copy waits for the player to choose.
   final List<int> conflicts = [];
   final Map<int, SlotInfo> cloudSlots = {};
+  final Map<int, SlotInfo> cloudBackups = {};
 
   bool _googleReady = false;
   Timer? _debounce;
@@ -126,6 +129,7 @@ class CloudSave extends ChangeNotifier {
     user = null;
     conflicts.clear();
     cloudSlots.clear();
+    cloudBackups.clear();
     lastSync = null;
     notifyListeners();
   }
@@ -138,14 +142,51 @@ class CloudSave extends ChangeNotifier {
   CollectionReference<Map<String, dynamic>> get _slots =>
       FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('slots');
 
-  static SlotInfo _info(HeroData h) => SlotInfo(
-        savedAt: h.savedAt,
-        data: jsonEncode(h.toJson()),
-        name: h.name,
-        level: h.level,
-        sect: h.sect.name,
-        playSeconds: h.playSeconds,
-      );
+  CollectionReference<Map<String, dynamic>> get _backups =>
+      FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('backups');
+
+  static SlotInfo _info(HeroData h) => SlotInfo.ofHero(h);
+
+  static Map<String, dynamic> _doc(SlotInfo info) => {
+        'data': info.data,
+        'savedAt': info.savedAt,
+        'name': info.name,
+        'level': info.level,
+        'sect': info.sect,
+        'playSeconds': info.playSeconds,
+        'rebirths': info.rebirths,
+        'updated': FieldValue.serverTimestamp(),
+      };
+
+  /// Reads a slot or backup document, or null when it is not one.
+  static (int, SlotInfo)? _read(QueryDocumentSnapshot<Map<String, dynamic>> d) {
+    final i = int.tryParse(d.id);
+    final m = d.data();
+    if (i == null || i < 0 || i >= slotCount || m['data'] is! String) return null;
+    return (
+      i,
+      SlotInfo(
+        savedAt: (m['savedAt'] as num?)?.toInt() ?? 0,
+        data: m['data'] as String,
+        name: m['name'] as String? ?? '',
+        level: (m['level'] as num?)?.toInt() ?? 0,
+        sect: m['sect'] as String? ?? '',
+        playSeconds: (m['playSeconds'] as num?)?.toDouble() ?? 0,
+        rebirths: (m['rebirths'] as num?)?.toInt() ?? 0,
+      )
+    );
+  }
+
+  /// The cloud backup of [slot] as a hero, if there is a readable one.
+  HeroData? cloudBackupHero(int slot) {
+    final b = cloudBackups[slot];
+    if (b == null) return null;
+    try {
+      return HeroData.fromJson(jsonDecode(b.data) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Pulls the cloud copies, uploads what is newer here, restores slots
   /// that are empty here, and lists the rest in [conflicts].
@@ -158,17 +199,18 @@ class CloudSave extends ChangeNotifier {
       final snap = await _slots.get().timeout(const Duration(seconds: 15));
       cloudSlots.clear();
       for (final d in snap.docs) {
-        final i = int.tryParse(d.id);
-        final m = d.data();
-        if (i == null || i < 0 || i >= slotCount || m['data'] is! String) continue;
-        cloudSlots[i] = SlotInfo(
-          savedAt: (m['savedAt'] as num?)?.toInt() ?? 0,
-          data: m['data'] as String,
-          name: m['name'] as String? ?? '',
-          level: (m['level'] as num?)?.toInt() ?? 0,
-          sect: m['sect'] as String? ?? '',
-          playSeconds: (m['playSeconds'] as num?)?.toDouble() ?? 0,
-        );
+        final r = _read(d);
+        if (r != null) cloudSlots[r.$1] = r.$2;
+      }
+      cloudBackups.clear();
+      try {
+        final bak = await _backups.get().timeout(const Duration(seconds: 15));
+        for (final d in bak.docs) {
+          final r = _read(d);
+          if (r != null) cloudBackups[r.$1] = r.$2;
+        }
+      } catch (e) {
+        debugPrint('backups unreadable: $e');
       }
       final save = SaveService.instance;
       final local = [for (final h in save.slots) h == null ? null : _info(h)];
@@ -203,6 +245,22 @@ class CloudSave extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The player kept both: the cloud copy of [slot] goes into the empty
+  /// device slot [into] (and up to the cloud there).
+  Future<void> takeCloudInto(int slot, int into) async {
+    final c = cloudSlots[slot];
+    if (c == null || into < 0 || SaveService.instance.slots[into] != null) return;
+    _apply(into, c);
+    final h = SaveService.instance.slots[into];
+    if (h != null) {
+      try {
+        await _upload(into, h);
+      } catch (e) {
+        queueUpload(into);
+      }
+    }
+  }
+
   /// The player kept this device's copy of [slot].
   Future<void> keepLocal(int slot) async {
     conflicts.remove(slot);
@@ -227,16 +285,37 @@ class CloudSave extends ChangeNotifier {
 
   Future<void> _upload(int slot, HeroData h) async {
     final info = _info(h);
-    await _slots.doc('$slot').set({
-      'data': info.data,
-      'savedAt': info.savedAt,
-      'name': info.name,
-      'level': info.level,
-      'sect': info.sect,
-      'playSeconds': info.playSeconds,
-      'updated': FieldValue.serverTimestamp(),
-    });
+    final old = cloudSlots[slot];
+    if (old != null && old.data != info.data && wouldLose(old, info)) await _stash(slot, old);
+    await _slots.doc('$slot').set(_doc(info));
     cloudSlots[slot] = info;
+  }
+
+  /// Keeps [old] as the cloud backup of [slot] if it got further than the
+  /// backup already there.
+  Future<void> _stash(int slot, SlotInfo old) async {
+    if (!shouldStash(old, cloudBackups[slot])) return;
+    await _backups.doc('$slot').set(_doc(old));
+    cloudBackups[slot] = old;
+  }
+
+  /// After a backup was restored into [slot] on this device: push it now,
+  /// overriding any pending choice for that slot.
+  Future<void> pushRestored(int slot) async {
+    conflicts.remove(slot);
+    final h = SaveService.instance.slots[slot];
+    if (!available || user == null || h == null) {
+      notifyListeners();
+      return;
+    }
+    try {
+      await _upload(slot, h);
+      lastSync = DateTime.now();
+    } catch (e) {
+      debugPrint('restore upload failed: $e');
+      queueUpload(slot);
+    }
+    notifyListeners();
   }
 
   /// Called after every local save; uploads at most every 20 seconds.
@@ -280,9 +359,11 @@ class CloudSave extends ChangeNotifier {
     _dirty.clear();
     notifyListeners();
     try {
-      final snap = await _slots.get();
-      for (final d in snap.docs) {
-        await d.reference.delete();
+      for (final col in [_slots, _backups]) {
+        final snap = await col.get();
+        for (final d in snap.docs) {
+          await d.reference.delete();
+        }
       }
       try {
         await u.delete();
@@ -306,6 +387,7 @@ class CloudSave extends ChangeNotifier {
       if (_googleReady) await GoogleSignIn.instance.signOut();
       user = null;
       cloudSlots.clear();
+      cloudBackups.clear();
       conflicts.clear();
       lastSync = null;
       message = 'Đã xóa tài khoản và dữ liệu trên mây.';
@@ -323,9 +405,10 @@ class CloudSave extends ChangeNotifier {
 
   Future<void> deleteSlot(int slot) async {
     _dirty.remove(slot);
-    cloudSlots.remove(slot);
+    final old = cloudSlots.remove(slot);
     if (!available || user == null) return;
     try {
+      if (old != null) await _stash(slot, old);
       await _slots.doc('$slot').delete();
     } catch (_) {}
   }

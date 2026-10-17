@@ -4,6 +4,7 @@ import '../core/hero.dart';
 import '../services/cloud.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import '../services/sync_plan.dart';
 import 'cloud_panel.dart';
 import 'backdrop.dart';
 import 'create_screen.dart';
@@ -48,7 +49,7 @@ class _TitleScreenState extends State<TitleScreen> {
       body: Backdrop(
         child: SafeArea(
           child: ListenableBuilder(
-            listenable: SaveService.instance,
+            listenable: Listenable.merge([SaveService.instance, CloudSave.instance]),
             builder: (context, _) => Stack(
               children: [
                 const Positioned(right: 8, top: 4, child: CloudButton()),
@@ -94,8 +95,67 @@ class _SlotCard extends StatelessWidget {
   const _SlotCard({required this.index});
   final int index;
 
+  /// The backup worth offering for this slot: the local or cloud one that
+  /// got furthest, if it beats (or differs from) what the slot holds.
+  HeroData? _backup() {
+    final cur = SaveService.instance.slots[index];
+    final curInfo = cur == null ? null : SlotInfo.ofHero(cur);
+    HeroData? best;
+    for (final b in [SaveService.instance.backups[index], CloudSave.instance.cloudBackupHero(index)]) {
+      if (b == null || !backupWorthOffering(curInfo, SlotInfo.ofHero(b))) continue;
+      if (best == null || compareProgress(SlotInfo.ofHero(b), SlotInfo.ofHero(best)) > 0) best = b;
+    }
+    return best;
+  }
+
+  Future<void> _restore(BuildContext context, HeroData b) async {
+    final cur = SaveService.instance.slots[index];
+    final bInfo = SlotInfo.ofHero(b);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Khôi phục bản dự phòng?', style: titleStyle(20)),
+        content: Text(
+          'Đưa ${b.name} (${b.sect.name}, ${bInfo.levelText}) về ô ${index + 1}.'
+          '${cur == null ? '' : ' Bản đang có (${cur.name}, ${SlotInfo.ofHero(cur).levelText}) sẽ được cất làm bản dự phòng.'}',
+          style: body,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Khôi phục', style: TextStyle(color: Color(0xFF8CE07A), fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await SaveService.instance.restore(index, b);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final b = _backup();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _card(context),
+        SizedBox(
+          height: 30,
+          child: b == null
+              ? null
+              : TextButton.icon(
+                  onPressed: () => _restore(context, b),
+                  icon: const Icon(Icons.restore, size: 16, color: goldLight),
+                  label: Text('Bản dự phòng: ${SlotInfo.ofHero(b).levelText}',
+                      style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _card(BuildContext context) {
     final h = SaveService.instance.slots[index];
     return GestureDetector(
       onTap: () => _open(context, h),

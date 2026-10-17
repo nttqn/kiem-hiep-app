@@ -37,6 +37,20 @@ Future<void> main() async {
     if (m.minLv <= level) map = m;
   }
   if (q['map'] != null) map = mapById[q['map']] ?? map;
+  // bak=1 on the title screen: slot 1 regressed to level 27 with a level 50
+  // backup, as after a bad sync.
+  if (screen == 'title' && q['bak'] == '1') {
+    HeroData mk(int lv) {
+      final h = HeroData(name: 'Tiểu Hiệp', hanh: Hanh.hoa);
+      while (h.level < lv) {
+        h.gainExp(h.expNeeded.toDouble());
+      }
+      h.notices.clear();
+      return h;
+    }
+    SaveService.instance.slots[0] = mk(27);
+    SaveService.instance.backups[0] = mk(50);
+  }
   if (screen != 'title' && screen != 'create') {
     final h = HeroData(name: q['name'] ?? 'Tiểu Hiệp', hanh: Hanh.values[sect], female: female);
     final rng = math.Random(level * 7 + sect);

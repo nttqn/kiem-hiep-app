@@ -195,7 +195,10 @@ class _CloudPanel extends StatelessWidget {
 
 bool _resolving = false;
 
-/// Asks, slot by slot, which copy to keep when the cloud one is newer.
+/// Asks, slot by slot, which copy to keep when sync cannot decide alone:
+/// the cloud copy is newer, or the device copy is behind it or another
+/// character. The copy not chosen is kept as that slot's backup, and
+/// choosing the one that is further behind needs a second confirmation.
 Future<void> resolveConflicts(BuildContext context) async {
   final cloud = CloudSave.instance;
   if (_resolving || cloud.conflicts.isEmpty) return;
@@ -206,53 +209,96 @@ Future<void> resolveConflicts(BuildContext context) async {
       final local = SaveService.instance.slots[slot];
       final remote = cloud.cloudSlots[slot];
       if (local == null || remote == null) continue;
-      final takeCloud = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: lacquer,
-          title: Text('Ô ${slot + 1}: chọn bản lưu', style: titleStyle(20)),
-          content: SizedBox(
-            width: 480,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Trên mây có bản mới hơn bản trong máy này (có thể bạn đã chơi trên máy khác).',
-                    style: body),
-                const SizedBox(height: 10),
-                _copy('Trên mây (mới hơn)', SlotInfo(
-                  savedAt: remote.savedAt,
-                  data: '',
-                  name: remote.name,
-                  level: remote.level,
-                  sect: remote.sect,
-                  playSeconds: remote.playSeconds,
-                )),
-                const SizedBox(height: 6),
-                _copy('Trong máy', SlotInfo(
-                  savedAt: local.savedAt,
-                  data: '',
-                  name: local.name,
-                  level: local.level,
-                  sect: local.sect.name,
-                  playSeconds: local.playSeconds,
-                )),
-                const SizedBox(height: 8),
-                Text('Bản không chọn sẽ bị ghi đè.', style: small.copyWith(color: const Color(0xFFFF8A7A))),
+      final here = SlotInfo.ofHero(local);
+      final other = !sameHero(here, remote);
+      final cloudNewer = remote.savedAt > here.savedAt;
+      final empty = SaveService.instance.slots.indexWhere((s) => s == null);
+      String? choice;
+      while (choice == null) {
+        if (!context.mounted) return;
+        final pick = await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: lacquer,
+            title: Text('Ô ${slot + 1}: chọn bản lưu', style: titleStyle(20)),
+            content: SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      other
+                          ? 'Ô này trên mây là một nhân vật khác với nhân vật trong máy.'
+                          : cloudNewer
+                              ? 'Trên mây có bản mới hơn bản trong máy này (có thể bạn đã chơi trên máy khác).'
+                              : 'Bản trong máy này đang kém hơn bản trên mây (có thể máy vừa khôi phục một bản sao lưu cũ).',
+                      style: body,
+                    ),
+                    const SizedBox(height: 10),
+                    _copy('Trên mây', remote, best: compareProgress(remote, here) > 0),
+                    const SizedBox(height: 6),
+                    _copy('Trong máy', here, best: compareProgress(here, remote) > 0),
+                    const SizedBox(height: 8),
+                    Text(
+                      other && empty >= 0
+                          ? 'Có thể giữ cả hai: nhân vật trên mây sẽ được đưa vào ô trống ${empty + 1}.'
+                          : 'Bản không chọn được cất vào bản dự phòng, khôi phục được ở màn chọn nhân vật.',
+                      style: small.copyWith(color: goldLight),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, 'local'), child: const Text('Giữ bản trong máy')),
+              TextButton(onPressed: () => Navigator.pop(ctx, 'cloud'), child: const Text('Dùng bản trên mây')),
+              if (other && empty >= 0)
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 'both'),
+                  child: const Text('Giữ cả hai', style: TextStyle(color: Color(0xFF8CE07A), fontWeight: FontWeight.w800)),
+                ),
+            ],
+          ),
+        );
+        if (pick == null) return;
+        // Taking the copy that is further behind loses progress: ask again.
+        final (kept, dropped) = pick == 'cloud' ? (remote, here) : (here, remote);
+        if (pick != 'both' && sameHero(kept, dropped) && compareProgress(kept, dropped) < 0) {
+          if (!context.mounted) return;
+          final sure = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: lacquer,
+              title: Text('Chọn bản kém hơn?', style: titleStyle(20, color: const Color(0xFFFF8A7A))),
+              content: Text(
+                'Bản bạn chọn (${kept.levelText}) kém hơn bản kia (${dropped.levelText}). '
+                'Bản ${dropped.levelText} sẽ được cất vào bản dự phòng của ô ${slot + 1}.',
+                style: body,
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Chọn lại')),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Vẫn chọn', style: TextStyle(color: Color(0xFFFF8A7A))),
+                ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Giữ bản trong máy')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Dùng bản trên mây')),
-          ],
-        ),
-      );
-      if (takeCloud == true) {
-        await cloud.takeCloud(slot);
-      } else {
-        await cloud.keepLocal(slot);
+          );
+          if (sure != true) continue;
+        }
+        choice = pick;
+      }
+      switch (choice) {
+        case 'cloud':
+          await cloud.takeCloud(slot);
+        case 'both':
+          await cloud.takeCloudInto(slot, empty);
+          await cloud.keepLocal(slot);
+        default:
+          await cloud.keepLocal(slot);
       }
     }
   } finally {
@@ -260,7 +306,7 @@ Future<void> resolveConflicts(BuildContext context) async {
   }
 }
 
-Widget _copy(String title, SlotInfo s) {
+Widget _copy(String title, SlotInfo s, {bool best = false}) {
   final hours = s.playSeconds / 3600;
   final when = DateTime.fromMillisecondsSinceEpoch(s.savedAt);
   return Container(
@@ -269,13 +315,14 @@ Widget _copy(String title, SlotInfo s) {
     decoration: BoxDecoration(
       color: lacquerDeep,
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: gold.withValues(alpha: 0.5)),
+      border: Border.all(color: best ? const Color(0xFF8CE07A) : gold.withValues(alpha: 0.5), width: best ? 2 : 1),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: small.copyWith(color: goldLight)),
-        Text('${s.name} · ${s.sect} · Cấp ${s.level}', style: bold),
+        Text(best ? '$title · tiến độ cao hơn' : title,
+            style: small.copyWith(color: best ? const Color(0xFF8CE07A) : goldLight)),
+        Text('${s.name} · ${s.sect} · ${s.levelText}', style: bold),
         Text(
           'Đã chơi ${hours.toStringAsFixed(1)} giờ · lưu lúc '
           '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')} '
