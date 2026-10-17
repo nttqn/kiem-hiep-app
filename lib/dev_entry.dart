@@ -13,6 +13,7 @@ import 'ui/character_screen.dart';
 import 'ui/create_screen.dart';
 import 'ui/lists.dart';
 import 'ui/pet_screen.dart';
+import 'ui/rebirth_screen.dart';
 import 'ui/play_screen.dart';
 import 'ui/rewards_ui.dart';
 import 'ui/shop_screen.dart';
@@ -42,6 +43,10 @@ Future<void> main() async {
     for (var l = 1; l < level; l++) {
       h.gainExp(h.expNeeded.toDouble());
     }
+    // exp=<0..100> fills that share of the bar, cs=<n> sets rebirths.
+    h.rebirths = int.tryParse(q['cs'] ?? '') ?? 0;
+    final expPct = int.tryParse(q['exp'] ?? '');
+    if (expPct != null) h.exp = (h.expNeeded * expPct / 100).round();
     h.notices.clear();
     h.autoSpend();
     h.autoLearn();
@@ -105,6 +110,7 @@ Future<void> main() async {
     'dungeons' => const DungeonListScreen(),
     'ach' => const AchievementsScreen(),
     'pets' => const PetScreen(),
+    'rebirth' => const RebirthScreen(),
     'gems' => const CharacterScreen(tab: 3, forge: true),
     _ => const TownScreen(),
   };

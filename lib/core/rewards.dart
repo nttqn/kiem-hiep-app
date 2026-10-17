@@ -25,7 +25,7 @@ OfflineReward? offlineReward(HeroData h, Duration away) {
   final minutes = t.inSeconds / 60;
   final exp = (mobExpAt(h.level) * 2 * minutes).round();
   final gold = ((1 + 0.4 * h.level) * 1.0 * minutes).round();
-  return OfflineReward(t, h.level >= maxLevel ? 0 : exp, gold);
+  return OfflineReward(t, h.expFull ? 0 : exp, gold);
 }
 
 // ------------------------------------------------------------- login gifts
@@ -116,6 +116,8 @@ final achievements = <AchDef>[
   AchDef('lv80', 'Võ lâm chí tôn', 'Đạt cấp 80', 'Võ Lâm Chí Tôn', 80, 50000, (h) => h.level),
   AchDef('lv90', 'Thiên hạ vô song', 'Đạt cấp 90', 'Vô Song', 90, 80000, (h) => h.level),
   AchDef('lv99', 'Phá toái hư không', 'Đạt cấp 99', 'Võ Thánh', 99, 150000, (h) => h.level),
+  AchDef('cs1', 'Tái sinh', 'Chuyển sinh lần đầu', 'Tái Sinh Hiệp Khách', 1, 100000, (h) => h.rebirths),
+  AchDef('cs5', 'Ngũ chuyển', 'Chuyển sinh 5 lần', 'Ngũ Chuyển Chân Nhân', 5, 500000, (h) => h.rebirths),
   AchDef('boss1', 'Hạ đầu lĩnh', 'Đánh bại 1 đầu lĩnh', 'Dũng Sĩ', 1, 400, (h) => h.bossKills),
   AchDef('boss25', 'Săn đầu lĩnh', 'Đánh bại 25 đầu lĩnh', 'Thợ Săn Đầu Lĩnh', 25, 8000, (h) => h.bossKills),
   AchDef('dungeon5', 'Vượt ải', 'Vượt 5 ải khác nhau', 'Phá Trận Sư', 5, 2500, _cleared),

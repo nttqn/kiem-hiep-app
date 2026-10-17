@@ -24,7 +24,7 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 • 56 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo và Thiên Ma Lão Tổ, cùng nhiệm vụ hằng ngày.
 
 🧙 BUILD NHÂN VẬT THEO Ý MÌNH
-• Mỗi cấp nhận điểm tiềm năng và điểm kỹ năng, tối đa cấp 99.
+• Mỗi cấp nhận điểm tiềm năng và điểm kỹ năng, tối đa cấp 99, rồi chuyển sinh tới 5 lần để nhận thưởng sinh lực, công lực, phòng thủ vĩnh viễn.
 • 4 chiêu chủ động và 2 nội công cho mỗi phái, nâng tới cấp 10.
 • Trang bị 7 ô, 5 độ hiếm từ Thường đến Truyền thuyết; thợ rèn cường hóa tới +10.
 • Khảm ngọc Ngũ Hành vào trang bị, khảm đủ các hệ để kích hoạt thưởng bộ, hợp 3 viên thành 1 viên cao cấp.
@@ -33,7 +33,7 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 🎁 NGÀY NÀO CŨNG CÓ QUÀ
 • Bế quan tu luyện: tắt game vẫn nhận kinh nghiệm và lượng, tới 8 giờ.
 • Quà đăng nhập 7 ngày, ngày 7 tặng trang bị Hiếm.
-• 20 thành tựu mở khóa danh hiệu: Thiếu Hiệp, Đại Hiệp, Tông Sư, Võ Lâm Chí Tôn, Võ Thánh…
+• 22 thành tựu mở khóa danh hiệu: Thiếu Hiệp, Đại Hiệp, Tông Sư, Võ Lâm Chí Tôn, Võ Thánh, Ngũ Chuyển Chân Nhân…
 
 🤖 CHƠI NHẸ NHÀNG, CHƠI MỌI LÚC
 • Đánh thời gian thực bằng joystick và nút chiêu, hoặc bật TỰ ĐỘNG để nhân vật tự tìm quái nhiệm vụ, ra chiêu, uống thuốc.
@@ -48,6 +48,9 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự chọn xem để nhận thưởng: hồi sinh tại chỗ, nhân đôi phần thưởng, thuốc miễn phí.
 
 Hỗ trợ: trungsmail@gmail.com
+
+## Có gì mới (bản 1.0.4, ≤ 500 ký tự)
+Mở giới hạn cấp 99 và tính năng CHUYỂN SINH: đầy kinh nghiệm cấp 99 thì chuyển sinh về cấp 10, giữ nguyên trang bị, nhận thưởng sinh lực, công lực, phòng thủ, kinh nghiệm vĩnh viễn (tối đa 5 lần). Thêm 2 bản đồ Vân Vụ Sơn, Hoa Sơn Tuyệt Đỉnh, 4 ải, 13 nhiệm vụ mới, khảm ngọc Ngũ Hành và 6 linh thú đồng hành.
 
 ## Có gì mới (bản 1.0.3, ≤ 500 ký tự)
 Mở giới hạn cấp 99! Thêm 2 bản đồ mới Vân Vụ Sơn và Hoa Sơn Tuyệt Đỉnh, 4 ải mới, 13 nhiệm vụ chính tuyến đối đầu Thiên Ma Lão Tổ, 2 bản nhạc nền mới. Thêm khảm ngọc Ngũ Hành và 6 linh thú đồng hành. Sửa lỗi đăng nhập Google để lưu trữ đám mây.
@@ -104,7 +107,7 @@ Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire be
 • 56 story quests against the Blood Demon Cult and the Heavenly Demon, plus daily quests.
 
 🧙 BUILD YOUR HERO
-• Attribute and skill points every level, up to level 99.
+• Attribute and skill points every level, up to level 99, then rebirth up to 5 times for permanent HP, attack and defense bonuses.
 • 4 active skills and 2 passives per sect, each up to level 10.
 • 7 gear slots, 5 rarities from Common to Legendary, and forging up to +10.
 • Five-element gems to socket into gear, with set bonuses and gem fusion.
@@ -113,7 +116,7 @@ Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire be
 🎁 REWARDS EVERY DAY
 • Closed-door training: earn EXP and gold while the game is closed, up to 8 hours.
 • 7-day login gifts with an Epic item on day 7.
-• 20 achievements that unlock titles to wear.
+• 22 achievements that unlock titles to wear.
 
 🤖 EASY TO PLAY ANYTIME
 • Real-time combat with joystick and skill buttons, or switch on AUTO to hunt quest monsters, cast skills and drink potions for you.

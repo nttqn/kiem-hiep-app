@@ -9,6 +9,21 @@ import 'sects.dart';
 
 const int maxLevel = 99;
 const int pointsPerLevel = 5;
+
+// Chuyển sinh: at level 99 with a full EXP bar the hero may be reborn at
+// [rebirthLevel], keeping gear, skills, gems, pets and gold, for permanent
+// bonuses that stack with each rebirth.
+const int maxRebirths = 5;
+const int rebirthLevel = 10;
+const int rebirthPoints = 40;
+const double rebirthHpAtk = 0.05;
+const double rebirthDef = 0.04;
+const double rebirthExp = 0.5;
+
+/// Permanent bonuses after [n] rebirths.
+Map<Bonus, double> rebirthBonuses(int n) => n <= 0
+    ? const {}
+    : {Bonus.hpPct: rebirthHpAtk * n, Bonus.atkPct: rebirthHpAtk * n, Bonus.defPct: rebirthDef * n};
 const int bagSize = 60;
 
 // ---------------------------------------------------------------- balance
@@ -155,6 +170,9 @@ class HeroData {
   String activePet = '';
   final Map<String, int> bossKillsById = {};
 
+  /// Times reborn (chuyển sinh), 0..[maxRebirths].
+  int rebirths = 0;
+
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
 
@@ -200,6 +218,7 @@ class HeroData {
       }
     }
     add(setBonus(gemPhases));
+    add(rebirthBonuses(rebirths));
     final pet = petById[activePet];
     if (pet != null) add({pet.bonus: pet.bonusAt(petLevels[pet.id] ?? 1)});
     return out;
@@ -330,9 +349,24 @@ class HeroData {
 
   int get expNeeded => expToNext(level);
 
-  /// Adds EXP and handles level-ups. Returns levels gained.
+  /// Level 99 with the EXP bar filled: nothing more to gain.
+  bool get expFull => level >= maxLevel && exp >= expToNext(maxLevel);
+
+  bool get canRebirth => expFull && rebirths < maxRebirths;
+
+  /// Adds EXP and handles level-ups. Returns levels gained. At level 99 the
+  /// bar still fills up, which is the requirement for a rebirth.
   int gainExp(double amount) {
-    if (level >= maxLevel) return 0;
+    amount *= 1 + rebirthExp * rebirths;
+    if (level >= maxLevel) {
+      final cap = expToNext(maxLevel);
+      if (exp >= cap) return 0;
+      exp = math.min(cap, exp + amount.round());
+      if (exp >= cap && rebirths < maxRebirths) {
+        notices.add(Notice('Kinh nghiệm đã đầy! Về thành để chuyển sinh.', color: 0xFFFFD34A, big: true));
+      }
+      return 0;
+    }
     exp += amount.round();
     var gained = 0;
     while (level < maxLevel && exp >= expToNext(level)) {
@@ -342,7 +376,7 @@ class HeroData {
       freePoints += pointsPerLevel;
       skillPoints++;
     }
-    if (level >= maxLevel) exp = 0;
+    if (level >= maxLevel) exp = math.min(exp, expToNext(maxLevel));
     if (gained > 0) {
       recompute();
       notices.add(Notice('THĂNG CẤP $level!', color: 0xFFFFD34A, big: true));
@@ -489,6 +523,27 @@ class HeroData {
       }
     }
     return n;
+  }
+
+  // ------------------------------------------------------------- rebirth
+
+  /// Back to [rebirthLevel] with every potential point refunded (minus the
+  /// ones earned above that level) plus [rebirthPoints] more.
+  bool rebirth() {
+    if (!canRebirth) return false;
+    rebirths++;
+    var total = freePoints;
+    for (var i = 0; i < 4; i++) {
+      total += spent[i];
+      spent[i] = 0;
+    }
+    total -= (level - rebirthLevel) * pointsPerLevel;
+    freePoints = math.max(0, total) + rebirthPoints;
+    level = rebirthLevel;
+    exp = 0;
+    recompute();
+    notices.add(Notice('CHUYỂN SINH LẦN $rebirths!', color: 0xFFFFD34A, big: true));
+    return true;
   }
 
   // ------------------------------------------------------------- quests
@@ -658,6 +713,7 @@ class HeroData {
         'pets': petLevels,
         'pet': activePet,
         'bossKillsById': bossKillsById,
+        'rebirths': rebirths,
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -720,6 +776,7 @@ class HeroData {
     (m['bossKillsById'] as Map? ?? const {}).forEach((k, v) {
       if (v is int) h.bossKillsById['$k'] = v;
     });
+    h.rebirths = ((m['rebirths'] as int?) ?? 0).clamp(0, maxRebirths);
     h.recompute();
     return h;
   }

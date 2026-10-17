@@ -10,6 +10,7 @@ import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
 import 'pet_screen.dart';
+import 'rebirth_screen.dart';
 import 'rewards_ui.dart';
 import 'cloud_panel.dart';
 import 'lists.dart';
@@ -183,13 +184,25 @@ class _TownScreenState extends State<TownScreen> {
           if (h.title.isNotEmpty)
             Text('« ${h.title} »', style: small.copyWith(color: goldLight, fontStyle: FontStyle.italic)),
           Text('${h.sect.name} · Cấp ${h.level}', style: body.copyWith(color: hanhColor(h.hanh))),
+          if (h.rebirths > 0)
+            Text('Chuyển sinh lần ${h.rebirths}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           Bar(
-            value: h.level >= maxLevel ? 1 : h.exp / h.expNeeded,
+            value: (h.exp / h.expNeeded).clamp(0.0, 1.0),
             color: expGold,
             height: 13,
-            label: h.level >= maxLevel ? 'MAX' : '${fmt(h.exp)} / ${fmt(h.expNeeded)}',
+            label: h.expFull ? 'ĐẦY' : '${fmt(h.exp)} / ${fmt(h.expNeeded)}',
           ),
+          if (h.level >= maxLevel) ...[
+            const SizedBox(height: 6),
+            LButton(
+              label: h.canRebirth ? 'Chuyển sinh!' : 'Chuyển sinh',
+              icon: Icons.autorenew,
+              small: true,
+              color: h.canRebirth ? seal : const Color(0xFF5A4A3A),
+              onTap: () => _go(const RebirthScreen()),
+            ),
+          ],
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,

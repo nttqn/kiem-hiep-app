@@ -37,9 +37,9 @@ void townVisit(HeroData h) {
 }
 
 /// Runs a hero through the game on autopilot for [minutes] of game time.
-SimReport simulate(Hanh hanh, {int minutes = 120, int seed = 1}) {
+SimReport simulate(Hanh hanh, {int minutes = 120, int seed = 1, HeroData? start}) {
   final rep = SimReport();
-  final h = HeroData(name: 'Sim', hanh: hanh)..seed = seed;
+  final h = start ?? (HeroData(name: 'Sim', hanh: hanh)..seed = seed);
   rep.hero = h;
   h.refreshDaily('2026-10-15');
   final rng = math.Random(seed);

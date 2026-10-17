@@ -305,13 +305,15 @@ class ExpStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final v = hero.level >= maxLevel ? 1.0 : hero.exp / hero.expNeeded;
+    final v = (hero.exp / hero.expNeeded).clamp(0.0, 1.0);
     return IgnorePointer(
       child: Bar(
         value: v,
         color: expGold,
         height: 9,
-        label: hero.level >= maxLevel ? 'Cấp tối đa' : 'Cấp ${hero.level} · ${(v * 100).toStringAsFixed(1)}%',
+        label: hero.expFull
+            ? (hero.canRebirth ? 'Kinh nghiệm đầy · có thể chuyển sinh' : 'Cấp tối đa')
+            : 'Cấp ${hero.level} · ${(v * 100).toStringAsFixed(1)}%',
       ),
     );
   }
