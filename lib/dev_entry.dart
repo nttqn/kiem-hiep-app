@@ -83,6 +83,11 @@ Future<void> main() async {
       }
       h.petLevels['crane'] = 3;
       h.petLevels['tiger'] = 6;
+      if (q['pets'] == 'all') {
+        for (final (id, lv) in [('turtle', 9), ('fox', 12), ('kylin', 15), ('dragon', 20)]) {
+          h.petLevels[id] = lv;
+        }
+      }
       h.activePet = q['pet'] ?? 'tiger';
       h.recompute();
     }

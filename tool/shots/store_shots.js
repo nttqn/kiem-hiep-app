@@ -15,14 +15,14 @@ const devices = [
 ];
 
 const shots = [
-  ['01-chien-dau', 'screen=play&level=30&sect=3&map=hoangsa', 11000],
-  ['02-hang-dong', 'screen=play&level=22&sect=2&female=1&map=hacphong', 11000],
-  ['03-vuot-ai', 'screen=dungeon&level=12&sect=4&d=a3', 13000],
-  ['04-nui-lua', 'screen=play&level=50&sect=0&map=hoadiem', 11000],
+  ['01-hoa-son', 'screen=play&level=92&sect=3&cs=3&map=hoason&pet=dragon&pets=all', 11000],
+  ['02-van-vu-son', 'screen=play&level=78&sect=2&female=1&map=vanvu&pet=fox&pets=all', 8000],
+  ['03-vuot-ai', 'screen=dungeon&level=76&sect=4&cs=1&d=a15&pet=kylin&pets=all', 13000],
+  ['04-kiem-trung', 'screen=dungeon&level=92&sect=1&cs=5&d=a17&pet=dragon&pets=all', 13000],
   ['05-chon-phai', 'screen=create', 3000],
-  ['06-qua-dang-nhap', 'screen=town&level=25&sect=3&female=1', 3500],
-  ['07-thanh-tuu', 'screen=ach&level=35&sect=2&female=1', 2500],
-  ['08-ky-nang', 'screen=skills&level=40&sect=2&female=1', 2500],
+  ['06-linh-thu', 'screen=pets&level=60&sect=1&pets=all', 3500],
+  ['07-kham-ngoc', 'screen=gems&level=60&sect=3', 3000],
+  ['08-chuyen-sinh', 'screen=rebirth&level=99&sect=0&exp=100&cs=2', 3000],
 ];
 
 (async () => {

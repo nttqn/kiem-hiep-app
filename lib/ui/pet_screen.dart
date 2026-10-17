@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -64,7 +66,11 @@ class _PetScreenState extends State<PetScreen> {
             Expanded(
               child: Opacity(
                 opacity: owned ? 1 : 0.4,
-                child: Center(child: PetPreview(look: p.look, size: 110)),
+                child: LayoutBuilder(
+                  builder: (_, c) => Center(
+                    child: PetPreview(look: p.look, size: math.max(60, math.min(c.maxWidth, c.maxHeight) * 0.95)),
+                  ),
+                ),
               ),
             ),
             Text(p.desc, style: small.copyWith(fontSize: 10.5), maxLines: 3),
