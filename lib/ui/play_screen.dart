@@ -211,8 +211,9 @@ class _PlayScreenState extends State<PlayScreen> {
         [LogicalKeyboardKey.digit2, LogicalKeyboardKey.keyI],
         [LogicalKeyboardKey.digit3, LogicalKeyboardKey.keyO],
         [LogicalKeyboardKey.digit4, LogicalKeyboardKey.keyK],
+        [LogicalKeyboardKey.digit5, LogicalKeyboardKey.keyL],
       ];
-      for (var i = 0; i < 4; i++) {
+      for (var i = 0; i < skillKeys.length; i++) {
         if (skillKeys[i].contains(k)) _useSkill(i);
       }
       if (k == LogicalKeyboardKey.keyQ) world.input.hpPot = true;
@@ -236,9 +237,10 @@ class _PlayScreenState extends State<PlayScreen> {
     return false;
   }
 
-  /// Skill buttons map to the four active skills in sect order.
+  /// Skill buttons map to the active skills in sect order: four on the arc,
+  /// then the tuyệt kỹ.
   List<int> get _activeIdx => [
-        for (var i = 0; i < 6; i++)
+        for (var i = 0; i < hero.sect.skills.length; i++)
           if (!hero.sect.skills[i].isPassive) i,
       ];
 
@@ -432,6 +434,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 ),
                 for (var k = 0; k < ids.length && k < 4; k++)
                   _skillAt(k, ids[k]),
+                if (ids.length > 4 && hero.skillOpen(ids[4])) _ultimateAt(ids[4]),
                 Positioned(
                   left: 0,
                   bottom: 0,
@@ -473,6 +476,29 @@ class _PlayScreenState extends State<PlayScreen> {
     return Positioned(
       left: cx - s / 2,
       top: cy - s / 2,
+      child: SkillButton(
+        skill: sk,
+        hanh: hero.hanh,
+        size: s,
+        learned: lv > 0,
+        unlockLevel: sk.unlock,
+        cooldown: lv > 0 && cd > 0 ? (cd / (sk.cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
+        cdText: cd >= 0.1 ? cd.toStringAsFixed(cd < 1 ? 1 : 0) : null,
+        noMp: lv > 0 && world.player.mp < sk.mpAt(lv),
+        onTap: () => world.input.skills.add(idx),
+      ),
+    );
+  }
+
+  /// The tuyệt kỹ: a bigger button above the potions, shown from level 60.
+  Widget _ultimateAt(int idx) {
+    const s = 64.0;
+    final sk = hero.sect.skills[idx];
+    final lv = hero.skillLv[idx];
+    final cd = world.player.cd[idx];
+    return Positioned(
+      left: -6,
+      bottom: 116,
       child: SkillButton(
         skill: sk,
         hanh: hero.hanh,

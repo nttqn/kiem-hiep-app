@@ -141,7 +141,7 @@ class Zone {
     this.statusPower = 0,
     this.statusTime = 0,
     this.knock = 0,
-  }) : life = delay + interval * math.max(0, ticks - 1) + 0.4;
+  }) : life = delay + interval * math.max(0, ticks - 1) + (fx == 'buddhaPalm' || fx == 'fireLine' ? 0.8 : 0.4);
 
   final bool fromHero;
   final double x, y, r;
@@ -229,7 +229,7 @@ class Controls {
 class Player extends Actor {
   Player(double x, double y) : super(x, y, heroRadius);
   double mp = 1;
-  final List<double> cd = List.filled(6, 0);
+  final List<double> cd = List.filled(7, 0);
   double basicCd = 0;
   double potCd = 0;
   double guardUntil = 0, guardPct = 0;
@@ -485,9 +485,14 @@ class World {
 
   // ------------------------------------------------------------ loop
 
+  /// Screenshot aid for the dev build: fire the tuyệt kỹ whenever it is
+  /// ready and a monster is close.
+  static bool debugUltimate = false;
+
   void update(double dt) {
     if (finished) return;
     time += dt;
+    if (debugUltimate && sect.skills.length > 6 && ready(6) && _countNear(240) > 0) input.skills.add(6);
     hero.playSeconds += dt;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
     if (mode == WorldMode.field) _updateField();
@@ -808,7 +813,7 @@ class World {
           }
         }
       case SkillKind.nova:
-        fx.add(Fx(s.fx, p.x, p.y, life: 0.55, radius: s.radius));
+        fx.add(Fx(s.fx, p.x, p.y, life: s.ultimate ? 1.0 : 0.55, radius: s.radius));
         _shake(s.radius > 200 ? 8 : 4);
         for (final m in mobs) {
           if (m.alive &&
@@ -873,6 +878,7 @@ class World {
             power: pw,
             fx: s.fx,
             status: s.status,
+            statusPower: s.statusPower,
             statusTime: s.statusTime,
           ));
         }
@@ -971,16 +977,17 @@ class World {
       if (m.alive && _d2(m.x, m.y, p.x, p.y) < 200 * 200) count++;
     }
 
-    // Skills, biggest first.
-    for (final i in const [4, 2, 1, 0]) {
-      if (!ready(i)) continue;
+    // Skills, biggest first; the tuyệt kỹ waits for a crowd or a boss.
+    for (final i in const [6, 4, 2, 1, 0]) {
+      if (i >= sect.skills.length || !ready(i)) continue;
       final s = sect.skills[i];
+      if (s.ultimate && _countNear(260) < 3 && !(near?.def.boss ?? false)) continue;
       final use = switch (s.kind) {
         SkillKind.guard || SkillKind.shield =>
           count >= 2 || p.hp < p.maxHp * 0.75,
         SkillKind.heal => p.hp < p.maxHp * 0.6,
         SkillKind.nova || SkillKind.aura => _countNear(s.radius) >=
-            (i == 4 ? 2 : 1),
+            (i >= 4 && !(near?.def.boss ?? false) ? 2 : 1),
         SkillKind.dash => near != null &&
             _dist(p.x, p.y, near.x, near.y) < s.range,
         _ => near != null &&

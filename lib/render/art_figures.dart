@@ -230,6 +230,7 @@ void drawHuman(Canvas c, HumanLook k,
 
 class Curves {
   static double easeOut(double t) => 1 - (1 - t) * (1 - t);
+  static double easeIn(double t) => t * t;
 }
 
 double _idleAngle(Weapon w) => switch (w) {

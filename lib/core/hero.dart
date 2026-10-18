@@ -4,6 +4,7 @@ import 'content.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
+import 'meridians.dart';
 import 'pets.dart';
 import 'sects.dart';
 
@@ -134,7 +135,11 @@ class HeroData {
   final List<int> spent = [0, 0, 0, 0];
   int freePoints = 0;
   int skillPoints = 0;
-  final List<int> skillLv = List.filled(6, 0);
+  /// Levels of the sect's skills: six regular ones and the tuyệt kỹ.
+  final List<int> skillLv = List.filled(7, 0);
+
+  /// Points trained into each kinh mạch, by phase.
+  final List<int> meridianPts = List.filled(5, 0);
   final Map<Slot, Item> equip = {};
   final List<Item> bag = [];
   int hpPots = 15;
@@ -192,7 +197,7 @@ class HeroData {
 
   Map<Bonus, double> passiveBonuses() {
     final out = <Bonus, double>{};
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < sect.skills.length; i++) {
       final s = sect.skills[i];
       if (!s.isPassive || skillLv[i] == 0) continue;
       s.passive.forEach((k, v) => out[k] = (out[k] ?? 0) + v * skillLv[i]);
@@ -219,6 +224,10 @@ class HeroData {
     }
     add(setBonus(gemPhases));
     add(rebirthBonuses(rebirths));
+    for (var i = 0; i < meridians.length; i++) {
+      final n = meridianPts[i];
+      if (n > 0) add({meridians[i].bonus: meridians[i].valueAt(n)});
+    }
     final pet = petById[activePet];
     if (pet != null) add({pet.bonus: pet.bonusAt(petLevels[pet.id] ?? 1)});
     return out;
@@ -429,10 +438,29 @@ class HeroData {
     return true;
   }
 
-  bool canLearn(int i) =>
-      skillPoints > 0 &&
-      skillLv[i] < maxSkillLevel &&
-      level >= sect.skills[i].unlock;
+  /// Whether skill [i] is open to points: its unlock level was reached in
+  /// this life or any earlier one.
+  bool skillOpen(int i) => level >= sect.skills[i].unlock || rebirths > 0;
+
+  /// Đột phá lets the regular skills go past 10.
+  bool get breakthrough => level >= breakthroughLevel || rebirths > 0;
+
+  int skillCap(int i) => !sect.skills[i].ultimate && breakthrough ? maxBreakLevel : maxSkillLevel;
+
+  bool canLearn(int i) => skillPoints > 0 && skillLv[i] < skillCap(i) && skillOpen(i);
+
+  bool get meridiansOpen => level >= meridianLevel || rebirths > 0;
+
+  bool canTrainMeridian() => skillPoints > 0 && meridiansOpen;
+
+  bool trainMeridian(int i, [int n = 1]) {
+    n = math.min(n, skillPoints);
+    if (n <= 0 || !meridiansOpen) return false;
+    meridianPts[i] += n;
+    skillPoints -= n;
+    recompute();
+    return true;
+  }
 
   bool learn(int i) {
     if (!canLearn(i)) return false;
@@ -442,12 +470,15 @@ class HeroData {
     return true;
   }
 
-  /// Spends skill points: unlock new skills first, then the first active,
-  /// then whatever is lowest.
+  /// Spends skill points: unlock new skills first, then the tuyệt kỹ and the
+  /// first active, then whatever is lowest; once every skill is full after
+  /// the breakthrough, the rest goes into the kinh mạch, evening them out
+  /// (own phase first).
   void autoLearn() {
+    final n = sect.skills.length;
     while (skillPoints > 0) {
       int? pick;
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < n; i++) {
         if (canLearn(i) && skillLv[i] == 0) {
           pick = i;
           break;
@@ -455,10 +486,10 @@ class HeroData {
       }
       if (pick == null) {
         var best = 99;
-        for (var i = 0; i < 6; i++) {
+        for (var i = 0; i < n; i++) {
           if (!canLearn(i)) continue;
-          // Bias toward the bread-and-butter first skill.
-          final v = skillLv[i] * 2 - (i == 0 ? 3 : 0);
+          // Bias toward the bread-and-butter first skill and the tuyệt kỹ.
+          final v = skillLv[i] * 2 - (i == 0 ? 3 : 0) - (sect.skills[i].ultimate ? 6 : 0);
           if (v < best) {
             best = v;
             pick = i;
@@ -467,6 +498,14 @@ class HeroData {
       }
       if (pick == null) break;
       learn(pick);
+    }
+    // Before the breakthrough, spare points wait for the skills to open up.
+    while (breakthrough && canTrainMeridian()) {
+      var m = hanh.index;
+      for (var i = 0; i < meridians.length; i++) {
+        if (meridianPts[i] < meridianPts[m]) m = i;
+      }
+      trainMeridian(m);
     }
   }
 
@@ -717,6 +756,7 @@ class HeroData {
         'pet': activePet,
         'bossKillsById': bossKillsById,
         'rebirths': rebirths,
+        'meridians': meridianPts,
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -735,8 +775,12 @@ class HeroData {
     h.freePoints = m['free'] as int;
     h.skillPoints = m['sp'] as int;
     final sk = m['skills'] as List;
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < sk.length && i < h.skillLv.length; i++) {
       h.skillLv[i] = sk[i] as int;
+    }
+    final mer = m['meridians'] as List? ?? const [];
+    for (var i = 0; i < mer.length && i < h.meridianPts.length; i++) {
+      h.meridianPts[i] = math.max(0, mer[i] as int);
     }
     (m['equip'] as Map).forEach((k, v) {
       final it = Item.fromJson((v as Map).cast<String, dynamic>());

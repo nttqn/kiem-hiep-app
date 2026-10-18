@@ -225,6 +225,57 @@ void drawFx(Canvas c, Fx f, double t) {
         c.drawCircle(Offset.zero, 9, _glow(0xFFFFF3C4, 0.35, 6));
         c.restore();
       }
+    case 'iceNova':
+      // A white flash, then a ring of ice spikes racing outward.
+      final r = f.radius * Curves.easeOut(math.min(1, p * 1.5));
+      c.drawOval(_flat(f.x, f.y, r), _a(0xFFDFF6FF, 0.35 * fade));
+      c.drawOval(_flat(f.x, f.y, r), _glow(_ice, 0.6 * fade, 18));
+      c.drawCircle(Offset(f.x, f.y - 40), 70 * (1 - p), _glow(0xFFFFFFFF, 0.8 * fade, 24));
+      for (var ring = 0; ring < 2; ring++) {
+        final rr = r * (ring == 0 ? 1 : 0.6);
+        final n = ring == 0 ? 22 : 14;
+        for (var i = 0; i < n; i++) {
+          final a = i * math.pi * 2 / n + ring * 0.2;
+          final x = f.x + math.cos(a) * rr, y = f.y + math.sin(a) * rr * 0.5;
+          final h = (ring == 0 ? 46 : 34) * (0.4 + 0.6 * fade);
+          c.drawPath(
+              Path()
+                ..moveTo(x - 8, y)
+                ..lineTo(x, y - h)
+                ..lineTo(x + 8, y)
+                ..close(),
+              _a(i.isEven ? 0xFFBFE8FF : 0xFFFFFFFF, 0.95 * fade + 0.05));
+        }
+      }
+      c.drawOval(_flat(f.x, f.y, r), _stroke(0xFFFFFFFF, fade, 4));
+    case 'swordStorm':
+      // Two counter-turning rings of flying swords.
+      final end = math.min(1.0, (f.life - f.t) * 2);
+      c.drawOval(_flat(f.x, f.y, f.radius), _glow(0xFFFFF3C4, 0.22 * end, 16));
+      c.drawOval(_flat(f.x, f.y, f.radius), _stroke(_gold, 0.5 * end, 2));
+      for (var ring = 0; ring < 2; ring++) {
+        final n = ring == 0 ? 8 : 6;
+        final rr = f.radius * (ring == 0 ? 0.85 : 0.5);
+        final dir = ring == 0 ? 1.0 : -1.4;
+        for (var i = 0; i < n; i++) {
+          final a = t * 5 * dir + i * math.pi * 2 / n;
+          final x = f.x + math.cos(a) * rr;
+          final y = f.y - 26 + math.sin(a) * rr * 0.4;
+          c.save();
+          c.translate(x, y);
+          c.rotate(a + math.pi / 2 * dir);
+          c.drawPath(
+              Path()
+                ..moveTo(-16, -2)
+                ..lineTo(16, 0)
+                ..lineTo(-16, 2)
+                ..close(),
+              _a(0xFFF0F6FF, 0.95 * end));
+          c.drawRect(const Rect.fromLTRB(-19, -5, -16, 5), _a(_gold, end));
+          c.drawCircle(Offset.zero, 10, _glow(0xFFFFF3C4, 0.4 * end, 7));
+          c.restore();
+        }
+      }
     case 'snowStorm':
       final r = f.radius;
       c.drawOval(_flat(f.x, f.y, r), _a(_ice, 0.12));
@@ -358,18 +409,84 @@ void drawZone(Canvas c, Zone z, double t) {
     return;
   }
   switch (z.fx) {
-    case 'poisonCloud':
+    case 'poisonCloud' || 'venomCloud':
+      final venom = z.fx == 'venomCloud';
       final end = ((z.life - z.t) * 2).clamp(0.0, 1.0);
-      for (var i = 0; i < 9; i++) {
+      final cloud = venom ? 0xFF7A3AC0 : _poison;
+      for (var i = 0; i < (venom ? 14 : 9); i++) {
         final a = i * 0.7 + t * 0.4;
         final d = (i % 3) * r * 0.32;
         c.drawCircle(Offset(z.x + math.cos(a) * d, z.y + math.sin(a) * d * 0.5 - 14),
-            r * 0.42, _glow(_poison, 0.16 * end, 14));
+            r * 0.42, _glow(i.isEven || !venom ? cloud : _poison, (venom ? 0.2 : 0.16) * end, 14));
       }
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < (venom ? 12 : 6); i++) {
         final rise = (t * 0.7 + i / 6) % 1;
         c.drawCircle(Offset(z.x + math.sin(i * 3.0) * r * 0.6, z.y - rise * 50),
-            4 * (1 - rise), _a(0xFFCFF0A0, 0.8 * end));
+            (venom ? 6 : 4) * (1 - rise), _a(venom ? 0xFFD8A8FF : 0xFFCFF0A0, 0.8 * end));
+      }
+      if (venom) c.drawOval(_flat(z.x, z.y, r), _stroke(0xFFB06AFF, 0.6 * end, 2));
+    case 'buddhaPalm':
+      if (z.t < z.delay) {
+        // A giant golden palm drops from the sky onto its shadow.
+        c.drawOval(_flat(z.x, z.y, r * (0.3 + pre * 0.7)), _a(0xFF000000, 0.25 * pre));
+        c.drawOval(_flat(z.x, z.y, r), _stroke(_gold, 0.6, 2));
+        final k = 1 - Curves.easeIn(pre);
+        final px = z.x, py = z.y - 40 - 520 * k;
+        final s = r / 120;
+        c.save();
+        c.translate(px, py);
+        c.scale(s);
+        c.drawCircle(const Offset(0, -40), 70, _glow(_gold, 0.7, 26));
+        final palm = RRect.fromRectAndRadius(const Rect.fromLTRB(-34, -50, 34, 10), const Radius.circular(18));
+        c.drawRRect(palm, _a(0xFFF3C04A, 1));
+        for (var i = 0; i < 4; i++) {
+          final x = -27.0 + i * 18;
+          final h = i == 1 || i == 2 ? 62.0 : 52.0;
+          c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTRB(x - 7, -50 - h, x + 7, -44), const Radius.circular(7)),
+              _a(0xFFF8D060, 1));
+        }
+        c.save();
+        c.translate(-36, -14);
+        c.rotate(-0.7);
+        c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTRB(-8, -40, 8, 0), const Radius.circular(8)),
+            _a(0xFFF8D060, 1));
+        c.restore();
+        c.drawCircle(const Offset(0, -22), 9, _a(0xFFFFF3C4, 0.9));
+        c.restore();
+      } else {
+        final f = (1 - after / 0.7).clamp(0.0, 1.0);
+        c.drawOval(_flat(z.x, z.y, r * (0.7 + after * 1.2)), _glow(_gold, 0.8 * f, 24));
+        c.drawOval(_flat(z.x, z.y, r), _a(0xFFFFF3C4, 0.45 * f));
+        c.drawOval(_flat(z.x, z.y, r * (0.4 + after * 1.5)), _stroke(0xFFFFFFFF, f, 6 * f + 1));
+        for (var i = 0; i < 16; i++) {
+          final a = i * math.pi / 8;
+          c.drawLine(Offset(z.x + math.cos(a) * r * 0.3, z.y + math.sin(a) * r * 0.15),
+              Offset(z.x + math.cos(a) * r * (0.9 + after), z.y + math.sin(a) * r * (0.45 + after * 0.5)),
+              _stroke(0xFFFFE08A, 0.8 * f, 4));
+        }
+      }
+    case 'fireLine':
+      if (z.t < z.delay) return;
+      // A pillar of fire bursting out of the ground.
+      final f = (1 - after / 0.7).clamp(0.0, 1.0);
+      final rise = math.min(1.0, after * 6);
+      c.drawOval(_flat(z.x, z.y, r * 0.9), _glow(_fire, 0.7 * f, 18));
+      c.drawOval(_flat(z.x, z.y, r * 0.55), _a(0xFFFFE08A, 0.6 * f));
+      final h = 150 * rise * (0.5 + 0.5 * f);
+      for (var i = 0; i < 3; i++) {
+        final w = r * (0.55 - i * 0.15);
+        final colr = const [_fire, 0xFFFFB03A, 0xFFFFF0B0][i];
+        c.drawPath(
+            Path()
+              ..moveTo(z.x - w, z.y)
+              ..quadraticBezierTo(z.x - w * 0.6 + math.sin(t * 18 + i) * 6, z.y - h * 0.6, z.x, z.y - h * (1 - i * 0.18))
+              ..quadraticBezierTo(z.x + w * 0.6 + math.cos(t * 16 + i) * 6, z.y - h * 0.6, z.x + w, z.y)
+              ..close(),
+            _a(colr, f * 0.9));
+      }
+      for (var i = 0; i < 5; i++) {
+        final up = (after * 1.5 + i / 5) % 1;
+        c.drawCircle(Offset(z.x + math.sin(i * 2.1) * r * 0.4, z.y - up * h * 1.2), 4 * (1 - up), _a(0xFFFFE08A, f));
       }
     case 'iceField':
       if (z.t < z.delay) {

@@ -6,6 +6,7 @@ import 'core/content.dart';
 import 'core/gems.dart';
 import 'core/hanh.dart';
 import 'core/hero.dart';
+import 'core/world.dart';
 import 'core/items.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final q = Uri.base.queryParameters;
   final screen = q['screen'] ?? 'town';
+  World.debugUltimate = q['ult'] == '1';
   final sect = int.tryParse(q['sect'] ?? '') ?? 0;
   final level = int.tryParse(q['level'] ?? '') ?? 1;
   final female = q['female'] == '1';
@@ -64,6 +66,12 @@ Future<void> main() async {
     h.notices.clear();
     h.autoSpend();
     h.autoLearn();
+    // sp=<n> spare skill points, mer=a,b,c,d,e kinh mạch points.
+    if (q['sp'] != null) h.skillPoints = int.parse(q['sp']!);
+    final mer = q['mer']?.split(',') ?? const [];
+    for (var i = 0; i < mer.length && i < h.meridianPts.length; i++) {
+      h.meridianPts[i] = int.tryParse(mer[i]) ?? 0;
+    }
     if (level > 1) {
       for (final s in Slot.values) {
         h.addItem(makeItem(

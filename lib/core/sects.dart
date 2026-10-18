@@ -83,6 +83,7 @@ class SkillDef {
     this.knock = 0,
     this.passive = const {},
     this.fx = '',
+    this.ultimate = false,
   });
 
   final String id;
@@ -119,6 +120,9 @@ class SkillDef {
   /// Which effect the renderer draws.
   final String fx;
 
+  /// The sect's tuyệt kỹ (7th skill): its own button, no breakthrough.
+  final bool ultimate;
+
   bool get isPassive => kind == SkillKind.passive;
 
   double powerAt(int lv) => power + powerPerLv * (lv - 1);
@@ -128,6 +132,11 @@ class SkillDef {
 }
 
 const int maxSkillLevel = 10;
+
+/// Đột phá: from this hero level (or after a rebirth) the six regular
+/// skills go past [maxSkillLevel] up to [maxBreakLevel].
+const int breakthroughLevel = 80;
+const int maxBreakLevel = 15;
 
 enum BasicKind { melee, ranged }
 
@@ -268,6 +277,25 @@ const sects = <SectDef>[
         unlock: 35,
         passive: {Bonus.atkPct: 0.03, Bonus.regen: 0.002},
       ),
+      SkillDef(
+        id: 'kim7',
+        name: 'Như Lai Thần Chưởng',
+        desc: 'Tuyệt kỹ: bàn tay Phật khổng lồ giáng xuống, choáng cả vùng.',
+        kind: SkillKind.ground,
+        unlock: 60,
+        cooldown: 20,
+        mp: 60,
+        power: 7.0,
+        powerPerLv: 0.6,
+        range: 320,
+        radius: 250,
+        delay: 0.6,
+        knock: 120,
+        status: Status.stun,
+        statusTime: 1.8,
+        fx: 'buddhaPalm',
+        ultimate: true,
+      ),
     ],
   ),
   SectDef(
@@ -370,6 +398,26 @@ const sects = <SectDef>[
         unlock: 35,
         passive: {Bonus.crit: 0.01, Bonus.dotPct: 0.06},
       ),
+      SkillDef(
+        id: 'moc7',
+        name: 'Vạn Độc Quy Tông',
+        desc: 'Tuyệt kỹ: biển độc vụ mênh mông, quái trong đó trúng kịch độc.',
+        kind: SkillKind.ground,
+        unlock: 60,
+        cooldown: 22,
+        mp: 60,
+        power: 2.0,
+        powerPerLv: 0.17,
+        range: 330,
+        radius: 250,
+        duration: 6,
+        ticks: 12,
+        status: Status.poison,
+        statusPower: 0.8,
+        statusTime: 5,
+        fx: 'venomCloud',
+        ultimate: true,
+      ),
     ],
   ),
   SectDef(
@@ -470,6 +518,22 @@ const sects = <SectDef>[
         kind: SkillKind.passive,
         unlock: 35,
         passive: {Bonus.skillDmg: 0.04, Bonus.cdr: 0.02},
+      ),
+      SkillDef(
+        id: 'thuy7',
+        name: 'Băng Phong Vạn Lý',
+        desc: 'Tuyệt kỹ: băng phong bùng ra quanh thân, đóng băng mọi kẻ địch.',
+        kind: SkillKind.nova,
+        unlock: 60,
+        cooldown: 22,
+        mp: 65,
+        power: 7.5,
+        powerPerLv: 0.6,
+        radius: 300,
+        status: Status.stun,
+        statusTime: 2.2,
+        fx: 'iceNova',
+        ultimate: true,
       ),
     ],
   ),
@@ -572,6 +636,25 @@ const sects = <SectDef>[
         unlock: 35,
         passive: {Bonus.aspd: 0.03, Bonus.hpPct: 0.02},
       ),
+      SkillDef(
+        id: 'hoa7',
+        name: 'Hỏa Long Phần Thiên',
+        desc: 'Tuyệt kỹ: hỏa long trườn tới, cột lửa bốc lên thành hàng dài.',
+        kind: SkillKind.line,
+        unlock: 60,
+        cooldown: 20,
+        mp: 60,
+        power: 5.2,
+        powerPerLv: 0.45,
+        range: 520,
+        radius: 95,
+        count: 8,
+        status: Status.burn,
+        statusPower: 0.6,
+        statusTime: 3,
+        fx: 'fireLine',
+        ultimate: true,
+      ),
     ],
   ),
   SectDef(
@@ -666,6 +749,22 @@ const sects = <SectDef>[
         kind: SkillKind.passive,
         unlock: 35,
         passive: {Bonus.defPct: 0.04, Bonus.crit: 0.008},
+      ),
+      SkillDef(
+        id: 'tho7',
+        name: 'Vạn Kiếm Quy Tông',
+        desc: 'Tuyệt kỹ: vạn thanh phi kiếm cuộn quanh thân, chém nát mọi thứ.',
+        kind: SkillKind.aura,
+        unlock: 60,
+        cooldown: 24,
+        mp: 65,
+        power: 1.4,
+        powerPerLv: 0.12,
+        radius: 230,
+        duration: 8,
+        ticks: 20,
+        fx: 'swordStorm',
+        ultimate: true,
       ),
     ],
   ),

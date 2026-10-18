@@ -42,8 +42,11 @@ void main() {
       }
     }
     for (final s in sects) {
-      expect(s.skills.length, 6);
-      expect(s.skills.where((k) => !k.isPassive).length, 4, reason: s.name);
+      // Six regular skills (four active) and the tuyệt kỹ last.
+      expect(s.skills.length, 7);
+      expect(s.skills.where((k) => !k.isPassive && !k.ultimate).length, 4, reason: s.name);
+      expect(s.skills.last.ultimate, isTrue, reason: s.name);
+      expect(s.skills.where((k) => k.ultimate).length, 1, reason: s.name);
     }
   });
 

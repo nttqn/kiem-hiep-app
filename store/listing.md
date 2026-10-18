@@ -25,7 +25,7 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 
 🧙 BUILD NHÂN VẬT THEO Ý MÌNH
 • Mỗi cấp nhận điểm tiềm năng và điểm kỹ năng, tối đa cấp 99, rồi chuyển sinh tới 5 lần để nhận thưởng sinh lực, công lực, phòng thủ vĩnh viễn.
-• 4 chiêu chủ động và 2 nội công cho mỗi phái, nâng tới cấp 10.
+• 4 chiêu chủ động, 2 nội công và 1 tuyệt kỹ trấn phái cho mỗi phái; đột phá kỹ năng tới cấp 15 và luyện 5 kinh mạch ngũ hành.
 • Trang bị 7 ô, 5 độ hiếm từ Thường đến Truyền thuyết; thợ rèn cường hóa tới +10.
 • Khảm ngọc Ngũ Hành vào trang bị, khảm đủ các hệ để kích hoạt thưởng bộ, hợp 3 viên thành 1 viên cao cấp.
 • 6 linh thú đồng hành: Bạch Hạc, Hắc Hổ, Huyền Quy, Tuyết Hồ, Kỳ Lân Con, Tiểu Bạch Long; tự ra chiêu và tăng chỉ số cho chủ.
@@ -48,6 +48,9 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự chọn xem để nhận thưởng: hồi sinh tại chỗ, nhân đôi phần thưởng, thuốc miễn phí.
 
 Hỗ trợ: trungsmail@gmail.com
+
+## Có gì mới (bản 1.0.6, ≤ 500 ký tự)
+TUYỆT KỸ TRẤN PHÁI: mỗi phái mở chiêu thứ 7 ở cấp 60 với hiệu ứng riêng (Như Lai Thần Chưởng, Vạn Độc Quy Tông, Băng Phong Vạn Lý, Hỏa Long Phần Thiên, Vạn Kiếm Quy Tông). ĐỘT PHÁ ở cấp 80: kỹ năng nâng tới cấp 15. KINH MẠCH ngũ hành: điểm kỹ năng dư không còn bị phí. Kèm bản dự phòng nhân vật và đồng bộ đám mây an toàn hơn.
 
 ## Có gì mới (bản 1.0.5, ≤ 500 ký tự)
 Mở giới hạn cấp 99 và tính năng CHUYỂN SINH: đầy kinh nghiệm cấp 99 thì chuyển sinh về cấp 10, giữ nguyên trang bị, nhận thưởng sinh lực, công lực, phòng thủ, kinh nghiệm vĩnh viễn (tối đa 5 lần). Thêm 2 bản đồ Vân Vụ Sơn, Hoa Sơn Tuyệt Đỉnh, 4 ải, 13 nhiệm vụ mới, khảm ngọc Ngũ Hành và 6 linh thú đồng hành. Bảo vệ dữ liệu: mỗi ô nhân vật có bản dự phòng, khôi phục được ở màn chọn nhân vật; đồng bộ đám mây hỏi lại trước khi ghi đè bản có cấp cao hơn.
@@ -111,7 +114,7 @@ Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire be
 
 🧙 BUILD YOUR HERO
 • Attribute and skill points every level, up to level 99, then rebirth up to 5 times for permanent HP, attack and defense bonuses.
-• 4 active skills and 2 passives per sect, each up to level 10.
+• 4 active skills, 2 passives and an ultimate per sect; break skills through to level 15 and train five meridians.
 • 7 gear slots, 5 rarities from Common to Legendary, and forging up to +10.
 • Five-element gems to socket into gear, with set bonuses and gem fusion.
 • 6 spirit-beast companions that fight beside you and boost your stats.

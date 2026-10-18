@@ -420,6 +420,20 @@ class SkillGlyph extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     final f = Paint()..color = Colors.white.withValues(alpha: 0.92);
     Offset o(double x, double y) => Offset(r + x * r, r + y * r);
+    if (skill.ultimate) {
+      // Tuyệt kỹ: an eight-pointed burst inside a gold ring.
+      final star = Path();
+      for (var k = 0; k < 16; k++) {
+        final a = -math.pi / 2 + k * math.pi / 8;
+        final d = k.isEven ? 0.62 : 0.28;
+        final pt = o(math.cos(a) * d, math.sin(a) * d);
+        k == 0 ? star.moveTo(pt.dx, pt.dy) : star.lineTo(pt.dx, pt.dy);
+      }
+      star.close();
+      c.drawPath(star, Paint()..color = const Color(0xFFFFE08A));
+      c.drawCircle(ctr, r * 0.2, Paint()..color = Color.lerp(hc, Colors.black, 0.3)!);
+      c.drawCircle(ctr, r * 0.8, p..strokeWidth = r * 0.05);
+    } else {
     switch (skill.kind) {
       case SkillKind.arc:
         c.drawArc(Rect.fromCircle(center: o(-0.25, 0.1), radius: r * 0.6), -1.3, 2.2, false, p);
@@ -504,6 +518,7 @@ class SkillGlyph extends CustomPainter {
         c.drawCircle(o(0, -0.275), r * 0.275, f);
         c.drawCircle(o(0, 0.275), r * 0.275, Paint()..color = Color.lerp(hc, Colors.black, 0.6)!);
     }
+    }
     if (cooldown > 0) {
       c.drawArc(Rect.fromCircle(center: ctr, radius: r), -math.pi / 2, math.pi * 2 * cooldown, true,
           Paint()..color = const Color(0xAA000000));
@@ -512,7 +527,7 @@ class SkillGlyph extends CustomPainter {
     c.drawCircle(ctr, r - 1, Paint()
       ..color = goldLight.withValues(alpha: 0.9)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2);
+      ..strokeWidth = skill.ultimate ? 3.5 : 2);
   }
 
   @override

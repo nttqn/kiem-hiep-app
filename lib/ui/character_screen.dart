@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/gems.dart';
 import '../core/hero.dart';
+import '../core/meridians.dart';
 import '../core/items.dart';
 import '../core/sects.dart';
 import '../services/save.dart';
@@ -202,6 +203,101 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   Widget _skills() {
     final s = h.sect;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: _skillList(s)),
+        const SizedBox(width: 10),
+        SizedBox(width: 262, child: _meridianPanel()),
+      ],
+    );
+  }
+
+  Widget _meridianPanel() {
+    final open = h.meridiansOpen;
+    return Panel(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Kinh mạch', style: titleStyle(18)),
+          Text(
+            open
+                ? 'Dồn điểm kỹ năng dư vào kinh mạch. Càng nhiều điểm, mỗi điểm càng ít tác dụng.'
+                : 'Mở ở cấp $meridianLevel. Dùng điểm kỹ năng dư sau khi đã nâng đủ kỹ năng.',
+            style: small.copyWith(fontSize: 11),
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: ListView(
+              children: [
+                for (var i = 0; i < meridians.length; i++) _meridianRow(i, open),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _meridianRow(int i, bool open) {
+    final m = meridians[i];
+    final n = h.meridianPts[i];
+    final can = open && h.skillPoints > 0;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.fromLTRB(6, 3, 4, 3),
+      decoration: BoxDecoration(
+        color: lacquerDeep,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: hanhColor(m.hanh).withValues(alpha: open ? 0.7 : 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(color: hanhColor(m.hanh), shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${m.name} · $n điểm', style: bold.copyWith(fontSize: 12.5, color: open ? cream : creamDim)),
+                Text(m.text(n), style: small.copyWith(fontSize: 11, color: hanhColor(m.hanh))),
+              ],
+            ),
+          ),
+          for (final k in const [1, 10])
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: GestureDetector(
+                onTap: can
+                    ? () {
+                        h.trainMeridian(i, k);
+                        _changed();
+                      }
+                    : null,
+                child: Container(
+                  width: k == 1 ? 34 : 40,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: can ? seal : const Color(0xFF4A3E36),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: can ? goldLight : gold.withValues(alpha: 0.3)),
+                  ),
+                  child: Text('+$k', style: bold.copyWith(fontSize: 12, color: can ? cream : creamDim)),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _skillList(SectDef s) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -209,6 +305,14 @@ class _CharacterScreenState extends State<CharacterScreen> {
           children: [
             Text('Điểm kỹ năng: ', style: body),
             Text('${h.skillPoints}', style: titleStyle(20)),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                h.breakthrough ? 'Đã đột phá: kỹ năng tới cấp $maxBreakLevel' : 'Cấp $breakthroughLevel: đột phá tới cấp $maxBreakLevel',
+                style: small.copyWith(fontSize: 11, color: h.breakthrough ? const Color(0xFF8CE07A) : creamDim),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             const Spacer(),
             LButton(
               label: 'Tự học',
@@ -231,8 +335,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
-            itemCount: 6,
-            itemBuilder: (_, i) => _skillCard(s, i),
+            itemCount: s.skills.length,
+            // The tuyệt kỹ leads the list; the rest keep sect order.
+            itemBuilder: (_, k) => _skillCard(s, (k + s.skills.length - 1) % s.skills.length),
           ),
         ),
       ],
@@ -242,10 +347,10 @@ class _CharacterScreenState extends State<CharacterScreen> {
   Widget _skillCard(SectDef s, int i) {
     final sk = s.skills[i];
     final lv = h.skillLv[i];
-    final locked = h.level < sk.unlock;
+    final locked = !h.skillOpen(i);
     return Panel(
       padding: const EdgeInsets.all(8),
-      border: lv > 0 ? gold : const Color(0xFF6A5A4A),
+      border: sk.ultimate ? (locked ? const Color(0xFF8A3A2A) : seal) : (lv > 0 ? gold : const Color(0xFF6A5A4A)),
       child: Row(
         children: [
           SizedBox(
@@ -264,7 +369,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       child: Text(sk.name, style: bold.copyWith(color: goldLight), overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(width: 6),
-                    Text(locked ? 'Cấp ${sk.unlock} mở' : '$lv/$maxSkillLevel',
+                    Text(locked ? 'Cấp ${sk.unlock} mở' : '$lv/${h.skillCap(i)}',
                         style: small.copyWith(color: locked ? const Color(0xFFFF8A7A) : cream)),
                   ],
                 ),
