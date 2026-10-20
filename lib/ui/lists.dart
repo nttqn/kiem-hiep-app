@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/tower.dart';
 import '../services/save.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
@@ -79,6 +80,52 @@ class MapListScreen extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// Tháp Thử Luyện entry: best floor and a button to climb on.
+class TowerCard extends StatelessWidget {
+  const TowerCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = SaveService.instance.hero;
+    final next = h.towerBest + 1;
+    final open = h.level >= towerOpenLevel || h.rebirths > 0;
+    return Panel(
+      border: goldLight,
+      padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
+      child: Row(
+        children: [
+          const Icon(Icons.temple_buddhist, color: goldLight, size: 38),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tháp Thử Luyện', style: titleStyle(19, color: cream)),
+                Text(
+                  open
+                      ? 'Tầng cao nhất: ${h.towerBest} · Mỗi 5 tầng có đầu lĩnh và ngọc, từ tầng 60 rơi ngọc Tiên, 72 ngọc Thánh.'
+                      : 'Mở ở cấp $towerOpenLevel. Tháp vô tận, càng lên cao quái càng mạnh.',
+                  style: small.copyWith(fontSize: 11.5),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          open
+              ? LButton(
+                  label: 'Leo tầng $next',
+                  small: true,
+                  color: jade,
+                  onTap: () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(towerFloor(next)))),
+                )
+              : Text('Cấp $towerOpenLevel', style: small),
+        ],
       ),
     );
   }
@@ -180,65 +227,76 @@ class DungeonListScreen extends StatelessWidget {
     final last = dungeons.lastIndexWhere((d) => h.level >= d.level - 2);
     return SubScreen(
       title: 'Vượt ải',
-      child: _OpenAt(
-        fraction: math.max(0, last) / (dungeons.length - 1),
-        builder: (ctl) => GridView.builder(
-          controller: ctl,
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 270,
-            mainAxisExtent: 112,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemCount: dungeons.length,
-          itemBuilder: (context, i) {
-            final d = dungeons[i];
-            final stars = h.dungeonStars[d.id] ?? 0;
-            final open = h.level >= d.level - 2;
-            final quest = h.currentMain?.type == QuestType.dungeon && h.currentMain?.target == d.id;
-            return Opacity(
-              opacity: open ? 1 : 0.5,
-              child: GestureDetector(
-                onTap: open ? () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d))) : null,
-                child: Panel(
-                  border: quest ? goldLight : gold,
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Ải ${i + 1}: ${d.name}',
-                              style: bold.copyWith(color: goldLight),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (quest) const Icon(Icons.auto_stories, size: 16, color: goldLight),
-                        ],
-                      ),
-                      Text('Cấp ${d.level} · ${d.map.name}', style: small),
-                      Text(
-                        '${d.waves.length} đợt quái + ${mobById[d.map.boss]!.name}',
-                        style: small.copyWith(color: cream),
-                      ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          for (var s = 0; s < 3; s++)
-                            Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
-                          const Spacer(),
-                          Text(open ? '${d.timeLimit.round()} giây' : 'Cần cấp ${d.level - 2}', style: small),
-                        ],
-                      ),
-                    ],
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const TowerCard(),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _OpenAt(
+              fraction: math.max(0, last) / (dungeons.length - 1),
+              builder: (ctl) => GridView.builder(
+                controller: ctl,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 270,
+                  mainAxisExtent: 112,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
                 ),
+                itemCount: dungeons.length,
+                itemBuilder: (context, i) {
+                  final d = dungeons[i];
+                  final stars = h.dungeonStars[d.id] ?? 0;
+                  final open = h.level >= d.level - 2;
+                  final quest = h.currentMain?.type == QuestType.dungeon && h.currentMain?.target == d.id;
+                  return Opacity(
+                    opacity: open ? 1 : 0.5,
+                    child: GestureDetector(
+                      onTap: open
+                          ? () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d)))
+                          : null,
+                      child: Panel(
+                        border: quest ? goldLight : gold,
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Ải ${i + 1}: ${d.name}',
+                                    style: bold.copyWith(color: goldLight),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (quest) const Icon(Icons.auto_stories, size: 16, color: goldLight),
+                              ],
+                            ),
+                            Text('Cấp ${d.level} · ${d.map.name}', style: small),
+                            Text(
+                              '${d.waves.length} đợt quái + ${mobById[d.map.boss]!.name}',
+                              style: small.copyWith(color: cream),
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                for (var s = 0; s < 3; s++)
+                                  Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
+                                const Spacer(),
+                                Text(open ? '${d.timeLimit.round()} giây' : 'Cần cấp ${d.level - 2}', style: small),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

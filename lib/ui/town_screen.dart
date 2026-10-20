@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/content.dart';
 import '../core/hero.dart';
+import '../core/tower.dart';
 import '../core/items.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
@@ -9,6 +10,7 @@ import '../services/sound.dart';
 import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
+import 'leaderboard_screen.dart';
 import 'pet_screen.dart';
 import 'rebirth_screen.dart';
 import 'rewards_ui.dart';
@@ -185,6 +187,7 @@ class _TownScreenState extends State<TownScreen> {
           if (h.title.isNotEmpty)
             Text('« ${h.title} »', style: small.copyWith(color: goldLight, fontStyle: FontStyle.italic)),
           Text('${h.sect.name} · Cấp ${h.level}', style: body.copyWith(color: hanhColor(h.hanh))),
+          Text('Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           if (h.rebirths > 0)
             Text('Chuyển sinh lần ${h.rebirths}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
@@ -260,6 +263,15 @@ class _TownScreenState extends State<TownScreen> {
     final tiles = [
       _Tile('Luyện công', Icons.landscape, () => _go(const MapListScreen())),
       _Tile('Vượt ải', Icons.castle, () => _go(const DungeonListScreen())),
+      _Tile('Leo tháp', Icons.temple_buddhist, () {
+        if (h.level < towerOpenLevel && h.rebirths == 0) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Tháp Thử Luyện mở ở cấp $towerOpenLevel')));
+          return;
+        }
+        _go(PlayScreen.dungeon(towerFloor(h.towerBest + 1)));
+      }),
+      _Tile('Xếp hạng', Icons.leaderboard, () => _go(const LeaderboardScreen())),
       _Tile('Nhiệm vụ', Icons.assignment, () => _go(const QuestScreen()),
           badge: h.daily.where((d) => !d.done).length),
       _Tile('Nhân vật', Icons.person, () => _go(const CharacterScreen(tab: 0)),
@@ -271,14 +283,14 @@ class _TownScreenState extends State<TownScreen> {
       _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
       _Tile('Thành tựu', Icons.emoji_events, () => _go(const AchievementsScreen()),
           badge: claimableCount(h)),
-      _Tile('Quà đăng nhập', Icons.card_giftcard, () async {
+      _Tile('Quà ngày', Icons.card_giftcard, () async {
         await showLoginGiftDialog(context, h);
         if (mounted) setState(() {});
       }, badge: h.lastLoginDate == todayKey() ? 0 : 1),
     ];
     return LayoutBuilder(
       builder: (context, c) {
-        final w = (c.maxWidth - 4 * 8) / 5;
+        final w = (c.maxWidth - 5 * 8) / 6;
         return Wrap(
           spacing: 8,
           runSpacing: 8,

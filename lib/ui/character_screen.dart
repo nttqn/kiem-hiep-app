@@ -143,7 +143,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('${h.name} · ${h.sect.name}', style: titleStyle(18)),
-                Text('Cấp ${h.level} · Đã hạ ${fmt(h.kills)} quái', style: small),
+                Text('Cấp ${h.level} · Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight)),
                 const SizedBox(height: 6),
                 Expanded(
                   child: ListView(

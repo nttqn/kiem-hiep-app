@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/hero.dart';
+import 'leaderboard.dart';
 import 'save.dart';
 import 'sync_plan.dart';
 
@@ -289,6 +290,7 @@ class CloudSave extends ChangeNotifier {
     if (old != null && old.data != info.data && wouldLose(old, info)) await _stash(slot, old);
     await _slots.doc('$slot').set(_doc(info));
     cloudSlots[slot] = info;
+    await Leaderboard.instance.submit(slot, h);
   }
 
   /// Keeps [old] as the cloud backup of [slot] if it got further than the
@@ -359,6 +361,7 @@ class CloudSave extends ChangeNotifier {
     _dirty.clear();
     notifyListeners();
     try {
+      await Leaderboard.instance.withdraw();
       for (final col in [_slots, _backups]) {
         final snap = await col.get();
         for (final d in snap.docs) {
@@ -410,6 +413,7 @@ class CloudSave extends ChangeNotifier {
     try {
       if (old != null) await _stash(slot, old);
       await _slots.doc('$slot').delete();
+      await Leaderboard.instance.withdraw(slot: slot);
     } catch (_) {}
   }
 }

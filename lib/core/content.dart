@@ -302,6 +302,9 @@ class DungeonDef {
     required this.level,
     required this.waves,
     this.timeLimit = 180,
+    this.floor = 0,
+    this.mul = 1,
+    this.boss = true,
   });
 
   final String id;
@@ -312,6 +315,14 @@ class DungeonDef {
   /// Monsters per wave; the boss comes after the last one.
   final List<int> waves;
   final double timeLimit;
+
+  /// Tháp Thử Luyện floor (0 for a regular dungeon), the HP/attack
+  /// multiplier on its monsters, and whether a boss ends it.
+  final int floor;
+  final double mul;
+  final bool boss;
+
+  bool get isTower => floor > 0;
 
   MapDef get map => mapById[mapId]!;
 

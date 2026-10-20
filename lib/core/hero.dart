@@ -6,6 +6,7 @@ import 'hanh.dart';
 import 'items.dart';
 import 'meridians.dart';
 import 'pets.dart';
+import 'tower.dart';
 import 'sects.dart';
 
 const int maxLevel = 99;
@@ -177,6 +178,9 @@ class HeroData {
 
   /// Times reborn (chuyển sinh), 0..[maxRebirths].
   int rebirths = 0;
+
+  /// Highest Tháp Thử Luyện floor cleared.
+  int towerBest = 0;
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -671,6 +675,42 @@ class HeroData {
     return lines;
   }
 
+  /// Pays for a tower floor. Only the first clear of a floor pays (the climb
+  /// always starts above the best floor); boss floors add a gem whose tier
+  /// grows with height, up to Thánh.
+  List<String> towerReward(int floor, math.Random rng) {
+    if (floor <= towerBest) {
+      lastDungeonGold = 0;
+      lastDungeonExp = 0;
+      return const ['Tầng đã vượt trước đây'];
+    }
+    towerBest = floor;
+    final g = towerGold(floor);
+    final xp = level >= maxLevel ? 0.0 : expToNext(level) * 0.03;
+    lastDungeonGold = g;
+    lastDungeonExp = xp;
+    gold += g;
+    final lines = <String>['+$g lượng', if (xp > 0) '+${xp.round()} kinh nghiệm'];
+    if (towerBossFloor(floor)) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], towerGemTier(floor));
+      addGem(gem);
+      lines.add(gem.name);
+    }
+    if (xp > 0) gainExp(xp);
+    _progressDaily((d) => d.type == QuestType.dungeon);
+    return lines;
+  }
+
+  /// Lực chiến: one number for leaderboards, from effective attack,
+  /// toughness and trained skills.
+  int get power {
+    final s = stats;
+    final atkEff = s.atk * (1 + s.crit * (s.critDmg - 1)) * s.aspd * (1 + s.skillDmg * 0.6);
+    final tough = s.maxHp * (1 + s.dodge) * 0.4 + s.def * 3;
+    final skills = skillLv.fold<int>(0, (a, b) => a + b);
+    return (atkEff * 4 + tough + skills * 20).round();
+  }
+
   void onDungeonClear(String id, int stars, math.Random rng) {
     dungeonStars[id] = math.max(dungeonStars[id] ?? 0, stars);
     final q = currentMain;
@@ -757,6 +797,7 @@ class HeroData {
         'bossKillsById': bossKillsById,
         'rebirths': rebirths,
         'meridians': meridianPts,
+        'tower': towerBest,
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -824,6 +865,7 @@ class HeroData {
       if (v is int) h.bossKillsById['$k'] = v;
     });
     h.rebirths = ((m['rebirths'] as int?) ?? 0).clamp(0, maxRebirths);
+    h.towerBest = math.max(0, (m['tower'] as int?) ?? 0);
     h.recompute();
     return h;
   }

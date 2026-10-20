@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'services/ads.dart';
 import 'services/cloud.dart';
+import 'services/leaderboard.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
 import 'ui/theme.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
   // Not awaited: a slow or broken audio asset must never delay the first frame.
   SoundService.instance.init();
   await SaveService.instance.load();
+  await Leaderboard.instance.load();
   // Not awaited either: the game starts offline and syncs when it can.
   CloudSave.instance.init();
   AdsService.instance.init();

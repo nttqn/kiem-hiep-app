@@ -150,7 +150,7 @@ class TopInfo extends StatelessWidget {
                       Text(' ${world.timeLeft.ceil()}s',
                           style: bold.copyWith(fontSize: 13, color: world.timeLeft < 30 ? hpRed : cream)),
                       const SizedBox(width: 6),
-                      for (var i = 0; i < 3; i++)
+                      for (var i = 0; i < (d.isTower ? 0 : 3); i++)
                         Icon(
                           world.time <= (i == 0 ? d.timeLimit : (i == 1 ? d.twoStar : d.threeStar))
                               ? Icons.star

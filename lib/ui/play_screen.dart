@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/content.dart';
+import '../core/tower.dart';
 import '../core/hero.dart';
 import '../core/world.dart';
 import '../game/battle_game.dart';
@@ -672,6 +673,7 @@ class _PlayScreenState extends State<PlayScreen> {
   Widget _resultOverlay() {
     final ok = _cleared == true;
     final d = widget.dungeon!;
+    if (d.isTower) return _towerResult(ok, d);
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -722,6 +724,60 @@ class _PlayScreenState extends State<PlayScreen> {
                     onTap: () {
                       SaveService.instance.save();
                       Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d)));
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tower floor done or failed: climb on, retry, or go home.
+  Widget _towerResult(bool ok, DungeonDef d) {
+    final next = ok ? d.floor + 1 : d.floor;
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(ok ? 'Vượt tầng ${d.floor}!' : 'Dừng bước ở tầng ${d.floor}',
+                  style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A))),
+              const SizedBox(height: 4),
+              Text('Tầng cao nhất: ${hero.towerBest}', style: small),
+              const SizedBox(height: 8),
+              if (ok) ...[
+                for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
+                const SizedBox(height: 10),
+                if (hero.lastDungeonGold > 0 && !_doubled)
+                  _adButton('Nhân đôi lượng & kinh nghiệm', () {
+                    hero.gold += hero.lastDungeonGold;
+                    hero.gainExp(hero.lastDungeonExp);
+                    SaveService.instance.save();
+                    setState(() => _doubled = true);
+                    _toast('+${hero.lastDungeonGold} lượng', goldLight);
+                  })
+                else if (_doubled)
+                  Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+              ] else
+                Text('Quái tầng này quá mạnh. Hãy nâng trang bị, ngọc, kỹ năng rồi thử lại.', style: body),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LButton(label: 'Về thành', onTap: _leave),
+                  const SizedBox(width: 10),
+                  LButton(
+                    label: ok ? 'Lên tầng $next' : 'Thử lại',
+                    color: jade,
+                    onTap: () {
+                      SaveService.instance.save();
+                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(towerFloor(next))));
                     },
                   ),
                 ],

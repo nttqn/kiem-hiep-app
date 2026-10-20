@@ -442,9 +442,12 @@ class World {
     wave++;
     if (wave >= d.waves.length) {
       bossWave = true;
+      // A tower floor without a boss is done once the wave is down.
+      if (!d.boss) return;
       final def = mobById[map.boss]!;
       final m = Mob(_uid++, def, d.level + 1, width * 0.72, height / 2)
         ..state = MobState.chase;
+      _scale(m, d.mul);
       mobs.add(m);
       boss = m;
       events.add(GameEvent(EvKind.boss, text: '${def.name} xuất hiện!',
@@ -479,8 +482,17 @@ class World {
     final m = Mob(_uid++, def, d.level, x, y)..state = MobState.chase;
     m.maxHp *= 1.2;
     m.hp = m.maxHp;
+    _scale(m, d.mul);
     mobs.add(m);
     fx.add(Fx('spark_mob_${def.hanh.name}', x, y - 20, life: 0.4));
+  }
+
+  /// Tower floors past level 99 make monsters tougher instead.
+  void _scale(Mob m, double mul) {
+    if (mul == 1) return;
+    m.maxHp *= mul;
+    m.hp = m.maxHp;
+    m.atk *= mul;
   }
 
   // ------------------------------------------------------------ loop
@@ -571,6 +583,11 @@ class World {
         if (!finished) {
           finished = true;
           finishTime = time;
+          if (d.isTower) {
+            rewardLines = hero.towerReward(d.floor, rng);
+            events.add(GameEvent(EvKind.cleared, value: 3));
+            return;
+          }
           final stars = d.starsFor(time);
           rewardLines = hero.dungeonReward(d, stars, rng);
           hero.onDungeonClear(d.id, stars, rng);
@@ -591,7 +608,7 @@ class World {
   void _updatePlayer(double dt) {
     final p = player;
     p.maxHp = st.maxHp;
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < p.cd.length; i++) {
       if (p.cd[i] > 0) p.cd[i] -= dt;
     }
     if (p.basicCd > 0) p.basicCd -= dt;

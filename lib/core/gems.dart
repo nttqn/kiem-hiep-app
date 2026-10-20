@@ -4,9 +4,11 @@ import 'hanh.dart';
 import 'items.dart';
 import 'sects.dart';
 
-/// Ngũ hành gems: socketed into gear, one stat each, five tiers.
-const int maxGemTier = 5;
-const gemTierNames = ['Thô', 'Hoàn', 'Tinh', 'Bảo', 'Thần'];
+/// Ngũ hành gems: socketed into gear, one stat each. Monsters drop tiers up
+/// to [maxDropTier]; Tiên and Thánh come only from fusing and the tower.
+const int maxGemTier = 7;
+const int maxDropTier = 5;
+const gemTierNames = ['Thô', 'Hoàn', 'Tinh', 'Bảo', 'Thần', 'Tiên', 'Thánh'];
 
 class Gem {
   const Gem(this.hanh, this.tier);
@@ -84,7 +86,7 @@ int fuseCost(int tier) => 300 * tier * tier;
 
 /// Tier of a gem dropped by a monster of [level]; bosses one higher.
 int dropTier(int level, {bool boss = false}) =>
-    math.min(maxGemTier, 1 + level ~/ 20 + (boss ? 1 : 0));
+    math.min(maxDropTier, 1 + level ~/ 20 + (boss ? 1 : 0));
 
 /// Chance a normal monster drops a gem.
 const double gemDropChance = 0.025;

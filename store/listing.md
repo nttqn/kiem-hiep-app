@@ -20,7 +20,8 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 🗺️ LUYỆN CÔNG – VƯỢT ẢI – LÀM NHIỆM VỤ
 • 9 bản đồ: đồng cỏ Lạc An, rừng trúc tím, hang Hắc Phong, sa mạc Hoàng Sa, băng nguyên tuyết phủ, núi lửa Hỏa Diệm Sơn, Ma Giáo Tổng Đàn, Vân Vụ Sơn mây phủ và Hoa Sơn Tuyệt Đỉnh.
 • Hơn 35 loại quái: sói, rắn hổ mang, cương thi, nhện độc, bọ cạp, tuyết quái, thạch nhân dung nham, kỳ lân lửa, bạch long, kiếm hồn… cùng các đầu lĩnh có chiêu đánh lan phải né.
-• 18 ải nhiều đợt quái, chấm 3 sao theo thời gian.
+• 18 ải nhiều đợt quái, chấm 3 sao theo thời gian, cùng Tháp Thử Luyện vô tận.
+• Bảng xếp hạng toàn server: Lực chiến, Tháp Thử Luyện, Cấp độ (cần đăng nhập).
 • 56 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo và Thiên Ma Lão Tổ, cùng nhiệm vụ hằng ngày.
 
 🧙 BUILD NHÂN VẬT THEO Ý MÌNH
@@ -50,7 +51,7 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 Hỗ trợ: trungsmail@gmail.com
 
 ## Có gì mới (bản 1.0.6, ≤ 500 ký tự)
-TUYỆT KỸ TRẤN PHÁI: mỗi phái mở chiêu thứ 7 ở cấp 60 với hiệu ứng riêng (Như Lai Thần Chưởng, Vạn Độc Quy Tông, Băng Phong Vạn Lý, Hỏa Long Phần Thiên, Vạn Kiếm Quy Tông). ĐỘT PHÁ ở cấp 80: kỹ năng nâng tới cấp 15. KINH MẠCH ngũ hành: điểm kỹ năng dư không còn bị phí. Kèm bản dự phòng nhân vật và đồng bộ đám mây an toàn hơn.
+THÁP THỬ LUYỆN vô tận: càng lên cao quái càng mạnh, mỗi 5 tầng có đầu lĩnh và ngọc, từ tầng 60 rơi ngọc Tiên, Thánh mới. BẢNG XẾP HẠNG toàn server: Lực chiến, Tháp, Cấp độ. TUYỆT KỸ trấn phái ở cấp 60, ĐỘT PHÁ kỹ năng tới cấp 15, KINH MẠCH ngũ hành. Hợp ngọc Thần lên Tiên, Thánh. Bản dự phòng nhân vật.
 
 ## Có gì mới (bản 1.0.5, ≤ 500 ký tự)
 Mở giới hạn cấp 99 và tính năng CHUYỂN SINH: đầy kinh nghiệm cấp 99 thì chuyển sinh về cấp 10, giữ nguyên trang bị, nhận thưởng sinh lực, công lực, phòng thủ, kinh nghiệm vĩnh viễn (tối đa 5 lần). Thêm 2 bản đồ Vân Vụ Sơn, Hoa Sơn Tuyệt Đỉnh, 4 ải, 13 nhiệm vụ mới, khảm ngọc Ngũ Hành và 6 linh thú đồng hành. Bảo vệ dữ liệu: mỗi ô nhân vật có bản dự phòng, khôi phục được ở màn chọn nhân vật; đồng bộ đám mây hỏi lại trước khi ghi đè bản có cấp cao hơn.
@@ -109,7 +110,8 @@ Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire be
 🗺️ TRAIN, CLEAR DUNGEONS, FOLLOW THE STORY
 • 9 regions from grassland and purple bamboo forests to a dark cave, a desert, snowfields, a volcano, the Demon Cult's fortress, the misty Cloud Mountain and the summit of Mount Hua.
 • Over 35 monsters — wolves, cobras, jiangshi, spiders, scorpions, yetis, lava golems, a fire qilin — and bosses with telegraphed area attacks.
-• 18 multi-wave dungeons with 3-star time ratings.
+• 18 multi-wave dungeons with 3-star time ratings, plus the endless Trial Tower.
+• Server-wide leaderboards: combat power, tower floor and level (sign-in required).
 • 56 story quests against the Blood Demon Cult and the Heavenly Demon, plus daily quests.
 
 🧙 BUILD YOUR HERO

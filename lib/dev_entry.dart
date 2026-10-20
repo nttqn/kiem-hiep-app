@@ -7,6 +7,9 @@ import 'core/gems.dart';
 import 'core/hanh.dart';
 import 'core/hero.dart';
 import 'core/world.dart';
+import 'ui/leaderboard_screen.dart';
+import 'services/leaderboard.dart';
+import 'core/tower.dart';
 import 'core/items.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
@@ -29,6 +32,24 @@ Future<void> main() async {
   final q = Uri.base.queryParameters;
   final screen = q['screen'] ?? 'town';
   World.debugUltimate = q['ult'] == '1';
+  // lb=1: a made-up leaderboard, since the web build has no Firebase.
+  if (q['lb'] == '1') {
+    const names = ['Độc Cô Cầu Bại', 'Lệnh Hồ Xung', 'Tiểu Long Nữ', 'Kiều Phong', 'Hư Trúc', 'Đoàn Dự',
+        'Hoàng Dung', 'Quách Tĩnh', 'Dương Quá', 'Vô Kỵ', 'Chu Chỉ Nhược', 'Lâm Bình Chi'];
+    Leaderboard.instance.debugEntries = [
+      for (var i = 0; i < names.length; i++)
+        LbEntry(
+          id: 'u${i}_0',
+          name: names[i],
+          hanh: i % 5,
+          level: 99 - i * 3,
+          rebirths: math.max(0, 3 - i ~/ 2),
+          power: 160000 - i * 9000,
+          tower: 96 - i * 4,
+          title: i == 0 ? 'Ngũ Chuyển Chân Nhân' : (i < 4 ? 'Võ Thánh' : ''),
+        ),
+    ];
+  }
   final sect = int.tryParse(q['sect'] ?? '') ?? 0;
   final level = int.tryParse(q['level'] ?? '') ?? 1;
   final female = q['female'] == '1';
@@ -68,6 +89,7 @@ Future<void> main() async {
     h.autoLearn();
     // sp=<n> spare skill points, mer=a,b,c,d,e kinh mạch points.
     if (q['sp'] != null) h.skillPoints = int.parse(q['sp']!);
+    h.towerBest = int.tryParse(q['tower'] ?? '') ?? 0;
     final mer = q['mer']?.split(',') ?? const [];
     for (var i = 0; i < mer.length && i < h.meridianPts.length; i++) {
       h.meridianPts[i] = int.tryParse(mer[i]) ?? 0;
@@ -127,7 +149,10 @@ Future<void> main() async {
     'title' => const TitleScreen(),
     'create' => const CreateScreen(slot: 0),
     'play' => PlayScreen.field(map),
-    'dungeon' => PlayScreen.dungeon(dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
+    'dungeon' => PlayScreen.dungeon(q['tf'] != null
+        ? towerFloor(int.parse(q['tf']!))
+        : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
+    'rank' => const LeaderboardScreen(),
     'char' => const CharacterScreen(tab: 0),
     'skills' => const CharacterScreen(tab: 1),
     'bag' => const CharacterScreen(tab: 2),
