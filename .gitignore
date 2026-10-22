@@ -52,3 +52,6 @@ app.*.map.json
 *.mobileprovision
 key.properties
 *-base64.txt
+
+# Promo videos are large; rebuild with tool/promo (see build.sh).
+store/video/

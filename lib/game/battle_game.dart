@@ -18,7 +18,11 @@ class BattleGame extends Game {
   /// Bumped about 15 times a second so the HUD rebuilds cheaply.
   final ValueNotifier<int> hudTick = ValueNotifier(0);
   bool halted = false;
-  double speed = 1;
+  double speed = debugSpeed;
+
+  /// Dev build only: slow the whole battle down (animations included) so a
+  /// screen recorder can catch every frame; the video is sped up after.
+  static double debugSpeed = 1;
 
   double _clock = 0;
   double _sinceHud = 0;
@@ -34,7 +38,7 @@ class BattleGame extends Game {
         world.update(step);
         left -= step;
       }
-      _clock += _lastDt;
+      _clock += _lastDt * speed;
     }
     if (world.events.isNotEmpty) {
       final events = List<GameEvent>.of(world.events);
@@ -60,6 +64,6 @@ class BattleGame extends Game {
 
   @override
   void render(Canvas canvas) {
-    renderer.render(canvas, size.toSize(), world, _clock, halted ? 0 : _lastDt);
+    renderer.render(canvas, size.toSize(), world, _clock, halted ? 0 : _lastDt * speed);
   }
 }
