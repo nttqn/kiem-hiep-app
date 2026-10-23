@@ -13,7 +13,7 @@ q() { "$FF" -hide_banner -loglevel error -y "$@"; }
 q -ss 0 -t 5.5 -i clips/a_hoason.mp4 $ENC seg/1.mp4
 q -ss 0 -t 4.5 -i clips/b_palm.mp4 $ENC seg/2.mp4
 q -ss 2.0 -t 4.5 -i clips/d_swords.mp4 $ENC seg/3.mp4
-q -ss 0 -t 5.5 -i clips/c_tower.mp4 $ENC seg/4.mp4
+q -ss 0.5 -t 5.5 -i clips/c_tower.mp4 $ENC seg/4.mp4
 
 # Feature screens, 1.3 s each with a slow push-in.
 for i in 1 2 3 4; do

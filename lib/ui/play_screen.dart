@@ -23,6 +23,9 @@ class PlayScreen extends StatefulWidget {
   final MapDef? map;
   final DungeonDef? dungeon;
 
+  /// Dev build only: battle without the HUD, for thumbnails.
+  static bool debugHideHud = false;
+
   @override
   State<PlayScreen> createState() => _PlayScreenState();
 }
@@ -329,7 +332,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   child: SafeArea(
                     child: ValueListenableBuilder<int>(
                       valueListenable: game.hudTick,
-                      builder: (_, _, _) => _hud(size),
+                      builder: (_, _, _) => PlayScreen.debugHideHud ? const SizedBox.shrink() : _hud(size),
                     ),
                   ),
                 ),

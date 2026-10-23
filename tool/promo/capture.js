@@ -4,10 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 
-const SLOW_DEFAULT = 4;
+const SLOW_DEFAULT = 6;
 const scenes = [
   ['a_hoason', 'screen=play&level=90&sect=3&cs=3&map=hoason&ult=1&pet=dragon&pets=all', 7.5],
-  ['b_palm', 'screen=play&level=80&sect=0&cs=1&map=vanvu&ult=1&pet=tiger', 6.5, 6],
+  ['b_palm', 'screen=play&level=80&sect=0&cs=1&map=vanvu&ult=1&pet=tiger', 6.5, 8],
   ['c_tower', 'screen=dungeon&level=92&sect=2&cs=2&tf=35&tower=34&ult=1&pet=fox&pets=all', 8],
   ['d_swords', 'screen=play&level=75&sect=4&map=hoadiem&ult=1&pet=kylin', 6.5],
   ['e_venom', 'screen=play&level=70&sect=1&map=bangnguyen&ult=1&pet=crane&female=1', 6],
@@ -16,7 +16,7 @@ const scenes = [
 (async () => {
   const out = process.argv[2];
   const only = process.argv[3];
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ['--force-device-scale-factor=2'] });
   const ctx = await browser.newContext({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 2 });
   for (const [name, q, secs, slow] of scenes) {
     const SLOW = slow || SLOW_DEFAULT;
@@ -29,6 +29,8 @@ const scenes = [
     // Page load, then about 1.5 s of game time for the fight to start.
     await page.waitForTimeout(4200 + 1500 * SLOW);
     const cdp = await ctx.newCDPSession(page);
+    // Without this the screencast delivers CSS-pixel (960x540) frames.
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 960, height: 540, deviceScaleFactor: 2, mobile: false });
     const frames = [];
     cdp.on('Page.screencastFrame', async (f) => {
       frames.push({ t: f.metadata.timestamp, data: f.data });

@@ -8,6 +8,7 @@ import 'core/hanh.dart';
 import 'core/hero.dart';
 import 'core/world.dart';
 import 'game/battle_game.dart';
+import 'render/world_renderer.dart';
 import 'ui/leaderboard_screen.dart';
 import 'services/leaderboard.dart';
 import 'core/tower.dart';
@@ -35,6 +36,8 @@ Future<void> main() async {
   World.debugUltimate = q['ult'] == '1';
   // slow=4 runs battles at quarter speed for smooth screen recordings.
   BattleGame.debugSpeed = 1 / (double.tryParse(q['slow'] ?? '') ?? 1);
+  PlayScreen.debugHideHud = q['hud'] == '0';
+  WorldRenderer.debugClean = q['hud'] == '0';
   // lb=1: a made-up leaderboard, since the web build has no Firebase.
   if (q['lb'] == '1') {
     const names = ['Độc Cô Cầu Bại', 'Lệnh Hồ Xung', 'Tiểu Long Nữ', 'Kiều Phong', 'Hư Trúc', 'Đoàn Dự',

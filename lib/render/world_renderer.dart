@@ -24,6 +24,9 @@ double mobTop(MobDef d) => switch (d.body) {
     d.size;
 
 class WorldRenderer {
+  /// Dev build only: no damage numbers or monster bars (clean thumbnails).
+  static bool debugClean = false;
+
   /// World units visible top to bottom.
   double viewHeight = 400;
   double camX = 0, camY = 0;
@@ -145,9 +148,9 @@ class WorldRenderer {
     for (final m in w.mobs) {
       if (!m.alive || !pad.contains(Offset(m.x, m.y))) continue;
       final show = m == tg || m.hp < m.maxHp || m.def.boss;
-      if (show) _mobBar(c, m, m == tg);
+      if (show && !debugClean) _mobBar(c, m, m == tg);
     }
-    for (final ft in w.texts) {
+    for (final ft in debugClean ? const <FloatText>[] : w.texts) {
       final rise = ft.t * 46;
       final a = ft.t < 0.7 ? 1.0 : (1 - (ft.t - 0.7) / 0.3);
       final pop = ft.big ? 1 + math.max(0.0, 0.3 - ft.t) * 2 : 1.0;
