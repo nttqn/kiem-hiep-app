@@ -25,6 +25,9 @@
   .card b { color: var(--gold-light); }
   .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
   .shots img { width: 100%; border-radius: 10px; border: 1.5px solid var(--gold); }
+  .video { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid var(--gold); box-shadow: 0 8px 28px #000a; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .stores a { background: var(--seal); border: 1.5px solid var(--gold-light); border-radius: 10px; padding: 10px 18px; font-weight: 800; color: #fff; text-decoration: none; }
   .sects span { display: inline-block; margin: 4px 6px 4px 0; padding: 4px 12px; border-radius: 16px; font-weight: 700; color: #fff; }
   footer { text-align: center; padding: 24px 16px 40px; color: #b8a888; font-size: 14px; }
   footer a { color: var(--gold-light); }
@@ -35,10 +38,16 @@
   <img class="icon" src="img/icon.png" alt="Biểu tượng Kiếm Hiệp Ngũ Hành">
   <h1>Kiếm Hiệp Ngũ Hành</h1>
   <p class="tag">Ngũ phái tranh hùng · Ngũ hành tương khắc · Chơi offline</p>
-  <div class="stores"><span>Google Play · sắp ra mắt</span><span>App Store · sắp ra mắt</span></div>
+  <div class="stores"><a href="https://play.google.com/store/apps/details?id=com.trungsmail.kiemhiep">Tải trên Google Play</a><span>App Store · sắp ra mắt</span></div>
   <img class="banner" src="img/banner.png" alt="Năm môn phái đứng trước vầng trăng">
 </header>
 <main>
+  <h2>Video giới thiệu</h2>
+  <div class="video">
+    <iframe src="https://www.youtube-nocookie.com/embed/7J3ifq_Np8k" title="Kiếm Hiệp Ngũ Hành – video giới thiệu" loading="lazy"
+      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  </div>
+
   <h2>Năm môn phái, năm hệ ngũ hành</h2>
   <p class="sects">
     <span style="background:#b8962e">Kim Cang Tự · Kim</span>
@@ -48,26 +57,29 @@
     <span style="background:#8f6634">Huyền Thổ Quán · Thổ</span>
   </p>
   <p>Côn pháp cương mãnh, ám khí độc dược, băng pháp hồi phục, đao lửa bùng nổ hay kiếm khí
-  khống chế: mỗi phái có lối đánh riêng với 4 chiêu thức và 2 nội công. Kim khắc Mộc, Mộc khắc
+  khống chế: mỗi phái có lối đánh riêng với 4 chiêu thức, 2 nội công và một tuyệt kỹ trấn phái mở ở cấp 60. Kim khắc Mộc, Mộc khắc
   Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim: chọn đúng đối thủ để gây thêm 25% sát thương.</p>
 
   <div class="grid">
     <div class="card"><b>Luyện công</b><br>9 bản đồ từ đồng cỏ Lạc An tới Hoa Sơn Tuyệt Đỉnh, hơn 35 loại quái và đầu lĩnh, tối đa cấp 99.</div>
     <div class="card"><b>Vượt ải</b><br>18 ải nhiều đợt quái, chấm sao theo thời gian, đầu lĩnh có chiêu đánh lan phải né.</div>
     <div class="card"><b>Nhiệm vụ</b><br>56 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo và Thiên Ma Lão Tổ, cùng nhiệm vụ hằng ngày.</div>
-    <div class="card"><b>Build nhân vật</b><br>Cộng điểm tiềm năng, nâng kỹ năng, nhặt trang bị 5 độ hiếm và cường hóa tới +10.</div>
+    <div class="card"><b>Tháp Thử Luyện</b><br>Tháp vô tận, càng lên cao quái càng mạnh, mỗi 5 tầng có đầu lĩnh và ngọc quý Tiên, Thánh.</div>
+    <div class="card"><b>Bảng xếp hạng</b><br>So tài toàn server theo Lực chiến, tầng Tháp Thử Luyện và cấp độ.</div>
+    <div class="card"><b>Build nhân vật</b><br>Cộng điểm tiềm năng, nâng và đột phá kỹ năng tới cấp 15, luyện kinh mạch, cường hóa trang bị tới +10, khảm ngọc Ngũ Hành.</div>
+    <div class="card"><b>Chuyển sinh · Linh thú</b><br>Đạt cấp 99 thì chuyển sinh tới 5 lần nhận sức mạnh vĩnh viễn; 6 linh thú đồng hành cùng chiến đấu.</div>
     <div class="card"><b>Tự động đánh</b><br>Bật tự động: nhân vật tự tìm quái nhiệm vụ, ra chiêu và uống thuốc.</div>
-    <div class="card"><b>Ngày nào cũng có quà</b><br>Bế quan tu luyện khi tắt game, quà đăng nhập 7 ngày, 18 thành tựu mở khóa danh hiệu.</div>
+    <div class="card"><b>Ngày nào cũng có quà</b><br>Bế quan tu luyện khi tắt game, quà đăng nhập 7 ngày, 22 thành tựu mở khóa danh hiệu.</div>
     <div class="card"><b>Nhạc nền ngũ cung</b><br>Đàn tranh, nhị, sáo trúc và trống trận, mỗi vùng đất một giai điệu.</div>
     <div class="card"><b>Lưu trữ đám mây</b><br>Đăng nhập để giữ nhân vật khi cài lại hay đổi máy, cả Android lẫn iPhone.</div>
   </div>
 
   <h2>Hình ảnh</h2>
   <div class="shots">
-    <img src="img/01-chien-dau.png" alt="Liệt Hỏa Bang chiến đấu ở Hoàng Sa Mạc">
-    <img src="img/02-hang-dong.png" alt="Bích Thủy Am trong Hắc Phong Động">
-    <img src="img/04-nui-lua.png" alt="Kim Cang Tự giữa Hỏa Diệm Sơn">
-    <img src="img/05-chon-phai.png" alt="Màn chọn môn phái">
+    <img src="img/01-hoa-son.png" alt="Liệt Hỏa Bang ở Hoa Sơn Tuyệt Đỉnh với hào quang chuyển sinh">
+    <img src="img/03-vuot-ai.png" alt="Vượt ải Vân Hải Kiếm Trận">
+    <img src="img/06-linh-thu.png" alt="Sáu linh thú đồng hành">
+    <img src="img/08-chuyen-sinh.png" alt="Màn chuyển sinh">
   </div>
 </main>
 <footer>
