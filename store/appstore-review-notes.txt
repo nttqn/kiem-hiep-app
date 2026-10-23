@@ -1,0 +1,43 @@
+Kiếm Hiệp Ngũ Hành - Notes for App Review
+
+No account or demo login is needed. The whole game plays offline: tap
+"Tạo nhân vật" (Create character), pick one of the five sects, enter any name,
+and you are in the town hub. Signing in is optional and only used for cloud
+save and the leaderboard.
+
+About the game
+Kiếm Hiệp Ngũ Hành is an original real-time action RPG set in Vietnamese
+martial-arts fiction (kiếm hiệp), built around the Five Elements (Ngũ Hành:
+Metal, Wood, Water, Fire, Earth). All characters, monsters, scenery, effects
+and music are drawn and composed for this game in code; nothing is licensed
+or reskinned from another title. Content includes:
+- Five sects, each with its own fighting style, 6 skills plus a sect
+  ultimate, and an elemental counter system (each element deals +25% to the
+  one it overcomes).
+- 9 regions, 18 multi-wave dungeons with time-based stars, 56 story quests,
+  daily quests, an endless Trial Tower, rebirth up to 5 times.
+- Gear with 5 rarities and +10 forging, element gem socketing, 6 companion
+  spirit beasts, five meridian channels, achievements and titles.
+- Progression balanced with an automated play simulation.
+The interface and story are in Vietnamese; the game's primary audience is
+Vietnam.
+
+Sign-in, data and account deletion
+- Sign in with Apple and Google Sign-In are offered side by side (cloud icon
+  in the title screen or town, top right).
+- Account deletion is in the app: cloud icon > "Xóa tài khoản và dữ liệu
+  trên mây" (Delete account and cloud data). It deletes the cloud saves, the
+  leaderboard rows and the sign-in account.
+- Signed-in players appear on the in-game leaderboard with their character
+  name, sect, level, combat power and tower floor (no email or account name).
+  "Ẩn tôi khỏi bảng" (Hide me) in the leaderboard screen removes them.
+
+Ads
+- Google AdMob. Rewarded ads are always the player's choice (revive, double a
+  dungeon reward, free potions). A rare interstitial may show when returning
+  to town, at most once every 4 minutes.
+- App Tracking Transparency is requested before the first ad request. Ads
+  still work, non-personalised, if the player declines.
+
+Privacy policy: https://nttqn.github.io/kiem-hiep-app/privacy.html
+Support: https://nttqn.github.io/kiem-hiep-app/ (trungsmail@gmail.com)

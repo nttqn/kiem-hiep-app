@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// AdMob: rewarded ads the player chooses to watch (revive, double a
@@ -48,12 +50,27 @@ class AdsService {
     try {
       await _gatherConsent();
       if (!await ConsentInformation.instance.canRequestAds()) return;
+      if (_ios) await _askTracking();
       await MobileAds.instance.initialize();
       _started = true;
       _loadRewarded();
       _loadInterstitial();
     } catch (e) {
       debugPrint('ads off: $e');
+    }
+  }
+
+  /// iOS App Tracking Transparency, asked once before the first ad request.
+  /// Whatever the answer, ads still load (non-personalised when denied). The
+  /// prompt only shows once the app is on screen, so wait for the first frame.
+  Future<void> _askTracking() async {
+    try {
+      if (await AppTrackingTransparency.trackingAuthorizationStatus != TrackingStatus.notDetermined) return;
+      await WidgetsBinding.instance.endOfFrame;
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    } catch (e) {
+      debugPrint('tracking prompt failed: $e');
     }
   }
 
