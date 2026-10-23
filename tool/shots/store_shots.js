@@ -11,6 +11,7 @@ const devices = [
   ['tablet-7in', 960, 600, 2], // Play 7" tablet 1920x1200
   ['tablet-10in', 1280, 800, 2], // Play 10" tablet 2560x1600
   ['iphone-6.9in', 956, 440, 3], // App Store 6.9" iPhone 2868x1320
+  ['iphone-6.3in', 874, 402, 3], // App Store 6.1"/6.3" iPhone (Dynamic Island) 2622x1206
   ['ipad-13in', 1376, 1032, 2], // App Store 13" iPad 2752x2064
 ];
 
