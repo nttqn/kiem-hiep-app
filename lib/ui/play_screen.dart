@@ -7,6 +7,9 @@ import 'package:flutter/services.dart';
 
 import '../core/content.dart';
 import '../core/tower.dart';
+import '../core/world_boss.dart';
+import '../services/analytics.dart';
+import '../services/leaderboard.dart';
 import '../core/hero.dart';
 import '../core/world.dart';
 import '../game/battle_game.dart';
@@ -139,6 +142,13 @@ class _PlayScreenState extends State<PlayScreen> {
         setState(() => _dead = true);
       case EvKind.cleared:
         SaveService.instance.save();
+        final d = widget.dungeon;
+        if (d != null && d.isWorldBoss) {
+          Leaderboard.instance.submitBoss(SaveService.instance.active, hero);
+          Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
+        } else if (d != null && !d.isTower) {
+          Analytics.instance.log('dungeon_clear', {'id': d.id, 'stars': e.value.round()});
+        }
         setState(() {
           _cleared = true;
           _stars = e.value.round();
@@ -677,6 +687,7 @@ class _PlayScreenState extends State<PlayScreen> {
     final ok = _cleared == true;
     final d = widget.dungeon!;
     if (d.isTower) return _towerResult(ok, d);
+    if (d.isWorldBoss) return _bossResult();
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -727,6 +738,61 @@ class _PlayScreenState extends State<PlayScreen> {
                     onTap: () {
                       SaveService.instance.save();
                       Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d)));
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Boss Thế Giới run over: the damage, the day so far, another run.
+  Widget _bossResult() {
+    final day = vnDayKey();
+    final left = hero.wbRunsLeft;
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Kết thúc khiêu chiến', style: titleStyle(26)),
+              const SizedBox(height: 6),
+              Text(fmt(world.bossDamage.round()), style: titleStyle(40, color: const Color(0xFFFF9A5A))),
+              Text('sát thương lượt này', style: small),
+              const SizedBox(height: 8),
+              Text('Tổng hôm nay: ${fmt(hero.wbTotal)} · Cao nhất: ${fmt(hero.wbBest)}',
+                  style: bold.copyWith(color: cream)),
+              for (final l in world.rewardLines.skip(1)) Text(l, style: bold.copyWith(color: goldLight)),
+              const SizedBox(height: 10),
+              if (!_doubled && hero.lastDungeonGold > 0)
+                _adButton('Nhân đôi lượng', () {
+                  hero.gold += hero.lastDungeonGold;
+                  SaveService.instance.save();
+                  setState(() => _doubled = true);
+                  _toast('+${fmt(hero.lastDungeonGold)} lượng', goldLight);
+                })
+              else if (_doubled)
+                Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LButton(label: 'Về', onTap: _leave),
+                  const SizedBox(width: 10),
+                  LButton(
+                    label: left > 0 ? 'Đánh tiếp (còn $left)' : 'Hết lượt hôm nay',
+                    color: jade,
+                    enabled: left > 0,
+                    onTap: () {
+                      if (!hero.wbStartRun(day)) return;
+                      SaveService.instance.save();
+                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(worldBossDef())));
                     },
                   ),
                 ],

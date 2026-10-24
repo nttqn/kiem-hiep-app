@@ -7,7 +7,20 @@ import 'items.dart';
 import 'meridians.dart';
 import 'pets.dart';
 import 'tower.dart';
+import 'treasure.dart';
+import 'world_boss.dart';
 import 'sects.dart';
+
+/// 1234567 as "1.234.567" (Vietnamese grouping) for reward lines.
+String _thousands(int v) {
+  final s = v.abs().toString();
+  final b = StringBuffer(v < 0 ? '-' : '');
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write('.');
+    b.write(s[i]);
+  }
+  return b.toString();
+}
 
 const int maxLevel = 99;
 const int pointsPerLevel = 5;
@@ -181,6 +194,20 @@ class HeroData {
 
   /// Highest Tháp Thử Luyện floor cleared.
   int towerBest = 0;
+
+  // Boss Thế Giới, per Vietnam day: runs used (free and ad), the day's total
+  // and best run, and which damage milestones were claimed (bit mask).
+  String wbDay = '';
+  int wbRuns = 0;
+  int wbAdRuns = 0;
+  int wbTotal = 0;
+  int wbBest = 0;
+  int wbClaimed = 0;
+
+  // Kỳ Trân Các, per day: refreshes made and offers bought (indices).
+  String shopDay = '';
+  int shopRefresh = 0;
+  final Set<int> shopBought = {};
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -701,6 +728,112 @@ class HeroData {
     return lines;
   }
 
+  /// Starts a new Boss Thế Giới day when the date changed.
+  void wbRollDay(String day) {
+    if (wbDay == day) return;
+    wbDay = day;
+    wbRuns = 0;
+    wbAdRuns = 0;
+    wbTotal = 0;
+    wbBest = 0;
+    wbClaimed = 0;
+  }
+
+  int get wbRunsLeft => worldBossFreeTries + wbAdRuns - wbRuns;
+
+  /// Uses one run; false when none are left.
+  bool wbStartRun(String day) {
+    wbRollDay(day);
+    if (wbRunsLeft <= 0) return false;
+    wbRuns++;
+    return true;
+  }
+
+  /// A rewarded ad adds a run (at most [worldBossAdTries] a day).
+  bool wbAddAdRun(String day) {
+    wbRollDay(day);
+    if (wbAdRuns >= worldBossAdTries) return false;
+    wbAdRuns++;
+    return true;
+  }
+
+  /// Pays one Boss Thế Giới run and adds it to the day's total.
+  List<String> worldBossReward(int damage, math.Random rng) {
+    wbTotal += damage;
+    wbBest = math.max(wbBest, damage);
+    final g = worldBossGold(damage);
+    gold += g;
+    lastDungeonGold = g;
+    lastDungeonExp = 0;
+    _progressDaily((d) => d.type == QuestType.dungeon);
+    return ['Sát thương: ${_thousands(damage)}', '+${_thousands(g)} lượng'];
+  }
+
+  bool wbCanClaim(int i) => wbTotal >= worldBossMilestones[i] && wbClaimed & (1 << i) == 0;
+
+  /// Claims damage milestone [i]: gold and a gem of a random phase.
+  Gem? wbClaim(int i, math.Random rng) {
+    if (!wbCanClaim(i)) return null;
+    wbClaimed |= 1 << i;
+    gold += worldBossMilestoneGold(i);
+    final g = Gem(Hanh.values[rng.nextInt(5)], worldBossMilestoneGem[i]);
+    addGem(g);
+    recompute();
+    return g;
+  }
+
+  // ------------------------------------------------------------- refine
+
+  /// Tẩy luyện [it], keeping the lines in [locked] (at most all but one).
+  bool refine(Item it, Set<Stat> locked, math.Random rng) {
+    if (it.bonus.isEmpty || locked.length >= it.bonus.length) return false;
+    final cost = refineCost(it, locked.length);
+    if (gold < cost) return false;
+    gold -= cost;
+    rerollAffixes(it, locked, rng);
+    recompute();
+    return true;
+  }
+
+  // ------------------------------------------------------------- treasure
+
+  void shopRollDay(String day) {
+    if (shopDay == day) return;
+    shopDay = day;
+    shopRefresh = 0;
+    shopBought.clear();
+  }
+
+  List<TreasureOffer> treasureOffers(String day) {
+    shopRollDay(day);
+    return treasureStock(level: level, hanh: hanh, sect: sect, day: day, refresh: shopRefresh, seed: seed);
+  }
+
+  /// New stock; [free] for the rewarded-ad refresh.
+  bool treasureRefresh(String day, {bool free = false}) {
+    shopRollDay(day);
+    final cost = treasureRefreshCost(shopRefresh);
+    if (!free && gold < cost) return false;
+    if (!free) gold -= cost;
+    shopRefresh++;
+    shopBought.clear();
+    return true;
+  }
+
+  bool treasureBuy(String day, int i) {
+    final offers = treasureOffers(day);
+    if (i < 0 || i >= offers.length || shopBought.contains(i)) return false;
+    final o = offers[i];
+    if (gold < o.price) return false;
+    if (o.item != null && bag.length >= bagSize) return false;
+    gold -= o.price;
+    shopBought.add(i);
+    if (o.gem != null) addGem(o.gem!);
+    if (o.item != null) bag.add(o.item!);
+    recompute();
+    return true;
+  }
+
   /// Lực chiến: one number for leaderboards, from effective attack,
   /// toughness and trained skills.
   int get power {
@@ -798,6 +931,8 @@ class HeroData {
         'rebirths': rebirths,
         'meridians': meridianPts,
         'tower': towerBest,
+        'wb': [wbDay, wbRuns, wbAdRuns, wbTotal, wbBest, wbClaimed],
+        'shop': [shopDay, shopRefresh, shopBought.toList()],
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -866,6 +1001,21 @@ class HeroData {
     });
     h.rebirths = ((m['rebirths'] as int?) ?? 0).clamp(0, maxRebirths);
     h.towerBest = math.max(0, (m['tower'] as int?) ?? 0);
+    final wb = m['wb'];
+    if (wb is List && wb.length == 6) {
+      h.wbDay = wb[0] as String;
+      h.wbRuns = wb[1] as int;
+      h.wbAdRuns = wb[2] as int;
+      h.wbTotal = wb[3] as int;
+      h.wbBest = wb[4] as int;
+      h.wbClaimed = wb[5] as int;
+    }
+    final shop = m['shop'];
+    if (shop is List && shop.length == 3) {
+      h.shopDay = shop[0] as String;
+      h.shopRefresh = shop[1] as int;
+      h.shopBought.addAll([for (final v in shop[2] as List) v as int]);
+    }
     h.recompute();
     return h;
   }

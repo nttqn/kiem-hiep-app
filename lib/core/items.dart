@@ -264,6 +264,21 @@ Item makeItem({
   );
 }
 
+/// Tẩy luyện: gold to reroll [it]'s extra lines keeping [locks] of them.
+int refineCost(Item it, int locks) =>
+    ((300 + it.level * 60) * (1 + it.rarity.index * 0.5) * (1 + locks * 1.5)).round();
+
+/// Rerolls every extra line of [it] not in [locked]: new stats (never a
+/// duplicate of a kept one) with fresh values for the item's level.
+void rerollAffixes(Item it, Set<Stat> locked, math.Random rng) {
+  final n = it.bonus.length;
+  it.bonus.removeWhere((k, _) => !locked.contains(k));
+  final pool = Stat.values.where((s) => !it.bonus.containsKey(s)).toList()..shuffle(rng);
+  for (final s in pool.take(n - it.bonus.length)) {
+    it.bonus[s] = _affixValue(s, it.level, rng);
+  }
+}
+
 /// Rarity of a random drop. Bosses never drop below [Rarity.rare].
 Rarity rollRarity(math.Random r, {bool boss = false}) {
   final x = r.nextDouble();

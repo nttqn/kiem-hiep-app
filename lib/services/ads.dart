@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'analytics.dart';
+
 /// AdMob: rewarded ads the player chooses to watch (revive, double a
 /// dungeon reward, free potions) and a rare interstitial when walking back
 /// to town.
@@ -149,7 +151,10 @@ class AdsService {
         if (!result.isCompleted) result.complete(false);
       },
     );
-    await ad.show(onUserEarnedReward: (_, _) => earned = true);
+    await ad.show(onUserEarnedReward: (_, _) {
+      earned = true;
+      Analytics.instance.log('ad_reward');
+    });
     return result.future;
   }
 

@@ -10,6 +10,8 @@ import 'core/world.dart';
 import 'game/battle_game.dart';
 import 'render/world_renderer.dart';
 import 'ui/leaderboard_screen.dart';
+import 'ui/world_boss_screen.dart';
+import 'core/world_boss.dart';
 import 'services/leaderboard.dart';
 import 'core/tower.dart';
 import 'core/items.dart';
@@ -42,6 +44,19 @@ Future<void> main() async {
   if (q['lb'] == '1') {
     const names = ['Độc Cô Cầu Bại', 'Lệnh Hồ Xung', 'Tiểu Long Nữ', 'Kiều Phong', 'Hư Trúc', 'Đoàn Dự',
         'Hoàng Dung', 'Quách Tĩnh', 'Dương Quá', 'Vô Kỵ', 'Chu Chỉ Nhược', 'Lâm Bình Chi'];
+    Leaderboard.instance.debugBoss = [
+      for (var i = 0; i < 10; i++)
+        LbEntry(
+          id: 'b${i}_0',
+          name: const ['Kiều Phong', 'Độc Cô Cầu Bại', 'Hoàng Dung', 'Tiểu Long Nữ', 'Lệnh Hồ Xung', 'Đoàn Dự',
+              'Hư Trúc', 'Quách Tĩnh', 'Dương Quá', 'Vô Kỵ'][i],
+          hanh: (i + 3) % 5,
+          level: 99 - i * 2,
+          rebirths: 0,
+          power: 18500000 - i * 1700000,
+          tower: 0,
+        ),
+    ];
     Leaderboard.instance.debugEntries = [
       for (var i = 0; i < names.length; i++)
         LbEntry(
@@ -96,6 +111,12 @@ Future<void> main() async {
     // sp=<n> spare skill points, mer=a,b,c,d,e kinh mạch points.
     if (q['sp'] != null) h.skillPoints = int.parse(q['sp']!);
     h.towerBest = int.tryParse(q['tower'] ?? '') ?? 0;
+    // wb=<damage> fills today's Boss Thế Giới total (one run used).
+    final wb = int.tryParse(q['wb'] ?? '');
+    if (wb != null) {
+      h.wbStartRun(vnDayKey());
+      h.worldBossReward(wb, rng);
+    }
     final mer = q['mer']?.split(',') ?? const [];
     for (var i = 0; i < mer.length && i < h.meridianPts.length; i++) {
       h.meridianPts[i] = int.tryParse(mer[i]) ?? 0;
@@ -155,10 +176,15 @@ Future<void> main() async {
     'title' => const TitleScreen(),
     'create' => const CreateScreen(slot: 0),
     'play' => PlayScreen.field(map),
+    'wboss' => PlayScreen.dungeon(worldBossDef()),
     'dungeon' => PlayScreen.dungeon(q['tf'] != null
         ? towerFloor(int.parse(q['tf']!))
         : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
     'rank' => const LeaderboardScreen(),
+    'challenge' => const ChallengeScreen(),
+    'boss' => const WorldBossScreen(),
+    'treasure' => const ShopScreen(tab: 1),
+    'refine' => const CharacterScreen(tab: 4, forge: true),
     'char' => const CharacterScreen(tab: 0),
     'skills' => const CharacterScreen(tab: 1),
     'bag' => const CharacterScreen(tab: 2),

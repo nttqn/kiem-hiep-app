@@ -8,7 +8,7 @@ Trả lời "Có, app thu thập dữ liệu", rồi khai các loại sau.
 | Identifiers → User ID | Firebase (mã tài khoản) | Có | Không | App Functionality |
 | Identifiers → Device ID | AdMob (IDFA, chỉ khi người chơi cho phép ATT) | Không | **Có** | Third-Party Advertising |
 | User Content → Gameplay Content | Bản lưu trên mây, bảng xếp hạng (tên nhân vật, cấp, lực chiến, tầng tháp) | Có | Không | App Functionality |
-| Usage Data → Product Interaction | AdMob | Không | Có | Third-Party Advertising, Analytics |
+| Usage Data → Product Interaction | AdMob, Firebase Analytics (từ 1.0.7) | Không | Có (AdMob) | Third-Party Advertising, Analytics |
 | Usage Data → Advertising Data | AdMob | Không | Có | Third-Party Advertising |
 | Location → Coarse Location | AdMob (ước lượng từ IP) | Không | Có | Third-Party Advertising |
 | Diagnostics → Crash Data, Performance Data | AdMob SDK | Không | Không | Analytics |

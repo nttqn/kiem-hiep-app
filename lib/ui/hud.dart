@@ -118,7 +118,9 @@ class TopInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final d = world.dungeon;
     final boss = world.boss;
+    // The world boss never drops; its damage is shown above instead.
     final showBoss = boss != null &&
+        !(d?.isWorldBoss ?? false) &&
         boss.alive &&
         (boss.state == MobState.chase ||
             (boss.x - world.player.x).abs() + (boss.y - world.player.y).abs() < 700);
@@ -140,17 +142,21 @@ class TopInfo extends StatelessWidget {
                       Text(d.name, style: bold.copyWith(fontSize: 13, color: goldLight)),
                       const SizedBox(width: 10),
                       Text(
-                        world.bossWave
-                            ? 'Đầu lĩnh'
-                            : 'Đợt ${math.max(1, world.wave + 1)}/${d.waves.length} · còn ${world.aliveMobs}',
-                        style: body.copyWith(fontSize: 12),
+                        d.isWorldBoss
+                            ? 'Sát thương ${fmt(world.bossDamage.round())}'
+                            : world.bossWave
+                                ? 'Đầu lĩnh'
+                                : 'Đợt ${math.max(1, world.wave + 1)}/${d.waves.length} · còn ${world.aliveMobs}',
+                        style: d.isWorldBoss
+                            ? bold.copyWith(fontSize: 13, color: const Color(0xFFFF9A5A))
+                            : body.copyWith(fontSize: 12),
                       ),
                       const SizedBox(width: 10),
                       Icon(Icons.timer, size: 14, color: world.timeLeft < 30 ? hpRed : cream),
                       Text(' ${world.timeLeft.ceil()}s',
                           style: bold.copyWith(fontSize: 13, color: world.timeLeft < 30 ? hpRed : cream)),
                       const SizedBox(width: 6),
-                      for (var i = 0; i < (d.isTower ? 0 : 3); i++)
+                      for (var i = 0; i < (d.isTower || d.isWorldBoss ? 0 : 3); i++)
                         Icon(
                           world.time <= (i == 0 ? d.timeLimit : (i == 1 ? d.twoStar : d.threeStar))
                               ? Icons.star

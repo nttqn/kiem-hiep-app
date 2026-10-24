@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/hero.dart';
+import 'analytics.dart';
 import 'cloud.dart';
 import 'sync_plan.dart';
 
@@ -60,6 +61,7 @@ class SaveService extends ChangeNotifier {
   Future<void> save() async {
     if (active < 0 || slots[active] == null) return;
     slots[active]!.savedAt = DateTime.now().millisecondsSinceEpoch;
+    Analytics.instance.track(active, slots[active]!);
     await writeSlot(active);
     CloudSave.instance.queueUpload(active);
   }
@@ -114,6 +116,7 @@ class SaveService extends ChangeNotifier {
   }
 
   Future<void> create(int slot, HeroData h) async {
+    Analytics.instance.log('hero_create', {'sect': h.sect.name});
     slots[slot] = h;
     active = slot;
     h.seed = DateTime.now().millisecondsSinceEpoch & 0x7fffffff;

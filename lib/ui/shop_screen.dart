@@ -7,10 +7,14 @@ import '../core/items.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
+import 'treasure_view.dart';
 import 'theme.dart';
 
 class ShopScreen extends StatefulWidget {
-  const ShopScreen({super.key});
+  const ShopScreen({super.key, this.tab = 0});
+
+  /// 0 the general store, 1 Kỳ Trân Các.
+  final int tab;
 
   @override
   State<ShopScreen> createState() => _ShopScreenState();
@@ -19,6 +23,7 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> {
   HeroData get h => SaveService.instance.hero;
   late List<Item> _stock = _makeStock();
+  late int _tab = widget.tab;
 
   /// Plain gear for the hero's level band; the same all day.
   List<Item> _makeStock() {
@@ -85,10 +90,33 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final price = potionPrice(h.level);
     return SubScreen(
-      title: 'Tiệm thuốc & tạp hóa',
-      child: Row(
+      title: 'Cửa hàng',
+      actions: [
+        for (final (i, name) in const [(0, 'Tạp hóa'), (1, 'Kỳ Trân Các')])
+          Padding(
+            padding: const EdgeInsets.only(left: 6),
+            child: GestureDetector(
+              onTap: () => setState(() => _tab = i),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _tab == i ? seal : lacquer,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _tab == i ? goldLight : gold.withValues(alpha: 0.5)),
+                ),
+                child: Text(name, style: bold.copyWith(fontSize: 13)),
+              ),
+            ),
+          ),
+      ],
+      child: _tab == 1 ? const TreasureView() : _general(),
+    );
+  }
+
+  Widget _general() {
+    final price = potionPrice(h.level);
+    return Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
@@ -139,7 +167,6 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
         ],
-      ),
     );
   }
 

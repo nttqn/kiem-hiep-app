@@ -442,6 +442,10 @@ class World {
     wave++;
     if (wave >= d.waves.length) {
       bossWave = true;
+      if (d.isWorldBoss) {
+        _spawnWorldBoss(d);
+        return;
+      }
       // A tower floor without a boss is done once the wave is down.
       if (!d.boss) return;
       final def = mobById[map.boss]!;
@@ -485,6 +489,31 @@ class World {
     _scale(m, d.mul);
     mobs.add(m);
     fx.add(Fx('spark_mob_${def.hanh.name}', x, y - 20, life: 0.4));
+  }
+
+  /// Damage dealt to the Boss Thế Giới this run.
+  double bossDamage = 0;
+
+  /// The day's boss: level 99 defence for a fair score, effectively endless
+  /// HP, and an attack matched to the hero's level so anyone can last a while.
+  void _spawnWorldBoss(DungeonDef d) {
+    final def = mobById[d.worldBoss]!;
+    final m = Mob(_uid++, def, 99, width * 0.68, height / 2)..state = MobState.chase;
+    m.maxHp = 1e13;
+    m.hp = m.maxHp;
+    m.atk = mobAtkAt(hero.level.clamp(1, 99)) * def.atk * 1.15;
+    mobs.add(m);
+    boss = m;
+    events.add(GameEvent(EvKind.boss, text: '${def.name} giáng thế!', color: 0xFFFF6A4A, big: true));
+  }
+
+  /// Ends a Boss Thế Giới run (time up or knocked out) and pays for it.
+  void _endWorldBoss() {
+    if (finished) return;
+    finished = true;
+    finishTime = math.min(time, dungeon!.timeLimit);
+    rewardLines = hero.worldBossReward(bossDamage.round(), rng);
+    events.add(GameEvent(EvKind.cleared, value: 0));
   }
 
   /// Tower floors past level 99 make monsters tougher instead.
@@ -571,6 +600,10 @@ class World {
 
   void _updateDungeon(double dt) {
     final d = dungeon!;
+    if (d.isWorldBoss && time > d.timeLimit) {
+      _endWorldBoss();
+      return;
+    }
     if (time > d.timeLimit && !finished) {
       finished = true;
       events.add(GameEvent(EvKind.failed, text: 'Hết giờ!'));
@@ -1203,6 +1236,7 @@ class World {
   void _damageMob(Mob m, double dmg, int color,
       {bool big = false, bool small = false}) {
     m.hp -= dmg;
+    if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
     m.hurt = 0.15;
     _text(m.x + (rng.nextDouble() - 0.5) * 20, m.y - 40 * m.def.size - 10,
         dmg.round().toString(), color,
@@ -1312,7 +1346,10 @@ class World {
     if (p.hp <= 0) {
       p.hp = 0;
       _sfx('heroDie');
-      if (mode == WorldMode.dungeon && dungeonRevived) {
+      if (dungeon?.isWorldBoss ?? false) {
+        // A knock-out just ends the run early; the damage still counts.
+        _endWorldBoss();
+      } else if (mode == WorldMode.dungeon && dungeonRevived) {
         finished = true;
         events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));
       } else {

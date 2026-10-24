@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/content.dart';
 import '../core/hero.dart';
 import '../core/tower.dart';
+import '../core/world_boss.dart';
 import '../core/items.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
@@ -11,6 +12,7 @@ import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
 import 'leaderboard_screen.dart';
+import 'world_boss_screen.dart';
 import 'pet_screen.dart';
 import 'rebirth_screen.dart';
 import 'rewards_ui.dart';
@@ -259,18 +261,24 @@ class _TownScreenState extends State<TownScreen> {
     );
   }
 
+  /// Boss Thế Giới runs still free today, for the Thử thách badge.
+  int _bossRunsLeft() {
+    h.wbRollDay(vnDayKey());
+    return h.wbRunsLeft;
+  }
+
   Widget _grid(bool pending) {
     final tiles = [
       _Tile('Luyện công', Icons.landscape, () => _go(const MapListScreen())),
       _Tile('Vượt ải', Icons.castle, () => _go(const DungeonListScreen())),
-      _Tile('Leo tháp', Icons.temple_buddhist, () {
+      _Tile('Thử thách', Icons.whatshot, () {
         if (h.level < towerOpenLevel && h.rebirths == 0) {
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Tháp Thử Luyện mở ở cấp $towerOpenLevel')));
+              .showSnackBar(SnackBar(content: Text('Thử thách mở ở cấp $towerOpenLevel')));
           return;
         }
-        _go(PlayScreen.dungeon(towerFloor(h.towerBest + 1)));
-      }),
+        _go(const ChallengeScreen());
+      }, badge: h.level >= worldBossOpenLevel || h.rebirths > 0 ? _bossRunsLeft() : 0),
       _Tile('Xếp hạng', Icons.leaderboard, () => _go(const LeaderboardScreen())),
       _Tile('Nhiệm vụ', Icons.assignment, () => _go(const QuestScreen()),
           badge: h.daily.where((d) => !d.done).length),
@@ -279,7 +287,7 @@ class _TownScreenState extends State<TownScreen> {
       _Tile('Linh thú', Icons.pets, () => _go(const PetScreen())),
       _Tile('Hành trang', Icons.backpack, () => _go(const CharacterScreen(tab: 2)),
           badge: 0),
-      _Tile('Tiệm thuốc', Icons.storefront, () => _go(const ShopScreen())),
+      _Tile('Cửa hàng', Icons.storefront, () => _go(const ShopScreen())),
       _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
       _Tile('Thành tựu', Icons.emoji_events, () => _go(const AchievementsScreen()),
           badge: claimableCount(h)),

@@ -305,6 +305,7 @@ class DungeonDef {
     this.floor = 0,
     this.mul = 1,
     this.boss = true,
+    this.worldBoss = '',
   });
 
   final String id;
@@ -323,6 +324,10 @@ class DungeonDef {
   final bool boss;
 
   bool get isTower => floor > 0;
+
+  /// Boss Thế Giới run: this boss alone, unkillable, scored by damage.
+  final String worldBoss;
+  bool get isWorldBoss => worldBoss.isNotEmpty;
 
   MapDef get map => mapById[mapId]!;
 

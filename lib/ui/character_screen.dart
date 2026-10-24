@@ -10,6 +10,7 @@ import '../core/sects.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'gem_tab.dart';
+import 'refine_tab.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -33,11 +34,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc'];
+    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện'];
     return SubScreen(
       title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
       actions: [
-        for (final i in widget.forge ? const [2, 3] : const [0, 1, 2, 3])
+        for (final i in widget.forge ? const [2, 3, 4] : const [0, 1, 2, 3])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: _TabChip(
@@ -52,7 +53,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
         0 => _attrs(),
         1 => _skills(),
         2 => _bag(),
-        _ => GemTab(onChanged: () => setState(() {}), openItem: _itemDialog),
+        3 => GemTab(onChanged: () => setState(() {}), openItem: _itemDialog),
+        _ => RefineTab(onChanged: () => setState(() {})),
       },
     );
   }

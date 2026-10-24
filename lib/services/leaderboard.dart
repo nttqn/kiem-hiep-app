@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/hero.dart';
+import '../core/world_boss.dart';
 import 'cloud.dart';
 
 /// One row of the public leaderboard: a hero of a signed-in player.
@@ -111,6 +112,59 @@ class Leaderboard extends ChangeNotifier {
     }
   }
 
+  // ------------------------------------------------------------ boss
+
+  /// The day's Boss Thế Giới board: `worldboss/{yyyymmdd}/hits/{uid}_{slot}`.
+  CollectionReference<Map<String, dynamic>> _boss(String day) =>
+      FirebaseFirestore.instance.collection('worldboss').doc(day).collection('hits');
+
+  /// Rows to show for the boss board in the dev build.
+  List<LbEntry>? debugBoss;
+
+  /// Writes [h]'s damage total for its Boss Thế Giới day.
+  Future<void> submitBoss(int slot, HeroData h) async {
+    final uid = myUid;
+    if (hidden || uid == null || debugBoss != null || h.wbDay.isEmpty) return;
+    try {
+      await _boss(h.wbDay).doc('${uid}_$slot').set({
+        'uid': uid,
+        'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
+        'hanh': h.hanh.index,
+        'level': h.level,
+        'rebirths': h.rebirths,
+        'dmg': h.wbTotal,
+        'updated': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('boss submit failed: $e');
+    }
+  }
+
+  /// The day's top [limit] damage totals (damage carried in [LbEntry.power]).
+  Future<List<LbEntry>> topBoss(String day, {int limit = 30}) async {
+    final dbg = debugBoss;
+    if (dbg != null) {
+      return (List<LbEntry>.of(dbg)..sort((a, b) => b.power.compareTo(a.power))).take(limit).toList();
+    }
+    final snap = await _boss(day).orderBy('dmg', descending: true).limit(limit).get().timeout(
+          const Duration(seconds: 15),
+        );
+    return [
+      for (final d in snap.docs) ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
+    ];
+  }
+
+  Future<int?> placeBoss(String day, int dmg) async {
+    final dbg = debugBoss;
+    if (dbg != null) return dbg.where((e) => e.power > dmg).length + 1;
+    try {
+      final agg = await _boss(day).where('dmg', isGreaterThan: dmg).count().get();
+      return (agg.count ?? 0) + 1;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Removes this player's rows (hiding, deleting a slot or the account).
   Future<void> withdraw({int? slot}) async {
     final uid = myUid;
@@ -119,6 +173,7 @@ class Leaderboard extends ChangeNotifier {
       if (slot != null && i != slot) continue;
       try {
         await _col.doc('${uid}_$i').delete();
+        await _boss(vnDayKey()).doc('${uid}_$i').delete();
       } catch (_) {}
     }
   }

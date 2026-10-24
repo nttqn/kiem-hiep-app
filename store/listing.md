@@ -21,7 +21,7 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 • 9 bản đồ: đồng cỏ Lạc An, rừng trúc tím, hang Hắc Phong, sa mạc Hoàng Sa, băng nguyên tuyết phủ, núi lửa Hỏa Diệm Sơn, Ma Giáo Tổng Đàn, Vân Vụ Sơn mây phủ và Hoa Sơn Tuyệt Đỉnh.
 • Hơn 35 loại quái: sói, rắn hổ mang, cương thi, nhện độc, bọ cạp, tuyết quái, thạch nhân dung nham, kỳ lân lửa, bạch long, kiếm hồn… cùng các đầu lĩnh có chiêu đánh lan phải né.
 • 18 ải nhiều đợt quái, chấm 3 sao theo thời gian, cùng Tháp Thử Luyện vô tận.
-• Bảng xếp hạng toàn server: Lực chiến, Tháp Thử Luyện, Cấp độ (cần đăng nhập).
+• Bảng xếp hạng toàn server: Lực chiến, Tháp Thử Luyện, Cấp độ, và Boss Thế Giới mỗi ngày (cần đăng nhập).
 • 56 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo và Thiên Ma Lão Tổ, cùng nhiệm vụ hằng ngày.
 
 🧙 BUILD NHÂN VẬT THEO Ý MÌNH
@@ -49,6 +49,9 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự chọn xem để nhận thưởng: hồi sinh tại chỗ, nhân đôi phần thưởng, thuốc miễn phí.
 
 Hỗ trợ: trungsmail@gmail.com
+
+## Có gì mới (bản 1.0.7, ≤ 500 ký tự)
+BOSS THẾ GIỚI mỗi ngày: 60 giây dốc toàn lực, so tổng sát thương với cả server, nhận ngọc theo mốc. TẨY LUYỆN trang bị: đổi dòng thuộc tính phụ, khóa dòng ưng ý. KỲ TRÂN CÁC: hàng quý mỗi ngày (ngọc, trang bị Sử thi, Truyền thuyết). Mục Thử thách mới gom Tháp Thử Luyện và Boss Thế Giới.
 
 ## Có gì mới (bản 1.0.6, ≤ 500 ký tự)
 THÁP THỬ LUYỆN vô tận: càng lên cao quái càng mạnh, mỗi 5 tầng có đầu lĩnh và ngọc, từ tầng 60 rơi ngọc Tiên, Thánh mới. BẢNG XẾP HẠNG toàn server: Lực chiến, Tháp, Cấp độ. TUYỆT KỸ trấn phái ở cấp 60, ĐỘT PHÁ kỹ năng tới cấp 15, KINH MẠCH ngũ hành. Hợp ngọc Thần lên Tiên, Thánh. Bản dự phòng nhân vật.
@@ -111,7 +114,7 @@ Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire be
 • 9 regions from grassland and purple bamboo forests to a dark cave, a desert, snowfields, a volcano, the Demon Cult's fortress, the misty Cloud Mountain and the summit of Mount Hua.
 • Over 35 monsters — wolves, cobras, jiangshi, spiders, scorpions, yetis, lava golems, a fire qilin — and bosses with telegraphed area attacks.
 • 18 multi-wave dungeons with 3-star time ratings, plus the endless Trial Tower.
-• Server-wide leaderboards: combat power, tower floor and level (sign-in required).
+• Server-wide leaderboards: combat power, tower floor, level and a daily World Boss (sign-in required).
 • 56 story quests against the Blood Demon Cult and the Heavenly Demon, plus daily quests.
 
 🧙 BUILD YOUR HERO

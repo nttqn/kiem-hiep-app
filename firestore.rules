@@ -31,5 +31,26 @@ service cloud.firestore {
         && request.resource.data.tower >= 0 && request.resource.data.tower <= 5000;
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
+
+    // Boss Thế Giới: one board per Vietnam day, same ownership rules.
+    match /worldboss/{day}/hits/{id} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && day.matches('[0-9]{8}')
+        && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2']
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 24
+        && request.resource.data.hanh is int
+        && request.resource.data.hanh >= 0 && request.resource.data.hanh <= 4
+        && request.resource.data.level is int
+        && request.resource.data.level >= 1 && request.resource.data.level <= 99
+        && request.resource.data.rebirths is int
+        && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 5
+        && request.resource.data.dmg is int
+        && request.resource.data.dmg >= 0 && request.resource.data.dmg <= 1000000000000;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
   }
 }
