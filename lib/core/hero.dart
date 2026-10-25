@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'costumes.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
@@ -203,6 +204,12 @@ class HeroData {
   int wbTotal = 0;
   int wbBest = 0;
   int wbClaimed = 0;
+
+  // Ngoại trang: outfits owned, the one worn ('' shows the gear's own look),
+  // and whether the hat is hidden.
+  final Set<String> ownedCostumes = {};
+  String costume = '';
+  bool hideHat = false;
 
   // Kỳ Trân Các, per day: refreshes made and offers bought (indices).
   String shopDay = '';
@@ -421,6 +428,7 @@ class HeroData {
       recompute();
       notices.add(Notice('THĂNG CẤP $level!', color: 0xFFFFD34A, big: true));
       _checkLevelQuests();
+      unlockCostumes();
     }
     return gained;
   }
@@ -613,6 +621,50 @@ class HeroData {
     exp = 0;
     recompute();
     notices.add(Notice('CHUYỂN SINH LẦN $rebirths!', color: 0xFFFFD34A, big: true));
+    unlockCostumes();
+    return true;
+  }
+
+  // ------------------------------------------------------------- ngoại trang
+
+  /// Whether [c]'s tower, rebirth or level goal is met. Boss Thế Giới and
+  /// gold outfits are granted when claimed or bought instead.
+  bool costumeGoalMet(CostumeDef c) => switch (c.source) {
+        CostumeSource.tower => towerBest >= c.need,
+        CostumeSource.rebirth => rebirths >= c.need,
+        // A rebirth means level 99 was reached.
+        CostumeSource.level => level >= c.need || rebirths > 0,
+        CostumeSource.worldBoss || CostumeSource.gold => false,
+      };
+
+  /// Grants every outfit whose goal is met; [quiet] skips the notices (when
+  /// loading a save made before outfits existed).
+  void unlockCostumes({bool quiet = false}) {
+    for (final c in costumes) {
+      if (costumeGoalMet(c)) _grantCostume(c, quiet: quiet);
+    }
+  }
+
+  void _grantCostume(CostumeDef c, {bool quiet = false}) {
+    if (!ownedCostumes.add(c.id) || quiet) return;
+    notices.add(Notice('Mở khóa ngoại trang: ${c.name}', color: 0xFFFFD34A, big: true));
+  }
+
+  /// Buys a gold outfit; false when not for sale, owned or too dear.
+  bool buyCostume(String id) {
+    final c = costumeById[id];
+    if (c == null || c.source != CostumeSource.gold || ownedCostumes.contains(id) || gold < c.need) {
+      return false;
+    }
+    gold -= c.need;
+    ownedCostumes.add(id);
+    return true;
+  }
+
+  /// Wears an owned outfit, or '' for the gear's own look.
+  bool wearCostume(String id) {
+    if (id.isNotEmpty && !ownedCostumes.contains(id)) return false;
+    costume = id;
     return true;
   }
 
@@ -712,6 +764,7 @@ class HeroData {
       return const ['Tầng đã vượt trước đây'];
     }
     towerBest = floor;
+    unlockCostumes();
     final g = towerGold(floor);
     final xp = level >= maxLevel ? 0.0 : expToNext(level) * 0.03;
     lastDungeonGold = g;
@@ -778,6 +831,9 @@ class HeroData {
     gold += worldBossMilestoneGold(i);
     final g = Gem(Hanh.values[rng.nextInt(5)], worldBossMilestoneGem[i]);
     addGem(g);
+    for (final c in costumes) {
+      if (c.source == CostumeSource.worldBoss && c.need == i) _grantCostume(c);
+    }
     recompute();
     return g;
   }
@@ -933,6 +989,7 @@ class HeroData {
         'tower': towerBest,
         'wb': [wbDay, wbRuns, wbAdRuns, wbTotal, wbBest, wbClaimed],
         'shop': [shopDay, shopRefresh, shopBought.toList()],
+        'look': [costume, hideHat, ownedCostumes.toList()],
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -1016,6 +1073,16 @@ class HeroData {
       h.shopRefresh = shop[1] as int;
       h.shopBought.addAll([for (final v in shop[2] as List) v as int]);
     }
+    final look = m['look'];
+    if (look is List && look.length == 3) {
+      h.ownedCostumes.addAll([
+        for (final v in look[2] as List)
+          if (costumeById.containsKey(v)) v as String,
+      ]);
+      h.hideHat = look[1] as bool;
+      h.costume = h.ownedCostumes.contains(look[0]) ? look[0] as String : '';
+    }
+    h.unlockCostumes(quiet: true);
     h.recompute();
     return h;
   }

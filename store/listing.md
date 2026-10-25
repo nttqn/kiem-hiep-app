@@ -50,6 +50,12 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.0.8, ≤ 500 ký tự)
+TRANG BỊ HIỆN HÌNH: nón, áo, đai, hài, ngọc bội và vũ khí đổi diện mạo theo cấp đồ, từ khăn vải tới kim quan lông trĩ, mũ phượng, mũ Tỳ Lô, giáp vai, hộ tâm kính, áo choàng, kiếm ngọc, kiếm vàng phát sáng. NGOẠI TRANG: 10 bộ thời trang sưu tập (Bạch Y Kiếm Khách, Phượng Hoàng Y, Kim Giáp Thần Tướng…) nhận từ Tháp, Chuyển sinh, Boss Thế Giới hoặc mua bằng lượng; mặc thử trước, ẩn mũ tùy ý. Ni cô Kim Cang Tự có mũ ni riêng.
+
+## What's new (1.0.8, en-US)
+GEAR YOU CAN SEE: hats, robes, belts, boots, pendants and weapons now change your hero's look as they level, from cloth headwraps to gold crowns with pheasant plumes, phoenix crowns, shoulder plates, capes and glowing jade and gold blades. OUTFITS: 10 collectible costumes earned from the Trial Tower, rebirths and the World Boss, or bought with gold; try them on first and hide your hat if you like.
+
 ## Có gì mới (bản 1.0.7, ≤ 500 ký tự)
 BOSS THẾ GIỚI mỗi ngày: 60 giây dốc toàn lực, so tổng sát thương với cả server, nhận ngọc theo mốc. TẨY LUYỆN trang bị: đổi dòng thuộc tính phụ, khóa dòng ưng ý. KỲ TRÂN CÁC: hàng quý mỗi ngày (ngọc, trang bị Sử thi, Truyền thuyết). Mục Thử thách mới gom Tháp Thử Luyện và Boss Thế Giới.
 

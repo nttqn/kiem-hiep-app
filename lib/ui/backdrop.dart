@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../core/hanh.dart';
+import '../core/costumes.dart';
+import '../core/hero.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 import '../render/art_fx.dart';
@@ -189,11 +191,22 @@ class FigurePreview extends StatefulWidget {
       this.female = false,
       this.scale = 2.4,
       this.gear = HeroGear.none,
+      this.costume,
       this.rebirths = 0});
+
+  /// [h] as they appear, with their gear and outfit.
+  FigurePreview.of(HeroData h, {super.key, this.scale = 2.4, bool aura = false})
+      : hanh = h.hanh,
+        female = h.female,
+        gear = HeroGear.of(h.equip, hideHat: h.hideHat),
+        costume = costumeById[h.costume],
+        rebirths = aura ? h.rebirths : 0;
+
   final Hanh hanh;
   final bool female;
   final double scale;
   final HeroGear gear;
+  final CostumeDef? costume;
   final int rebirths;
 
   @override
@@ -220,18 +233,20 @@ class _FigurePreviewState extends State<FigurePreview> with SingleTickerProvider
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size(76 * widget.scale, 92 * widget.scale),
-      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.gear, widget.rebirths),
+      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.gear, widget.costume, widget.rebirths),
     );
   }
 }
 
 class _FigurePainter extends CustomPainter {
-  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.gear, this.rebirths) : super(repaint: t);
+  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.gear, this.costume, this.rebirths)
+      : super(repaint: t);
   final ValueNotifier<double> t;
   final Hanh hanh;
   final bool female;
   final double scale;
   final HeroGear gear;
+  final CostumeDef? costume;
   final int rebirths;
 
   @override
@@ -247,12 +262,16 @@ class _FigurePainter extends CustomPainter {
     drawRebirthAura(c, rebirths, time);
     drawShadow(c, 16);
     setClock(time);
-    drawChibi(c, heroLook(hanh, female: female, gear: gear),
+    drawChibi(c, heroLook(hanh, female: female, gear: gear, costume: costume),
         attack: attack, cast: hanh == Hanh.moc || hanh == Hanh.thuy || hanh == Hanh.tho, t: time);
     c.restore();
   }
 
   @override
   bool shouldRepaint(_FigurePainter old) =>
-      old.hanh != hanh || old.female != female || old.gear != gear || old.rebirths != rebirths;
+      old.hanh != hanh ||
+      old.female != female ||
+      old.gear != gear ||
+      old.costume != costume ||
+      old.rebirths != rebirths;
 }

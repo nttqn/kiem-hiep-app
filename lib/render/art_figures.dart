@@ -2,14 +2,16 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../core/content.dart';
+import '../core/costumes.dart';
 import '../core/hanh.dart';
+import '../core/hero.dart';
 import '../core/items.dart';
 import 'art_chibi.dart';
 
 /// Figures are drawn in local units with the feet at (0, 0), facing right;
 /// the caller flips and scales the canvas. A humanoid is about 64 tall.
 
-enum Hair { bald, topknot, bun, long, hood, turban, zombieHat, crown, straw }
+enum Hair { bald, topknot, bun, long, hood, turban, zombieHat, crown, straw, nunCap }
 
 enum Weapon { none, staff, saber, bigSaber, sword, darts, dagger, spear }
 
@@ -36,6 +38,7 @@ class HumanLook {
     this.boots = 0,
     this.weaponTier = 0,
     this.pendant = 0,
+    this.aura = 0,
   });
 
   final int skin, robe, trim, pants, hairColor;
@@ -61,9 +64,16 @@ class HumanLook {
 
   /// Ngọc bội colour hanging from the belt, 0 for none.
   final int pendant;
+
+  /// Colour of motes drifting up around the figure (outfits), 0 for none.
+  final int aura;
 }
 
 const int maxGearTier = 4;
+
+/// Mũ ni: the nun's brown cloth cap with ear flaps.
+const int nunCapColor = 0xFF7A6250;
+const int _nunCap = nunCapColor;
 
 /// Look tier of a worn item: a new look every 20 levels.
 int gearTier(Item? it) => it == null ? 0 : (it.level ~/ 20).clamp(0, maxGearTier);
@@ -84,13 +94,13 @@ class HeroGear {
     this.cape = false,
   });
 
-  factory HeroGear.of(Map<Slot, Item> equip) {
+  factory HeroGear.of(Map<Slot, Item> equip, {bool hideHat = false}) {
     final w = equip[Slot.weapon];
     final a = equip[Slot.armor];
     final am = equip[Slot.amulet];
     return HeroGear(
       weapon: gearTier(w),
-      hat: gearTier(equip[Slot.hat]),
+      hat: hideHat ? 0 : gearTier(equip[Slot.hat]),
       armor: gearTier(a),
       belt: gearTier(equip[Slot.belt]),
       boots: gearTier(equip[Slot.boots]),
@@ -368,6 +378,10 @@ void _hair(Canvas c, HumanLook k, double hy) {
         ..close();
       c.drawPath(p, fillOf(0xFFE8C547));
       c.drawCircle(Offset(2, hy - 10), 1.5, fillOf(0xFFB3261E));
+    case Hair.nunCap:
+      c.drawArc(Rect.fromCircle(center: Offset(1, hy), radius: 8.8), math.pi * 0.9,
+          math.pi * 1.15, true, fillOf(_nunCap));
+      c.drawRect(Rect.fromLTRB(-8.2, hy - 2, -2, hy + 7), fillOf(_nunCap));
     case Hair.straw:
       final p = Path()
         ..moveTo(-13, hy - 3)
@@ -843,16 +857,29 @@ void _brute(Canvas c, MobDef d, double walk, bool moving, double attack, double 
   c.drawCircle(Offset(ax, ay), 6, fillOf(shade(d.c1, golem ? 0.1 : -0.1)));
 }
 
-/// Hero look for a sect wearing [gear]; female variants swap the hair.
-HumanLook heroLook(Hanh h, {bool female = false, int glow = 0, HeroGear gear = HeroGear.none}) {
+/// The hero as they appear: sect, worn gear and outfit.
+HumanLook lookOfHero(HeroData h) => heroLook(h.hanh,
+    female: h.female, gear: HeroGear.of(h.equip, hideHat: h.hideHat), costume: costumeById[h.costume]);
+
+/// Hero look for a sect wearing [gear] and, over it, [costume]; female
+/// variants swap the hair.
+HumanLook heroLook(Hanh h,
+    {bool female = false, int glow = 0, HeroGear gear = HeroGear.none, CostumeDef? costume}) {
   final base = _sectLook(h, female, glow == 0 ? gear.glow : glow);
+  final o = costume;
   final wt = gear.weapon;
-  final blade = wt == 0 ? base.blade : _bladeByTier[wt];
+  var blade = wt == 0 ? base.blade : _bladeByTier[wt];
+  if (o != null && o.blade != 0) blade = o.blade;
+  final trim = o?.trim ?? base.trim;
+  var cape = gear.cape ? shade(trim, trim == 0xFF2A1A1A ? 0.25 : 0) : base.cape;
+  if (o != null && o.cape != 0) cape = o.cape;
+  var glowCol = base.glow != 0 ? base.glow : (wt >= maxGearTier ? blade : 0);
+  if (o != null && o.glow != 0) glowCol = o.glow;
   return HumanLook(
     skin: base.skin,
-    robe: base.robe,
-    trim: base.trim,
-    pants: base.pants,
+    robe: o?.robe ?? base.robe,
+    trim: trim,
+    pants: o?.pants ?? base.pants,
     hairColor: base.hairColor,
     hair: base.hair,
     weapon: base.weapon,
@@ -860,15 +887,16 @@ HumanLook heroLook(Hanh h, {bool female = false, int glow = 0, HeroGear gear = H
     female: base.female,
     mask: base.mask,
     band: base.band,
-    cape: gear.cape ? shade(base.trim, base.trim == 0xFF2A1A1A ? 0.25 : 0) : base.cape,
+    cape: cape,
     longRobe: base.longRobe,
-    glow: base.glow != 0 ? base.glow : (wt >= maxGearTier ? blade : 0),
+    glow: glowCol,
     hat: gear.hat,
-    armor: gear.armor,
+    armor: o == null ? gear.armor : math.max(gear.armor, o.armor),
     belt: gear.belt,
     boots: gear.boots,
     weaponTier: wt,
     pendant: gear.pendant,
+    aura: o?.aura ?? 0,
   );
 }
 
@@ -877,7 +905,7 @@ HumanLook _sectLook(Hanh h, bool female, int glow) {
     case Hanh.kim:
       return HumanLook(
           skin: 0xFFE8B888, robe: 0xFFE08A2E, trim: 0xFF9A2A1A, pants: 0xFF6A3A1A,
-          hair: Hair.bald, weapon: Weapon.staff, female: female, glow: glow);
+          hair: female ? Hair.nunCap : Hair.bald, weapon: Weapon.staff, female: female, glow: glow);
     case Hanh.moc:
       return HumanLook(
           skin: 0xFFE8BC92, robe: 0xFF2F5D3A, trim: 0xFF7A3A8A, pants: 0xFF1E2A22,

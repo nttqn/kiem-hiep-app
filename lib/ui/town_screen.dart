@@ -7,7 +7,6 @@ import '../core/world_boss.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
-import '../render/art_figures.dart';
 import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
@@ -175,13 +174,7 @@ class _TownScreenState extends State<TownScreen> {
         children: [
           Expanded(
             child: FittedBox(
-              child: FigurePreview(
-                hanh: h.hanh,
-                female: h.female,
-                scale: 2,
-                gear: HeroGear.of(h.equip),
-                rebirths: h.rebirths,
-              ),
+              child: FigurePreview.of(h, scale: 2, aura: true),
             ),
           ),
           Text(h.name, style: titleStyle(20, color: cream)),

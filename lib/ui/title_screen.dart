@@ -6,7 +6,6 @@ import '../services/save.dart';
 import '../services/sound.dart';
 import '../services/sync_plan.dart';
 import 'cloud_panel.dart';
-import '../render/art_figures.dart';
 import 'backdrop.dart';
 import 'create_screen.dart';
 import 'theme.dart';
@@ -187,12 +186,7 @@ class _SlotCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Center(
-                        child: FigurePreview(
-                          hanh: h.hanh,
-                          female: h.female,
-                          scale: 1.25,
-                          gear: HeroGear.of(h.equip),
-                        ),
+                        child: FigurePreview.of(h, scale: 1.25),
                       ),
                     ),
                     Text(

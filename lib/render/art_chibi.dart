@@ -94,6 +94,8 @@ void drawChibi(Canvas c, HumanLook k,
 
   const hx = 1.5, hy = -47.0, hr = 12.5;
 
+  if (k.aura != 0) _motes(c, k.aura, t, behind: true);
+
   // ---- back layer: cape, long hair, sash and headband tails
   if (k.cape != 0) {
     final p = Path()
@@ -263,7 +265,22 @@ void drawChibi(Canvas c, HumanLook k,
 
   if (!longW) _chibiWeapon(c, k, hand, wAng);
   _hand(c, hand, k.skin);
+  if (k.aura != 0) _motes(c, k.aura, t, behind: false);
   c.restore();
+}
+
+/// Outfit motes rising round the figure, half behind it and half in front.
+void _motes(Canvas c, int argb, double t, {required bool behind}) {
+  final p = Paint()
+    ..isAntiAlias = true
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+  for (var i = behind ? 0 : 1; i < 8; i += 2) {
+    final ph = (t * 0.45 + i / 8) % 1;
+    final x = math.sin(i * 2.3 + t * 1.3) * (10 + i);
+    final y = -4 - ph * 62;
+    p.color = col(argb).withValues(alpha: math.sin(ph * math.pi) * 0.9 * col(argb).a);
+    c.drawCircle(Offset(x, y), 1.4 + (i % 3) * 0.4, p);
+  }
 }
 
 /// Hem and lapel edging by armour tier.
@@ -513,6 +530,28 @@ void _hairFront(Canvas c, HumanLook k, double hx, double hy, double hr, double t
           _o
             ..color = col(0xFFB3261E)
             ..strokeWidth = 1);
+    case Hair.nunCap:
+      // Mũ ni: a soft cloth cap over crown and ears, flaps falling behind.
+      final p = Path()
+        ..moveTo(hx + 12, hy - 3)
+        ..quadraticBezierTo(hx + 12.8, hy - 15.8, hx, hy - 15.6)
+        ..quadraticBezierTo(hx - 15, hy - 15, hx - 14.5, hy + 2)
+        ..lineTo(hx - 13.5, hy + 13)
+        ..quadraticBezierTo(hx - 9, hy + 14.5, hx - 4.5, hy + 11.5)
+        ..lineTo(hx - 4, hy + 1)
+        ..quadraticBezierTo(hx + 3, hy - 6, hx + 12, hy - 3)
+        ..close();
+      _shape(c, p, _lit(nunCapColor, Rect.fromLTRB(hx - 15, hy - 16, hx + 13, hy + 14), light: 0.25), ow: 2);
+      // Front hem and the seam down the flap.
+      final hem = Path()
+        ..moveTo(hx - 4, hy + 1)
+        ..quadraticBezierTo(hx + 3, hy - 6, hx + 12, hy - 3);
+      c.drawPath(hem, _o
+        ..color = col(shade(nunCapColor, -0.3))
+        ..strokeWidth = 1.6);
+      c.drawLine(Offset(hx - 9, hy - 2), Offset(hx - 9.5, hy + 12), _o
+        ..color = col(shade(nunCapColor, -0.25))
+        ..strokeWidth = 0.9);
     case Hair.straw:
       final p = Path()
         ..moveTo(hx - 17, hy - 4)
@@ -536,7 +575,7 @@ void _hairFront(Canvas c, HumanLook k, double hx, double hy, double hr, double t
     c.drawCircle(Offset(hx + 4, hy - 7.6), 1.5, _flat(0xFFE8C547));
   }
   if (k.hat > 0) {
-    if (k.hair == Hair.bald) {
+    if (k.hair == Hair.bald || k.hair == Hair.nunCap) {
       _monkHat(c, k.hat, hx, hy);
     } else if (k.female) {
       _ladyHat(c, k.hat, hx, hy, t);

@@ -249,7 +249,7 @@ class WorldRenderer {
           ..strokeWidth = 2);
     c.scale(p.face, 1);
     setTint(flash: p.hurt > 0 ? p.hurt / 0.18 * 0.6 : 0, alpha: p.alive ? 1 : 0.5);
-    drawChibi(c, heroLook(h.hanh, female: h.female, gear: HeroGear.of(h.equip)),
+    drawChibi(c, lookOfHero(h),
         walk: p.walk,
         moving: p.moving,
         attack: p.attackAnim,

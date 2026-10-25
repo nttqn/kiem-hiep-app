@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'core/content.dart';
+import 'core/costumes.dart';
 import 'core/gems.dart';
 import 'core/hanh.dart';
 import 'core/hero.dart';
@@ -115,6 +116,13 @@ Future<void> main() async {
     // sp=<n> spare skill points, mer=a,b,c,d,e kinh mạch points.
     if (q['sp'] != null) h.skillPoints = int.parse(q['sp']!);
     h.towerBest = int.tryParse(q['tower'] ?? '') ?? 0;
+    // look=<id> wears that outfit (granting it), costumes=all owns them all.
+    if (q['costumes'] == 'all') h.ownedCostumes.addAll([for (final c in costumes) c.id]);
+    h.unlockCostumes(quiet: true);
+    if (q['look'] != null) {
+      h.ownedCostumes.add(q['look']!);
+      h.wearCostume(q['look']!);
+    }
     // wb=<damage> fills today's Boss Thế Giới total (one run used).
     final wb = int.tryParse(q['wb'] ?? '');
     if (wb != null) {
@@ -201,6 +209,8 @@ Future<void> main() async {
     'rebirth' => const RebirthScreen(),
     'gems' => const CharacterScreen(tab: 3, forge: true),
     'gear' => const _GearSheet(),
+    'outfits' => const _OutfitSheet(),
+    'wardrobe' => const CharacterScreen(tab: 5),
     _ => const TownScreen(),
   };
   runApp(MaterialApp(
@@ -208,6 +218,34 @@ Future<void> main() async {
     theme: buildTheme(),
     home: home,
   ));
+}
+
+/// Every outfit (rows) on each sect, both sexes, over mid-tier gear.
+class _OutfitSheet extends StatelessWidget {
+  const _OutfitSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    const gear = HeroGear(weapon: 2, hat: 2, armor: 2, belt: 2, boots: 2);
+    return Scaffold(
+      backgroundColor: const Color(0xFF3A4A3A),
+      body: FittedBox(
+        child: Column(
+          children: [
+            for (final c in costumes)
+              Row(
+                children: [
+                  SizedBox(width: 150, child: Text(c.name, style: const TextStyle(color: Colors.white))),
+                  for (final hn in Hanh.values)
+                    for (final f in [false, true])
+                      FigurePreview(hanh: hn, female: f, scale: 0.9, gear: gear, costume: c),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Every sect, both sexes, at each gear look tier (rows), to check the art.
