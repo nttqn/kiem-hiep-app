@@ -24,6 +24,10 @@ class BattleGame extends Game {
   /// screen recorder can catch every frame; the video is sped up after.
   static double debugSpeed = 1;
 
+  /// Dev build only: print each sound cue so a recorder can lay the game's
+  /// own effects under a captured video.
+  static bool debugLogSfx = false;
+
   double _clock = 0;
   double _sinceHud = 0;
   double _lastDt = 1 / 60;
@@ -52,7 +56,13 @@ class BattleGame extends Game {
       }
     }
     if (world.sounds.isNotEmpty) {
-      world.sounds.toSet().forEach(onSound);
+      final cues = world.sounds.toSet();
+      cues.forEach(onSound);
+      if (debugLogSfx) {
+        for (final c in cues) {
+          debugPrint('SFX $c');
+        }
+      }
       world.sounds.clear();
     }
     _sinceHud += dt;

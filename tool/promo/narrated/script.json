@@ -1,0 +1,11 @@
+[
+  {"id": "s1", "scene": "clip:a_hoason", "say": "Kiếm Hiệp Ngũ Hành, game nhập vai kiếm hiệp chơi offline, không cần mạng!", "sub": "Kiếm Hiệp Ngũ Hành\nGame nhập vai kiếm hiệp chơi offline"},
+  {"id": "s2", "scene": "still:create", "say": "Chọn một trong năm môn phái theo Ngũ Hành, tương sinh tương khắc.", "sub": "Chọn 1 trong 5 môn phái\nKim · Mộc · Thủy · Hỏa · Thổ"},
+  {"id": "s3", "scene": "clip:b_palm", "say": "Tung tuyệt kỹ trấn phái cực đẹp mắt, Như Lai Thần Chưởng!", "sub": "Tuyệt kỹ trấn phái\nNhư Lai Thần Chưởng"},
+  {"id": "s4", "scene": "clip:d_swords", "say": "Vạn Kiếm Quy Tông, cùng linh thú đồng hành chiến đấu.", "sub": "Vạn Kiếm Quy Tông\nLinh thú đồng hành"},
+  {"id": "s5", "scene": "stills:pets,gems,refine", "say": "Thu phục linh thú, khảm ngọc Ngũ Hành, tẩy luyện trang bị cực phẩm.", "sub": "Thu phục linh thú · Khảm ngọc\nTẩy luyện trang bị"},
+  {"id": "s6", "scene": "clip:c_tower", "say": "Leo Tháp Thử Luyện vô tận, càng lên cao càng khó.", "sub": "Tháp Thử Luyện vô tận"},
+  {"id": "s7", "scene": "clip:e_wboss", "say": "Mỗi ngày một Boss Thế Giới, đua top sát thương với cả server!", "sub": "Boss Thế Giới mỗi ngày\nĐua top sát thương toàn server"},
+  {"id": "s8", "scene": "stills:rebirth,rank", "say": "Chuyển sinh năm lần, leo bảng xếp hạng, trở thành Võ Lâm Chí Tôn.", "sub": "Chuyển sinh 5 lần\nBảng xếp hạng toàn server"},
+  {"id": "s9", "scene": "end", "say": "Tải miễn phí Kiếm Hiệp Ngũ Hành trên Google Play ngay hôm nay!", "sub": "Tải miễn phí trên Google Play"}
+]
