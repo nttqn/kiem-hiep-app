@@ -6,6 +6,7 @@ import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/core/luan_hoi.dart';
 import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/core/world.dart';
 
@@ -30,16 +31,32 @@ void main() {
       }
       expect(mobById[m.boss]!.boss, isTrue);
     }
-    for (final q in mainQuests) {
+    for (final q in [...mainQuests, for (final c in luanHoi) ...c.quests]) {
       switch (q.type) {
         case QuestType.kill || QuestType.boss:
           expect(mobById[q.target], isNotNull, reason: q.title);
           expect(mapOfMob(q.target), isNotNull, reason: q.title);
         case QuestType.dungeon:
           expect(dungeonById[q.target], isNotNull, reason: q.title);
+          expect(dungeonById[q.target]!.level, lessThanOrEqualTo(q.minLv), reason: q.title);
+        case QuestType.elite:
+          final e = eliteById[q.target];
+          expect(e, isNotNull, reason: q.title);
+          expect(mobById[e!.mob], isNotNull, reason: q.title);
+          expect(mobById[e.mob]!.boss, isFalse, reason: 'elites are not built on bosses: ${q.title}');
+          expect(mapById[e.map], isNotNull, reason: q.title);
+          expect(q.minLv, greaterThanOrEqualTo(mapById[e.map]!.minLv), reason: q.title);
         case QuestType.level:
           break;
       }
+    }
+    for (final c in luanHoi) {
+      // Each chapter climbs from level 10 back to 99, in order.
+      expect(c.quests.first.minLv, 10, reason: c.title);
+      for (var i = 1; i < c.quests.length; i++) {
+        expect(c.quests[i].minLv, greaterThan(c.quests[i - 1].minLv), reason: c.quests[i].title);
+      }
+      expect(c.quests.last.type, QuestType.elite, reason: c.title);
     }
     for (final s in sects) {
       // Six regular skills (four active) and the tuyệt kỹ last.

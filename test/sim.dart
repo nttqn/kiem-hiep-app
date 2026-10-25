@@ -109,9 +109,8 @@ SimReport simulate(Hanh hanh, {int minutes = 120, int seed = 1, HeroData? start}
     }
     // Like pressing "Đi ngay": go where the main quest's monster lives.
     final mq = h.currentMain;
-    if (mq != null && !h.mainLocked &&
-        (mq.type == QuestType.kill || mq.type == QuestType.boss)) {
-      map = mapOfMob(mq.target) ?? map;
+    if (mq != null && !h.mainLocked) {
+      map = questMap(mq) ?? map;
     }
     final w = World.field(h, map, seed: rng.nextInt(1 << 30))..auto = true;
     final until = clock + 300;

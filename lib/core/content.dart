@@ -1,4 +1,5 @@
 import 'hanh.dart';
+import 'luan_hoi.dart';
 
 /// Body plans the renderer knows how to draw.
 enum Body { quad, human, serpent, bug, flyer, brute }
@@ -382,7 +383,7 @@ final Map<String, DungeonDef> dungeonById = {
   for (final d in dungeons) d.id: d,
 };
 
-enum QuestType { kill, boss, dungeon, level }
+enum QuestType { kill, boss, dungeon, level, elite }
 
 class QuestDef {
   const QuestDef({
@@ -401,7 +402,7 @@ class QuestDef {
   final String story;
   final QuestType type;
 
-  /// Monster id for kill/boss, dungeon id for dungeon.
+  /// Monster id for kill/boss, dungeon id for dungeon, [EliteDef] id for elite.
   final String target;
 
   /// Kills needed, or the level to reach for [QuestType.level].
@@ -422,8 +423,17 @@ class QuestDef {
           'Đánh bại ${mobById[target]!.name} (${_mapOfMob(target)})',
         QuestType.dungeon => 'Vượt ải ${dungeonById[target]!.name}',
         QuestType.level => 'Đạt cấp $count',
+        QuestType.elite =>
+          'Hạ tinh anh ${eliteById[target]!.name} (${mapById[eliteById[target]!.map]!.name})',
       };
 }
+
+/// Where a quest is done: the map of its monster or elite, if any.
+MapDef? questMap(QuestDef q) => switch (q.type) {
+      QuestType.kill || QuestType.boss => mapOfMob(q.target),
+      QuestType.elite => mapById[eliteById[q.target]?.map],
+      _ => null,
+    };
 
 String _mapOfMob(String id) {
   for (final m in maps) {

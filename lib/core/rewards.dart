@@ -127,6 +127,8 @@ final achievements = <AchDef>[
   AchDef('main10', 'Hành hiệp', 'Hoàn thành 10 nhiệm vụ chính tuyến', 'Nghĩa Sĩ', 10, 2000, (h) => h.mainQuest),
   AchDef('mainAll', 'Diệt ma', 'Hoàn thành toàn bộ chính tuyến', 'Cứu Thế Anh Hùng', mainQuests.length, 30000,
       (h) => h.mainQuest),
+  AchDef('lh1', 'Luân hồi', 'Hoàn thành một hồi Luân Hồi', 'Luân Hồi Hiệp Khách', 1, 60000, (h) => h.rbDone),
+  AchDef('lh5', 'Ngũ thế luân hồi', 'Hoàn thành cả 5 hồi Luân Hồi', 'Võ Lâm Chí Tôn', 5, 600000, (h) => h.rbDone),
   AchDef('plus5', 'Thợ rèn', 'Cường hóa một món lên +5', 'Thiết Thủ', 5, 1500, (h) => h.bestPlus),
   AchDef('plus10', 'Thần binh', 'Cường hóa một món lên +10', 'Thần Binh Chủ', 10, 15000, (h) => h.bestPlus),
   AchDef('legend', 'Bảo vật', 'Sở hữu một trang bị Truyền thuyết', 'Bảo Chủ', 1, 5000,

@@ -80,6 +80,14 @@ class Mob extends Actor {
   double respawnAt = -1;
   double bossCd = 5;
   int camp = -1;
+
+  /// Set on a tinh anh: the quest or bounty key it answers to, and its name.
+  String? eliteKey;
+  String eliteName = '';
+  bool get elite => eliteKey != null;
+
+  /// Bosses and elites: bigger loot, a name bar, a screen shake.
+  bool get big => def.boss || elite;
 }
 
 class Proj {
@@ -570,7 +578,35 @@ class World {
     hero.notices.clear();
   }
 
+  double _eliteCheck = 0;
+  final Map<String, double> _eliteAgain = {};
+
+  /// Puts each tinh anh a quest or bounty wants on the map, at a camp away
+  /// from the hero; a killed one that is still wanted returns after a while.
+  void _spawnElites() {
+    for (final w in hero.wantedElites(map.id)) {
+      if (time < (_eliteAgain[w.key] ?? 0)) continue;
+      if (mobs.any((m) => m.eliteKey == w.key && m.alive)) continue;
+      final far = _camps.where((c) => _d2(c.x, c.y, player.x, player.y) > 500 * 500).toList();
+      final c = far.isEmpty ? _camps[rng.nextInt(_camps.length)] : far[rng.nextInt(far.length)];
+      final m = Mob(_uid++, mobById[w.mob]!, w.level, c.x + 50, c.y)
+        ..eliteKey = w.key
+        ..eliteName = w.name;
+      m.maxHp *= w.hpMul;
+      m.hp = m.maxHp;
+      m.atk *= w.atkMul;
+      mobs.add(m);
+      events.add(GameEvent(EvKind.boss, text: 'Tinh anh ${w.name} xuất hiện!', color: 0xFFFFD34A, big: true));
+    }
+  }
+
   void _updateField() {
+    if (time >= _eliteCheck) {
+      _eliteCheck = time + 1;
+      _spawnElites();
+    }
+    // Elites do not respawn: clear them once they have faded.
+    mobs.removeWhere((m) => m.elite && !m.alive && m.hurt <= 0);
     for (final m in mobs) {
       if (m.alive || m.respawnAt < 0 || time < m.respawnAt) continue;
       if (m == boss) continue;
@@ -1020,6 +1056,7 @@ class World {
     if (p.hp < p.maxHp * 0.42) input.hpPot = true;
     if (p.mp < st.maxMp * 0.22) input.mpPot = true;
 
+    _wanted = hero.wantedMobs();
     final near = _autoTarget();
     if (near != null) target = near;
     var count = 0;
@@ -1088,13 +1125,12 @@ class World {
       return;
     }
     // Head for the nearest living monster, quest targets preferred.
-    final quest = _questTarget;
     Mob? best;
     var bd = double.infinity;
     for (final m in mobs) {
       if (!m.alive || _avoid(m)) continue;
       var d = _d2(m.x, m.y, p.x, p.y);
-      if (m.def.id == quest) d *= 0.02;
+      if (_isWanted(m)) d *= 0.02;
       if (m.level > hero.level + 4) d *= 4;
       if (d < bd) {
         bd = d;
@@ -1109,8 +1145,14 @@ class World {
       m.def.boss &&
       mode == WorldMode.field &&
       m.state != MobState.chase &&
-      m.def.id != hero.currentMain?.target &&
+      !_wanted.contains(m.def.id) &&
       hero.level < map.maxLv;
+
+  /// Monster ids the story quest and bounties want, refreshed each
+  /// autopilot step.
+  Set<String> _wanted = const {};
+
+  bool _isWanted(Mob m) => m.elite || _wanted.contains(m.def.id);
 
   /// Nearest worthwhile monster within reach of a fight; ones already
   /// hitting the hero count as closer.
@@ -1120,15 +1162,14 @@ class World {
         _d2(target!.x, target!.y, p.x, p.y) < 500 * 500) {
       return target;
     }
-    // While a kill quest's monsters live on this map, only they and
+    // While a quest's or bounty's monsters live on this map, only they and
     // whatever is already attacking count: the autopilot does the quest.
-    final quest = _questTarget;
-    final hunt = quest != null && mobs.any((m) => m.alive && m.def.id == quest);
+    final hunt = mobs.any((m) => m.alive && _isWanted(m));
     Mob? best;
     var bd = 600.0 * 600;
     for (final m in mobs) {
       if (!m.alive || _avoid(m)) continue;
-      if (hunt && m.def.id != quest && m.state != MobState.chase) continue;
+      if (hunt && !_isWanted(m) && m.state != MobState.chase) continue;
       var d = _d2(m.x, m.y, p.x, p.y);
       if (m.state == MobState.chase) d *= 0.5;
       if (d < bd) {
@@ -1139,13 +1180,6 @@ class World {
     return best;
   }
 
-  /// Monster id the current main quest wants killed, if any.
-  String? get _questTarget {
-    final q = hero.currentMain;
-    if (q == null || hero.mainLocked) return null;
-    if (q.type != QuestType.kill && q.type != QuestType.boss) return null;
-    return q.target;
-  }
 
   void _flee(Mob m) {
     final p = player;
@@ -1264,12 +1298,17 @@ class World {
     m.hurt = 0.6;
     m.dots.clear();
     if (target == m) target = null;
-    _sfx(m.def.boss ? 'bossDie' : 'die');
+    _sfx(m.big ? 'bossDie' : 'die');
     final xp = mobExpAt(m.level) *
         m.def.exp *
+        (m.elite ? 12 : 1) *
         expLevelFactor(hero.level, m.level);
     _text(m.x, m.y - 70, '+${xp.round()} EXP', 0xFFB8E0FF, small: true);
     hero.onKill(m.def, rng);
+    if (m.elite) {
+      hero.onEliteKill(m.eliteKey!, rng);
+      _eliteAgain[m.eliteKey!] = time + 20;
+    }
     hero.gainExp(xp);
     if (m.def.boss) {
       final tamed = hero.rollPet(m.def.id, rng);
@@ -1282,30 +1321,30 @@ class World {
     if (mode == WorldMode.field) {
       if (m == boss) {
         bossRespawnAt = time + 150;
-      } else {
+      } else if (!m.elite) {
         m.respawnAt = time + 9 + rng.nextDouble() * 6;
       }
     }
     _rollDrops(m);
-    if (m.def.boss) _shake(10);
+    if (m.big) _shake(10);
   }
 
   void _rollDrops(Mob m) {
     double jx() => (rng.nextDouble() - 0.5) * 60;
-    final goldChance = m.def.boss ? 1.0 : 0.5;
+    final goldChance = m.big ? 1.0 : 0.5;
     if (rng.nextDouble() < goldChance) {
       final g = ((1 + m.level * 0.4) *
               (0.7 + rng.nextDouble() * 0.6) *
-              (m.def.boss ? 15 : 1))
+              (m.big ? 15 : 1))
           .round();
       drops.add(Drop(m.x + jx(), m.y + jx(), gold: g));
     }
-    final items = m.def.boss ? 2 : (rng.nextDouble() < 0.075 ? 1 : 0);
+    final items = m.big ? 2 : (rng.nextDouble() < 0.075 ? 1 : 0);
     for (var i = 0; i < items; i++) {
       final it = makeItem(
         slot: Slot.values[rng.nextInt(Slot.values.length)],
         level: math.min(maxLevel, m.level),
-        rarity: rollRarity(rng, boss: m.def.boss),
+        rarity: rollRarity(rng, boss: m.big),
         sect: sect,
         rng: rng,
       );
@@ -1315,9 +1354,9 @@ class World {
       drops.add(Drop(m.x + jx(), m.y + jx(), potion: rng.nextBool() ? 1 : 2));
     }
     // Gems take the monster's phase; bosses always drop one, a tier up.
-    if (m.def.boss || rng.nextDouble() < gemDropChance) {
+    if (m.big || rng.nextDouble() < gemDropChance) {
       drops.add(Drop(m.x + jx(), m.y + jx(),
-          gem: Gem(m.def.hanh, dropTier(m.level, boss: m.def.boss))));
+          gem: Gem(m.def.hanh, dropTier(m.level, boss: m.big))));
     }
   }
 

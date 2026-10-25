@@ -146,7 +146,7 @@ class WorldRenderer {
     }
     for (final m in w.mobs) {
       if (!m.alive || !pad.contains(Offset(m.x, m.y))) continue;
-      final show = m == tg || m.hp < m.maxHp || m.def.boss;
+      final show = m == tg || m.hp < m.maxHp || m.big;
       if (show && !debugClean) _mobBar(c, m, m == tg);
     }
     for (final ft in debugClean ? const <FloatText>[] : w.texts) {
@@ -202,15 +202,26 @@ class WorldRenderer {
     c.save();
     c.translate(m.x, m.y + (dying ? (0.6 - m.hurt) * 10 : 0));
     setTint(alpha: dying ? m.hurt / 0.6 : 1);
-    drawShadow(c, m.radius * 1.1 * (d.body == Body.flyer ? 0.6 : 1));
-    c.scale(m.face * d.size, d.size);
+    // Elites: a pulsing gold ring and a bigger body.
+    final size = d.size * (m.elite ? 1.3 : 1);
+    if (m.elite && !dying) {
+      final pulse = 0.5 + 0.5 * math.sin(t * 4 + m.uid);
+      c.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: m.radius * 3.4, height: m.radius * 1.3),
+          Paint()
+            ..color = Color.fromRGBO(255, 196, 64, 0.35 + 0.3 * pulse)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3);
+    }
+    drawShadow(c, m.radius * 1.1 * (d.body == Body.flyer ? 0.6 : 1) * (m.elite ? 1.3 : 1));
+    c.scale(m.face * size, size);
     setTint(
       flash: !dying && m.hurt > 0 ? m.hurt / 0.15 * 0.5 : 0,
       alpha: dying ? m.hurt / 0.6 : 1,
     );
     drawMob(c, d, walk: m.walk, moving: m.moving, attack: m.attackAnim, t: t + m.uid);
     if (t < m.stunUntil && m.alive) {
-      c.scale(1 / d.size);
+      c.scale(1 / size);
       for (var i = 0; i < 3; i++) {
         final a = t * 6 + i * 2.1;
         c.drawCircle(Offset(math.cos(a) * 10, -mobTop(d) / d.size - 6 + math.sin(a) * 3),
@@ -277,15 +288,15 @@ class WorldRenderer {
 
   void _mobBar(Canvas c, Mob m, bool targeted) {
     final d = m.def;
-    final wdt = d.boss ? 70.0 : 40.0;
-    final y = m.y - mobTop(d) - 12;
-    final r = Rect.fromLTWH(m.x - wdt / 2, y, wdt, d.boss ? 6 : 4.5);
+    final wdt = m.big ? 70.0 : 40.0;
+    final y = m.y - mobTop(d) * (m.elite ? 1.3 : 1) - 12;
+    final r = Rect.fromLTWH(m.x - wdt / 2, y, wdt, m.big ? 6 : 4.5);
     c.drawRect(r.inflate(1.2), Paint()..color = const Color(0xCC1A1410));
     c.drawRect(Rect.fromLTWH(r.left, r.top, r.width * (m.hp / m.maxHp).clamp(0, 1), r.height),
-        Paint()..color = d.boss ? const Color(0xFFE8503A) : const Color(0xFFD8403A));
-    if (targeted || d.boss) {
-      final tp = _label('${d.name} · ${m.level}', d.boss ? 0xFFFFB08A : 0xFFFFF3C4,
-          d.boss ? 13 : 11);
+        Paint()..color = m.big ? const Color(0xFFE8503A) : const Color(0xFFD8403A));
+    if (targeted || m.big) {
+      final tp = _label(m.elite ? '★ ${m.eliteName} · ${m.level}' : '${d.name} · ${m.level}',
+          m.elite ? 0xFFFFD34A : (d.boss ? 0xFFFFB08A : 0xFFFFF3C4), m.big ? 13 : 11);
       tp.paint(c, Offset(m.x - tp.width / 2, y - tp.height - 1));
       // Hanh pip.
       c.drawCircle(Offset(m.x - tp.width / 2 - 7, y - tp.height / 2 - 1), 4,

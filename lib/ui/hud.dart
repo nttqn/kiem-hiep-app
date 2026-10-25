@@ -283,7 +283,13 @@ class _MiniMapPainter extends CustomPainter {
     for (final m in w.mobs) {
       if (!m.alive) continue;
       final o = Offset(m.x * sx, m.y * sy);
-      if (m.def.boss) {
+      if (m.elite) {
+        c.drawCircle(o, 4, Paint()..color = const Color(0xFFFFD34A));
+        c.drawCircle(o, 4, Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1);
+      } else if (m.def.boss) {
         c.drawCircle(o, 4, Paint()..color = const Color(0xFFB57BF0));
         c.drawCircle(o, 4, Paint()
           ..color = Colors.white

@@ -1,0 +1,3 @@
+tags:
+  sim:
+    skip: "Long balance simulation; run with: flutter test --run-skipped -t sim"

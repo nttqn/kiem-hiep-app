@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/luan_hoi.dart';
 import '../core/tower.dart';
 import '../services/save.dart';
+import 'bounty_view.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -302,32 +304,90 @@ class DungeonListScreen extends StatelessWidget {
   }
 }
 
-class QuestScreen extends StatelessWidget {
-  const QuestScreen({super.key});
+class QuestScreen extends StatefulWidget {
+  const QuestScreen({super.key, this.tab = 0});
+
+  /// 0 the story and dailies, 1 Bảng Truy Nã.
+  final int tab;
+
+  @override
+  State<QuestScreen> createState() => _QuestScreenState();
+}
+
+class _QuestScreenState extends State<QuestScreen> {
+  late int _tab = widget.tab;
+
+  /// What the story panel says once there is no quest under way.
+  Widget _storyDone(HeroData h) {
+    final (head, line) = h.rebirths == 0
+        ? ('Đã hoàn thành toàn bộ chính tuyến!', 'Đạt cấp 99 đầy kinh nghiệm rồi chuyển sinh để mở Luân Hồi.')
+        : h.rbDone >= luanHoi.length
+            ? ('Đã hoàn thành toàn bộ Luân Hồi!', 'Danh xưng Võ Lâm Chí Tôn đã thuộc về bạn.')
+            : (
+                'Hoàn thành ${chapterLabel(h.chapter)}: ${luanHoi[h.chapter].title}',
+                'Chuyển sinh lần nữa để mở ${chapterLabel(h.chapter + 1)}. Trong lúc chờ, hãy nhận lệnh ở Bảng Truy Nã.'
+              );
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(head, style: titleStyle(18), textAlign: TextAlign.center),
+          const SizedBox(height: 6),
+          Text(line, style: body, textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String label, int i) => Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: GestureDetector(
+          onTap: () => setState(() => _tab = i),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: _tab == i ? seal : lacquer,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _tab == i ? goldLight : gold.withValues(alpha: 0.5)),
+            ),
+            child: Text(label, style: bold.copyWith(fontSize: 13)),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
     final q = h.currentMain;
+    final ready = h.bounties.where((b) => b.done).length;
     return SubScreen(
       title: 'Nhiệm vụ',
-      child: Row(
+      actions: [
+        _chip('Cốt truyện', 0),
+        _chip(ready > 0 ? 'Truy nã ($ready)' : 'Truy nã', 1),
+      ],
+      child: _tab == 1 ? const BountyView() : Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             flex: 5,
             child: Panel(
               child: q == null
-                  ? Center(child: Text('Đã hoàn thành toàn bộ chính tuyến!', style: titleStyle(18)))
+                  ? _storyDone(h)
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Chính tuyến · ${h.mainQuest + 1}/${mainQuests.length}', style: small),
+                        Text(h.inLuanHoi ? '${h.questLabel} · ${luanHoi[h.chapter].title}' : h.questLabel,
+                            style: small.copyWith(color: h.inLuanHoi ? goldLight : creamDim)),
                         Text(q.title, style: titleStyle(22)),
                         const SizedBox(height: 6),
                         Expanded(
                           child: SingleChildScrollView(
-                            child: Text(q.story, style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
+                            child: Text(
+                                h.inLuanHoi && h.rbQuest == 0
+                                    ? '${luanHoi[h.chapter].intro}\n\n${q.story}'
+                                    : q.story,
+                                style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
                           ),
                         ),
                         const Divider(color: gold),

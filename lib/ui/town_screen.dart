@@ -86,7 +86,7 @@ class _TownScreenState extends State<TownScreen> {
       _go(PlayScreen.dungeon(d));
       return;
     }
-    final m = mapOfMob(q.target);
+    final m = questMap(q);
     if (m != null) {
       _go(PlayScreen.field(m));
     } else {
@@ -235,7 +235,7 @@ class _TownScreenState extends State<TownScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Chính tuyến ${h.mainQuest + 1}/${mainQuests.length}: ${q.title}',
+                Text('${h.questLabel}: ${q.title}',
                     style: bold.copyWith(color: goldLight)),
                 Text(
                   locked
@@ -273,7 +273,7 @@ class _TownScreenState extends State<TownScreen> {
       }, badge: h.level >= worldBossOpenLevel || h.rebirths > 0 ? _bossRunsLeft() : 0),
       _Tile('Xếp hạng', Icons.leaderboard, () => _go(const LeaderboardScreen())),
       _Tile('Nhiệm vụ', Icons.assignment, () => _go(const QuestScreen()),
-          badge: h.daily.where((d) => !d.done).length),
+          badge: h.daily.where((d) => !d.done).length + h.bounties.where((b) => b.done).length),
       _Tile('Nhân vật', Icons.person, () => _go(const CharacterScreen(tab: 0)),
           badge: pending ? h.freePoints + h.skillPoints : 0),
       _Tile('Linh thú', Icons.pets, () => _go(const PetScreen())),

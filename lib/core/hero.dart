@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
+import 'bounty.dart';
 import 'content.dart';
 import 'costumes.dart';
+import 'luan_hoi.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
@@ -100,7 +102,7 @@ class DailyQuest {
                 ' (${mapOfMob(target)?.name ?? ''})',
         QuestType.boss => 'Đánh bại ${mobById[target]!.name}',
         QuestType.dungeon => 'Vượt ải bất kỳ $count lần',
-        QuestType.level => '',
+        QuestType.level || QuestType.elite => '',
       };
 
   Map<String, dynamic> toJson() => {
@@ -205,6 +207,17 @@ class HeroData {
   int wbBest = 0;
   int wbClaimed = 0;
 
+  /// Luân Hồi: quest index in this rebirth's chapter, and chapters finished.
+  int rbQuest = 0;
+  int rbDone = 0;
+
+  // Bảng Truy Nã: the posted bounties, and per day the new ones still to
+  // come and the ad refreshes used.
+  final List<Bounty> bounties = [];
+  String bountyDay = '';
+  int bountyLeft = 0;
+  int bountyAds = 0;
+
   // Ngoại trang: outfits owned, the one worn ('' shows the gear's own look),
   // and whether the hat is hidden.
   final Set<String> ownedCostumes = {};
@@ -223,8 +236,24 @@ class HeroData {
 
   SectDef get sect => sectOf(hanh);
 
-  QuestDef? get currentMain =>
-      mainQuest < mainQuests.length ? mainQuests[mainQuest] : null;
+  /// The story quest under way: the main story, then after a rebirth that
+  /// rebirth's Luân Hồi chapter.
+  QuestDef? get currentMain {
+    if (mainQuest < mainQuests.length) return mainQuests[mainQuest];
+    if (rebirths == 0) return null;
+    final qs = luanHoi[chapter].quests;
+    return rbQuest < qs.length ? qs[rbQuest] : null;
+  }
+
+  /// Luân Hồi chapter for this rebirth (0-based).
+  int get chapter => (rebirths.clamp(1, luanHoi.length)) - 1;
+
+  bool get inLuanHoi => mainQuest >= mainQuests.length && rebirths > 0;
+
+  /// "Chính tuyến 12/56" or "Luân Hồi II · 3/12".
+  String get questLabel => inLuanHoi
+      ? '${chapterLabel(chapter)} · ${rbQuest + 1}/${luanHoi[chapter].quests.length}'
+      : 'Chính tuyến ${mainQuest + 1}/${mainQuests.length}';
 
   bool get mainLocked => (currentMain?.minLv ?? 0) > level;
 
@@ -610,6 +639,9 @@ class HeroData {
   bool rebirth() {
     if (!canRebirth) return false;
     rebirths++;
+    // A new Luân Hồi chapter starts (after the main story, if unfinished).
+    rbQuest = 0;
+    if (mainQuest >= mainQuests.length) mainProgress = 0;
     var total = freePoints;
     for (var i = 0; i < 4; i++) {
       total += spent[i];
@@ -622,7 +654,122 @@ class HeroData {
     recompute();
     notices.add(Notice('CHUYỂN SINH LẦN $rebirths!', color: 0xFFFFD34A, big: true));
     unlockCostumes();
+    // Bounties were rolled for level 99 maps: post new ones for level 10.
+    bounties.clear();
+    _fillBounties(math.Random(seed ^ rebirths), free: true);
     return true;
+  }
+
+  // ------------------------------------------------------------- truy nã
+
+  bool get bountyOpen => level >= bountyMinLevel || rebirths > 0;
+
+  /// A new day: fresh quota and ad refreshes, then fill the board.
+  void rollBountyDay(String today) {
+    if (bountyDay == today) return;
+    bountyDay = today;
+    bountyLeft = bountiesPerDay;
+    bountyAds = 0;
+    _fillBounties(math.Random(seed ^ today.hashCode));
+  }
+
+  /// Tops the board up to [bountySlots]; [free] ones do not use the day's quota.
+  void _fillBounties(math.Random rng, {bool free = false}) {
+    if (!bountyOpen) return;
+    while (bounties.length < bountySlots && (free || bountyLeft > 0)) {
+      bounties.add(rollBounty(level, expToNext(level), rng));
+      if (!free) bountyLeft--;
+    }
+  }
+
+  /// Hands in finished bounty [i]: its gold and EXP, a Quý item at 4 stars,
+  /// a Hiếm item and a gem at 5. Returns the reward lines, or null.
+  List<String>? claimBounty(int i, math.Random rng) {
+    if (i < 0 || i >= bounties.length || !bounties[i].done) return null;
+    final b = bounties.removeAt(i);
+    gold += b.gold;
+    final lines = ['+${_thousands(b.exp)} kinh nghiệm', '+${_thousands(b.gold)} lượng'];
+    if (b.stars >= 4) {
+      final it = makeItem(
+          slot: Slot.values[rng.nextInt(Slot.values.length)],
+          level: level,
+          rarity: b.stars >= 5 ? Rarity.epic : Rarity.rare,
+          sect: sect,
+          rng: rng);
+      addItem(it);
+      lines.add('${it.name} [${it.rarity.label}]');
+    }
+    if (b.stars >= 5) {
+      final g = Gem(Hanh.values[rng.nextInt(5)], dropTier(level, boss: true));
+      addGem(g);
+      lines.add(g.name);
+    }
+    gainExp(b.exp.toDouble());
+    _fillBounties(rng);
+    return lines;
+  }
+
+  /// Rerolls every unfinished bounty; [ad] uses one of the day's free
+  /// refreshes, otherwise it costs [bountyRefreshCost] gold.
+  bool rerollBounties(math.Random rng, {bool ad = false}) {
+    if (ad) {
+      if (bountyAds >= bountyAdRefreshes) return false;
+      bountyAds++;
+    } else {
+      final cost = bountyRefreshCost(level);
+      if (gold < cost) return false;
+      gold -= cost;
+    }
+    bounties.removeWhere((b) => !b.done);
+    _fillBounties(rng, free: true);
+    return true;
+  }
+
+  void _progressBounties(bool Function(Bounty b) matches, int by) {
+    for (final b in bounties) {
+      if (b.done || !matches(b)) continue;
+      b.progress = math.min(b.count, b.progress + by);
+      if (b.done) {
+        notices.add(Notice('Truy nã xong: ${b.goal} · về thành nhận thưởng', color: 0xFF8CE07A, big: true));
+      }
+    }
+  }
+
+  /// Elites the world should put on map [mapId]: the Luân Hồi quest's and
+  /// the bounties'.
+  List<WantedElite> wantedElites(String mapId) {
+    final out = <WantedElite>[];
+    final q = currentMain;
+    if (q != null && q.type == QuestType.elite && !mainLocked) {
+      final e = eliteById[q.target]!;
+      if (e.map == mapId) {
+        out.add(WantedElite(e.id, e.name, e.mob, math.min(maxLevel, q.minLv + 3), e.hpMul, e.atkMul));
+      }
+    }
+    final m = mapById[mapId];
+    for (final b in bounties) {
+      if (b.kind != BountyKind.elite || b.done || b.map != mapId || m == null) continue;
+      out.add(WantedElite(b.eliteKey, b.eliteName, b.target,
+          (level + 2).clamp(m.minLv, math.min(maxLevel, m.maxLv + 2)), b.eliteHp, b.eliteAtk));
+    }
+    return out;
+  }
+
+  /// Monster ids worth hunting on this map: the story quest's and the
+  /// kill and boss bounties'.
+  Set<String> wantedMobs() => {
+        if (currentMain case final q? when !mainLocked && (q.type == QuestType.kill || q.type == QuestType.boss))
+          q.target,
+        for (final b in bounties)
+          if (!b.done && b.kind != BountyKind.elite) b.target,
+      };
+
+  void onEliteKill(String key, math.Random rng) {
+    final q = currentMain;
+    if (q != null && !mainLocked && q.type == QuestType.elite && q.target == key) {
+      _rewardMain(q, rng);
+    }
+    _progressBounties((b) => b.kind == BountyKind.elite && b.eliteKey == key, 1);
   }
 
   // ------------------------------------------------------------- ngoại trang
@@ -683,7 +830,16 @@ class HeroData {
       addItem(it);
       notices.add(Notice('Nhận ${it.name}', color: Rarity.rare.color));
     }
-    mainQuest++;
+    if (mainQuest < mainQuests.length) {
+      mainQuest++;
+    } else {
+      rbQuest++;
+      final ch = luanHoi[chapter];
+      if (rbQuest >= ch.quests.length) {
+        rbDone = math.max(rbDone, chapter + 1);
+        notices.add(Notice('Hoàn thành ${chapterLabel(chapter)}: ${ch.title}!', color: 0xFFFFD34A, big: true));
+      }
+    }
     mainProgress = 0;
     gainExp(xp);
     _checkLevelQuests();
@@ -726,6 +882,7 @@ class HeroData {
     _progressDaily((d) =>
         (d.type == QuestType.kill && (d.target == '*' || d.target == m.id)) ||
         (d.type == QuestType.boss && d.target == m.id));
+    _progressBounties((b) => b.kind != BountyKind.elite && b.target == m.id, 1);
   }
 
   /// Pays for a cleared dungeon; the first clear pays most and adds an
@@ -915,6 +1072,7 @@ class HeroData {
     // Also settles a level quest already met, e.g. after an update re-ordered
     // the story.
     _checkLevelQuests();
+    rollBountyDay(today);
     if (dailyDate == today && daily.isNotEmpty) return;
     dailyDate = today;
     final rng = math.Random(today.hashCode ^ hanh.index ^ name.hashCode);
@@ -990,6 +1148,8 @@ class HeroData {
         'wb': [wbDay, wbRuns, wbAdRuns, wbTotal, wbBest, wbClaimed],
         'shop': [shopDay, shopRefresh, shopBought.toList()],
         'look': [costume, hideHat, ownedCostumes.toList()],
+        'lh': [rbQuest, rbDone],
+        'bounty': [bountyDay, bountyLeft, bountyAds, [for (final b in bounties) b.toJson()]],
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -1083,6 +1243,28 @@ class HeroData {
       h.costume = h.ownedCostumes.contains(look[0]) ? look[0] as String : '';
     }
     h.unlockCostumes(quiet: true);
+    final lh = m['lh'];
+    if (lh is List && lh.length == 2) {
+      h.rbQuest = math.max(0, lh[0] as int);
+      h.rbDone = (lh[1] as int).clamp(0, luanHoi.length);
+    } else if (h.inLuanHoi) {
+      // Reborn before Luân Hồi existed: start at the first quest near the
+      // hero's level rather than back at level 10.
+      final qs = luanHoi[h.chapter].quests;
+      final i = qs.indexWhere((q) => q.minLv >= h.level - 3);
+      h.rbQuest = i < 0 ? qs.length - 1 : i;
+      h.mainProgress = 0;
+    }
+    final bounty = m['bounty'];
+    if (bounty is List && bounty.length == 4) {
+      h.bountyDay = bounty[0] as String;
+      h.bountyLeft = bounty[1] as int;
+      h.bountyAds = bounty[2] as int;
+      for (final v in bounty[3] as List) {
+        final b = Bounty.fromJson((v as Map).cast<String, dynamic>());
+        if (b != null && h.bounties.length < bountySlots) h.bounties.add(b);
+      }
+    }
     h.recompute();
     return h;
   }

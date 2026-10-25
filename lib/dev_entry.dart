@@ -177,6 +177,11 @@ Future<void> main() async {
     // By default, the main quest that hunts on the chosen map.
     final onMap = mainQuests.indexWhere((x) => map.mobs.contains(x.target) || x.target == map.boss);
     h.mainQuest = int.tryParse(q['quest'] ?? '') ?? (onMap < 0 ? 0 : onMap);
+    // lh=<n>: past the main story, at Luân Hồi quest n (needs cs>=1).
+    if (q['lh'] != null) {
+      h.mainQuest = mainQuests.length;
+      h.rbQuest = int.parse(q['lh']!);
+    }
     h.refreshDaily(todayKey());
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
@@ -202,6 +207,7 @@ Future<void> main() async {
     'bag' => const CharacterScreen(tab: 2),
     'shop' => const ShopScreen(),
     'quests' => const QuestScreen(),
+    'bounty' => const QuestScreen(tab: 1),
     'maps' => const MapListScreen(),
     'dungeons' => const DungeonListScreen(),
     'ach' => const AchievementsScreen(),
