@@ -18,3 +18,4 @@ Ghi chú:
 - Game không thu tên thật, số điện thoại, danh bạ, ảnh hay vị trí chính xác.
 - Privacy Policy URL: https://nttqn.github.io/kiem-hiep-app/privacy.html
 - Ghi chú cho người duyệt: dán nội dung `store/appstore-review-notes.txt` vào App Review Information → Notes. Không cần tài khoản demo (bỏ trống, bỏ chọn "Sign-in required").
+- Age Rating (App Information → Age Rating): câu **Advertising** phải chọn **Yes** vì có AdMob. Bản 1.0.6 (9) từng bị từ chối tự động (2.3.6) do để No.
