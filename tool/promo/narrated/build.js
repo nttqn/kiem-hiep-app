@@ -39,7 +39,7 @@ fs.writeFileSync('txt/title.txt', 'KIẾM HIỆP NGŨ HÀNH');
 fs.writeFileSync('txt/tagline.txt', 'Nhập vai kiếm hiệp offline');
 fs.writeFileSync('txt/cta.txt', 'TẢI MIỄN PHÍ TRÊN GOOGLE PLAY');
 
-const GAP = 0.45; // silence after each line
+const GAP = 0.9; // silence after each line
 let t = 0;
 const segs = [];
 const sfx = []; // {at, file, vol}
