@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../core/content.dart';
 import '../core/hanh.dart';
+import '../core/items.dart';
 import 'art_chibi.dart';
 
 /// Figures are drawn in local units with the feet at (0, 0), facing right;
@@ -29,6 +30,12 @@ class HumanLook {
     this.longRobe = true,
     this.zombie = false,
     this.glow = 0,
+    this.hat = 0,
+    this.armor = 0,
+    this.belt = 0,
+    this.boots = 0,
+    this.weaponTier = 0,
+    this.pendant = 0,
   });
 
   final int skin, robe, trim, pants, hairColor;
@@ -48,6 +55,70 @@ class HumanLook {
 
   /// Weapon glow colour (rare gear), 0 for none.
   final int glow;
+
+  /// Worn gear look tiers, 0..[maxGearTier]; 0 draws the plain sect outfit.
+  final int hat, armor, belt, boots, weaponTier;
+
+  /// Ngọc bội colour hanging from the belt, 0 for none.
+  final int pendant;
+}
+
+const int maxGearTier = 4;
+
+/// Look tier of a worn item: a new look every 20 levels.
+int gearTier(Item? it) => it == null ? 0 : (it.level ~/ 20).clamp(0, maxGearTier);
+
+/// Blade colours by weapon tier: the sect's own, bronze, jade, gold, celestial.
+const _bladeByTier = [0, 0xFFD8A868, 0xFF8FE8C8, 0xFFFFD45A, 0xFFF2FBFF];
+
+/// What the hero's worn items change on the figure.
+class HeroGear {
+  const HeroGear({
+    this.weapon = 0,
+    this.hat = 0,
+    this.armor = 0,
+    this.belt = 0,
+    this.boots = 0,
+    this.pendant = 0,
+    this.glow = 0,
+    this.cape = false,
+  });
+
+  factory HeroGear.of(Map<Slot, Item> equip) {
+    final w = equip[Slot.weapon];
+    final a = equip[Slot.armor];
+    final am = equip[Slot.amulet];
+    return HeroGear(
+      weapon: gearTier(w),
+      hat: gearTier(equip[Slot.hat]),
+      armor: gearTier(a),
+      belt: gearTier(equip[Slot.belt]),
+      boots: gearTier(equip[Slot.boots]),
+      pendant: am == null ? 0 : (am.rarity == Rarity.common ? 0xFF8FCFA8 : am.rarity.color),
+      glow: w != null && w.rarity.index >= Rarity.rare.index ? w.rarity.color : 0,
+      cape: a != null && (gearTier(a) >= maxGearTier || a.rarity == Rarity.legend),
+    );
+  }
+
+  static const none = HeroGear();
+
+  final int weapon, hat, armor, belt, boots, pendant, glow;
+  final bool cape;
+
+  @override
+  bool operator ==(Object other) =>
+      other is HeroGear &&
+      other.weapon == weapon &&
+      other.hat == hat &&
+      other.armor == armor &&
+      other.belt == belt &&
+      other.boots == boots &&
+      other.pendant == pendant &&
+      other.glow == glow &&
+      other.cape == cape;
+
+  @override
+  int get hashCode => Object.hash(weapon, hat, armor, belt, boots, pendant, glow, cape);
 }
 
 /// Current flash (0..1) toward white applied to every colour, for hits.
@@ -772,8 +843,36 @@ void _brute(Canvas c, MobDef d, double walk, bool moving, double attack, double 
   c.drawCircle(Offset(ax, ay), 6, fillOf(shade(d.c1, golem ? 0.1 : -0.1)));
 }
 
-/// Hero look for a sect; female variants swap the hair.
-HumanLook heroLook(Hanh h, {bool female = false, int glow = 0}) {
+/// Hero look for a sect wearing [gear]; female variants swap the hair.
+HumanLook heroLook(Hanh h, {bool female = false, int glow = 0, HeroGear gear = HeroGear.none}) {
+  final base = _sectLook(h, female, glow == 0 ? gear.glow : glow);
+  final wt = gear.weapon;
+  final blade = wt == 0 ? base.blade : _bladeByTier[wt];
+  return HumanLook(
+    skin: base.skin,
+    robe: base.robe,
+    trim: base.trim,
+    pants: base.pants,
+    hairColor: base.hairColor,
+    hair: base.hair,
+    weapon: base.weapon,
+    blade: blade,
+    female: base.female,
+    mask: base.mask,
+    band: base.band,
+    cape: gear.cape ? shade(base.trim, base.trim == 0xFF2A1A1A ? 0.25 : 0) : base.cape,
+    longRobe: base.longRobe,
+    glow: base.glow != 0 ? base.glow : (wt >= maxGearTier ? blade : 0),
+    hat: gear.hat,
+    armor: gear.armor,
+    belt: gear.belt,
+    boots: gear.boots,
+    weaponTier: wt,
+    pendant: gear.pendant,
+  );
+}
+
+HumanLook _sectLook(Hanh h, bool female, int glow) {
   switch (h) {
     case Hanh.kim:
       return HumanLook(

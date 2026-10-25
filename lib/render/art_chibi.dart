@@ -11,6 +11,13 @@ import 'art_figures.dart';
 
 const int _ink = 0xFF2A1810;
 
+// Gear metals.
+const int _bronze = 0xFFC08A4A;
+const int _silver = 0xFFC8D0D8;
+const int _gold = 0xFFE8C547;
+const int _jade = 0xFF6FCFA0;
+const int _ruby = 0xFFD8302A;
+
 final Paint _o = Paint()
   ..isAntiAlias = true
   ..style = PaintingStyle.stroke
@@ -165,12 +172,18 @@ void drawChibi(Canvas c, HumanLook k,
     ..quadraticBezierTo(-flare + 3, (hem - 26) / 2, -waist, -26)
     ..close();
   _shape(c, skirt, _lit(k.robe, Rect.fromLTRB(-flare, -26, flare, hem)));
-  // Front panel split and hem band.
+  // Front panel split and hem band; better armour edges it in silver, then gold.
   c.drawLine(Offset(4, -24), Offset(5.5 + sk, hem + 1), _outline(1.4));
   c.drawLine(Offset(-flare + trail + sk + 1.5, hem - 1.5), Offset(flare + sk - 1, hem - 1.5),
       _o
-        ..color = col(k.trim)
-        ..strokeWidth = 2.2);
+        ..color = col(_edge(k))
+        ..strokeWidth = k.armor == 0 ? 2.2 : 3.2);
+  if (k.armor >= 3) {
+    c.drawLine(Offset(4.8, -23), Offset(5.8 + sk, hem - 2),
+        _o
+          ..color = col(_gold)
+          ..strokeWidth = 1.2);
+  }
 
   // ---- torso
   final torso = Path()
@@ -191,13 +204,16 @@ void drawChibi(Canvas c, HumanLook k,
   c.drawLine(const Offset(-2.5, -38.5), const Offset(5, -27), _outline(3.6));
   c.drawLine(const Offset(-2.5, -38.5), const Offset(5, -27),
       _o
-        ..color = col(k.trim)
+        ..color = col(k.armor == 0 ? k.trim : _edge(k))
         ..strokeWidth = 2.2);
-  // Belt with a knot.
-  final belt = Path()..addRRect(RRect.fromLTRBR(-waist - 1, -27, waist + 1, -23, const Radius.circular(1.5)));
-  _shape(c, belt, _flat(k.trim), ow: 1.6);
-  c.drawCircle(const Offset(3.5, -25), 2.2, _outline(1.4));
-  c.drawCircle(const Offset(3.5, -25), 2.2, _flat(shade(k.trim, 0.2)));
+  if (k.armor >= 3) {
+    // Hộ tâm kính: the round chest mirror.
+    c.drawCircle(const Offset(-4, -30.5), 2.6, _outline(1.4));
+    c.drawCircle(const Offset(-4, -30.5), 2.6, _lit(_gold, const Rect.fromLTRB(-6.6, -33, -1.4, -28), light: 0.4));
+    c.drawCircle(const Offset(-4, -30.5), 1.1, _flat(k.armor >= 4 ? _ruby : shade(_gold, -0.25)));
+  }
+  _belt(c, k, waist);
+  if (k.pendant != 0) _pendant(c, k, wind);
 
   // ---- head
   // Neck.
@@ -243,21 +259,93 @@ void drawChibi(Canvas c, HumanLook k,
   if (longW) _chibiWeapon(c, k, hand, wAng);
   _shape(c, _sleevePath(const Offset(4, -34), hand, 3, 5.5),
       _lit(k.robe, Rect.fromPoints(const Offset(4, -34), hand)), ow: 2);
+  if (k.armor >= 2) _pauldron(c, k);
 
   if (!longW) _chibiWeapon(c, k, hand, wAng);
   _hand(c, hand, k.skin);
   c.restore();
 }
 
-void _boot(Canvas c, Offset at, HumanLook k) {
-  final p = Path()..addRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: at + const Offset(1.2, 0), width: 8.5, height: 4.6),
-      const Radius.circular(2.3)));
-  _shape(c, p, _flat(0xFF2A1E18), ow: 1.6);
-  c.drawLine(at + const Offset(-2.6, -2.4), at + const Offset(3, -2.4),
+/// Hem and lapel edging by armour tier.
+int _edge(HumanLook k) => switch (k.armor) {
+      0 || 1 => k.trim,
+      2 => _silver,
+      _ => _gold,
+    };
+
+/// Shoulder plate on the near arm, from armour tier 2.
+void _pauldron(Canvas c, HumanLook k) {
+  final pc = k.armor == 2 ? _silver : _gold;
+  final p = Path()
+    ..moveTo(2.5, -33.5)
+    ..quadraticBezierTo(8, -37, 12.5, -32.5)
+    ..quadraticBezierTo(12.2, -28.5, 9, -27.5)
+    ..quadraticBezierTo(5, -29, 2.5, -33.5)
+    ..close();
+  _shape(c, p, _lit(pc, const Rect.fromLTRB(2, -36, 13, -27), light: 0.4), ow: 1.6);
+  c.drawLine(const Offset(4.5, -32.6), const Offset(10.8, -30.6),
       _o
-        ..color = col(shade(k.trim, 0.1))
-        ..strokeWidth = 1.4);
+        ..color = col(shade(pc, -0.35))
+        ..strokeWidth = 0.9);
+  if (k.armor >= 4) c.drawCircle(const Offset(8.2, -32.4), 1.3, _flat(_ruby));
+}
+
+void _belt(Canvas c, HumanLook k, double waist) {
+  final belt = Path()..addRRect(RRect.fromLTRBR(-waist - 1, -27, waist + 1, -23, const Radius.circular(1.5)));
+  if (k.belt == 0) {
+    // Cloth sash with a knot.
+    _shape(c, belt, _flat(k.trim), ow: 1.6);
+    c.drawCircle(const Offset(3.5, -25), 2.2, _outline(1.4));
+    c.drawCircle(const Offset(3.5, -25), 2.2, _flat(shade(k.trim, 0.2)));
+    return;
+  }
+  // Leather, lacquer, then gold belts with a plate buckle.
+  final band = const [0, 0xFF5A3A22, 0xFF2A2430, _gold, _gold][k.belt];
+  final plate = const [0, _silver, _jade, _jade, _ruby][k.belt];
+  _shape(c, belt, _lit(band, Rect.fromLTRB(-waist - 1, -27, waist + 1, -23), light: 0.3), ow: 1.6);
+  final buckle = Path()..addRRect(RRect.fromLTRBR(0.8, -27.8, 6.2, -22.2, const Radius.circular(1.2)));
+  _shape(c, buckle, _lit(plate, const Rect.fromLTRB(0.8, -27.8, 6.2, -22.2), light: 0.4), ow: 1.3);
+  if (k.belt >= 3) {
+    for (final x in [-waist + 1.5, -1.8]) {
+      c.drawCircle(Offset(x, -25), 0.9, _flat(k.belt >= 4 ? _ruby : _jade));
+    }
+  }
+}
+
+/// Ngọc bội: a jade disc on a cord with a red tassel, hanging from the belt.
+void _pendant(Canvas c, HumanLook k, double wind) {
+  const top = Offset(-2.5, -23);
+  final disc = Offset(-2.5 + wind * 0.15, -17.5);
+  c.drawLine(top, disc, _o
+    ..color = col(_ruby)
+    ..strokeWidth = 0.9);
+  c.drawLine(disc, disc + Offset(-0.6 + wind * 0.4, 5.5), _o
+    ..color = col(_ruby)
+    ..strokeWidth = 1.6);
+  c.drawCircle(disc, 2.5, _outline(1.3));
+  c.drawCircle(disc, 2.5, _lit(k.pendant, Rect.fromCircle(center: disc, radius: 2.5), light: 0.45));
+  c.drawCircle(disc, 0.8, _flat(shade(k.pendant, -0.35)));
+}
+
+void _boot(Canvas c, Offset at, HumanLook k) {
+  final tall = k.boots >= 3 ? 1.6 : 0.0;
+  final p = Path()..addRRect(RRect.fromRectAndRadius(
+      Rect.fromLTRB(at.dx - 3.05, at.dy - 2.3 - tall, at.dx + 5.45, at.dy + 2.3),
+      const Radius.circular(2.3)));
+  _shape(c, p, _flat(k.boots >= 2 ? 0xFF1E1A22 : 0xFF2A1E18), ow: 1.6);
+  final cuff = switch (k.boots) {
+    0 || 1 => shade(k.trim, 0.1),
+    2 => _silver,
+    _ => _gold,
+  };
+  c.drawLine(at + Offset(-2.6, -2.4 - tall), at + Offset(3, -2.4 - tall),
+      _o
+        ..color = col(cuff)
+        ..strokeWidth = k.boots == 0 ? 1.4 : 2.2);
+  if (k.boots >= 4) {
+    // Cloud toe.
+    c.drawCircle(at + const Offset(4.6, -0.4), 1.2, _flat(_gold));
+  }
 }
 
 void _hand(Canvas c, Offset at, int skin) {
@@ -447,6 +535,180 @@ void _hairFront(Canvas c, HumanLook k, double hx, double hy, double hr, double t
           ..strokeWidth = 3);
     c.drawCircle(Offset(hx + 4, hy - 7.6), 1.5, _flat(0xFFE8C547));
   }
+  if (k.hat > 0) {
+    if (k.hair == Hair.bald) {
+      _monkHat(c, k.hat, hx, hy);
+    } else if (k.female) {
+      _ladyHat(c, k.hat, hx, hy, t);
+    } else if (k.hair == Hair.topknot || k.hair == Hair.bun) {
+      _guan(c, k, hx, hy, t);
+    }
+  }
+}
+
+Offset _quadAt(Offset a, Offset b, Offset e, double s) {
+  final u = 1 - s;
+  return a * (u * u) + b * (2 * u * s) + e * (s * s);
+}
+
+/// Monks: a bronze then gold circlet, gems, and at the top the five-leaf
+/// Tỳ Lô crown.
+void _monkHat(Canvas c, int tier, double hx, double hy) {
+  final a = Offset(hx - 11.8, hy - 5), b = Offset(hx + 1, hy - 10.5), e = Offset(hx + 12.4, hy - 7);
+  final band = Path()
+    ..moveTo(a.dx, a.dy)
+    ..quadraticBezierTo(b.dx, b.dy, e.dx, e.dy);
+  final metal = tier == 1 ? _bronze : _gold;
+  if (tier >= maxGearTier) {
+    for (var i = 0; i < 5; i++) {
+      final base = _quadAt(a, b, e, 0.3 + i * 0.13);
+      final x = base.dx, y = base.dy + 0.5;
+      final h = i == 2 ? 10.0 : 8.0;
+      final leaf = Path()
+        ..moveTo(x - 2.4, y)
+        ..quadraticBezierTo(x - 2.8, y - h * 0.65, x, y - h)
+        ..quadraticBezierTo(x + 2.8, y - h * 0.65, x + 2.4, y)
+        ..close();
+      _shape(c, leaf, _lit(_gold, Rect.fromLTRB(x - 3, y - h, x + 3, y), light: 0.4), ow: 1.3);
+      c.drawCircle(Offset(x, y - h * 0.45), 0.9, _flat(i.isEven ? _ruby : 0xFF3F8FC8));
+    }
+  }
+  c.drawPath(band, _outline(4.8));
+  c.drawPath(
+      band,
+      _o
+        ..color = col(metal)
+        ..strokeWidth = 2.8);
+  if (tier >= 2) {
+    final gems = tier == 2 ? const [(0.62, _ruby)] : const [(0.42, _jade), (0.62, _ruby), (0.82, 0xFF3F8FC8)];
+    for (final g in gems) {
+      final p = _quadAt(a, b, e, g.$1);
+      c.drawCircle(p, 1.7, _outline(1));
+      c.drawCircle(p, 1.7, _flat(g.$2));
+    }
+  }
+}
+
+/// Ladies: a hairpin, a gold flower with a swaying dangle, a comb crown,
+/// then the phoenix crown.
+void _ladyHat(Canvas c, int tier, double hx, double hy, double t) {
+  final sway = math.sin(t * 3) * 1.2;
+  if (tier <= 2) {
+    final pin = [Offset(hx - 12, hy - 7), Offset(hx - 1, hy - 16.5)];
+    c.drawLine(pin[0], pin[1], _outline(3));
+    c.drawLine(pin[0], pin[1], _o
+      ..color = col(_gold)
+      ..strokeWidth = 1.5);
+    c.drawCircle(pin[1], 1.9, _outline(1));
+    c.drawCircle(pin[1], 1.9, _flat(_jade));
+    if (tier == 1) return;
+  }
+  if (tier == 2) {
+    final f = Offset(hx - 6, hy - 13);
+    for (var i = 0; i < 5; i++) {
+      final a = i * math.pi * 2 / 5;
+      final p = f + Offset(math.cos(a) * 2.2, math.sin(a) * 2.2);
+      c.drawCircle(p, 1.6, _outline(0.9));
+      c.drawCircle(p, 1.6, _flat(_gold));
+    }
+    c.drawCircle(f, 1.2, _flat(_ruby));
+    final end = Offset(hx - 9 + sway * 0.5, hy - 3);
+    c.drawLine(f, end, _o
+      ..color = col(_gold)
+      ..strokeWidth = 0.8);
+    c.drawCircle(end, 1.3, _flat(_ruby));
+    return;
+  }
+  if (tier == 3) {
+    final a = Offset(hx - 10, hy - 10), b = Offset(hx - 1, hy - 20), e = Offset(hx + 8, hy - 12);
+    final arc = Path()
+      ..moveTo(a.dx, a.dy)
+      ..quadraticBezierTo(b.dx, b.dy, e.dx, e.dy);
+    c.drawPath(arc, _outline(5));
+    c.drawPath(arc, _o
+      ..color = col(_gold)
+      ..strokeWidth = 3);
+    for (final g in const [(0.3, _jade), (0.5, _ruby), (0.7, _jade)]) {
+      final p = _quadAt(a, b, e, g.$1);
+      c.drawCircle(p, 1.6, _flat(g.$2));
+    }
+    return;
+  }
+  // Phoenix crown: gold body, swept wings at the back, dangles each side.
+  final body = Path()
+    ..moveTo(hx - 10, hy - 9)
+    ..quadraticBezierTo(hx - 9, hy - 17, hx - 4, hy - 19)
+    ..lineTo(hx - 1, hy - 23)
+    ..lineTo(hx + 2, hy - 18.5)
+    ..quadraticBezierTo(hx + 8, hy - 18, hx + 9.5, hy - 11)
+    ..quadraticBezierTo(hx, hy - 15, hx - 10, hy - 9)
+    ..close();
+  for (var i = 0; i < 2; i++) {
+    final wing = Path()
+      ..moveTo(hx - 8, hy - 14 - i * 3)
+      ..quadraticBezierTo(hx - 16, hy - 20 - i * 4 + sway, hx - 22, hy - 16 - i * 5 + sway)
+      ..quadraticBezierTo(hx - 15, hy - 14 - i * 2, hx - 9, hy - 10 - i * 3)
+      ..close();
+    _shape(c, wing, _lit(i == 0 ? _gold : shade(_gold, -0.15), Rect.fromLTRB(hx - 22, hy - 24, hx - 8, hy - 9), light: 0.4),
+        ow: 1.3);
+  }
+  _shape(c, body, _lit(_gold, Rect.fromLTRB(hx - 10, hy - 23, hx + 10, hy - 9), light: 0.4), ow: 1.5);
+  c.drawCircle(Offset(hx - 1, hy - 16), 1.8, _flat(_ruby));
+  for (final x in [hx - 9.5, hx + 9]) {
+    final end = Offset(x + sway * 0.4, hy - 2);
+    c.drawLine(Offset(x, hy - 10), end, _o
+      ..color = col(_gold)
+      ..strokeWidth = 0.8);
+    c.drawCircle(end, 1.3, _flat(_jade));
+  }
+}
+
+/// Men with a topknot: a cloth cover, a lacquer guan, a gold guan, then a
+/// gold crown with two long pheasant feathers.
+void _guan(Canvas c, HumanLook k, double hx, double hy, double t) {
+  final kn = Offset(hx - 3, hy - 15);
+  if (k.hat == 1) {
+    final cap = Path()..addOval(Rect.fromCenter(center: kn, width: 12, height: 10));
+    _shape(c, cap, _lit(k.trim, Rect.fromCenter(center: kn, width: 12, height: 10), light: 0.35), ow: 1.6);
+    c.drawLine(kn + const Offset(-6, 2), kn + const Offset(6, 1), _o
+      ..color = col(shade(k.trim, -0.3))
+      ..strokeWidth = 1.2);
+    return;
+  }
+  final big = k.hat >= maxGearTier ? 1.3 : 1.0;
+  if (k.hat >= maxGearTier) {
+    for (var i = 0; i < 2; i++) {
+      final w = math.sin(t * 2.6 + i) * 1.8;
+      final a = kn + Offset(-1.0 + i * 2.5, -6);
+      final b = kn + Offset(-8.0 + i * 3, -22 + w);
+      final e = kn + Offset(-27.0 + i * 3, -12.0 - i * 4 + w * 1.5);
+      final f = Path()
+        ..moveTo(a.dx, a.dy)
+        ..quadraticBezierTo(b.dx, b.dy, e.dx, e.dy);
+      c.drawPath(f, _outline(4.4));
+      c.drawPath(f, _o
+        ..color = col(0xFFD89A3A)
+        ..strokeWidth = 2.4);
+      for (var s = 0.25; s < 0.95; s += 0.14) {
+        final p = _quadAt(a, b, e, s);
+        c.drawCircle(p, 0.8, _flat(0xFF5A2A10));
+      }
+    }
+  }
+  final metal = k.hat == 2 ? 0xFF2A2430 : _gold;
+  final g = Path()
+    ..moveTo(kn.dx - 6 * big, kn.dy + 3.5)
+    ..lineTo(kn.dx - 4.5 * big, kn.dy - 5.5 * big)
+    ..quadraticBezierTo(kn.dx, kn.dy - 8 * big, kn.dx + 4.5 * big, kn.dy - 5.5 * big)
+    ..lineTo(kn.dx + 6 * big, kn.dy + 3.5)
+    ..close();
+  _shape(c, g, _lit(metal, Rect.fromLTRB(kn.dx - 6 * big, kn.dy - 8 * big, kn.dx + 6 * big, kn.dy + 3.5), light: 0.4),
+      ow: 1.6);
+  c.drawLine(kn + Offset(-7.5 * big, 1.5), kn + Offset(7 * big, -3.5), _outline(3.2));
+  c.drawLine(kn + Offset(-7.5 * big, 1.5), kn + Offset(7 * big, -3.5), _o
+    ..color = col(k.hat == 2 ? _gold : 0xFFF2E6B0)
+    ..strokeWidth = 1.6);
+  if (k.hat >= 3) c.drawCircle(kn + Offset(0, -3 * big), 1.5 * big, _flat(k.hat >= maxGearTier ? _ruby : _jade));
 }
 
 double _restAngle(Weapon w) => switch (w) {
@@ -462,21 +724,45 @@ void _chibiWeapon(Canvas c, HumanLook k, Offset hand, double ang) {
   c.save();
   c.translate(hand.dx, hand.dy);
   c.rotate(ang);
+  // Better weapons are a little bigger.
+  if (k.weaponTier > 0) c.scale(1 + 0.06 * k.weaponTier);
+  final guardCol = const [0xFFC9A040, 0xFFC9A040, _silver, _gold, _gold][k.weaponTier];
   if (k.glow != 0) {
     c.drawRect(
-        const Rect.fromLTRB(-2, -4, 34, 4),
+        k.weapon == Weapon.darts || k.weapon == Weapon.dagger
+            ? const Rect.fromLTRB(-2, -5, 15, 5)
+            : const Rect.fromLTRB(-2, -4, 34, 4),
         Paint()
           ..color = col(k.glow).withValues(alpha: 0.5)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
   }
   switch (k.weapon) {
     case Weapon.staff:
-      _limb(c, const Offset(-20, 0), const Offset(34, 0), 0xFF8A5A2A, 3.2);
+      _limb(c, const Offset(-20, 0), const Offset(34, 0),
+          switch (k.weaponTier) {
+            0 => 0xFF8A5A2A,
+            maxGearTier => 0xFFF0E6C8,
+            _ => shade(k.blade, -0.35),
+          },
+          3.2);
       for (final x in const [-20.0, 31.0]) {
         final cap = Path()..addRRect(RRect.fromLTRBR(x, -2.6, x + 5, 2.6, const Radius.circular(1.2)));
         _shape(c, cap, _flat(0xFFE8C547), ow: 1.4);
       }
       c.drawLine(const Offset(-6, -2.2), const Offset(-6, 2.2), _outline(1));
+      if (k.weaponTier >= maxGearTier) {
+        // Tích trượng: the monk's ringed head.
+        c.drawCircle(const Offset(40, 0), 4.6, _outline(3.2));
+        c.drawCircle(const Offset(40, 0), 4.6, _o
+          ..color = col(_gold)
+          ..strokeWidth = 1.6);
+        for (final p in const [Offset(39, -4.8), Offset(39, 4.8)]) {
+          c.drawCircle(p, 1.8, _outline(2.2));
+          c.drawCircle(p, 1.8, _o
+            ..color = col(_gold)
+            ..strokeWidth = 1);
+        }
+      }
     case Weapon.spear:
       _limb(c, const Offset(-18, 0), const Offset(36, 0), 0xFF6A4A2A, 2.4);
       final tip = Path()
@@ -490,7 +776,7 @@ void _chibiWeapon(Canvas c, HumanLook k, Offset hand, double ang) {
       final b = k.weapon == Weapon.bigSaber ? 1.35 : 1.1;
       _limb(c, const Offset(-5, 0), const Offset(3, 0), 0xFF3A2A1A, 3);
       final guard = Path()..addOval(const Rect.fromLTRB(1.5, -4, 5, 4));
-      _shape(c, guard, _flat(0xFFC9A040), ow: 1.2);
+      _shape(c, guard, _flat(guardCol), ow: 1.2);
       final blade = Path()
         ..moveTo(5, -2.4 * b)
         ..lineTo(24 * b, -3.6 * b)
@@ -510,7 +796,8 @@ void _chibiWeapon(Canvas c, HumanLook k, Offset hand, double ang) {
     case Weapon.sword:
       _limb(c, const Offset(-5, 0), const Offset(2, 0), 0xFF3A2A1A, 2.6);
       final guard = Path()..addRRect(RRect.fromLTRBR(1, -4.2, 3.6, 4.2, const Radius.circular(1)));
-      _shape(c, guard, _flat(0xFFC9A040), ow: 1.2);
+      _shape(c, guard, _flat(guardCol), ow: 1.2);
+      if (k.weaponTier >= maxGearTier) c.drawCircle(const Offset(2.3, 0), 1.2, _flat(_ruby));
       final blade = Path()
         ..moveTo(4, -1.7)
         ..lineTo(31, -1.2)

@@ -184,11 +184,16 @@ class _BackdropPainter extends CustomPainter {
 /// An animated standing hero: idles, and strikes every few seconds.
 class FigurePreview extends StatefulWidget {
   const FigurePreview(
-      {super.key, required this.hanh, this.female = false, this.scale = 2.4, this.glow = 0, this.rebirths = 0});
+      {super.key,
+      required this.hanh,
+      this.female = false,
+      this.scale = 2.4,
+      this.gear = HeroGear.none,
+      this.rebirths = 0});
   final Hanh hanh;
   final bool female;
   final double scale;
-  final int glow;
+  final HeroGear gear;
   final int rebirths;
 
   @override
@@ -215,18 +220,18 @@ class _FigurePreviewState extends State<FigurePreview> with SingleTickerProvider
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size(76 * widget.scale, 92 * widget.scale),
-      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.glow, widget.rebirths),
+      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.gear, widget.rebirths),
     );
   }
 }
 
 class _FigurePainter extends CustomPainter {
-  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.glow, this.rebirths) : super(repaint: t);
+  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.gear, this.rebirths) : super(repaint: t);
   final ValueNotifier<double> t;
   final Hanh hanh;
   final bool female;
   final double scale;
-  final int glow;
+  final HeroGear gear;
   final int rebirths;
 
   @override
@@ -242,12 +247,12 @@ class _FigurePainter extends CustomPainter {
     drawRebirthAura(c, rebirths, time);
     drawShadow(c, 16);
     setClock(time);
-    drawChibi(c, heroLook(hanh, female: female, glow: glow),
+    drawChibi(c, heroLook(hanh, female: female, gear: gear),
         attack: attack, cast: hanh == Hanh.moc || hanh == Hanh.thuy || hanh == Hanh.tho, t: time);
     c.restore();
   }
 
   @override
   bool shouldRepaint(_FigurePainter old) =>
-      old.hanh != hanh || old.female != female || old.glow != glow || old.rebirths != rebirths;
+      old.hanh != hanh || old.female != female || old.gear != gear || old.rebirths != rebirths;
 }

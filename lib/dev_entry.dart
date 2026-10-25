@@ -8,7 +8,9 @@ import 'core/hanh.dart';
 import 'core/hero.dart';
 import 'core/world.dart';
 import 'game/battle_game.dart';
+import 'render/art_figures.dart';
 import 'render/world_renderer.dart';
+import 'ui/backdrop.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/world_boss_screen.dart';
 import 'core/world_boss.dart';
@@ -198,6 +200,7 @@ Future<void> main() async {
     'pets' => const PetScreen(),
     'rebirth' => const RebirthScreen(),
     'gems' => const CharacterScreen(tab: 3, forge: true),
+    'gear' => const _GearSheet(),
     _ => const TownScreen(),
   };
   runApp(MaterialApp(
@@ -205,4 +208,44 @@ Future<void> main() async {
     theme: buildTheme(),
     home: home,
   ));
+}
+
+/// Every sect, both sexes, at each gear look tier (rows), to check the art.
+class _GearSheet extends StatelessWidget {
+  const _GearSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF3A4A3A),
+      body: FittedBox(
+        child: Column(
+          children: [
+            for (var tier = 0; tier <= maxGearTier; tier++)
+              Row(
+                children: [
+                  SizedBox(width: 40, child: Text('T$tier', style: const TextStyle(color: Colors.white))),
+                  for (final hn in Hanh.values)
+                    for (final f in [false, true])
+                      FigurePreview(
+                        hanh: hn,
+                        female: f,
+                        scale: 2.4,
+                        gear: HeroGear(
+                          weapon: tier,
+                          hat: tier,
+                          armor: tier,
+                          belt: tier,
+                          boots: tier,
+                          pendant: tier == 0 ? 0 : Rarity.values[tier].color,
+                          cape: tier >= maxGearTier,
+                        ),
+                      ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

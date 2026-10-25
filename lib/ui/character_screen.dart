@@ -8,6 +8,7 @@ import '../core/meridians.dart';
 import '../core/items.dart';
 import '../core/sects.dart';
 import '../services/save.dart';
+import '../render/art_figures.dart';
 import 'backdrop.dart';
 import 'gem_tab.dart';
 import 'refine_tab.dart';
@@ -458,7 +459,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       ),
                       Expanded(
                         child: FittedBox(
-                          child: FigurePreview(hanh: h.hanh, female: h.female, scale: 1.4),
+                          child: FigurePreview(
+                              hanh: h.hanh, female: h.female, scale: 1.4, gear: HeroGear.of(h.equip)),
                         ),
                       ),
                       Column(

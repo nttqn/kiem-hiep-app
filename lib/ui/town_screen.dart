@@ -4,10 +4,10 @@ import '../core/content.dart';
 import '../core/hero.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
-import '../core/items.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import '../render/art_figures.dart';
 import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
@@ -169,7 +169,6 @@ class _TownScreenState extends State<TownScreen> {
   }
 
   Widget _heroCard() {
-    final glowItem = h.equip[Slot.weapon];
     return Panel(
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -180,7 +179,7 @@ class _TownScreenState extends State<TownScreen> {
                 hanh: h.hanh,
                 female: h.female,
                 scale: 2,
-                glow: glowItem != null && glowItem.rarity.index >= 2 ? glowItem.rarity.color : 0,
+                gear: HeroGear.of(h.equip),
                 rebirths: h.rebirths,
               ),
             ),

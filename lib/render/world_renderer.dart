@@ -4,7 +4,6 @@ import 'package:flutter/painting.dart';
 
 import '../core/content.dart';
 import '../core/hanh.dart';
-import '../core/items.dart';
 import '../core/scenery.dart';
 import '../core/world.dart';
 import 'art_chibi.dart';
@@ -238,10 +237,6 @@ class WorldRenderer {
   void _drawHero(Canvas c, World w, double t) {
     final p = w.player;
     final h = w.hero;
-    final weapon = h.equip[Slot.weapon];
-    final glow = weapon != null && weapon.rarity.index >= Rarity.rare.index
-        ? weapon.rarity.color
-        : 0;
     c.save();
     c.translate(p.x, p.y);
     drawRebirthAura(c, h.rebirths, t);
@@ -254,7 +249,7 @@ class WorldRenderer {
           ..strokeWidth = 2);
     c.scale(p.face, 1);
     setTint(flash: p.hurt > 0 ? p.hurt / 0.18 * 0.6 : 0, alpha: p.alive ? 1 : 0.5);
-    drawChibi(c, heroLook(h.hanh, female: h.female, glow: glow),
+    drawChibi(c, heroLook(h.hanh, female: h.female, gear: HeroGear.of(h.equip)),
         walk: p.walk,
         moving: p.moving,
         attack: p.attackAnim,
