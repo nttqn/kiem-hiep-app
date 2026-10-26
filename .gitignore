@@ -55,3 +55,6 @@ key.properties
 
 # Promo videos are large; rebuild with tool/promo (see build.sh).
 store/video/
+
+# Ad videos (large binaries; keep locally / on YouTube)
+store/ads/*.mp4
