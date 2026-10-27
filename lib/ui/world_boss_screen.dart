@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/gems.dart';
 import '../core/hanh.dart';
@@ -13,12 +14,13 @@ import '../render/art_figures.dart';
 import '../services/ads.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
+import 'arena_screen.dart';
 import 'cloud_panel.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
-/// Thử thách: the endless tower and the daily world boss side by side.
+/// Thử thách: the endless tower, the daily world boss and the Lôi đài.
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
 
@@ -39,6 +41,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Widget build(BuildContext context) {
     final towerOpen = h.level >= towerOpenLevel || h.rebirths > 0;
     final bossOpen = h.level >= worldBossOpenLevel || h.rebirths > 0;
+    final arenaOpen = h.arenaOpen;
+    h.arenaRollDay(vnDayKey());
     final boss = worldBossOf();
     h.wbRollDay(vnDayKey());
     return SubScreen(
@@ -75,6 +79,22 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               button: bossOpen ? 'Vào Boss Thế Giới' : 'Mở ở cấp $worldBossOpenLevel',
               enabled: bossOpen,
               onTap: () => _go(const WorldBossScreen()),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _card(
+              title: 'Lôi đài',
+              icon: Icons.sports_kabaddi,
+              lines: [
+                'Hạng: ${arenaTiers[h.arenaTier].name} · ${h.arenaPoints} điểm',
+                'Lượt còn: ${arenaOpen ? h.arenaFightsLeft : 0} · Uy danh: ${fmt(h.arenaCoins)}',
+                'Tỷ thí với bản sao cao thủ khác, đổi Uy danh lấy thú cưỡi, ngọc, đan dược.',
+              ],
+              art: Icon(Icons.sports_kabaddi, size: 110, color: Color(arenaTiers[h.arenaTier].color).withValues(alpha: 0.85)),
+              button: arenaOpen ? 'Lên lôi đài' : 'Mở ở cấp $arenaOpenLevel',
+              enabled: arenaOpen,
+              onTap: () => _go(const ArenaScreen()),
             ),
           ),
         ],

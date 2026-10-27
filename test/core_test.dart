@@ -157,7 +157,9 @@ void main() {
       final name = sectOf(hanh).name;
       expect(r.levelAtMinute[15], greaterThanOrEqualTo(7), reason: name);
       expect(r.levelAtMinute[30], inInclusiveRange(12, 28), reason: name);
-      expect(r.deaths, lessThanOrEqualTo(8), reason: name);
+      // Deaths swing with the random stream: 0-6 per sect over seeds 5-7 before
+      // herb drops (1.0.9), 1-9 after, the same total.
+      expect(r.deaths, lessThanOrEqualTo(10), reason: name);
     }
   }, timeout: const Timeout(Duration(minutes: 5)));
 }

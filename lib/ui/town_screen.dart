@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/hero.dart';
 import '../core/tower.dart';
@@ -7,6 +8,8 @@ import '../core/world_boss.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import 'activity_screen.dart';
+import 'alchemy_screen.dart';
 import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
@@ -112,7 +115,7 @@ class _TownScreenState extends State<TownScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: 220, child: _heroCard()),
+                  SizedBox(width: 200, child: _heroCard()),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -259,6 +262,13 @@ class _TownScreenState extends State<TownScreen> {
     return h.wbRunsLeft;
   }
 
+  /// Lôi đài duels still left today.
+  int _arenaLeft() {
+    if (!h.arenaOpen) return 0;
+    h.arenaRollDay(vnDayKey());
+    return h.arenaFightsLeft;
+  }
+
   Widget _grid(bool pending) {
     final tiles = [
       _Tile('Luyện công', Icons.landscape, () => _go(const MapListScreen())),
@@ -270,13 +280,23 @@ class _TownScreenState extends State<TownScreen> {
           return;
         }
         _go(const ChallengeScreen());
-      }, badge: h.level >= worldBossOpenLevel || h.rebirths > 0 ? _bossRunsLeft() : 0),
+      }, badge: (h.level >= worldBossOpenLevel || h.rebirths > 0 ? _bossRunsLeft() : 0) + _arenaLeft()),
       _Tile('Xếp hạng', Icons.leaderboard, () => _go(const LeaderboardScreen())),
       _Tile('Nhiệm vụ', Icons.assignment, () => _go(const QuestScreen()),
           badge: h.daily.where((d) => !d.done).length + h.bounties.where((b) => b.done).length),
       _Tile('Nhân vật', Icons.person, () => _go(const CharacterScreen(tab: 0)),
           badge: pending ? h.freePoints + h.skillPoints : 0),
       _Tile('Linh thú', Icons.pets, () => _go(const PetScreen())),
+      _Tile('Luyện đan', Icons.science, () {
+        if (!h.alchemyOpen) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Luyện đan mở ở cấp $alchemyOpenLevel')));
+          return;
+        }
+        _go(const AlchemyScreen());
+      }),
+      _Tile('Năng động', Icons.local_fire_department, () => _go(const ActivityScreen()),
+          badge: activityClaimable(h)),
       _Tile('Hành trang', Icons.backpack, () => _go(const CharacterScreen(tab: 2)),
           badge: 0),
       _Tile('Cửa hàng', Icons.storefront, () => _go(const ShopScreen())),
@@ -290,7 +310,7 @@ class _TownScreenState extends State<TownScreen> {
     ];
     return LayoutBuilder(
       builder: (context, c) {
-        final w = (c.maxWidth - 5 * 8) / 6;
+        final w = (c.maxWidth - 6 * 8) / 7;
         return Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -317,14 +337,14 @@ class _Tile extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Panel(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(icon, color: goldLight, size: 26),
                   const SizedBox(height: 2),
                   Text(label,
-                      style: bold.copyWith(fontSize: 12.5),
+                      style: bold.copyWith(fontSize: 11.5),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center),

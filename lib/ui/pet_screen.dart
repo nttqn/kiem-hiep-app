@@ -9,12 +9,16 @@ import '../core/pets.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 import '../services/save.dart';
+import 'mount_view.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
 /// Spirit beasts: buy, tame (boss drops), level up and send one out.
 class PetScreen extends StatefulWidget {
-  const PetScreen({super.key});
+  const PetScreen({super.key, this.tab = 0});
+
+  /// 0 spirit beasts, 1 mounts.
+  final int tab;
 
   @override
   State<PetScreen> createState() => _PetScreenState();
@@ -22,6 +26,7 @@ class PetScreen extends StatefulWidget {
 
 class _PetScreenState extends State<PetScreen> {
   HeroData get h => SaveService.instance.hero;
+  late int _tab = widget.tab;
 
   void _changed() {
     SaveService.instance.save();
@@ -31,11 +36,17 @@ class _PetScreenState extends State<PetScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Linh thú',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [for (final p in pets) Expanded(child: _card(p))],
-      ),
+      title: _tab == 0 ? 'Linh thú' : 'Thú cưỡi',
+      actions: [
+        for (final (i, name) in const [(0, 'Linh thú'), (1, 'Thú cưỡi')])
+          tabChip(name, _tab == i, () => setState(() => _tab = i)),
+      ],
+      child: _tab == 1
+          ? const MountView()
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [for (final p in pets) Expanded(child: _card(p))],
+            ),
     );
   }
 

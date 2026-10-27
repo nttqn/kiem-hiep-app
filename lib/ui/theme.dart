@@ -540,3 +540,20 @@ Route<T> fadeRoute<T>(Widget page) => PageRouteBuilder<T>(
       transitionDuration: const Duration(milliseconds: 220),
       transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
     );
+
+/// A pill-shaped tab switch for a screen's title bar.
+Widget tabChip(String name, bool on, VoidCallback onTap) => Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: on ? seal : lacquer,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: on ? goldLight : gold.withValues(alpha: 0.5)),
+          ),
+          child: Text(name, style: bold.copyWith(fontSize: 13)),
+        ),
+      ),
+    );

@@ -50,6 +50,12 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.0.9, ≤ 500 ký tự)
+LÔI ĐÀI: tỷ thí với bản sao nhân vật của người chơi khác, leo 7 bậc từ Sơ Nhập tới Võ Lâm Chí Tôn, đổi Uy danh lấy quà. THÚ CƯỠI: 6 thú cưỡi (Bạch Mã, Hãn Huyết Bảo Mã, Bạch Hổ, Thần Lộc, Hỏa Kỳ Lân...) tăng tốc chạy và chỉ số. LUYỆN ĐAN: hái thuốc ở bãi luyện công, luyện Song Bội Đan, Cuồng Lực Đan, Tẩy Tủy Đan. NĂNG ĐỘNG: tích điểm mỗi ngày, mở rương ngày và rương tuần. Sửa lỗi văng game trên một số máy Android 8.
+
+## What's new (1.0.9, en-US)
+ARENA: duel copies of other players' heroes, climb 7 ranks to Supreme Master, trade Prestige for rewards. MOUNTS: 6 mounts (White Steed, Blood-Sweat Horse, White Tiger, Spirit Deer, Fire Kylin...) for speed and stats. ALCHEMY: gather herbs in the wilds, brew pills for double EXP, power or permanent potential. ACTIVITY: earn daily points, open daily and weekly chests. Fixed a crash on some Android 8 phones.
+
 ## Có gì mới (bản 1.0.8, ≤ 500 ký tự)
 LUÂN HỒI: mỗi lần chuyển sinh mở một hồi truyện mới, 5 hồi 60 nhiệm vụ, đối đầu tinh anh có tên riêng. BẢNG TRUY NÃ: lệnh 1-5 sao làm mới liên tục, truy diệt tinh anh nhận trang bị và ngọc. TRANG BỊ HIỆN HÌNH: nón, áo, đai, hài, vũ khí đổi diện mạo theo cấp đồ (kim quan lông trĩ, mũ phượng, giáp vai, áo choàng, kiếm vàng). NGOẠI TRANG: 10 bộ thời trang sưu tập. Ni cô Kim Cang Tự có mũ ni riêng.
 

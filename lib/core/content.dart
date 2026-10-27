@@ -1,3 +1,4 @@
+import 'arena.dart';
 import 'hanh.dart';
 import 'luan_hoi.dart';
 
@@ -307,6 +308,7 @@ class DungeonDef {
     this.mul = 1,
     this.boss = true,
     this.worldBoss = '',
+    this.rival,
   });
 
   final String id;
@@ -329,6 +331,10 @@ class DungeonDef {
   /// Boss Thế Giới run: this boss alone, unkillable, scored by damage.
   final String worldBoss;
   bool get isWorldBoss => worldBoss.isNotEmpty;
+
+  /// Lôi đài duel: this challenger alone, win by knocking them out.
+  final ArenaRival? rival;
+  bool get isArena => rival != null;
 
   MapDef get map => mapById[mapId]!;
 

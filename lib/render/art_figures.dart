@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/costumes.dart';
 import '../core/hanh.dart';
@@ -860,6 +861,14 @@ void _brute(Canvas c, MobDef d, double walk, bool moving, double attack, double 
 /// The hero as they appear: sect, worn gear and outfit.
 HumanLook lookOfHero(HeroData h) => heroLook(h.hanh,
     female: h.female, gear: HeroGear.of(h.equip, hideHat: h.hideHat), costume: costumeById[h.costume]);
+
+/// A Lôi đài challenger's gear look: every piece fits their level.
+HeroGear rivalGear(ArenaRival r) {
+  final tier = (r.level ~/ 20).clamp(0, maxGearTier);
+  return HeroGear(weapon: tier, hat: tier, armor: tier, belt: tier, boots: tier, cape: r.rebirths > 0);
+}
+
+HumanLook rivalLook(ArenaRival r) => heroLook(r.hanh, female: r.female, gear: rivalGear(r));
 
 /// Hero look for a sect wearing [gear] and, over it, [costume]; female
 /// variants swap the hair.

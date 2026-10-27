@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 
+import 'activity.dart';
+import 'alchemy.dart';
+import 'arena.dart';
 import 'bounty.dart';
 import 'content.dart';
 import 'costumes.dart';
@@ -8,6 +11,7 @@ import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
 import 'meridians.dart';
+import 'mounts.dart';
 import 'pets.dart';
 import 'tower.dart';
 import 'treasure.dart';
@@ -229,6 +233,39 @@ class HeroData {
   int shopRefresh = 0;
   final Set<int> shopBought = {};
 
+  // Thú cưỡi: mounts owned with their level, the one ridden, and whether
+  // the hero rides at all.
+  final Map<String, int> mountLevels = {};
+  String activeMount = '';
+  bool riding = true;
+
+  // Luyện đan: herbs by tier, pills on hand, buff time left (play seconds)
+  // and Tẩy Tủy Đan eaten.
+  final List<int> herbs = List.filled(herbNames.length, 0);
+  final Map<String, int> pills = {};
+  final Map<String, double> buffs = {};
+  int potentialPills = 0;
+
+  // Lôi đài: points, Uy danh, per day fights and ad fights, the day the
+  // salary was claimed, wins, and list refreshes (for invented rivals).
+  int arenaPoints = arenaStartPoints;
+  int arenaCoins = 0;
+  String arenaDay = '';
+  int arenaFights = 0;
+  int arenaAds = 0;
+  String arenaSalaryDay = '';
+  int arenaWins = 0;
+  int arenaRefresh = 0;
+
+  // Năng động: today's actions by source and chests claimed (bit mask),
+  // then the week's points and chests.
+  String actDay = '';
+  final Map<ActSource, int> actCounts = {};
+  int actClaimed = 0;
+  String actWeek = '';
+  int actWeekPoints = 0;
+  int actWeekClaimed = 0;
+
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
 
@@ -297,6 +334,15 @@ class HeroData {
     }
     final pet = petById[activePet];
     if (pet != null) add({pet.bonus: pet.bonusAt(petLevels[pet.id] ?? 1)});
+    final mount = ridingMount;
+    if (mount != null) {
+      final lv = mountLevels[mount.id] ?? 1;
+      add({Bonus.move: mount.moveAt(lv), mount.bonus: mount.bonusAt(lv)});
+    }
+    buffs.forEach((id, left) {
+      final p = pillById[id];
+      if (p != null && left > 0) add(p.bonus);
+    });
     return out;
   }
 
@@ -688,6 +734,7 @@ class HeroData {
     if (i < 0 || i >= bounties.length || !bounties[i].done) return null;
     final b = bounties.removeAt(i);
     gold += b.gold;
+    addActivity(ActSource.bounty);
     final lines = ['+${_thousands(b.exp)} kinh nghiệm', '+${_thousands(b.gold)} lượng'];
     if (b.stars >= 4) {
       final it = makeItem(
@@ -790,6 +837,7 @@ class HeroData {
     for (final c in costumes) {
       if (costumeGoalMet(c)) _grantCostume(c, quiet: quiet);
     }
+    unlockMounts(quiet: quiet);
   }
 
   void _grantCostume(CostumeDef c, {bool quiet = false}) {
@@ -861,6 +909,7 @@ class HeroData {
         gold += d.gold;
         notices.add(Notice('Hằng ngày xong: ${d.goal}', color: 0xFF8CE07A,
             big: true));
+        addActivity(ActSource.daily);
         notices.add(Notice('+${d.exp} kinh nghiệm · +${d.gold} lượng'));
         gainExp(d.exp.toDouble());
       }
@@ -869,6 +918,7 @@ class HeroData {
 
   void onKill(MobDef m, math.Random rng) {
     kills++;
+    addActivity(ActSource.kills);
     if (m.boss) {
       bossKills++;
       bossKillsById[m.id] = (bossKillsById[m.id] ?? 0) + 1;
@@ -935,6 +985,7 @@ class HeroData {
     }
     if (xp > 0) gainExp(xp);
     _progressDaily((d) => d.type == QuestType.dungeon);
+    addActivity(ActSource.dungeon);
     return lines;
   }
 
@@ -976,6 +1027,7 @@ class HeroData {
     lastDungeonGold = g;
     lastDungeonExp = 0;
     _progressDaily((d) => d.type == QuestType.dungeon);
+    addActivity(ActSource.worldBoss);
     return ['Sát thương: ${_thousands(damage)}', '+${_thousands(g)} lượng'];
   }
 
@@ -1047,6 +1099,297 @@ class HeroData {
     return true;
   }
 
+  // ------------------------------------------------------------- mounts
+
+  bool ownsMount(String id) => mountLevels.containsKey(id);
+
+  /// The mount under the hero, if any.
+  MountDef? get ridingMount => riding ? mountById[activeMount] : null;
+
+  bool mountGoalMet(MountDef m) => switch (m.source) {
+        MountSource.tower => towerBest >= m.need,
+        MountSource.rebirth => rebirths >= m.need,
+        MountSource.gold || MountSource.arena => false,
+      };
+
+  void unlockMounts({bool quiet = false}) {
+    for (final m in mounts) {
+      if (mountGoalMet(m) && !ownsMount(m.id)) _grantMount(m, quiet: quiet);
+    }
+  }
+
+  void _grantMount(MountDef m, {bool quiet = false}) {
+    mountLevels[m.id] = 1;
+    if (activeMount.isEmpty) activeMount = m.id;
+    recompute();
+    if (!quiet) notices.add(Notice('Nhận thú cưỡi: ${m.name}', color: 0xFFFFD34A, big: true));
+  }
+
+  bool get mountsOpen => level >= mountOpenLevel || rebirths > 0;
+
+  bool buyMount(MountDef m) {
+    if (m.source != MountSource.gold || ownsMount(m.id) || gold < m.need || !mountsOpen) return false;
+    gold -= m.need;
+    _grantMount(m, quiet: true);
+    return true;
+  }
+
+  bool feedMount(MountDef m) {
+    final lv = mountLevels[m.id];
+    if (lv == null || lv >= maxMountLevel || gold < mountLevelCost(lv)) return false;
+    gold -= mountLevelCost(lv);
+    mountLevels[m.id] = lv + 1;
+    recompute();
+    return true;
+  }
+
+  /// Rides [id], or gets off it when it is already ridden.
+  void rideMount(String id) {
+    if (!ownsMount(id)) return;
+    if (activeMount == id) {
+      riding = !riding;
+    } else {
+      activeMount = id;
+      riding = true;
+    }
+    recompute();
+  }
+
+  // ------------------------------------------------------------- alchemy
+
+  bool get alchemyOpen => level >= alchemyOpenLevel || rebirths > 0;
+
+  /// Herb tier of the region the hero's level belongs to.
+  int get herbTier {
+    var i = 0;
+    for (var k = 0; k < maps.length; k++) {
+      if (maps[k].minLv <= level) i = k;
+    }
+    return herbTierOfMap(i);
+  }
+
+  void addHerb(int tier, [int n = 1]) => herbs[tier.clamp(0, herbs.length - 1)] += n;
+
+  bool canCraft(PillDef p) {
+    if (gold < p.gold) return false;
+    for (var i = 0; i < p.herbs.length; i++) {
+      if (herbs[i] < p.herbs[i]) return false;
+    }
+    return true;
+  }
+
+  bool craft(PillDef p) {
+    if (!alchemyOpen || !canCraft(p)) return false;
+    gold -= p.gold;
+    for (var i = 0; i < p.herbs.length; i++) {
+      herbs[i] -= p.herbs[i];
+    }
+    pills[p.id] = (pills[p.id] ?? 0) + 1;
+    addActivity(ActSource.alchemy);
+    return true;
+  }
+
+  /// Seconds of [id]'s buff left.
+  double buffLeft(String id) => buffs[id] ?? 0;
+
+  bool canUsePill(PillDef p) {
+    if ((pills[p.id] ?? 0) <= 0) return false;
+    return switch (p.kind) {
+      PillKind.buff => buffLeft(p.id) + p.minutes * 60 <= maxBuffMinutes * 60 + 1,
+      PillKind.potions => true,
+      PillKind.potential => potentialPills < maxPotentialPills,
+    };
+  }
+
+  bool usePill(PillDef p) {
+    if (!canUsePill(p)) return false;
+    pills[p.id] = pills[p.id]! - 1;
+    if (pills[p.id] == 0) pills.remove(p.id);
+    switch (p.kind) {
+      case PillKind.buff:
+        buffs[p.id] = buffLeft(p.id) + p.minutes * 60;
+      case PillKind.potions:
+        hpPots += 10;
+        mpPots += 10;
+      case PillKind.potential:
+        potentialPills++;
+        freePoints += potentialPerPill;
+    }
+    recompute();
+    return true;
+  }
+
+  double get expMul => buffLeft('songboi') > 0 ? expPillMul : 1;
+  double get goldMul => buffLeft('tubao') > 0 ? goldPillMul : 1;
+
+  /// Counts buff time down while playing; true when one ran out.
+  bool tickBuffs(double dt) {
+    if (buffs.isEmpty) return false;
+    var ended = false;
+    for (final id in buffs.keys.toList()) {
+      final left = buffs[id]! - dt;
+      if (left > 0) {
+        buffs[id] = left;
+      } else {
+        buffs.remove(id);
+        ended = true;
+        final p = pillById[id];
+        if (p != null) notices.add(Notice('${p.name} đã hết tác dụng', color: 0xFFB8A890));
+      }
+    }
+    if (ended) recompute();
+    return ended;
+  }
+
+  // ------------------------------------------------------------- arena
+
+  bool get arenaOpen => level >= arenaOpenLevel || rebirths > 0;
+
+  void arenaRollDay(String day) {
+    if (arenaDay == day) return;
+    arenaDay = day;
+    arenaFights = 0;
+    arenaAds = 0;
+  }
+
+  int get arenaFightsLeft => arenaFreeFights + arenaAds - arenaFights;
+
+  /// Uses one of today's duels; false when none are left.
+  bool arenaStart(String day) {
+    arenaRollDay(day);
+    if (arenaFightsLeft <= 0) return false;
+    arenaFights++;
+    return true;
+  }
+
+  bool arenaAddAdFight(String day) {
+    arenaRollDay(day);
+    if (arenaAds >= arenaAdFights) return false;
+    arenaAds++;
+    return true;
+  }
+
+  int get arenaTier => arenaTierIndex(arenaPoints);
+
+  /// Settles a duel against [rival]; returns the result lines.
+  List<String> arenaResult(bool won, ArenaRival rival) {
+    final ratio = rival.power / math.max(1, power);
+    final pts = won ? arenaWinPoints(ratio) : -arenaLossPoints(ratio);
+    final before = arenaTier;
+    arenaPoints = math.max(0, arenaPoints + pts);
+    final coins = won ? arenaWinCoins : arenaLossCoins;
+    arenaCoins += coins;
+    if (won) arenaWins++;
+    addActivity(ActSource.arena);
+    final lines = ['${pts >= 0 ? '+' : ''}$pts điểm Lôi đài ($arenaPoints)', '+$coins Uy danh'];
+    if (arenaTier > before) lines.add('Thăng hạng: ${arenaTiers[arenaTier].name}!');
+    return lines;
+  }
+
+  bool arenaSalaryReady(String day) => arenaSalaryDay != day;
+
+  /// Today's salary for the current tier: Uy danh and gold.
+  bool arenaClaimSalary(String day) {
+    if (!arenaSalaryReady(day)) return false;
+    arenaSalaryDay = day;
+    arenaCoins += arenaDailyCoins(arenaTier);
+    gold += arenaDailyGold(arenaTier, level);
+    return true;
+  }
+
+  bool arenaBuy(ArenaOffer o, math.Random rng) {
+    if (arenaCoins < o.price) return false;
+    if (o.kind == ArenaWare.mount && ownsMount(o.id)) return false;
+    arenaCoins -= o.price;
+    switch (o.kind) {
+      case ArenaWare.mount:
+        _grantMount(mountById[o.id]!, quiet: true);
+      case ArenaWare.gem:
+        addGem(Gem(Hanh.values[rng.nextInt(5)], o.tier));
+      case ArenaWare.herbs:
+        addHerb(o.tier, o.count);
+      case ArenaWare.pill:
+        pills[o.id] = (pills[o.id] ?? 0) + o.count;
+    }
+    return true;
+  }
+
+  // ------------------------------------------------------------- năng động
+
+  void actRollDay(String day) {
+    if (actDay != day) {
+      actDay = day;
+      actCounts.clear();
+      actClaimed = 0;
+    }
+    final week = weekKeyOf(day);
+    if (actWeek != week) {
+      actWeek = week;
+      actWeekPoints = 0;
+      actWeekClaimed = 0;
+    }
+  }
+
+  int actPointsOf(ActSource s) {
+    final d = actSources[s]!;
+    return math.min(d.cap, (actCounts[s] ?? 0) ~/ d.per * d.points);
+  }
+
+  int get actPoints => ActSource.values.fold(0, (a, s) => a + actPointsOf(s));
+
+  /// Records [n] actions of [s] toward today's and the week's points.
+  void addActivity(ActSource s, [int n = 1]) {
+    actRollDay(vnDayKey());
+    final before = actPoints;
+    actCounts[s] = (actCounts[s] ?? 0) + n;
+    actWeekPoints += actPoints - before;
+  }
+
+  bool actCanClaim(int i, {bool weekly = false}) => weekly
+      ? actWeekPoints >= actWeeklyMarks[i] && actWeekClaimed & (1 << i) == 0
+      : actPoints >= actDailyMarks[i] && actClaimed & (1 << i) == 0;
+
+  /// Opens chest [i]; returns its contents as lines, or null.
+  List<String>? actClaim(int i, math.Random rng, {bool weekly = false}) {
+    actRollDay(vnDayKey());
+    if (!actCanClaim(i, weekly: weekly)) return null;
+    if (weekly) {
+      actWeekClaimed |= 1 << i;
+    } else {
+      actClaimed |= 1 << i;
+    }
+    final c = actChest(i, level, weekly: weekly);
+    final lines = <String>[];
+    if (c.gold > 0) {
+      gold += c.gold;
+      lines.add('+${_thousands(c.gold)} lượng');
+    }
+    if (c.potions > 0) {
+      hpPots += c.potions;
+      mpPots += c.potions;
+      lines.add('+${c.potions} Kim Sang Dược, +${c.potions} Ngưng Thần Đan');
+    }
+    if (c.herbs > 0) {
+      final t = herbTier;
+      addHerb(t, c.herbs);
+      lines.add('+${c.herbs} ${herbNames[t]}');
+    }
+    if (c.gemTier > 0) {
+      final g = Gem(Hanh.values[rng.nextInt(5)], c.gemTier);
+      addGem(g);
+      lines.add(g.name);
+    }
+    if (c.coins > 0) {
+      arenaCoins += c.coins;
+      lines.add('+${c.coins} Uy danh');
+    }
+    if (c.pill.isNotEmpty) {
+      pills[c.pill] = (pills[c.pill] ?? 0) + 1;
+      lines.add(pillById[c.pill]!.name);
+    }
+    return lines;
+  }
+
   /// Lực chiến: one number for leaderboards, from effective attack,
   /// toughness and trained skills.
   int get power {
@@ -1065,6 +1408,7 @@ class HeroData {
       _rewardMain(q, rng);
     }
     _progressDaily((d) => d.type == QuestType.dungeon);
+    addActivity(ActSource.dungeon);
   }
 
   /// Rolls today's three daily quests if the date changed.
@@ -1150,6 +1494,17 @@ class HeroData {
         'look': [costume, hideHat, ownedCostumes.toList()],
         'lh': [rbQuest, rbDone],
         'bounty': [bountyDay, bountyLeft, bountyAds, [for (final b in bounties) b.toJson()]],
+        'mount': [activeMount, riding, mountLevels],
+        'alch': [herbs, pills, buffs, potentialPills],
+        'arena': [arenaPoints, arenaCoins, arenaDay, arenaFights, arenaAds, arenaSalaryDay, arenaWins, arenaRefresh],
+        'act': [
+          actDay,
+          {for (final e in actCounts.entries) '${e.key.index}': e.value},
+          actClaimed,
+          actWeek,
+          actWeekPoints,
+          actWeekClaimed,
+        ],
       };
 
   static HeroData fromJson(Map<String, dynamic> m) {
@@ -1264,6 +1619,54 @@ class HeroData {
         final b = Bounty.fromJson((v as Map).cast<String, dynamic>());
         if (b != null && h.bounties.length < bountySlots) h.bounties.add(b);
       }
+    }
+    final mount = m['mount'];
+    if (mount is List && mount.length == 3) {
+      (mount[2] as Map).forEach((k, v) {
+        if (mountById.containsKey(k) && v is int) h.mountLevels['$k'] = v.clamp(1, maxMountLevel);
+      });
+      h.riding = mount[1] as bool;
+      h.activeMount = h.mountLevels.containsKey(mount[0]) ? mount[0] as String : '';
+    }
+    h.unlockMounts(quiet: true);
+    final alch = m['alch'];
+    if (alch is List && alch.length == 4) {
+      final hb = alch[0] as List;
+      for (var i = 0; i < hb.length && i < h.herbs.length; i++) {
+        h.herbs[i] = math.max(0, hb[i] as int);
+      }
+      (alch[1] as Map).forEach((k, v) {
+        if (pillById.containsKey(k) && v is int && v > 0) h.pills['$k'] = v;
+      });
+      (alch[2] as Map).forEach((k, v) {
+        if (pillById.containsKey(k) && v is num && v > 0) {
+          h.buffs['$k'] = math.min(v.toDouble(), maxBuffMinutes * 60.0);
+        }
+      });
+      h.potentialPills = (alch[3] as int).clamp(0, maxPotentialPills);
+    }
+    final ar = m['arena'];
+    if (ar is List && ar.length == 8) {
+      h.arenaPoints = math.max(0, ar[0] as int);
+      h.arenaCoins = math.max(0, ar[1] as int);
+      h.arenaDay = ar[2] as String;
+      h.arenaFights = ar[3] as int;
+      h.arenaAds = ar[4] as int;
+      h.arenaSalaryDay = ar[5] as String;
+      h.arenaWins = ar[6] as int;
+      h.arenaRefresh = ar[7] as int;
+    }
+    final act = m['act'];
+    if (act is List && act.length == 6) {
+      h.actDay = act[0] as String;
+      (act[1] as Map).forEach((k, v) {
+        final i = int.tryParse('$k');
+        if (i != null && i >= 0 && i < ActSource.values.length && v is int) h.actCounts[ActSource.values[i]] = v;
+      });
+      h.actClaimed = act[2] as int;
+      h.actWeek = act[3] as String;
+      h.actWeekPoints = act[4] as int;
+      h.actWeekClaimed = act[5] as int;
     }
     h.recompute();
     return h;

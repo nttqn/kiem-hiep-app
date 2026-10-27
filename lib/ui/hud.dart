@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/alchemy.dart';
+import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
@@ -67,6 +69,26 @@ class HeroFrame extends StatelessWidget {
                 color: mpBlue,
                 label: '${p.mp.round()} / ${st.maxMp.round()}',
               ),
+              if (h.buffs.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    for (final e in h.buffs.entries)
+                      if (pillById[e.key] case final pill?)
+                        Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xAA170F0C),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Color(pill.color).withValues(alpha: 0.8)),
+                          ),
+                          child: Text('${pill.name.replaceAll(' Đan', '')} ${(e.value / 60).ceil()}p',
+                              style: bold.copyWith(fontSize: 10, color: Color(pill.color))),
+                        ),
+                  ],
+                ),
+              ],
             ],
           ),
         ],
@@ -144,7 +166,9 @@ class TopInfo extends StatelessWidget {
                       Text(
                         d.isWorldBoss
                             ? 'Sát thương ${fmt(world.bossDamage.round())}'
-                            : world.bossWave
+                            : d.isArena
+                                ? 'Bình máu ${arenaPotions - world.arenaPotsUsed}/$arenaPotions'
+                                : world.bossWave
                                 ? 'Đầu lĩnh'
                                 : 'Đợt ${math.max(1, world.wave + 1)}/${d.waves.length} · còn ${world.aliveMobs}',
                         style: d.isWorldBoss
@@ -156,7 +180,7 @@ class TopInfo extends StatelessWidget {
                       Text(' ${world.timeLeft.ceil()}s',
                           style: bold.copyWith(fontSize: 13, color: world.timeLeft < 30 ? hpRed : cream)),
                       const SizedBox(width: 6),
-                      for (var i = 0; i < (d.isTower || d.isWorldBoss ? 0 : 3); i++)
+                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena ? 0 : 3); i++)
                         Icon(
                           world.time <= (i == 0 ? d.timeLimit : (i == 1 ? d.twoStar : d.threeStar))
                               ? Icons.star

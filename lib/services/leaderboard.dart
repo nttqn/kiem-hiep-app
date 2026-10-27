@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/arena.dart';
+import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
@@ -201,6 +203,40 @@ class Leaderboard extends ChangeNotifier {
         );
     return [
       for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data()),
+    ];
+  }
+
+  /// Other players' heroes with power near [power], as Lôi đài challengers.
+  /// Needs Firebase but not a sign-in (the board is public).
+  Future<List<ArenaRival>> arenaPool(int power) async {
+    final dbg = debugEntries;
+    final me = myUid;
+    List<LbEntry> rows;
+    if (dbg != null) {
+      rows = dbg;
+    } else {
+      if (!_cloud.available) return const [];
+      final snap = await _col
+          .where('power', isGreaterThanOrEqualTo: (power * 0.6).round())
+          .where('power', isLessThanOrEqualTo: (power * 1.5).round())
+          .orderBy('power')
+          .limit(40)
+          .get()
+          .timeout(const Duration(seconds: 10));
+      rows = [for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data())];
+    }
+    return [
+      for (final e in rows)
+        if (me == null || !e.id.startsWith('${me}_'))
+          ArenaRival(
+            name: e.name,
+            hanh: Hanh.values[e.hanh],
+            level: e.level,
+            rebirths: e.rebirths,
+            power: e.power,
+            title: e.title,
+            female: e.id.hashCode.isOdd,
+          ),
     ];
   }
 

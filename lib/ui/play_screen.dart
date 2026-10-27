@@ -88,6 +88,9 @@ class _PlayScreenState extends State<PlayScreen> {
     _autosave?.cancel();
     _bannerTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
+    // Walking out of a duel concedes it.
+    final d = widget.dungeon;
+    if (d != null && d.isArena && !world.finished) hero.arenaResult(false, d.rival!);
     SaveService.instance.save();
     super.dispose();
   }
@@ -146,6 +149,8 @@ class _PlayScreenState extends State<PlayScreen> {
         if (d != null && d.isWorldBoss) {
           Leaderboard.instance.submitBoss(SaveService.instance.active, hero);
           Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
+        } else if (d != null && d.isArena) {
+          Analytics.instance.log('arena_fight', {'won': 1, 'level': hero.level});
         } else if (d != null && !d.isTower) {
           Analytics.instance.log('dungeon_clear', {'id': d.id, 'stars': e.value.round()});
         }
@@ -155,6 +160,9 @@ class _PlayScreenState extends State<PlayScreen> {
         });
       case EvKind.failed:
         SaveService.instance.save();
+        if (widget.dungeon?.isArena ?? false) {
+          Analytics.instance.log('arena_fight', {'won': 0, 'level': hero.level});
+        }
         setState(() => _cleared = false);
       case EvKind.shake:
         break;
@@ -688,6 +696,7 @@ class _PlayScreenState extends State<PlayScreen> {
     final d = widget.dungeon!;
     if (d.isTower) return _towerResult(ok, d);
     if (d.isWorldBoss) return _bossResult();
+    if (d.isArena) return _arenaResult(ok, d);
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -797,6 +806,33 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Lôi đài duel over: the points and Uy danh, then back to the list.
+  Widget _arenaResult(bool won, DungeonDef d) {
+    final r = d.rival!;
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(won ? 'Đánh bại ${r.name}!' : 'Thua ${r.name}',
+                  style: titleStyle(26, color: won ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
+              const SizedBox(height: 4),
+              Text(won ? 'Thời gian: ${world.finishTime.toStringAsFixed(1)} giây' : 'Hãy luyện thêm rồi phục thù.',
+                  style: small),
+              const SizedBox(height: 8),
+              for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
+              const SizedBox(height: 14),
+              LButton(label: 'Về Lôi đài', color: jade, onTap: _leave),
             ],
           ),
         ),

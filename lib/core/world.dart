@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'alchemy.dart';
+import 'arena.dart';
 import 'content.dart';
 import 'gems.dart';
 import 'hanh.dart';
@@ -85,6 +87,9 @@ class Mob extends Actor {
   String? eliteKey;
   String eliteName = '';
   bool get elite => eliteKey != null;
+
+  /// Set on a Lôi đài challenger, drawn as a hero of their sect.
+  ArenaRival? rival;
 
   /// Bosses and elites: bigger loot, a name bar, a screen shake.
   bool get big => def.boss || elite;
@@ -198,6 +203,16 @@ class FloatText {
   double t = 0;
 }
 
+/// A medicinal plant on a field map: walk over it to pick it.
+class HerbNode {
+  HerbNode(this.x, this.y, this.tier);
+  final double x, y;
+  final int tier;
+
+  /// World time when it can be picked again.
+  double readyAt = 0;
+}
+
 class Drop {
   Drop(this.x, this.y, {this.item, this.gold = 0, this.potion = 0, this.gem});
   double x, y;
@@ -268,6 +283,7 @@ class World {
         player = Player(220, map.height / 2) {
     _init();
     _buildCamps();
+    _plantHerbs();
   }
 
   World.dungeon(this.hero, DungeonDef d, {int? seed})
@@ -427,6 +443,35 @@ class World {
     _spawnBoss();
   }
 
+  /// Herb plants of the map's tier, scattered away from the gate.
+  final List<HerbNode> herbs = [];
+
+  int get _herbTier => herbTierOfMap(math.max(0, maps.indexOf(map)));
+
+  void _plantHerbs() {
+    final r = math.Random(map.id.hashCode ^ 0x5eed);
+    for (var i = 0; i < herbNodes; i++) {
+      herbs.add(HerbNode(450 + r.nextDouble() * (width - 800), 160 + r.nextDouble() * (height - 320), _herbTier));
+    }
+    if (debugHerbNear) herbs.add(HerbNode(player.x + 150, player.y - 30, _herbTier));
+  }
+
+  /// Screenshot aid for the dev build: a herb plant beside the gate.
+  static bool debugHerbNear = false;
+
+  void _updateHerbs() {
+    final p = player;
+    if (!p.alive) return;
+    for (final n in herbs) {
+      if (time < n.readyAt || _d2(n.x, n.y, p.x, p.y) > 46 * 46) continue;
+      n.readyAt = time + herbRegrow;
+      hero.addHerb(n.tier);
+      fx.add(Fx('potionHp', n.x, n.y, life: 0.5));
+      events.add(GameEvent(EvKind.loot, text: 'Hái được ${herbNames[n.tier]}', color: herbColors[n.tier]));
+      _sfx('loot');
+    }
+  }
+
   void _spawnInCamp(int ci) {
     final c = _camps[ci];
     final a = rng.nextDouble() * math.pi * 2;
@@ -452,6 +497,10 @@ class World {
       bossWave = true;
       if (d.isWorldBoss) {
         _spawnWorldBoss(d);
+        return;
+      }
+      if (d.isArena) {
+        _spawnRival(d.rival!);
         return;
       }
       // A tower floor without a boss is done once the wave is down.
@@ -524,6 +573,53 @@ class World {
     events.add(GameEvent(EvKind.cleared, value: 0));
   }
 
+  /// HP potions drunk in this Lôi đài duel.
+  int arenaPotsUsed = 0;
+
+  /// The Lôi đài challenger: a hero-shaped boss whose toughness and hits
+  /// follow the hero's own, scaled by how their power compares.
+  void _spawnRival(ArenaRival r) {
+    final def = MobDef(
+      id: 'rival',
+      name: r.name,
+      hanh: r.hanh,
+      body: Body.human,
+      c1: r.hanh.color,
+      c2: 0xFF2A2A2A,
+      ranged: sectOf(r.hanh).basic == BasicKind.ranged,
+      range: 300,
+      speed: 150,
+      attackCd: arenaRivalCd,
+      boss: true,
+    );
+    final m = Mob(_uid++, def, hero.level, width * 0.68, height / 2)
+      ..state = MobState.chase
+      ..rival = r;
+    final k = math.pow(r.power / math.max(1, hero.power), 0.8).toDouble();
+    m.defense = mobDefAt(hero.level);
+    // HP from the hero's own damage output, so an even duel lasts about the
+    // same at every level.
+    final atkEff = st.atk * (1 + st.crit * (st.critDmg - 1)) * st.aspd * (1 + st.skillDmg * 0.6);
+    m.maxHp = atkEff * (1 - mitigation(m.defense, hero.level)) * arenaRivalHp * (0.8 + hero.level / 150) * k;
+    m.hp = m.maxHp;
+    // Per hit, so that the hero (without potions) lasts [arenaRivalKill]
+    // seconds against an even rival, slams included.
+    final perSec = st.maxHp / arenaRivalKill * k;
+    const hits = 1 / arenaRivalCd + 2.2 / 7.5;
+    m.atk = perSec / hits / (1 - mitigation(st.def, hero.level));
+    mobs.add(m);
+    boss = m;
+    events.add(GameEvent(EvKind.boss, text: '${r.name} lên lôi đài!', color: 0xFFFF6A4A, big: true));
+  }
+
+  void _endArena(bool won) {
+    if (finished) return;
+    finished = true;
+    finishTime = math.min(time, dungeon!.timeLimit);
+    rewardLines = hero.arenaResult(won, dungeon!.rival!);
+    events.add(won ? GameEvent(EvKind.cleared, value: 1) : GameEvent(EvKind.failed, text: 'Thua trận'));
+  }
+
   /// Tower floors past level 99 make monsters tougher instead.
   void _scale(Mob m, double mul) {
     if (mul == 1) return;
@@ -543,8 +639,12 @@ class World {
     time += dt;
     if (debugUltimate && sect.skills.length > 6 && ready(6) && _countNear(240) > 0) input.skills.add(6);
     hero.playSeconds += dt;
+    if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
-    if (mode == WorldMode.field) _updateField();
+    if (mode == WorldMode.field) {
+      _updateField();
+      _updateHerbs();
+    }
     if (player.alive) {
       _updatePlayer(dt);
     }
@@ -640,6 +740,10 @@ class World {
       _endWorldBoss();
       return;
     }
+    if (d.isArena && time > d.timeLimit) {
+      _endArena(false);
+      return;
+    }
     if (time > d.timeLimit && !finished) {
       finished = true;
       events.add(GameEvent(EvKind.failed, text: 'Hết giờ!'));
@@ -649,6 +753,10 @@ class World {
     final aliveCount = mobs.where((m) => m.alive).length + _pending;
     if (aliveCount == 0) {
       if (bossWave) {
+        if (d.isArena) {
+          _endArena(true);
+          return;
+        }
         if (!finished) {
           finished = true;
           finishTime = time;
@@ -1030,6 +1138,10 @@ class World {
     if (p.potCd > 0) return;
     if (hp) {
       if (hero.hpPots <= 0 || p.hp >= p.maxHp) return;
+      if (dungeon?.isArena ?? false) {
+        if (arenaPotsUsed >= arenaPotions) return;
+        arenaPotsUsed++;
+      }
       hero.hpPots--;
       final v = p.maxHp * potionHeal;
       p.hp = math.min(p.maxHp, p.hp + v);
@@ -1299,10 +1411,16 @@ class World {
     m.dots.clear();
     if (target == m) target = null;
     _sfx(m.big ? 'bossDie' : 'die');
+    // A beaten challenger pays through the duel result only.
+    if (m.rival != null) {
+      _shake(10);
+      return;
+    }
     final xp = mobExpAt(m.level) *
         m.def.exp *
         (m.elite ? 12 : 1) *
-        expLevelFactor(hero.level, m.level);
+        expLevelFactor(hero.level, m.level) *
+        hero.expMul;
     _text(m.x, m.y - 70, '+${xp.round()} EXP', 0xFFB8E0FF, small: true);
     hero.onKill(m.def, rng);
     if (m.elite) {
@@ -1335,7 +1453,8 @@ class World {
     if (rng.nextDouble() < goldChance) {
       final g = ((1 + m.level * 0.4) *
               (0.7 + rng.nextDouble() * 0.6) *
-              (m.big ? 15 : 1))
+              (m.big ? 15 : 1) *
+              hero.goldMul)
           .round();
       drops.add(Drop(m.x + jx(), m.y + jx(), gold: g));
     }
@@ -1352,6 +1471,13 @@ class World {
     }
     if (rng.nextDouble() < 0.04) {
       drops.add(Drop(m.x + jx(), m.y + jx(), potion: rng.nextBool() ? 1 : 2));
+    }
+    // Herbs of the region go straight to the bag.
+    if (dungeon?.isTower != true && (m.big || rng.nextDouble() < herbDropChance)) {
+      final tier = _herbTier;
+      final n = m.big ? 2 : 1;
+      hero.addHerb(tier, n);
+      _text(m.x, m.y - 90, '+$n ${herbNames[tier]}', herbColors[tier], small: true);
     }
     // Gems take the monster's phase; bosses always drop one, a tier up.
     if (m.big || rng.nextDouble() < gemDropChance) {
@@ -1388,6 +1514,8 @@ class World {
       if (dungeon?.isWorldBoss ?? false) {
         // A knock-out just ends the run early; the damage still counts.
         _endWorldBoss();
+      } else if (dungeon?.isArena ?? false) {
+        _endArena(false);
       } else if (mode == WorldMode.dungeon && dungeonRevived) {
         finished = true;
         events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));

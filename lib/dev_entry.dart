@@ -2,8 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'core/activity.dart';
+import 'core/alchemy.dart';
+import 'core/arena.dart';
 import 'core/content.dart';
 import 'core/costumes.dart';
+import 'core/mounts.dart';
+import 'ui/activity_screen.dart';
+import 'ui/alchemy_screen.dart';
+import 'ui/arena_screen.dart';
 import 'core/gems.dart';
 import 'core/hanh.dart';
 import 'core/hero.dart';
@@ -39,6 +46,7 @@ Future<void> main() async {
   final q = Uri.base.queryParameters;
   final screen = q['screen'] ?? 'town';
   World.debugUltimate = q['ult'] == '1';
+  World.debugHerbNear = q['herb'] == '1';
   // slow=4 runs battles at quarter speed for smooth screen recordings.
   BattleGame.debugSpeed = 1 / (double.tryParse(q['slow'] ?? '') ?? 1);
   PlayScreen.debugHideHud = q['hud'] == '0';
@@ -182,6 +190,36 @@ Future<void> main() async {
       h.mainQuest = mainQuests.length;
       h.rbQuest = int.parse(q['lh']!);
     }
+    // mount=<id|all>: ride that mount (all: own every one); herbs=<n> of
+    // each; pills=1: a few of each pill and two buffs running; arena=<pts>;
+    // act=<n>: n of every activity today.
+    final mount = q['mount'];
+    if (mount != null) {
+      for (final m in mounts) {
+        if (mount == 'all' || m.id == mount) h.mountLevels[m.id] = 3;
+      }
+      h.activeMount = mount == 'all' ? 'hanhuyet' : mount;
+    }
+    final herbsN = int.tryParse(q['herbs'] ?? '');
+    if (herbsN != null) h.herbs.fillRange(0, h.herbs.length, herbsN);
+    if (q['pills'] == '1') {
+      for (final p in pills) {
+        h.pills[p.id] = 2;
+      }
+      h.buffs['songboi'] = 900;
+      h.buffs['cuongluc'] = 1100;
+    }
+    h.arenaPoints = int.tryParse(q['arena'] ?? '') ?? h.arenaPoints;
+    h.arenaCoins = int.tryParse(q['coins'] ?? '') ?? h.arenaCoins;
+    final act = int.tryParse(q['act'] ?? '');
+    if (act != null) {
+      for (final s in ActSource.values) {
+        h.addActivity(s, s == ActSource.kills ? act * 30 : act);
+      }
+    }
+    // gift=0: today's login gift already taken (no dialog over the town).
+    if (q['gift'] == '0') h.lastLoginDate = todayKey();
+    h.recompute();
     h.refreshDaily(todayKey());
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
@@ -217,6 +255,15 @@ Future<void> main() async {
     'gear' => const _GearSheet(),
     'outfits' => const _OutfitSheet(),
     'wardrobe' => const CharacterScreen(tab: 5),
+    'mounts' => const PetScreen(tab: 1),
+    'alchemy' => const AlchemyScreen(),
+    'activity' => const ActivityScreen(),
+    'arena' => const ArenaScreen(),
+    'duel' => PlayScreen.dungeon(arenaDef(botRivals(
+        power: SaveService.instance.hero.power,
+        level: SaveService.instance.hero.level,
+        rebirths: 1,
+        seed: 3)[1])),
     _ => const TownScreen(),
   };
   runApp(MaterialApp(

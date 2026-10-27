@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/painting.dart';
 
+import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/scenery.dart';
@@ -98,6 +99,9 @@ class WorldRenderer {
     }
     for (final z in w.zones) {
       drawZone(c, z, t);
+    }
+    for (final n in w.herbs) {
+      if (w.time >= n.readyAt && view.inflate(40).contains(Offset(n.x, n.y))) _drawHerb(c, n, t);
     }
     for (final d in w.drops) {
       if (view.inflate(40).contains(Offset(d.x, d.y))) drawDrop(c, d, t);
@@ -214,12 +218,19 @@ class WorldRenderer {
             ..strokeWidth = 3);
     }
     drawShadow(c, m.radius * 1.1 * (d.body == Body.flyer ? 0.6 : 1) * (m.elite ? 1.3 : 1));
+    final rival = m.rival;
+    if (rival != null && !dying) drawRebirthAura(c, rival.rebirths, t);
     c.scale(m.face * size, size);
     setTint(
       flash: !dying && m.hurt > 0 ? m.hurt / 0.15 * 0.5 : 0,
       alpha: dying ? m.hurt / 0.6 : 1,
     );
-    drawMob(c, d, walk: m.walk, moving: m.moving, attack: m.attackAnim, t: t + m.uid);
+    if (rival != null) {
+      drawChibi(c, rivalLook(rival),
+          walk: m.walk, moving: m.moving, attack: m.attackAnim, cast: d.ranged, t: t, hurt: dying);
+    } else {
+      drawMob(c, d, walk: m.walk, moving: m.moving, attack: m.attackAnim, t: t + m.uid);
+    }
     if (t < m.stunUntil && m.alive) {
       c.scale(1 / size);
       for (var i = 0; i < 3; i++) {
@@ -260,14 +271,52 @@ class WorldRenderer {
           ..strokeWidth = 2);
     c.scale(p.face, 1);
     setTint(flash: p.hurt > 0 ? p.hurt / 0.18 * 0.6 : 0, alpha: p.alive ? 1 : 0.5);
+    final mount = h.ridingMount;
+    if (mount != null) {
+      drawMount(c, mount, walk: p.walk, moving: p.moving, t: t);
+      c.translate(0, -mountSeatOf(mount));
+    }
     drawChibi(c, lookOfHero(h),
         walk: p.walk,
-        moving: p.moving,
+        // A rider sits still while the mount runs.
+        moving: p.moving && mount == null,
         attack: p.attackAnim,
         cast: h.sect.basic.name == 'ranged',
         t: t,
         hurt: p.hurt > 0.05 || !p.alive);
     setTint();
+    c.restore();
+  }
+
+  /// A herb plant: leaves round a glowing bud in the herb's colour.
+  void _drawHerb(Canvas c, HerbNode n, double t) {
+    final colr = Color(herbColors[n.tier]);
+    final sway = math.sin(t * 2 + n.x) * 2;
+    final glow = 0.5 + 0.5 * math.sin(t * 3 + n.y);
+    c.save();
+    c.translate(n.x, n.y);
+    c.scale(1.4);
+    c.drawOval(Rect.fromCenter(center: Offset.zero, width: 34, height: 12),
+        Paint()..color = colr.withValues(alpha: 0.18 + 0.12 * glow));
+    final leaf = Paint()..color = const Color(0xFF3F8A3A);
+    final edge = Paint()
+      ..color = const Color(0xFF1E3A1A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    for (final a in const [-0.9, -0.3, 0.4, 1.0]) {
+      final tip = Offset(math.sin(a) * 13 + sway * 0.5, -6 - math.cos(a) * 9);
+      final path = Path()
+        ..moveTo(0, 0)
+        ..quadraticBezierTo(tip.dx * 0.4 - 4, tip.dy * 0.6, tip.dx, tip.dy)
+        ..quadraticBezierTo(tip.dx * 0.4 + 4, tip.dy * 0.4, 0, 0);
+      c.drawPath(path, leaf);
+      c.drawPath(path, edge);
+    }
+    c.drawLine(Offset.zero, Offset(sway, -18), edge..strokeWidth = 1.6);
+    c.drawCircle(Offset(sway, -20), 11, Paint()..color = colr.withValues(alpha: 0.2 + 0.25 * glow));
+    c.drawCircle(Offset(sway, -20), 4.5, Paint()..color = colr);
+    c.drawCircle(Offset(sway, -20), 4.5, edge..strokeWidth = 1.2);
+    c.drawCircle(Offset(sway - 1.4, -21.5), 1.4, Paint()..color = const Color(0xCCFFFFFF));
     c.restore();
   }
 

@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../core/content.dart';
 import '../core/hanh.dart';
+import '../core/mounts.dart';
 import 'art_figures.dart';
 
 /// Chibi-style figures: big heads, dark outlines, two-tone shading, wide
@@ -1714,4 +1715,156 @@ void _turtle(Canvas c, double walk, bool moving, double attack, double t) {
       _o
         ..color = col(0xFFE8C547)
         ..strokeWidth = 2);
+}
+
+// ------------------------------------------------------------------ mounts
+
+/// How much higher a rider is drawn on [d] (hips on the saddle).
+double mountSeatOf(MountDef d) => d.look == 'tiger' || d.look == 'kylin' ? 27 : 26;
+
+/// A mount at the local origin facing right, its saddle about
+/// 40 units up (see [mountSeatOf]). Tigers and kylins reuse the quadruped body,
+/// scaled up; horses and deer have long legs and a neck.
+void drawMount(Canvas c, MountDef d, {double walk = 0, bool moving = false, double t = 0}) {
+  if (d.look == 'tiger' || d.look == 'kylin') {
+    c.save();
+    c.scale(1.4);
+    drawQuadChibi(
+        c,
+        MobDef(
+            id: d.id, name: d.name, hanh: Hanh.kim, body: Body.quad,
+            c1: d.c1, c2: d.c2, c3: d.look == 'tiger' ? d.c2 : d.c3, variant: d.look),
+        walk: walk,
+        moving: moving,
+        t: t);
+    c.restore();
+    _saddle(c, d, -40);
+    return;
+  }
+  final deer = d.look == 'deer';
+  final gallop = moving ? walk * 2.2 : 0.0;
+  final bob = moving ? (math.sin(gallop * 2)).abs() * 1.5 : math.sin(t * 2) * 0.4;
+  c.save();
+  c.translate(0, -bob);
+  const by = -29.0;
+  final dark = shade(d.c1, -0.3);
+
+  // Tail.
+  final swish = math.sin(t * (moving ? 9 : 3)) * 3;
+  if (deer) {
+    _shape(c, Path()..addOval(Rect.fromCircle(center: const Offset(-25, by - 6), radius: 4)), _flat(d.c2), ow: 1.6);
+  } else {
+    final tail = Path()
+      ..moveTo(-23, by - 7)
+      ..quadraticBezierTo(-36, by - 4 + swish, -33, by + 14 + swish)
+      ..quadraticBezierTo(-30, by + 4, -22, by - 1)
+      ..close();
+    _shape(c, tail, _flat(d.c2), ow: 1.8);
+  }
+
+  // Legs swing in pairs when galloping.
+  Offset foot(double x, double phase) {
+    final a = moving ? math.sin(gallop + phase) * 0.55 : 0.0;
+    return Offset(x + math.sin(a) * 15, by + 8 + math.cos(a) * 21);
+  }
+
+  void leg(double x, double phase, int colr) {
+    final f = foot(x, phase);
+    _limb(c, Offset(x, by + 4), f, colr, 5);
+    final hoof = Path()..addRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: f.translate(0.6, 0), width: 6.5, height: 3.5), const Radius.circular(1.2)));
+    _shape(c, hoof, _flat(deer ? 0xFF3A2A1A : 0xFF2A2420), ow: 1.2);
+  }
+
+  leg(-15, math.pi, dark);
+  leg(15, 0, dark);
+
+  // Body.
+  final body = Rect.fromCenter(center: const Offset(0, by), width: 50, height: 22);
+  _shape(c, Path()..addOval(body), _lit(d.c1, body));
+  c.drawOval(Rect.fromCenter(center: const Offset(2, by + 6), width: 32, height: 6), _flat(shade(d.c1, deer ? 0.35 : -0.08)));
+  if (deer) {
+    for (var i = 0; i < 5; i++) {
+      c.drawCircle(Offset(-14 + i * 6.5, by - 4 + (i.isEven ? 0 : 3)), 1.6, _flat(0xFFF8F0E0));
+    }
+  }
+
+  leg(-10, math.pi * 0.6, d.c1);
+  leg(19, math.pi * 1.6, d.c1);
+
+  // Neck and head, nodding with the gallop.
+  final nod = moving ? math.sin(gallop) * 1.5 : math.sin(t * 1.5) * 0.8;
+  final neck = Path()
+    ..moveTo(12, by - 8)
+    ..lineTo(22, by - 27 + nod)
+    ..lineTo(31, by - 25 + nod)
+    ..lineTo(25, by + 2)
+    ..close();
+  _shape(c, neck, _lit(d.c1, Rect.fromLTRB(12, by - 27, 31, by + 2)));
+  final hx = 32.0, hy = by - 24 + nod;
+  if (!deer) {
+    // Mane along the neck.
+    final mane = Path()..moveTo(11, by - 7);
+    for (var i = 0; i <= 5; i++) {
+      final p = Offset(11 + i * 2.4, by - 9 - i * 3.6 + nod * i / 5);
+      mane.quadraticBezierTo(p.dx - 5, p.dy + 1 + math.sin(t * 7 + i) * 1.2, p.dx, p.dy);
+    }
+    mane.lineTo(20, by - 4);
+    mane.close();
+    _shape(c, mane, _flat(d.c2), ow: 1.6);
+  }
+  final head = Path()
+    ..addRRect(RRect.fromLTRBR(hx - 8, hy - 6, hx + 11, hy + 5, const Radius.circular(5)));
+  _shape(c, head, _lit(d.c1, Rect.fromLTRB(hx - 8, hy - 6, hx + 11, hy + 5)));
+  c.drawOval(Rect.fromLTRB(hx + 3, hy - 3, hx + 11, hy + 5), _flat(shade(d.c1, deer ? 0.3 : -0.12)));
+  c.drawCircle(Offset(hx + 9, hy + 1), 0.9, _flat(_ink));
+  // Ear.
+  final ear = Path()
+    ..moveTo(hx - 6, hy - 4)
+    ..lineTo(hx - 5, hy - 12)
+    ..lineTo(hx - 1, hy - 5)
+    ..close();
+  _shape(c, ear, _flat(d.c1), ow: 1.4);
+  // Eye.
+  c.drawCircle(Offset(hx + 1.5, hy - 1.5), 1.8, _flat(_ink));
+  c.drawCircle(Offset(hx + 1, hy - 2.1), 0.6, _flat(0xFFFFFFFF));
+  if (deer) {
+    // Glowing antlers.
+    final glow = 0.6 + 0.4 * math.sin(t * 3);
+    for (final dx in const [-3.0, 1.5]) {
+      final a = Path()
+        ..moveTo(hx + dx, hy - 5)
+        ..lineTo(hx + dx - 3, hy - 16)
+        ..moveTo(hx + dx - 1.6, hy - 10)
+        ..lineTo(hx + dx + 3, hy - 14)
+        ..moveTo(hx + dx - 2.5, hy - 14)
+        ..lineTo(hx + dx - 7, hy - 18);
+      c.drawPath(a, _outline(3.4));
+      c.drawPath(
+          a,
+          _o
+            ..color = col(shade(d.c3, 0.2 * glow))
+            ..strokeWidth = 1.8);
+    }
+  } else {
+    // Bridle.
+    c.drawLine(Offset(hx - 4, hy - 5), Offset(hx + 5, hy + 4), _o
+      ..color = col(d.c3)
+      ..strokeWidth = 1.4);
+  }
+  c.restore();
+  _saddle(c, d, by - 11 - bob);
+}
+
+void _saddle(Canvas c, MountDef d, double top) {
+  final s = Path()
+    ..moveTo(-11, top + 2)
+    ..quadraticBezierTo(-12, top - 3, -8, top - 3)
+    ..lineTo(8, top - 1)
+    ..quadraticBezierTo(12, top - 4, 12, top + 1)
+    ..quadraticBezierTo(0, top + 6, -11, top + 2)
+    ..close();
+  _shape(c, s, _lit(d.c3, Rect.fromLTRB(-12, top - 4, 12, top + 6)), ow: 1.6);
+  c.drawLine(Offset(0, top + 4), Offset(0, top + 14), _o
+    ..color = col(0xFF3A2A1A)
+    ..strokeWidth = 1.2);
 }
