@@ -51,8 +51,9 @@ HeroData _hero(Hanh hanh, int level) {
 }
 
 void main() {
-  // State 2026-10-27 (autopilot, 80 duels each): 0.8x 89%, 1x 66%, 1.2x 43%
-  // won; an even duel lasts about 40 s at every level.
+  // State 2026-10-27 (autopilot, 80 duels each, challengers using their sect
+  // skills): 0.8x 80%, 1x 41%, 1.2x 24%
+  // won; an even duel lasts 35-40 s at every level.
   test('Lôi đài: even duels are close, weaker rivals easy, stronger hard', () {
     final rate = <double>[];
     for (final ratio in const [0.8, 1.0, 1.2]) {
@@ -78,6 +79,6 @@ void main() {
     }
     expect(rate[0], greaterThan(rate[1]));
     expect(rate[1], greaterThan(rate[2]));
-    expect(rate[1], inInclusiveRange(0.45, 0.85));
+    expect(rate[1], inInclusiveRange(0.3, 0.65));
   });
 }

@@ -16,12 +16,16 @@ const int arenaPotions = 3;
 const int arenaStartPoints = 1000;
 
 // The challenger's make-up, relative to the hero (tuned with a duel
-// simulation, test/arena_sim_test.dart): HP as a multiple of the hero's,
-// seconds an even challenger needs to knock out a hero who drinks nothing,
-// and seconds between their hits.
+// simulation, test/arena_sim_test.dart): HP in seconds of the hero's own
+// damage output; seconds an even challenger's basic hits alone need to
+// knock out a hero who drinks nothing; seconds between those hits; and
+// their sect skills' damage (times their basic hit and the skill's power)
+// and cooldowns (times the skill's own).
 const double arenaRivalHp = 115;
-const double arenaRivalKill = 11;
+const double arenaRivalKill = 16;
 const double arenaRivalCd = 0.8;
+const double arenaRivalSkillMul = 0.42;
+const double arenaRivalSkillCd = 1.3;
 
 /// The duel ground: Hoa Sơn's summit, where swords are judged.
 DungeonDef arenaDef(ArenaRival r) => DungeonDef(

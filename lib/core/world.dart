@@ -91,6 +91,11 @@ class Mob extends Actor {
   /// Set on a Lôi đài challenger, drawn as a hero of their sect.
   ArenaRival? rival;
 
+  // A challenger's skill cooldowns, when it may cast next, and its guard.
+  List<double> rivalCd = const [];
+  double rivalNext = 1.5;
+  double guardUntil = 0, guardPct = 0;
+
   /// Bosses and elites: bigger loot, a name bar, a screen shake.
   bool get big => def.boss || elite;
 }
@@ -154,9 +159,14 @@ class Zone {
     this.statusPower = 0,
     this.statusTime = 0,
     this.knock = 0,
+    this.visualOnly = false,
   }) : life = delay + interval * math.max(0, ticks - 1) + (fx == 'buddhaPalm' || fx == 'fireLine' ? 0.8 : 0.4);
 
   final bool fromHero;
+
+  /// Drawn like a hero skill but hits nothing (a challenger's skill art over
+  /// its red telegraph).
+  final bool visualOnly;
   final double x, y, r;
   final double life;
   final double delay;
@@ -595,7 +605,7 @@ class World {
     final m = Mob(_uid++, def, hero.level, width * 0.68, height / 2)
       ..state = MobState.chase
       ..rival = r;
-    final k = math.pow(r.power / math.max(1, hero.power), 0.8).toDouble();
+    final k = math.pow(r.power / math.max(1, hero.power), 1.2).toDouble();
     m.defense = mobDefAt(hero.level);
     // HP from the hero's own damage output, so an even duel lasts about the
     // same at every level.
@@ -603,9 +613,9 @@ class World {
     m.maxHp = atkEff * (1 - mitigation(m.defense, hero.level)) * arenaRivalHp * (0.8 + hero.level / 150) * k;
     m.hp = m.maxHp;
     // Per hit, so that the hero (without potions) lasts [arenaRivalKill]
-    // seconds against an even rival, slams included.
+    // seconds against an even rival with basic hits alone.
     final perSec = st.maxHp / arenaRivalKill * k;
-    const hits = 1 / arenaRivalCd + 2.2 / 7.5;
+    const hits = 1 / arenaRivalCd;
     m.atk = perSec / hits / (1 - mitigation(st.def, hero.level));
     mobs.add(m);
     boss = m;
@@ -1381,6 +1391,7 @@ class World {
 
   void _damageMob(Mob m, double dmg, int color,
       {bool big = false, bool small = false}) {
+    if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
     m.hurt = 0.15;
@@ -1655,7 +1666,11 @@ class World {
           m.state = MobState.leash;
           break;
         }
-        if (m.def.boss) _bossSkill(m, dt);
+        if (m.rival != null) {
+          _rivalSkills(m);
+        } else if (m.def.boss) {
+          _bossSkill(m, dt);
+        }
         final reach = m.def.ranged
             ? m.def.range
             : m.radius + heroRadius + 14;
@@ -1686,6 +1701,136 @@ class World {
           }
         }
     }
+  }
+
+  /// Slows or stuns the hero from a monster's skill hit (lighter than on
+  /// monsters, so a hero is never locked down).
+  void _statusHero(Status s, double power, double t) {
+    final p = player;
+    switch (s) {
+      case Status.slow:
+        p.slowUntil = time + t * 0.6;
+        p.slowPct = math.min(0.5, power);
+      case Status.stun:
+        p.stunUntil = time + math.min(0.8, t * 0.4);
+      case Status.none || Status.poison || Status.burn:
+        break;
+    }
+  }
+
+  /// A Lôi đài challenger fights with their sect's own skills: attacks in
+  /// reach, a heal or guard when hurt, and the tuyệt kỹ once below 60% HP.
+  /// Ground skills show a red circle first so they can be dodged.
+  void _rivalSkills(Mob m) {
+    final r = m.rival!;
+    final skills = sectOf(r.hanh).skills;
+    if (m.rivalCd.isEmpty) m.rivalCd = List.filled(skills.length, 0);
+    if (time < m.rivalNext || !player.alive) return;
+    final p = player;
+    final d = _dist(m.x, m.y, p.x, p.y);
+    final hurt = m.hp / m.maxHp;
+    final ready = <int>[];
+    for (var i = 0; i < skills.length; i++) {
+      final s = skills[i];
+      if (time < m.rivalCd[i] || (r.level < s.unlock && r.rebirths == 0)) continue;
+      final reach = math.max(s.range, s.radius) + heroRadius + 30;
+      final ok = switch (s.kind) {
+        SkillKind.passive => false,
+        SkillKind.heal => hurt < 0.5,
+        SkillKind.guard || SkillKind.shield => hurt < 0.85,
+        _ => d < reach && (!s.ultimate || hurt < 0.6),
+      };
+      if (ok) ready.add(i);
+    }
+    if (ready.isEmpty) return;
+    // The tuyệt kỹ first, then whatever else is up.
+    final i = ready.firstWhere((k) => skills[k].ultimate, orElse: () => ready[rng.nextInt(ready.length)]);
+    final s = skills[i];
+    final lv = ((r.level - s.unlock) ~/ 6 + 1).clamp(1, maxSkillLevel);
+    final pw = s.powerAt(lv);
+    final dmg = m.atk * pw * arenaRivalSkillMul;
+    m.rivalCd[i] = time + s.cooldown * arenaRivalSkillCd;
+    m.rivalNext = time + 1.2 + rng.nextDouble() * 0.8;
+    m.attackAnim = 1;
+    if (p.x != m.x) m.face = (p.x - m.x).sign;
+    final ang = math.atan2(p.y - m.y, p.x - m.x);
+    _sfx(s.fx);
+    if (s.ultimate) {
+      events.add(GameEvent(EvKind.boss, text: '${r.name}: ${s.name}!', color: 0xFFFF6A4A, big: true));
+    }
+    void zone(double x, double y, double delay) {
+      final ticks = math.max(1, s.ticks);
+      final interval = ticks > 1 ? s.duration / ticks : 0.0;
+      zones.add(Zone(fromHero: false, x: x, y: y, r: s.radius, delay: delay, ticks: ticks,
+          interval: interval, power: dmg, fx: 'rival_${r.hanh.name}',
+          status: s.status, statusPower: s.statusPower, statusTime: s.statusTime));
+      zones.add(Zone(fromHero: true, x: x, y: y, r: s.radius, delay: delay, ticks: ticks,
+          interval: interval, power: 0, fx: s.fx, visualOnly: true));
+    }
+
+    switch (s.kind) {
+      case SkillKind.arc:
+        fx.add(Fx(s.fx, m.x, m.y, life: 0.3, angle: ang, radius: s.range, spread: s.spread));
+        if (d < s.range + heroRadius) _hitHeroBySkill(dmg, r, s);
+      case SkillKind.nova || SkillKind.aura:
+        final hits = s.kind == SkillKind.aura ? math.min(4, s.ticks) * 0.5 : 1.0;
+        fx.add(Fx(s.fx, m.x, m.y, life: s.ultimate ? 1.0 : 0.55, radius: s.radius));
+        if (d < s.radius + heroRadius) _hitHeroBySkill(dmg * hits, r, s);
+      case SkillKind.projectile || SkillKind.radial:
+        final n = math.max(1, s.count);
+        for (var k = 0; k < n; k++) {
+          final a = s.kind == SkillKind.radial
+              ? ang + math.pi * 2 * k / n
+              : (n == 1 ? ang : ang - s.spread / 2 + s.spread * k / (n - 1));
+          projs.add(Proj(
+            fromHero: false,
+            x: m.x,
+            y: m.y - 30,
+            vx: math.cos(a) * 520,
+            vy: math.sin(a) * 520,
+            maxDist: s.range + 60,
+            radius: s.radius > 0 ? s.radius : 16,
+            fx: s.fx,
+            power: dmg,
+            status: s.status,
+            statusPower: s.statusPower,
+            statusTime: s.statusTime,
+            hanh: r.hanh,
+          ));
+        }
+      case SkillKind.ground:
+        zone(p.x, p.y, math.max(0.75, s.delay));
+      case SkillKind.line:
+        final n = math.max(1, s.count);
+        for (var k = 0; k < n; k++) {
+          final dd = s.range * (k + 1) / n;
+          zone(m.x + math.cos(ang) * dd, m.y + math.sin(ang) * dd, 0.6 + k * 0.07);
+        }
+      case SkillKind.dash:
+        final go = math.max(0.0, math.min(s.range, d - m.radius - heroRadius));
+        fx.add(Fx(s.fx, m.x, m.y, life: 0.45, angle: ang, radius: go,
+            x2: m.x + math.cos(ang) * go, y2: m.y + math.sin(ang) * go));
+        m.x += math.cos(ang) * go;
+        m.y += math.sin(ang) * go;
+        _clamp(m);
+        if (d <= s.range + heroRadius + m.radius) _hitHeroBySkill(dmg, r, s);
+      case SkillKind.heal:
+        final amount = m.maxHp * pw * 0.5;
+        m.hp = math.min(m.maxHp, m.hp + amount);
+        _text(m.x, m.y - 80, '+${amount.round()}', 0xFF7CF08A, big: true);
+        fx.add(Fx(s.fx, m.x, m.y, life: 1.0));
+      case SkillKind.guard || SkillKind.shield:
+        m.guardUntil = time + s.duration;
+        m.guardPct = s.kind == SkillKind.guard ? math.min(0.5, pw) : 0.35;
+        fx.add(Fx(s.fx, m.x, m.y, life: math.min(2.0, s.duration)));
+      case SkillKind.passive:
+        break;
+    }
+  }
+
+  void _hitHeroBySkill(double dmg, ArenaRival r, SkillDef s) {
+    _hurtHero(dmg, r.hanh);
+    _statusHero(s.status, s.statusPower, s.statusTime);
   }
 
   void _bossSkill(Mob m, double dt) {
@@ -1770,7 +1915,8 @@ class World {
           _d2(player.x, player.y, pr.x, cy) <
               _sq(heroRadius + pr.radius)) {
         pr.dead = true;
-        _hurtHero(pr.power, _hanhOfFx(pr.fx));
+        _hurtHero(pr.power, pr.hanh ?? _hanhOfFx(pr.fx));
+        _statusHero(pr.status, pr.statusPower, pr.statusTime);
         fx.add(Fx('spark_${pr.fx}', pr.x, pr.y, life: 0.25));
       }
     }
@@ -1787,7 +1933,7 @@ class World {
   void _updateZones(double dt) {
     for (final z in zones) {
       z.t += dt;
-      if (z.ticks <= 0 || z.t < z.delay) continue;
+      if (z.visualOnly || z.ticks <= 0 || z.t < z.delay) continue;
       if (z.t - z.delay < z.next) continue;
       z.next += z.interval > 0 ? z.interval : 999;
       z.ticks--;
@@ -1807,6 +1953,7 @@ class World {
         _shake(6);
         if (_d2(player.x, player.y, z.x, z.y) < _sq(z.r + heroRadius)) {
           _hurtHero(z.power, _hanhOfFx(z.fx));
+          _statusHero(z.status, z.statusPower, z.statusTime);
         }
       }
     }
