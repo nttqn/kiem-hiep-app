@@ -65,6 +65,7 @@ class SoundService {
   final ValueNotifier<bool> musicOn = ValueNotifier<bool>(true);
 
   final Map<String, AudioPool> _pools = {};
+  final Map<String, _LowLatencyPool> _android = {};
   final Map<String, DateTime> _last = {};
   bool _battle = false;
   bool _foreground = true;
@@ -117,11 +118,22 @@ class SoundService {
     });
     if (_wanted != null) playMusic(_wanted!);
     for (final f in _files) {
+      final size = f == 'hit' || f == 'swing' || f == 'shoot' ? 3 : 2;
+      // Android MediaPlayer crashes some phones (Galaxy J7, Android 8) when
+      // a pooled effect completes: audioplayers stops and re-prepares it
+      // from a native callback. SoundPool has no completion callback.
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        try {
+          _android[f] = await _LowLatencyPool.create('.wav', size)
+              .timeout(const Duration(seconds: 5));
+        } catch (_) {}
+        continue;
+      }
       try {
         _pools[f] = await FlameAudio.createPool(
           '$f.wav',
           minPlayers: 1,
-          maxPlayers: f == 'hit' || f == 'swing' || f == 'shoot' ? 3 : 2,
+          maxPlayers: size,
         ).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
@@ -209,7 +221,9 @@ class SoundService {
     if (last != null && now.difference(last).inMilliseconds < 70) return;
     _last[file] = now;
     try {
-      _pools[file]?.start(volume: volume * (_battle ? 0.9 : 1));
+      final v = volume * (_battle ? 0.9 : 1);
+      _pools[file]?.start(volume: v);
+      _android[file]?.start(v);
     } catch (_) {}
   }
 
@@ -238,5 +252,38 @@ class SoundService {
 
   static void _guard(Future<void>? f) {
     f?.catchError((Object _) {});
+  }
+}
+
+/// A few SoundPool-backed players for one effect, used round-robin.
+class _LowLatencyPool {
+  _LowLatencyPool._(this._players);
+  final List<AudioPlayer> _players;
+  int _next = 0;
+
+  static Future<_LowLatencyPool> create(String file, int size) async {
+    final players = <AudioPlayer>[];
+    for (var i = 0; i < size; i++) {
+      final p = AudioPlayer()..audioCache = FlameAudio.audioCache;
+      await p.setPlayerMode(PlayerMode.lowLatency);
+      await p.setReleaseMode(ReleaseMode.stop);
+      await p.setSource(AssetSource(file));
+      players.add(p);
+    }
+    return _LowLatencyPool._(players);
+  }
+
+  void start(double volume) {
+    final p = _players[_next];
+    _next = (_next + 1) % _players.length;
+    () async {
+      try {
+        // SoundPool never reports completion, so the player still counts
+        // as playing; stop first or resume() is ignored.
+        await p.stop();
+        await p.setVolume(volume);
+        await p.resume();
+      } catch (_) {}
+    }();
   }
 }

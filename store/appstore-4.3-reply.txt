@@ -1,0 +1,40 @@
+Hello App Review team,
+
+Thank you for the review. We believe Kiếm Hiệp Ngũ Hành meets guidelines 4.3(a), 4.3(b) and 4.2.6. Answers below.
+
+1. What the app does
+An original offline action RPG set in Vietnamese martial-arts fiction (kiếm hiệp). The player creates a hero in one of five sects built on the Five Elements (Metal, Wood, Water, Fire, Earth), each with its own fighting style, 7 skills and an elemental counter system. They fight in real time across 9 regions and 18 dungeons, follow a 56-quest story, then a second storyline after rebirth, plus a Trial Tower, a daily World Boss, bounties, gem socketing, companion beasts and meridian training. It solves a real gap: a deep kiếm hiệp RPG that plays fully offline, with no pay-to-win, energy timers or forced login.
+
+2. Intended users
+Vietnamese-speaking players aged roughly 16-45 who grew up with online kiếm hiệp games and wuxia novels but no longer have time for always-online MMOs. They play in short sessions (commute, breaks), often with weak mobile data, and want a long progression they can pause and resume.
+
+3. Market gap
+Kiếm hiệp RPGs on the App Store are almost all online MMOs: they need a constant connection, push in-app purchases and VIP tiers, and many are Chinese titles with machine translation. There is very little that is native Vietnamese, offline and free of purchases. Our game has no in-app purchases at all; rewarded ads are optional and progression is balanced with an automated play simulation so free players finish all content.
+
+4. Beta testing
+The Android build has been played daily since mid-October on real devices, past level 77 and into rebirth, and is released on Google Play. Feedback that changed the build:
+- "Too easy at level 77, gems pile up" -> added the Trial Tower, higher gem tiers and a leaderboard.
+- "All skills maxed at level 60" -> added sect ultimates, skill breakthrough and meridians.
+- "A save was overwritten by an older copy" -> added automatic backups and a safer cloud-sync conflict dialog.
+- "Leveling after rebirth has no story" -> added 60 rebirth quests and a bounty board.
+- "Equipment doesn't change how the hero looks" -> gear is now visible on the character, plus outfits.
+
+5. Standalone or suite
+Standalone. It is not part of a suite. Our other apps are unrelated genres (chess, puzzle, racing, strategy, utility) with no overlapping content.
+
+6. Could it be an IAP/expansion of another app?
+No. None of our apps is an RPG, and none could host this game's world, combat, story or progression.
+
+7. Shared code/assets with our other apps
+No shared game code or assets. All gameplay, combat, story, art (characters, monsters, maps and effects are drawn in code for this game) and music (composed for this game) are unique. The only common parts are standard third-party frameworks (Flutter, Flame, Google Mobile Ads, Firebase) and the same build pipeline.
+
+8. Shared codebase/SDK with third parties
+No. Beyond the standard frameworks above, there is no third-party template, engine kit, SDK or content library. Everything else was written for this game.
+
+9. Client, partner or third party
+No. The app was conceived, designed and built by us, the account holder. No template, app generator or outside content provider was used, so 4.2.6 does not apply.
+
+The app plays offline without an account; Notes for Review explain how to reach every feature. We are happy to provide a video or more detail.
+
+Thank you,
+Kiếm Hiệp Ngũ Hành developer
