@@ -50,6 +50,12 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.0.10, ≤ 500 ký tự)
+HIỆP KHÁCH ĐỒNG HÀNH: 5 hiệp khách ngũ phái (Tuệ Minh, Lam Diệp, Tô Thanh Vân, Mạc Liệt, Cổ Trường Phong) cùng ra trận, dùng chiêu thức môn phái, tăng hảo cảm để mở chiêu mới và nghe chuyện riêng của họ. TRANG BỊ HOÀNG KIM: 5 bộ ngũ hành, đủ 2/4/7 món kích hoạt hiệu ứng bộ, đủ bộ tung tuyệt chiêu khi đánh thường. MÙA GIẢI LÔI ĐÀI: mỗi 2 tuần trao thưởng theo hạng, bảng xếp hạng Lôi đài, 2 ngoại trang mới.
+
+## What's new (1.0.10, en-US)
+COMPANIONS: 5 wandering heroes, one per sect, fight beside you with their own sect skills; raise friendship to unlock skills and hear their stories. GOLDEN GEAR: 5 Five-Element sets with 2/4/7-piece bonuses; a full set unleashes a burst on basic hits. ARENA SEASONS: rewards by rank every 2 weeks, an arena leaderboard and 2 new outfits.
+
 ## Có gì mới (bản 1.0.9, ≤ 500 ký tự)
 LÔI ĐÀI: tỷ thí với bản sao nhân vật của người chơi khác, leo 7 bậc từ Sơ Nhập tới Võ Lâm Chí Tôn, đổi Uy danh lấy quà. THÚ CƯỠI: 6 thú cưỡi (Bạch Mã, Hãn Huyết Bảo Mã, Bạch Hổ, Thần Lộc, Hỏa Kỳ Lân...) tăng tốc chạy và chỉ số. LUYỆN ĐAN: hái thuốc ở bãi luyện công, luyện Song Bội Đan, Cuồng Lực Đan, Tẩy Tủy Đan. NĂNG ĐỘNG: tích điểm mỗi ngày, mở rương ngày và rương tuần. Sửa lỗi văng game trên một số máy Android 8.
 

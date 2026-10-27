@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../core/arena.dart';
+import '../core/companions.dart';
 import '../core/content.dart';
 import '../core/costumes.dart';
 import '../core/hanh.dart';
@@ -105,8 +106,8 @@ class HeroGear {
       armor: gearTier(a),
       belt: gearTier(equip[Slot.belt]),
       boots: gearTier(equip[Slot.boots]),
-      pendant: am == null ? 0 : (am.rarity == Rarity.common ? 0xFF8FCFA8 : am.rarity.color),
-      glow: w != null && w.rarity.index >= Rarity.rare.index ? w.rarity.color : 0,
+      pendant: am == null ? 0 : (am.rarity == Rarity.common ? 0xFF8FCFA8 : am.color),
+      glow: w != null && w.rarity.index >= Rarity.rare.index ? w.color : 0,
       cape: a != null && (gearTier(a) >= maxGearTier || a.rarity == Rarity.legend),
     );
   }
@@ -869,6 +870,15 @@ HeroGear rivalGear(ArenaRival r) {
 }
 
 HumanLook rivalLook(ArenaRival r) => heroLook(r.hanh, female: r.female, gear: rivalGear(r));
+
+/// A hiệp khách's gear look grows with hảo cảm.
+HeroGear companionGear(int bond) {
+  final t = companionGearTier(bond);
+  return HeroGear(weapon: t, hat: t, armor: t, belt: t, boots: t, cape: t >= 3);
+}
+
+HumanLook companionLook(CompanionDef c, int bond) =>
+    heroLook(c.hanh, female: c.female, gear: companionGear(bond), costume: c.look);
 
 /// Hero look for a sect wearing [gear] and, over it, [costume]; female
 /// variants swap the hair.

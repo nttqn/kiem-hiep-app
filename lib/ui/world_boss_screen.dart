@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/gems.dart';
+import '../core/gold_sets.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/tower.dart';
@@ -290,7 +291,9 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(fmt(goal), style: bold.copyWith(color: cream)),
-                Text('${fmt(worldBossMilestoneGold(i))} lượng · 1 ngọc $gemName ngẫu nhiên',
+                Text(
+                    '${fmt(worldBossMilestoneGold(i))} lượng · 1 ngọc $gemName ngẫu nhiên'
+                    '${worldBossGoldShards[i] > 0 ? ' · ${worldBossGoldShards[i]} mảnh Hoàng Kim' : ''}',
                     style: small.copyWith(fontSize: 11)),
                 const SizedBox(height: 3),
                 Bar(value: (h.wbTotal / goal).clamp(0.0, 1.0), color: const Color(0xFFFF9A5A), height: 6),
@@ -310,7 +313,9 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
                     if (g == null) return;
                     SaveService.instance.save();
                     ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text('Nhận ${fmt(worldBossMilestoneGold(i))} lượng và ${g.name}')));
+                        .showSnackBar(SnackBar(
+                            content: Text('Nhận ${fmt(worldBossMilestoneGold(i))} lượng và ${g.name}'
+                                '${worldBossGoldShards[i] > 0 ? ', ${worldBossGoldShards[i]} mảnh Hoàng Kim' : ''}')));
                     setState(() {});
                   },
                 ),

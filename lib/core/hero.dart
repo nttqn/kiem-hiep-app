@@ -4,8 +4,10 @@ import 'activity.dart';
 import 'alchemy.dart';
 import 'arena.dart';
 import 'bounty.dart';
+import 'companions.dart';
 import 'content.dart';
 import 'costumes.dart';
+import 'gold_sets.dart';
 import 'luan_hoi.dart';
 import 'gems.dart';
 import 'hanh.dart';
@@ -257,6 +259,21 @@ class HeroData {
   int arenaWins = 0;
   int arenaRefresh = 0;
 
+  // Mùa giải: the season the points belong to, fights in it, the best tier
+  // ever ended a season in (-1 none), and the last settled season's
+  // [season, tier, points] until the Lôi đài screen has shown it.
+  int arenaSeason = 0;
+  int arenaSeasonFights = 0;
+  int arenaBestTier = -1;
+  List<int> arenaSeasonResult = const [];
+
+  /// Mảnh Hoàng Kim for forging Hoàng Kim pieces.
+  int goldShards = 0;
+
+  // Hiệp khách: companions met with their hảo cảm, and the one along.
+  final Map<String, int> companionBonds = {};
+  String activeCompanion = '';
+
   // Năng động: today's actions by source and chests claimed (bit mask),
   // then the week's points and chests.
   String actDay = '';
@@ -343,6 +360,9 @@ class HeroData {
       final p = pillById[id];
       if (p != null && left > 0) add(p.bonus);
     });
+    add(goldSetBonuses(goldPieces(equip.values)));
+    final comp = companionById[activeCompanion];
+    if (comp != null) add({comp.bonus: comp.bonusAt(companionBonds[comp.id] ?? 1)});
     return out;
   }
 
@@ -828,6 +848,7 @@ class HeroData {
         CostumeSource.rebirth => rebirths >= c.need,
         // A rebirth means level 99 was reached.
         CostumeSource.level => level >= c.need || rebirths > 0,
+        CostumeSource.arena => arenaBestTier >= c.need,
         CostumeSource.worldBoss || CostumeSource.gold => false,
       };
 
@@ -983,6 +1004,11 @@ class HeroData {
       addGem(gem);
       lines.add(gem.name);
     }
+    final shards = towerGoldShards(floor);
+    if (shards > 0) {
+      goldShards += shards;
+      lines.add('+$shards Mảnh Hoàng Kim');
+    }
     if (xp > 0) gainExp(xp);
     _progressDaily((d) => d.type == QuestType.dungeon);
     addActivity(ActSource.dungeon);
@@ -1038,6 +1064,7 @@ class HeroData {
     if (!wbCanClaim(i)) return null;
     wbClaimed |= 1 << i;
     gold += worldBossMilestoneGold(i);
+    goldShards += worldBossGoldShards[i];
     final g = Gem(Hanh.values[rng.nextInt(5)], worldBossMilestoneGem[i]);
     addGem(g);
     for (final c in costumes) {
@@ -1246,10 +1273,50 @@ class HeroData {
   bool get arenaOpen => level >= arenaOpenLevel || rebirths > 0;
 
   void arenaRollDay(String day) {
+    arenaRollSeason(day);
     if (arenaDay == day) return;
     arenaDay = day;
     arenaFights = 0;
     arenaAds = 0;
+  }
+
+  /// Settles the season the points belong to once [day] is in a later one:
+  /// a hero who fought in it is paid by the tier held at its end, and the
+  /// points fall halfway back. True when a reward was paid.
+  bool arenaRollSeason(String day) {
+    final s = arenaSeasonOf(day);
+    if (arenaSeason == s) return false;
+    final old = arenaSeason;
+    arenaSeason = s;
+    final fought = arenaSeasonFights > 0;
+    arenaSeasonFights = 0;
+    if (old == 0 || !fought) {
+      arenaPoints = math.max(arenaPoints, arenaStartPoints);
+      return false;
+    }
+    final tier = arenaTier;
+    final r = arenaSeasonReward(tier, level);
+    arenaCoins += r.coins;
+    gold += r.gold;
+    goldShards += r.shards;
+    if (r.gemTier > 0) addGem(Gem(Hanh.values[math.Random(seed ^ old).nextInt(5)], r.gemTier));
+    arenaBestTier = math.max(arenaBestTier, tier);
+    arenaSeasonResult = [old, tier, arenaPoints, r.coins, r.gold, r.shards, r.gemTier];
+    arenaPoints = arenaSeasonReset(arenaPoints);
+    unlockCostumes();
+    return true;
+  }
+
+  /// The settled season's reward as lines, for the screen that shows it.
+  List<String> arenaSeasonLines() {
+    final r = arenaSeasonResult;
+    if (r.length < 7) return const [];
+    return [
+      '+${_thousands(r[3])} Uy danh',
+      '+${_thousands(r[4])} lượng',
+      if (r[5] > 0) '+${r[5]} Mảnh Hoàng Kim',
+      if (r[6] > 0) 'Ngọc cấp ${r[6]} (hành ngẫu nhiên)',
+    ];
   }
 
   int get arenaFightsLeft => arenaFreeFights + arenaAds - arenaFights;
@@ -1279,6 +1346,7 @@ class HeroData {
     arenaPoints = math.max(0, arenaPoints + pts);
     final coins = won ? arenaWinCoins : arenaLossCoins;
     arenaCoins += coins;
+    arenaSeasonFights++;
     if (won) arenaWins++;
     addActivity(ActSource.arena);
     final lines = ['${pts >= 0 ? '+' : ''}$pts điểm Lôi đài ($arenaPoints)', '+$coins Uy danh'];
@@ -1312,6 +1380,75 @@ class HeroData {
         pills[o.id] = (pills[o.id] ?? 0) + o.count;
     }
     return true;
+  }
+
+  // ------------------------------------------------------------- hiệp khách
+
+  bool get companionsOpen => level >= companions.first.unlock || rebirths > 0;
+
+  bool hasCompanion(String id) => companionBonds.containsKey(id);
+
+  bool canMeetCompanion(CompanionDef c) => level >= c.unlock || rebirths > 0;
+
+  /// Has [c] join for their price; the first one comes along at once.
+  bool hireCompanion(CompanionDef c) {
+    if (hasCompanion(c.id) || !canMeetCompanion(c) || gold < c.price) return false;
+    gold -= c.price;
+    companionBonds[c.id] = 1;
+    if (activeCompanion.isEmpty) activeCompanion = c.id;
+    recompute();
+    return true;
+  }
+
+  /// A gift that raises [c]'s hảo cảm by one.
+  bool giftCompanion(CompanionDef c) {
+    final b = companionBonds[c.id];
+    if (b == null || b >= maxBond || gold < bondCost(b)) return false;
+    gold -= bondCost(b);
+    companionBonds[c.id] = b + 1;
+    recompute();
+    return true;
+  }
+
+  /// Takes [id] along, or sends them off when already along.
+  void setActiveCompanion(String id) {
+    if (!hasCompanion(id)) return;
+    activeCompanion = activeCompanion == id ? '' : id;
+    recompute();
+  }
+
+  // ------------------------------------------------------------- hoàng kim
+
+  bool get goldOpen => level >= goldOpenLevel || rebirths > 0;
+
+  /// Forges a Hoàng Kim [slot] piece of [set] at the hero's level into the
+  /// bag; null when short of shards or bag space.
+  Item? forgeGold(GoldSetDef set, Slot slot, math.Random rng) {
+    final cost = goldPieceCost(slot);
+    if (!goldOpen || goldShards < cost || bag.length >= bagSize) return null;
+    goldShards -= cost;
+    final it = makeGoldItem(set: set, slot: slot, level: level, sect: sect, rng: rng);
+    bag.add(it);
+    ownedLegend = true;
+    return it;
+  }
+
+  bool canReforgeGold(Item it) => it.golden && it.level < level && goldShards >= goldReforgeCost(it.slot);
+
+  /// Forges [it] again at the hero's level, worn or in the bag.
+  Item? reforgeGold(Item it) {
+    if (!canReforgeGold(it)) return null;
+    final out = reforgedGold(it, level);
+    if (equip[it.slot] == it) {
+      equip[it.slot] = out;
+    } else {
+      final i = bag.indexOf(it);
+      if (i < 0) return null;
+      bag[i] = out;
+    }
+    goldShards -= goldReforgeCost(it.slot);
+    recompute();
+    return out;
   }
 
   // ------------------------------------------------------------- năng động
@@ -1386,6 +1523,10 @@ class HeroData {
     if (c.pill.isNotEmpty) {
       pills[c.pill] = (pills[c.pill] ?? 0) + 1;
       lines.add(pillById[c.pill]!.name);
+    }
+    if (c.shards > 0) {
+      goldShards += c.shards;
+      lines.add('+${c.shards} Mảnh Hoàng Kim');
     }
     return lines;
   }
@@ -1497,6 +1638,9 @@ class HeroData {
         'mount': [activeMount, riding, mountLevels],
         'alch': [herbs, pills, buffs, potentialPills],
         'arena': [arenaPoints, arenaCoins, arenaDay, arenaFights, arenaAds, arenaSalaryDay, arenaWins, arenaRefresh],
+        'season': [arenaSeason, arenaSeasonFights, arenaBestTier, arenaSeasonResult],
+        'shards': goldShards,
+        'comp': [activeCompanion, companionBonds],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -1596,6 +1740,21 @@ class HeroData {
       ]);
       h.hideHat = look[1] as bool;
       h.costume = h.ownedCostumes.contains(look[0]) ? look[0] as String : '';
+    }
+    final season = m['season'];
+    if (season is List && season.length == 4) {
+      h.arenaSeason = math.max(0, season[0] as int);
+      h.arenaSeasonFights = math.max(0, season[1] as int);
+      h.arenaBestTier = (season[2] as int).clamp(-1, arenaTiers.length - 1);
+      h.arenaSeasonResult = [for (final v in season[3] as List) v as int];
+    }
+    h.goldShards = math.max(0, m['shards'] as int? ?? 0);
+    final comp = m['comp'];
+    if (comp is List && comp.length == 2) {
+      (comp[1] as Map).forEach((k, v) {
+        if (companionById.containsKey(k) && v is int) h.companionBonds['$k'] = v.clamp(1, maxBond);
+      });
+      h.activeCompanion = h.companionBonds.containsKey(comp[0]) ? comp[0] as String : '';
     }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];

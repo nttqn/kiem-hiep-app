@@ -1,7 +1,9 @@
+import 'arena.dart';
+
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
-/// earned once (tower, rebirth, level 99, Boss Thế Giới) or bought with gold,
-/// and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold }
+/// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
+/// or bought with gold, and kept for good.
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena }
 
 class CostumeDef {
   const CostumeDef({
@@ -23,8 +25,8 @@ class CostumeDef {
   final String id, name, desc;
   final CostumeSource source;
 
-  /// Tower floor, rebirth count, level, Boss Thế Giới milestone index or
-  /// gold price, by [source].
+  /// Tower floor, rebirth count, level, Boss Thế Giới milestone index, gold
+  /// price or Lôi đài tier, by [source].
   final int need;
 
   // Look: outfit colours, then optional cape, blade and glow colours (0
@@ -37,6 +39,7 @@ class CostumeDef {
         CostumeSource.level => 'Đạt cấp $need',
         CostumeSource.worldBoss => 'Boss Thế Giới: nhận mốc ${const ['100 nghìn', '500 nghìn', '2 triệu', '6 triệu', '15 triệu'][need]} sát thương',
         CostumeSource.gold => 'Mua với ${_thousands(need)} lượng',
+        CostumeSource.arena => 'Kết thúc một mùa Lôi đài ở hạng ${arenaTiers[need].name}',
       };
 }
 
@@ -103,6 +106,17 @@ const costumes = <CostumeDef>[
     source: CostumeSource.rebirth, need: 5,
     robe: 0xFFE8B83A, trim: 0xFF8A2A1A, pants: 0xFF5A3A1A, cape: 0xFFB3261E, glow: 0xFFFFD45A,
     aura: 0xFFFFE07A, armor: 4,
+  ),
+  CostumeDef(
+    id: 'loidai', name: 'Lôi Đài Bá Chủ', desc: 'Chiến bào tím viền vàng của kẻ đứng vững trên lôi đài.',
+    source: CostumeSource.arena, need: 4,
+    robe: 0xFF3A2A5A, trim: 0xFFFFD34A, pants: 0xFF1E1630, cape: 0xFF8A1A2A, glow: 0xFFC8A0FF, armor: 3,
+  ),
+  CostumeDef(
+    id: 'chiton', name: 'Chí Tôn Chiến Bào', desc: 'Bạch bào choàng đỏ, chỉ dành cho bậc Võ Lâm Chí Tôn.',
+    source: CostumeSource.arena, need: 6,
+    robe: 0xFFF4F0E6, trim: 0xFFFF6A4A, pants: 0xFFD8D0C0, cape: 0xFFFF6A4A, glow: 0xFFFF8A5A,
+    aura: 0xFFFFC07A, armor: 4,
   ),
 ];
 

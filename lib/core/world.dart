@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'alchemy.dart';
 import 'arena.dart';
+import 'companions.dart';
 import 'content.dart';
 import 'gems.dart';
+import 'gold_sets.dart';
 import 'hanh.dart';
 import 'hero.dart';
 import 'items.dart';
@@ -56,6 +58,25 @@ class PetActor {
   bool moving = false;
   double cd = 1;
   double attackAnim = 0;
+}
+
+/// The hiệp khách along with the hero: monsters ignore them; they pick the
+/// hero's fights and use their sect's skills.
+class CompanionActor {
+  CompanionActor(this.def, this.bond, this.x, this.y)
+      : skillCd = List.filled(def.sect.skills.length, 0);
+  final CompanionDef def;
+  final int bond;
+  double x, y;
+  double face = 1;
+  double walk = 0;
+  bool moving = false;
+  double attackAnim = 0;
+  double cd = 0.5;
+
+  /// When each skill is ready again, and when any may be cast next.
+  final List<double> skillCd;
+  double next = 1.5;
 }
 
 class Mob extends Actor {
@@ -160,9 +181,13 @@ class Zone {
     this.statusTime = 0,
     this.knock = 0,
     this.visualOnly = false,
+    this.hanh,
   }) : life = delay + interval * math.max(0, ticks - 1) + (fx == 'buddhaPalm' || fx == 'fireLine' ? 0.8 : 0.4);
 
   final bool fromHero;
+
+  /// Phase for khắc bonuses on the hero's side; null means the hero's.
+  final Hanh? hanh;
 
   /// Drawn like a hero skill but hits nothing (a challenger's skill art over
   /// its red telegraph).
@@ -356,6 +381,7 @@ class World {
     player.hp = st.maxHp;
     player.mp = st.maxMp;
     _spawnPet();
+    _spawnCompanion();
   }
 
   // ------------------------------------------------------------ pet
@@ -417,6 +443,244 @@ class World {
       fx: 'pet_${pt.def.hanh.name}',
       power: petPower(hero.petLevels[pt.def.id] ?? 1),
       hanh: pt.def.hanh,
+    ));
+  }
+
+  // ------------------------------------------------------------ hiệp khách
+
+  /// The hiệp khách along, if any (field and ordinary dungeons only).
+  CompanionActor? companion;
+
+  bool get _companionAllowed {
+    final d = dungeon;
+    return d == null || !(d.isTower || d.isWorldBoss || d.isArena);
+  }
+
+  void _spawnCompanion() {
+    final def = companionById[hero.activeCompanion];
+    companion = def == null || !_companionAllowed
+        ? null
+        : CompanionActor(def, hero.companionBonds[def.id] ?? 1, player.x - 34, player.y - 34);
+  }
+
+  void _updateCompanion(double dt) {
+    final c = companion;
+    if (c == null) return;
+    final p = player;
+    final s = c.def.sect;
+    final melee = s.basic == BasicKind.melee;
+    if (c.attackAnim > 0) c.attackAnim = math.max(0, c.attackAnim - dt * 3);
+    c.cd -= dt;
+    // Fight what the hero fights, or whatever is closing in on them.
+    Mob? t = target != null && target!.alive && _d2(target!.x, target!.y, p.x, p.y) < 380 * 380 ? target : null;
+    if (t == null) {
+      var bd = 320.0 * 320;
+      for (final m in mobs) {
+        if (!m.alive || m.state != MobState.chase) continue;
+        final d = _d2(m.x, m.y, p.x, p.y);
+        if (d < bd) {
+          bd = d;
+          t = m;
+        }
+      }
+    }
+    if (!p.alive) t = null;
+    // Walk into reach of the target, else keep beside the hero.
+    var tx = p.x - 34 * p.face, ty = p.y - 34;
+    var stop = 10.0;
+    if (t != null) {
+      tx = t.x;
+      ty = t.y;
+      stop = melee ? s.basicRange * 0.8 + t.radius : s.basicRange * 0.85;
+    }
+    final d = _dist(c.x, c.y, tx, ty);
+    if (_dist(c.x, c.y, p.x, p.y) > 650) {
+      c.x = p.x - 34 * p.face;
+      c.y = p.y - 34;
+      c.moving = false;
+    } else if (d > stop) {
+      final sp = math.min(d - stop, math.max(st.move, 200.0) * 1.1 * dt);
+      c.x += (tx - c.x) / d * sp;
+      c.y += (ty - c.y) / d * sp;
+      if ((tx - c.x).abs() > 2) c.face = (tx - c.x).sign;
+      c.walk += sp / 22;
+      c.moving = true;
+    } else {
+      c.moving = false;
+    }
+    c.x = c.x.clamp(40, width - 40);
+    c.y = c.y.clamp(60, height - 40);
+    if (t == null) return;
+    if ((t.x - c.x).abs() > 2) c.face = (t.x - c.x).sign;
+    final dist = _dist(c.x, c.y, t.x, t.y);
+    if (time >= c.next && _companionSkill(c, t, dist)) return;
+    if (c.cd > 0 || dist > stop + 12) return;
+    c.cd = companionHitCd;
+    c.attackAnim = 1;
+    final ang = math.atan2(t.y - c.y, t.x - c.x);
+    final pw = companionHit(c.bond);
+    if (melee) {
+      fx.add(Fx(s.basicFx, c.x, c.y, life: 0.22, angle: ang, radius: s.basicRange + 10, spread: 1.6));
+      for (final m in mobs) {
+        if (m.alive && _inArcFrom(c.x, c.y, m, ang, s.basicRange + m.radius, 1.6)) {
+          _hitMob(m, pw, as: c.def.hanh);
+        }
+      }
+    } else {
+      _fireFrom(c, ang, 560, s.basicRange + 30, 14, s.basicFx, pw);
+    }
+  }
+
+  /// Casts one of [c]'s ready skills at [t] (some help the hero instead);
+  /// false when none suits right now.
+  bool _companionSkill(CompanionActor c, Mob t, double dist) {
+    final s = c.def.sect;
+    final p = player;
+    final hp = p.hp / p.maxHp;
+    final hurt = time - p.lastHurt < 3;
+    final crowd = _countNearAt(c.x, c.y, 200);
+    final ready = <int>[];
+    companionSkillBond.forEach((i, need) {
+      if (c.bond < need || i >= s.skills.length || time < c.skillCd[i]) return;
+      final k = s.skills[i];
+      final ok = switch (k.kind) {
+        SkillKind.passive => false,
+        SkillKind.heal => hp < 0.6,
+        SkillKind.guard || SkillKind.shield => hurt && hp < 0.85,
+        SkillKind.nova || SkillKind.aura => dist < k.radius + t.radius && (crowd >= 2 || t.big),
+        _ => dist < math.max(k.range, k.radius) + 30,
+      };
+      if (ok && (!k.ultimate || crowd >= 3 || t.big)) ready.add(i);
+    });
+    if (ready.isEmpty) return false;
+    final i = ready.firstWhere((k) => s.skills[k].ultimate, orElse: () => ready[rng.nextInt(ready.length)]);
+    final k = s.skills[i];
+    final lv = (hero.level ~/ 8).clamp(1, maxSkillLevel);
+    final pw = k.powerAt(lv) * companionSkillMul(c.bond);
+    final h = c.def.hanh;
+    c.skillCd[i] = time + k.cooldown * companionSkillCd;
+    c.next = time + 1.4 + rng.nextDouble();
+    c.attackAnim = 1;
+    final ang = math.atan2(t.y - c.y, t.x - c.x);
+    _sfx(k.fx);
+    if (k.ultimate) events.add(GameEvent(EvKind.notice, text: '${c.def.name}: ${k.name}!', color: h.color));
+    void hit(Mob m, double power) => _hitMob(m, power,
+        skill: true,
+        status: k.status,
+        statusPower: k.statusPower,
+        statusTime: k.statusTime,
+        knock: k.knock,
+        as: h);
+    void hitAround(double x, double y, double r, double power) {
+      for (final m in mobs) {
+        if (m.alive && _d2(m.x, m.y, x, y) < _sq(r + m.radius)) hit(m, power);
+      }
+    }
+
+    Zone zone(double x, double y, double delay, int ticks) => Zone(
+          fromHero: true,
+          x: x,
+          y: y,
+          r: k.radius,
+          delay: delay,
+          ticks: ticks,
+          interval: ticks > 1 ? k.duration / ticks : 0,
+          power: pw,
+          fx: k.fx,
+          status: k.status,
+          statusPower: k.statusPower,
+          statusTime: k.statusTime,
+          knock: k.knock,
+          hanh: h,
+        );
+
+    switch (k.kind) {
+      case SkillKind.arc:
+        fx.add(Fx(k.fx, c.x, c.y, life: 0.3, angle: ang, radius: k.range, spread: k.spread));
+        for (final m in mobs) {
+          if (m.alive && _inArcFrom(c.x, c.y, m, ang, k.range + m.radius, k.spread)) hit(m, pw);
+        }
+      case SkillKind.nova:
+        fx.add(Fx(k.fx, c.x, c.y, life: k.ultimate ? 1.0 : 0.55, radius: k.radius));
+        hitAround(c.x, c.y, k.radius, pw);
+      case SkillKind.aura:
+        fx.add(Fx(k.fx, c.x, c.y, life: 1.2, radius: k.radius));
+        hitAround(c.x, c.y, k.radius, pw * math.min(4, k.ticks) * 0.5);
+      case SkillKind.projectile || SkillKind.radial:
+        final n = math.max(1, k.count);
+        for (var j = 0; j < n; j++) {
+          final a = k.kind == SkillKind.radial
+              ? ang + math.pi * 2 * j / n
+              : (n == 1 ? ang : ang - k.spread / 2 + k.spread * j / (n - 1));
+          _fireFrom(c, a, 600, k.range, k.radius > 0 ? k.radius : 16, k.fx, pw,
+              pierce: k.pierce,
+              status: k.status,
+              statusPower: k.statusPower,
+              statusTime: k.statusTime,
+              skill: true,
+              knock: k.knock);
+        }
+      case SkillKind.ground:
+        zones.add(zone(t.x, t.y, k.delay, k.ticks));
+      case SkillKind.line:
+        for (var j = 0; j < k.count; j++) {
+          final dd = k.range * (j + 1) / k.count;
+          zones.add(zone(c.x + math.cos(ang) * dd, c.y + math.sin(ang) * dd, 0.06 + j * 0.07, 1));
+        }
+      case SkillKind.dash:
+        final go = math.max(0.0, math.min(k.range, dist - t.radius));
+        fx.add(Fx(k.fx, c.x, c.y, life: 0.45, angle: ang, radius: go,
+            x2: c.x + math.cos(ang) * go, y2: c.y + math.sin(ang) * go));
+        c.x += math.cos(ang) * go;
+        c.y += math.sin(ang) * go;
+        hitAround(c.x, c.y, k.radius + 20, pw);
+      case SkillKind.heal:
+        final amount = pw * p.maxHp;
+        p.hp = math.min(p.maxHp, p.hp + amount);
+        _text(p.x, p.y - 60, '+${amount.round()}', 0xFF7CF08A, big: true);
+        fx.add(Fx(k.fx, p.x, p.y, life: 1.0, onHero: true));
+      case SkillKind.guard:
+        // Never weakens a stronger guard of the hero's own.
+        if (time >= p.guardUntil || p.guardPct <= pw) {
+          p.guardPct = math.min(0.4, pw);
+          p.guardUntil = time + k.duration;
+        }
+        fx.add(Fx(k.fx, p.x, p.y, life: k.duration, onHero: true));
+      case SkillKind.shield:
+        p.shield = math.max(p.shield, pw * p.maxHp);
+        p.shieldUntil = math.max(p.shieldUntil, time + k.duration);
+        fx.add(Fx(k.fx, p.x, p.y, life: k.duration, onHero: true));
+      case SkillKind.passive:
+        break;
+    }
+    return true;
+  }
+
+  void _fireFrom(CompanionActor c, double ang, double speed, double maxDist, double radius, String kind,
+      double power,
+      {bool pierce = false,
+      Status status = Status.none,
+      double statusPower = 0,
+      double statusTime = 0,
+      bool skill = false,
+      double knock = 0}) {
+    projs.add(Proj(
+      fromHero: true,
+      x: c.x + math.cos(ang) * 20,
+      y: c.y - 26 + math.sin(ang) * 20,
+      vx: math.cos(ang) * speed,
+      vy: math.sin(ang) * speed,
+      maxDist: maxDist,
+      radius: radius,
+      fx: kind,
+      power: power,
+      pierce: pierce,
+      status: status,
+      statusPower: statusPower,
+      statusTime: statusTime,
+      skill: skill,
+      knock: knock,
+      hanh: c.def.hanh,
     ));
   }
 
@@ -665,6 +929,7 @@ class World {
     _updateZones(dt);
     _updateDrops(dt);
     _updatePet(dt);
+    _updateCompanion(dt);
     _tickDots(player, dt, null);
     for (final f in fx) {
       f.t += dt;
@@ -943,11 +1208,38 @@ class World {
       _fire(ang, 560, sect.basicRange + 30, 14, sect.basicFx, 1.1);
       _sfx('shoot');
     }
+    _goldBurst(t);
   }
 
-  bool _inArc(Mob m, double ang, double range, double spread) {
-    final p = player;
-    final dx = m.x - p.x, dy = m.y - p.y;
+  double _burstReady = 0;
+
+  /// A full Hoàng Kim set: now and then a basic attack sets off the set's
+  /// phase burst around the target.
+  void _goldBurst(Mob? t) {
+    if (t == null || !t.alive || time < _burstReady) return;
+    final set = fullGoldSet(goldPieces(hero.equip.values));
+    if (set == null || rng.nextDouble() >= goldBurstChance) return;
+    _burstReady = time + goldBurstCd;
+    zones.add(Zone(
+      fromHero: true,
+      x: t.x,
+      y: t.y,
+      r: goldBurstRadius,
+      delay: 0.15,
+      ticks: 1,
+      interval: 0,
+      power: goldBurstPower,
+      fx: set.burstFx,
+      hanh: set.hanh,
+    ));
+    _text(t.x, t.y - 96, set.burst, goldItemColor);
+  }
+
+  bool _inArc(Mob m, double ang, double range, double spread) =>
+      _inArcFrom(player.x, player.y, m, ang, range, spread);
+
+  bool _inArcFrom(double ox, double oy, Mob m, double ang, double range, double spread) {
+    final dx = m.x - ox, dy = m.y - oy;
     final d = math.sqrt(dx * dx + dy * dy);
     if (d > range) return false;
     if (d < m.radius + heroRadius) return true;
@@ -1322,13 +1614,12 @@ class World {
     _autoMoveY = dy;
   }
 
-  int _countNear(double r) {
+  int _countNear(double r) => _countNearAt(player.x, player.y, r);
+
+  int _countNearAt(double x, double y, double r) {
     var n = 0;
     for (final m in mobs) {
-      if (m.alive &&
-          _d2(m.x, m.y, player.x, player.y) < _sq(r + m.radius - 10)) {
-        n++;
-      }
+      if (m.alive && _d2(m.x, m.y, x, y) < _sq(r + m.radius - 10)) n++;
     }
     return n;
   }
@@ -1446,6 +1737,10 @@ class World {
             text: 'Thu phục linh thú: ${tamed.name}!', color: 0xFFFFD34A, big: true));
         if (pet == null) _spawnPet();
       }
+    }
+    if (m.big && m.level >= bossShardLevel && dungeon?.isTower != true && rng.nextDouble() < bossShardChance) {
+      hero.goldShards++;
+      events.add(GameEvent(EvKind.loot, text: 'Nhặt được 1 Mảnh Hoàng Kim', color: goldItemColor));
     }
     if (mode == WorldMode.field) {
       if (m == boss) {
@@ -1946,7 +2241,8 @@ class World {
                 status: z.status,
                 statusPower: z.statusPower,
                 statusTime: z.statusTime,
-                knock: z.knock);
+                knock: z.knock,
+                as: z.hanh);
           }
         }
       } else {
@@ -2020,9 +2316,9 @@ class World {
       final kept = hero.addItem(it);
       events.add(GameEvent(EvKind.loot,
           text: kept
-              ? 'Nhặt được ${it.name} [${it.rarity.label}]'
+              ? 'Nhặt được ${it.name} [${it.rarityLabel}]'
               : 'Đã bán ${it.name} (+${it.sellPrice} lượng)',
-          color: it.rarity.color));
+          color: it.color));
       _sfx('loot');
     }
   }

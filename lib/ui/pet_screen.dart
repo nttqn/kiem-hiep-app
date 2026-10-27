@@ -9,6 +9,7 @@ import '../core/pets.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 import '../services/save.dart';
+import 'companion_view.dart';
 import 'mount_view.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -17,7 +18,7 @@ import 'theme.dart';
 class PetScreen extends StatefulWidget {
   const PetScreen({super.key, this.tab = 0});
 
-  /// 0 spirit beasts, 1 mounts.
+  /// 0 spirit beasts, 1 mounts, 2 hiệp khách.
   final int tab;
 
   @override
@@ -35,18 +36,20 @@ class _PetScreenState extends State<PetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const tabs = [(2, 'Hiệp khách'), (0, 'Linh thú'), (1, 'Thú cưỡi')];
     return SubScreen(
-      title: _tab == 0 ? 'Linh thú' : 'Thú cưỡi',
+      title: tabs.firstWhere((t) => t.$1 == _tab).$2,
       actions: [
-        for (final (i, name) in const [(0, 'Linh thú'), (1, 'Thú cưỡi')])
-          tabChip(name, _tab == i, () => setState(() => _tab = i)),
+        for (final (i, name) in tabs) tabChip(name, _tab == i, () => setState(() => _tab = i)),
       ],
-      child: _tab == 1
-          ? const MountView()
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [for (final p in pets) Expanded(child: _card(p))],
-            ),
+      child: switch (_tab) {
+        1 => const MountView(),
+        2 => const CompanionView(),
+        _ => Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [for (final p in pets) Expanded(child: _card(p))],
+          ),
+      },
     );
   }
 

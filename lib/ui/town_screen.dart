@@ -286,7 +286,7 @@ class _TownScreenState extends State<TownScreen> {
           badge: h.daily.where((d) => !d.done).length + h.bounties.where((b) => b.done).length),
       _Tile('Nhân vật', Icons.person, () => _go(const CharacterScreen(tab: 0)),
           badge: pending ? h.freePoints + h.skillPoints : 0),
-      _Tile('Linh thú', Icons.pets, () => _go(const PetScreen())),
+      _Tile('Đồng hành', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
       _Tile('Luyện đan', Icons.science, () {
         if (!h.alchemyOpen) {
           ScaffoldMessenger.of(context)

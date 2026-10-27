@@ -49,6 +49,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.power => h.power,
         LbBoard.tower => h.towerBest,
         LbBoard.rank => h.rebirths * 100 + h.level,
+        LbBoard.arena => arenaBoardValue(h),
       };
 
   Future<void> _load() async {
@@ -81,7 +82,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = {LbBoard.power: 'Lực chiến', LbBoard.tower: 'Tháp Thử Luyện', LbBoard.rank: 'Cấp độ'};
+    const names = {
+      LbBoard.power: 'Lực chiến',
+      LbBoard.tower: 'Tháp Thử Luyện',
+      LbBoard.rank: 'Cấp độ',
+      LbBoard.arena: 'Lôi đài',
+    };
     return SubScreen(
       title: 'Xếp hạng',
       actions: [
@@ -192,6 +198,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.power => fmt(e.power),
         LbBoard.tower => 'Tầng ${e.tower}',
         LbBoard.rank => e.rebirths > 0 ? 'CS${e.rebirths} · ${e.level}' : 'Cấp ${e.level}',
+        LbBoard.arena => '${e.arenaS % 100000} điểm',
       };
 
   Widget _mePanel() {
@@ -206,10 +213,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _stat('Lực chiến', fmt(h.power)),
           _stat('Tháp Thử Luyện', 'Tầng ${h.towerBest}'),
           _stat('Chuyển sinh', '${h.rebirths}'),
+          _stat('Lôi đài', '${h.arenaPoints} điểm'),
           const SizedBox(height: 8),
           if (lb.available && !lb.hidden)
-            Text(_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place',
-                style: titleStyle(17, color: goldLight)),
+            Text(
+                _board == LbBoard.arena && arenaBoardValue(h) == 0
+                    ? 'Đấu một trận Lôi đài mùa này để lên bảng'
+                    : (_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place'),
+                style: titleStyle(_board == LbBoard.arena && arenaBoardValue(h) == 0 ? 14 : 17, color: goldLight)),
           const Spacer(),
           if (lb.available)
             Row(
@@ -225,7 +236,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               ],
             ),
-          Text('Bảng hiện tên nhân vật, môn phái, cấp, lực chiến và tầng tháp.',
+          Text('Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp và điểm Lôi đài.',
               style: small.copyWith(fontSize: 10.5)),
         ],
       ),

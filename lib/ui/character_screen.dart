@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/gems.dart';
+import '../core/gold_sets.dart';
 import '../core/hero.dart';
 import '../core/meridians.dart';
 import '../core/items.dart';
@@ -10,6 +11,7 @@ import '../core/sects.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'gem_tab.dart';
+import 'gold_tab.dart';
 import 'refine_tab.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -35,11 +37,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang'];
+    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim'];
     return SubScreen(
       title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
       actions: [
-        for (final i in widget.forge ? const [2, 3, 4] : const [0, 1, 2, 3, 5])
+        for (final i in widget.forge ? const [2, 3, 4, 6] : const [0, 1, 2, 3, 5])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: _TabChip(
@@ -56,6 +58,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
         2 => _bag(),
         3 => GemTab(onChanged: () => setState(() {}), openItem: _itemDialog),
         5 => WardrobeTab(onChanged: () => setState(() {})),
+        6 => GoldTab(onChanged: () => setState(() {})),
         _ => RefineTab(onChanged: () => setState(() {})),
       },
     );
@@ -435,6 +438,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
   Widget _bag() {
     final bag = List<Item>.of(h.bag)
       ..sort((a, b) {
+        if (a.golden != b.golden) return a.golden ? -1 : 1;
         final r = b.rarity.index.compareTo(a.rarity.index);
         return r != 0 ? r : b.level.compareTo(a.level);
       });
@@ -588,7 +592,7 @@ class _ItemDialogState extends State<_ItemDialog> {
     final it = widget.item;
     final worn = h.equip[it.slot];
     final isWorn = worn == it;
-    final rc = rarityColor(it.rarity);
+    final rc = Color(it.color);
     final cost = enhanceCost(it);
     final canEnhance = it.plus < maxPlus;
     return Dialog(
@@ -604,7 +608,7 @@ class _ItemDialogState extends State<_ItemDialog> {
               Expanded(child: _statsBlock(it, rc, isWorn ? 'Đang mặc' : 'Trong hành trang')),
               if (worn != null && !isWorn) ...[
                 const VerticalDivider(color: gold),
-                Expanded(child: _statsBlock(worn, rarityColor(worn.rarity), 'Đang mặc')),
+                Expanded(child: _statsBlock(worn, Color(worn.color), 'Đang mặc')),
               ],
               const SizedBox(width: 12),
               SizedBox(
@@ -645,6 +649,21 @@ class _ItemDialogState extends State<_ItemDialog> {
                         },
                       ),
                     const Spacer(),
+                    if (it.golden && it.level < h.level) ...[
+                      LButton(
+                        label: 'Đúc lại cấp ${h.level} · ${goldReforgeCost(it.slot)} mảnh',
+                        small: true,
+                        color: const Color(0xFF8A6A1A),
+                        enabled: h.canReforgeGold(it),
+                        onTap: () {
+                          if (h.reforgeGold(it) != null) {
+                            SaveService.instance.save();
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 6),
+                    ],
                     Text('Cường hóa', style: bold.copyWith(color: goldLight)),
                     Text(
                       canEnhance
@@ -699,7 +718,10 @@ class _ItemDialogState extends State<_ItemDialog> {
       children: [
         Text(where, style: small),
         Text(it.title, style: titleStyle(18, color: rc)),
-        Text('${it.rarity.label} · ${it.slot.label} · Cấp ${it.level}', style: small.copyWith(color: rc)),
+        Text('${it.rarityLabel} · ${it.slot.label} · Cấp ${it.level}', style: small.copyWith(color: rc)),
+        if (goldSetById[it.set] case final s?)
+          Text('Bộ ${s.name} (${goldPieces(h.equip.values)[s.id] ?? 0}/7)',
+              style: small.copyWith(fontSize: 11.5, color: rc)),
         const SizedBox(height: 6),
         for (final e in it.base.entries)
           Text('${e.key.label} ${e.key.format(e.value * (1 + 0.1 * it.plus))}', style: bold.copyWith(fontSize: 13)),

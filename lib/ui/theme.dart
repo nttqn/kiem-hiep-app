@@ -265,8 +265,7 @@ class ItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final it = item;
-    final r = it?.rarity;
-    final c = r == null ? const Color(0xFF5A4A40) : rarityColor(r);
+    final c = it == null ? const Color(0xFF5A4A40) : Color(it.color);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -294,6 +293,12 @@ class ItemTile extends StatelessWidget {
                 top: 1,
                 child: Text('+${it.plus}',
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: goldLight)),
+              ),
+            if (it != null && it.golden)
+              const Positioned(
+                left: 3,
+                top: 2,
+                child: Icon(Icons.star, size: 12, color: Color(goldItemColor)),
               ),
             if (it != null)
               Positioned(

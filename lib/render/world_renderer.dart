@@ -6,6 +6,7 @@ import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/scenery.dart';
+import '../core/sects.dart';
 import '../core/world.dart';
 import 'art_chibi.dart';
 import 'art_figures.dart';
@@ -129,6 +130,8 @@ class WorldRenderer {
     if (p.alive || p.hurt > 0) items.add(_Drawable(p.y, hero: true));
     final pt = w.pet;
     if (pt != null) items.add(_Drawable(pt.y, pet: true));
+    final comp = w.companion;
+    if (comp != null) items.add(_Drawable(comp.y, companion: true));
     items.sort((a, b) => a.y.compareTo(b.y));
     for (final it in items) {
       if (it.prop != null) {
@@ -137,6 +140,8 @@ class WorldRenderer {
         _drawMob(c, it.mob!, t);
       } else if (it.pet) {
         _drawPet(c, pt!, t);
+      } else if (it.companion) {
+        _drawCompanion(c, comp!, t);
       } else {
         _drawHero(c, w, t);
       }
@@ -335,6 +340,31 @@ class WorldRenderer {
     c.restore();
   }
 
+  void _drawCompanion(Canvas c, CompanionActor a, double t) {
+    final d = a.def;
+    c.save();
+    c.translate(a.x, a.y);
+    drawShadow(c, 15);
+    // A ring in their phase colour and their name mark them as a friend.
+    c.drawOval(Rect.fromCenter(center: Offset.zero, width: 38, height: 13),
+        Paint()
+          ..color = Color(d.hanh.color).withValues(alpha: 0.45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5);
+    if (!debugClean) {
+      final tp = _label(d.name, 0xFFB8F0C8, 10.5);
+      tp.paint(c, Offset(-tp.width / 2, -86));
+    }
+    c.scale(a.face, 1);
+    drawChibi(c, companionLook(d, a.bond),
+        walk: a.walk,
+        moving: a.moving,
+        attack: a.attackAnim,
+        cast: d.sect.basic == BasicKind.ranged,
+        t: t + 1.3);
+    c.restore();
+  }
+
   void _mobBar(Canvas c, Mob m, bool targeted) {
     final d = m.def;
     final wdt = m.big ? 70.0 : 40.0;
@@ -355,10 +385,11 @@ class WorldRenderer {
 }
 
 class _Drawable {
-  _Drawable(this.y, {this.prop, this.mob, this.hero = false, this.pet = false});
+  _Drawable(this.y, {this.prop, this.mob, this.hero = false, this.pet = false, this.companion = false});
   final double y;
   final Prop? prop;
   final Mob? mob;
   final bool hero;
   final bool pet;
+  final bool companion;
 }

@@ -30,8 +30,19 @@ const actWeeklyMarks = [200, 450, 700, 900];
 /// What chest [i] holds; [weekly] chests are bigger. Rewards scale with the
 /// hero's level when they are claimed.
 class ActChest {
-  const ActChest({this.gold = 0, this.potions = 0, this.herbs = 0, this.gemTier = 0, this.coins = 0, this.pill = ''});
+  const ActChest({
+    this.gold = 0,
+    this.potions = 0,
+    this.herbs = 0,
+    this.gemTier = 0,
+    this.coins = 0,
+    this.pill = '',
+    this.shards = 0,
+  });
   final int gold, potions, herbs, gemTier, coins;
+
+  /// Mảnh Hoàng Kim.
+  final int shards;
   final String pill;
 }
 
@@ -48,8 +59,8 @@ ActChest actChest(int i, int level, {bool weekly = false}) {
   return switch (i) {
     0 => ActChest(gold: g * 3, herbs: 8, coins: 100),
     1 => ActChest(gold: g * 3, gemTier: math.min(6, 2 + level ~/ 20), coins: 150),
-    2 => ActChest(gold: g * 3, pill: 'cuongluc', coins: 200),
-    _ => ActChest(gold: g * 4, gemTier: math.min(6, 2 + level ~/ 20), pill: 'taytuy', coins: 300),
+    2 => ActChest(gold: g * 3, pill: 'cuongluc', coins: 200, shards: 5),
+    _ => ActChest(gold: g * 4, gemTier: math.min(6, 2 + level ~/ 20), pill: 'taytuy', coins: 300, shards: 10),
   };
 }
 

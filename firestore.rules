@@ -28,7 +28,11 @@ service cloud.firestore {
         && request.resource.data.power is int
         && request.resource.data.power >= 0 && request.resource.data.power <= 50000000
         && request.resource.data.tower is int
-        && request.resource.data.tower >= 0 && request.resource.data.tower <= 5000;
+        && request.resource.data.tower >= 0 && request.resource.data.tower <= 5000
+        // Lôi đài season * 100000 + points (1.0.10+; older apps omit it).
+        && (!('arenaS' in request.resource.data)
+            || (request.resource.data.arenaS is int
+                && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 

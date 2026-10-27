@@ -98,6 +98,54 @@ int arenaTierIndex(int points) {
 int arenaDailyCoins(int tier) => 40 + tier * 30;
 int arenaDailyGold(int tier, int level) => (200 + level * 30) * (tier + 1);
 
+// Mùa giải: two-week seasons counted from Monday 26/10/2026 (Vietnam days).
+// A hero who fought in a season is paid by the tier they end it in, and
+// every hero's points fall halfway back to the start.
+const int arenaSeasonDays = 14;
+final DateTime _seasonEpoch = DateTime.utc(2026, 10, 26);
+
+DateTime? _dayOf(String dayKey) {
+  if (dayKey.length != 8) return null;
+  final y = int.tryParse(dayKey.substring(0, 4));
+  final m = int.tryParse(dayKey.substring(4, 6));
+  final d = int.tryParse(dayKey.substring(6, 8));
+  return y == null || m == null || d == null ? null : DateTime.utc(y, m, d);
+}
+
+/// Season number (1-based) of a `yyyymmdd` day.
+int arenaSeasonOf(String dayKey) {
+  final d = _dayOf(dayKey);
+  if (d == null) return 1;
+  return math.max(0, d.difference(_seasonEpoch).inDays) ~/ arenaSeasonDays + 1;
+}
+
+/// Days left in the season of [dayKey], today included.
+int arenaSeasonDaysLeft(String dayKey) {
+  final d = _dayOf(dayKey);
+  if (d == null) return arenaSeasonDays;
+  return arenaSeasonDays - math.max(0, d.difference(_seasonEpoch).inDays) % arenaSeasonDays;
+}
+
+/// Points carried into a new season.
+int arenaSeasonReset(int points) => arenaStartPoints + math.max(0, points - arenaStartPoints) ~/ 2;
+
+/// One number per season for the leaderboard: newer seasons sort above
+/// older ones, so a single-field query lists the current season.
+int arenaSeasonScore(int season, int points) => season * 100000 + points.clamp(0, 99999);
+
+class ArenaSeasonReward {
+  const ArenaSeasonReward({this.coins = 0, this.gold = 0, this.gemTier = 0, this.shards = 0});
+  final int coins, gold, gemTier, shards;
+}
+
+/// What ending a season in [tier] pays.
+ArenaSeasonReward arenaSeasonReward(int tier, int level) => ArenaSeasonReward(
+      coins: const [60, 120, 200, 320, 480, 700, 1000][tier],
+      gold: (500 + level * 50) * (tier + 1) * 3,
+      gemTier: const [0, 0, 3, 4, 5, 6, 7][tier],
+      shards: const [0, 2, 5, 8, 12, 20, 30][tier],
+    );
+
 const _surnames = ['Lý', 'Trần', 'Đoàn', 'Mộ Dung', 'Âu Dương', 'Lệnh Hồ', 'Tiêu', 'Hoa', 'Đông Phương', 'Nhạc', 'Vân', 'Bạch'];
 const _given = ['Phong', 'Vô Kỵ', 'Thiên Long', 'Tuyết', 'Bất Phàm', 'Kiếm Tâm', 'Lăng Ba', 'Hàn', 'Thanh Y', 'Vô Song', 'Nguyệt', 'Hạo Nhiên'];
 

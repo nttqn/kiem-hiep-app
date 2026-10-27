@@ -75,6 +75,7 @@ class Item {
     required this.bonus,
     required this.name,
     this.plus = 0,
+    this.set = '',
     List<Gem?>? gems,
   }) : gems = List<Gem?>.generate(
             socketsFor(rarity), (i) => gems != null && i < gems.length ? gems[i] : null);
@@ -92,6 +93,13 @@ class Item {
   /// Socketed ngũ hành gems; length is the item's socket count.
   final List<Gem?> gems;
 
+  /// Hoàng Kim set id, '' for an ordinary item.
+  final String set;
+
+  bool get golden => set.isNotEmpty;
+  int get color => golden ? goldItemColor : rarity.color;
+  String get rarityLabel => golden ? 'Hoàng Kim' : rarity.label;
+
   String get title => plus > 0 ? '$name +$plus' : name;
 
   /// Every stat this item gives right now, base scaled by enhancement.
@@ -104,7 +112,7 @@ class Item {
   }
 
   int get sellPrice =>
-      ((3 + level * 1.2) * (1 + rarity.index * 1.2) * (1 + plus * 0.3)).round();
+      ((3 + level * 1.2) * (1 + rarity.index * 1.2) * (1 + plus * 0.3) * (golden ? 3 : 1)).round();
 
   /// A rough single number for "is this better", used by auto-equip.
   double get score {
@@ -119,6 +127,7 @@ class Item {
         'r': rarity.index,
         'p': plus,
         'n': name,
+        if (golden) 'k': set,
         if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
         'b': {for (final e in base.entries) '${e.key.index}': e.value},
         'x': {for (final e in bonus.entries) '${e.key.index}': e.value},
@@ -146,6 +155,7 @@ class Item {
       plus: (m['p'] as int? ?? 0).clamp(0, maxPlus),
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
+      set: m['k'] as String? ?? '',
       base: stats(m['b']),
       bonus: stats(m['x']),
     );
@@ -153,6 +163,9 @@ class Item {
 }
 
 const int maxPlus = 10;
+
+/// Hoàng Kim items' colour, above Truyền thuyết.
+const int goldItemColor = 0xFFFFD34A;
 
 /// How much one unit of each stat is worth, roughly in attack points.
 double statWeight(Stat s) => switch (s) {
@@ -179,23 +192,28 @@ Map<Stat, double> slotBase(Slot slot, int l) => switch (slot) {
       Slot.ring => {Stat.atk: 3 + 1.4 * l, Stat.crit: 0.01 + 0.0004 * l},
     };
 
-double _affixValue(Stat s, int l, math.Random r) {
-  final roll = 0.6 + r.nextDouble() * 0.6;
-  final v = switch (s) {
-    Stat.str || Stat.dex || Stat.vit || Stat.ene => 2 + 0.35 * l,
-    Stat.hp => 12 + 6 * l,
-    Stat.mp => 6 + 3 * l,
-    Stat.atk => 2 + 1.1 * l,
-    Stat.def => 2 + 0.9 * l,
-    Stat.crit => 0.015 + 0.0005 * l,
-    Stat.critDmg => 0.05 + 0.002 * l,
-    Stat.dodge => 0.01 + 0.0004 * l,
-    Stat.aspd => 0.02 + 0.0006 * l,
-    Stat.move => 5 + 0.15 * l,
-  };
-  final out = v * roll;
-  return s.isPercent ? (out * 1000).round() / 1000 : out.roundToDouble();
-}
+/// An average extra line of [s] at item level [l].
+double _affixBase(Stat s, int l) => switch (s) {
+      Stat.str || Stat.dex || Stat.vit || Stat.ene => 2 + 0.35 * l,
+      Stat.hp => 12 + 6.0 * l,
+      Stat.mp => 6 + 3.0 * l,
+      Stat.atk => 2 + 1.1 * l,
+      Stat.def => 2 + 0.9 * l,
+      Stat.crit => 0.015 + 0.0005 * l,
+      Stat.critDmg => 0.05 + 0.002 * l,
+      Stat.dodge => 0.01 + 0.0004 * l,
+      Stat.aspd => 0.02 + 0.0006 * l,
+      Stat.move => 5 + 0.15 * l,
+    };
+
+double _roundStat(Stat s, double v) => s.isPercent ? (v * 1000).round() / 1000 : v.roundToDouble();
+
+double _affixValue(Stat s, int l, math.Random r) =>
+    _roundStat(s, _affixBase(s, l) * (0.6 + r.nextDouble() * 0.6));
+
+/// Extra lines rolled at level [from], kept as good relative to level [to].
+Map<Stat, double> rescaleAffixes(Map<Stat, double> lines, int from, int to) =>
+    lines.map((k, v) => MapEntry(k, _roundStat(k, v * _affixBase(k, to) / _affixBase(k, from))));
 
 /// Material names by level band, used as the first word of an item name.
 const _tiers = [
@@ -214,7 +232,7 @@ const _tiers = [
 String tierName(int level) =>
     _tiers[(level ~/ 10).clamp(0, _tiers.length - 1)];
 
-String _slotNoun(Slot slot, SectDef sect) => switch (slot) {
+String slotNoun(Slot slot, SectDef sect) => switch (slot) {
       Slot.weapon => sect.weaponName,
       Slot.hat => 'Mão',
       Slot.armor => 'Chiến Bào',
@@ -249,10 +267,10 @@ Item makeItem({
   for (final s in pool.take(rarity.affixes)) {
     bonus[s] = _affixValue(s, level, rng);
   }
-  var name = '${tierName(level)} ${_slotNoun(slot, sect)}';
+  var name = '${tierName(level)} ${slotNoun(slot, sect)}';
   if (rarity == Rarity.legend) {
     name = '${_legendNames[rng.nextInt(_legendNames.length)]} '
-        '${_slotNoun(slot, sect)}';
+        '${slotNoun(slot, sect)}';
   }
   return Item(
     slot: slot,

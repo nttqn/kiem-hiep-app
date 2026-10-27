@@ -153,6 +153,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       if (c.herbs > 0) '${c.herbs} dược liệu',
       if (c.gemTier > 0) 'ngọc cấp ${c.gemTier}',
       if (c.coins > 0) '${c.coins} Uy danh',
+      if (c.shards > 0) '${c.shards} mảnh Hoàng Kim',
       if (c.pill == 'songboi') 'Song Bội Đan',
       if (c.pill == 'cuongluc') 'Cuồng Lực Đan',
       if (c.pill == 'taytuy') 'Tẩy Tủy Đan',

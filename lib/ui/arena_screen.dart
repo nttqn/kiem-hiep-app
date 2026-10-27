@@ -35,6 +35,156 @@ class _ArenaScreenState extends State<ArenaScreen> {
     super.initState();
     h.arenaRollDay(_day);
     _load();
+    if (h.arenaSeasonResult.isNotEmpty) {
+      SaveService.instance.save();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _seasonEnded());
+    }
+  }
+
+  /// Tells how the last season ended and what it paid, once.
+  Future<void> _seasonEnded() async {
+    final r = h.arenaSeasonResult;
+    final lines = h.arenaSeasonLines();
+    if (r.length < 3 || !mounted) return;
+    final tier = arenaTiers[r[1]];
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Kết thúc mùa ${r[0]}', style: titleStyle(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Hạng cuối mùa: ${tier.name} (${r[2]} điểm)', style: bold.copyWith(color: Color(tier.color))),
+            const SizedBox(height: 6),
+            for (final l in lines) Text('• $l', style: body),
+            const SizedBox(height: 6),
+            Text('Mùa ${arenaSeasonOf(_day)} bắt đầu với ${h.arenaPoints} điểm.', style: small),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+      ),
+    );
+    h.arenaSeasonResult = const [];
+    await SaveService.instance.save();
+    if (mounted) setState(() {});
+  }
+
+  /// Season rewards by tier and this season's top players.
+  void _seasonInfo() {
+    final season = arenaSeasonOf(_day);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: lacquer,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720, maxHeight: 340),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('Mùa $season · còn ${arenaSeasonDaysLeft(_day)} ngày', style: titleStyle(18)),
+                      Text('Thưởng theo hạng lúc hết mùa (cần đấu ít nhất 1 trận trong mùa):',
+                          style: small.copyWith(fontSize: 11)),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: ListView(
+                          children: [
+                            for (var i = arenaTiers.length - 1; i >= 0; i--) _rewardRow(i),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'Sang mùa mới: điểm = 1000 + một nửa phần vượt 1000. '
+                        'Hết mùa ở Bạch Kim mở ngoại trang Lôi Đài Bá Chủ, ở Võ Lâm Chí Tôn mở Chí Tôn Chiến Bào.',
+                        style: small.copyWith(fontSize: 10.5),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(width: 250, child: _seasonTop()),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _rewardRow(int i) {
+    final t = arenaTiers[i];
+    final r = arenaSeasonReward(i, h.level);
+    final mine = i == h.arenaTier;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: mine ? Color.lerp(lacquer, seal, 0.4) : lacquerDeep,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: mine ? goldLight : gold.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(width: 108, child: Text(t.name, style: bold.copyWith(fontSize: 12, color: Color(t.color)))),
+          Expanded(
+            child: Text(
+              '${fmt(r.coins)} Uy danh · ${fmt(r.gold)} lượng'
+              '${r.shards > 0 ? ' · ${r.shards} mảnh HK' : ''}${r.gemTier > 0 ? ' · ngọc ${r.gemTier}' : ''}',
+              style: small.copyWith(fontSize: 10.5, color: cream),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _seasonTop() {
+    final lb = Leaderboard.instance;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Cao thủ mùa này', style: bold.copyWith(color: goldLight)),
+        const SizedBox(height: 4),
+        Expanded(
+          child: !lb.available
+              ? Text('Đăng nhập (nút mây ở Thành) để xem và lên bảng Lôi đài.', style: small)
+              : FutureBuilder<List<LbEntry>>(
+                  future: lb.top(LbBoard.arena, limit: 30),
+                  builder: (_, snap) {
+                    if (snap.hasError) return Text('Không tải được bảng.', style: small);
+                    final rows = snap.data;
+                    if (rows == null) return const Center(child: CircularProgressIndicator(color: goldLight));
+                    if (rows.isEmpty) return Text('Chưa ai lên bảng mùa này.', style: small);
+                    return ListView(
+                      children: [
+                        for (var i = 0; i < rows.length; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Row(
+                              children: [
+                                SizedBox(width: 26, child: Text('${i + 1}', style: bold.copyWith(fontSize: 12))),
+                                Expanded(
+                                  child: Text(rows[i].name,
+                                      style: small.copyWith(color: cream), overflow: TextOverflow.ellipsis),
+                                ),
+                                Text('${rows[i].arenaS % 100000}', style: bold.copyWith(fontSize: 12, color: goldLight)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
   }
 
   /// Fetches real players near the hero's power, once per visit.
@@ -100,6 +250,14 @@ class _ArenaScreenState extends State<ArenaScreen> {
           const SizedBox(height: 6),
           Text('Uy danh: ${fmt(h.arenaCoins)}', style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
           Text('Thắng: ${h.arenaWins} trận', style: small, textAlign: TextAlign.center),
+          const SizedBox(height: 4),
+          LButton(
+            label: 'Mùa ${arenaSeasonOf(_day)} · còn ${arenaSeasonDaysLeft(_day)} ngày',
+            icon: Icons.emoji_events,
+            small: true,
+            color: const Color(0xFF5A3A7A),
+            onTap: _seasonInfo,
+          ),
           const Spacer(),
           Text('Lượt đấu còn: ${h.arenaFightsLeft}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           Text('Mỗi trận ${arenaTime.round()} giây, tối đa $arenaPotions bình máu.',

@@ -19,6 +19,7 @@ class LbEntry {
     required this.power,
     required this.tower,
     this.title = '',
+    this.arenaS = 0,
   });
 
   /// `{uid}_{slot}`.
@@ -30,6 +31,10 @@ class LbEntry {
   final int power;
   final int tower;
   final String title;
+
+  /// Lôi đài season and points as one number ([arenaSeasonScore]); 0 when
+  /// they have not fought this season.
+  final int arenaS;
 
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
@@ -45,6 +50,7 @@ class LbEntry {
         power: (m['power'] as num).toInt(),
         tower: (m['tower'] as num?)?.toInt() ?? 0,
         title: m['title'] as String? ?? '',
+        arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return null;
@@ -52,21 +58,27 @@ class LbEntry {
   }
 }
 
-enum LbBoard { power, tower, rank }
+enum LbBoard { power, tower, rank, arena }
 
 extension LbBoardField on LbBoard {
   String get field => switch (this) {
         LbBoard.power => 'power',
         LbBoard.tower => 'tower',
         LbBoard.rank => 'rank',
+        LbBoard.arena => 'arenaS',
       };
 
   int valueOf(LbEntry e) => switch (this) {
         LbBoard.power => e.power,
         LbBoard.tower => e.tower,
         LbBoard.rank => e.rank,
+        LbBoard.arena => e.arenaS,
       };
 }
+
+/// This hero's Lôi đài board value: 0 until they fight this season.
+int arenaBoardValue(HeroData h) =>
+    h.arenaSeason > 0 && h.arenaSeasonFights > 0 ? arenaSeasonScore(h.arenaSeason, h.arenaPoints) : 0;
 
 /// Public leaderboard in Firestore (`leaderboard/{uid}_{slot}`), fed by the
 /// cloud uploads of signed-in players who have not hidden themselves.
@@ -107,6 +119,7 @@ class Leaderboard extends ChangeNotifier {
         'power': h.power,
         'tower': h.towerBest,
         'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,
+        'arenaS': arenaBoardValue(h),
         'updated': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -192,13 +205,18 @@ class Leaderboard extends ChangeNotifier {
 
   /// The best [limit] rows of [board].
   Future<List<LbEntry>> top(LbBoard board, {int limit = 50}) async {
+    // The Lôi đài board lists this season only.
+    final floor = board == LbBoard.arena ? arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0) : 0;
     final dbg = debugEntries;
     if (dbg != null) {
-      return (List<LbEntry>.of(dbg)..sort((a, b) => board.valueOf(b).compareTo(board.valueOf(a))))
+      return (dbg.where((e) => board.valueOf(e) >= floor).toList()
+            ..sort((a, b) => board.valueOf(b).compareTo(board.valueOf(a))))
           .take(limit)
           .toList();
     }
-    final snap = await _col.orderBy(board.field, descending: true).limit(limit).get().timeout(
+    Query<Map<String, dynamic>> q = _col;
+    if (floor > 0) q = q.where(board.field, isGreaterThanOrEqualTo: floor);
+    final snap = await q.orderBy(board.field, descending: true).limit(limit).get().timeout(
           const Duration(seconds: 15),
         );
     return [

@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'core/activity.dart';
 import 'core/alchemy.dart';
 import 'core/arena.dart';
+import 'core/companions.dart';
 import 'core/content.dart';
 import 'core/costumes.dart';
+import 'core/gold_sets.dart';
 import 'core/mounts.dart';
 import 'ui/activity_screen.dart';
 import 'ui/alchemy_screen.dart';
@@ -81,6 +83,7 @@ Future<void> main() async {
           power: 160000 - i * 9000,
           tower: 96 - i * 4,
           title: i == 0 ? 'Ngũ Chuyển Chân Nhân' : (i < 4 ? 'Võ Thánh' : ''),
+          arenaS: arenaSeasonScore(arenaSeasonOf(vnDayKey()), 2150 - i * 95),
         ),
     ];
   }
@@ -217,6 +220,29 @@ Future<void> main() async {
         h.addActivity(s, s == ActSource.kills ? act * 30 : act);
       }
     }
+    // comp=<id|all>[:bond]: hiệp khách met (all at that hảo cảm), the id
+    // along; shards=<n>; gold=<set id>: a full Hoàng Kim set worn;
+    // season=1: last season ended in Kim Kiếm (the result dialog).
+    final comp = q['comp']?.split(':');
+    if (comp != null) {
+      final bond = comp.length > 1 ? int.parse(comp[1]) : 4;
+      for (final c in companions) {
+        if (comp[0] == 'all' || c.id == comp[0]) h.companionBonds[c.id] = bond;
+      }
+      h.activeCompanion = comp[0] == 'all' ? companions[h.hanh.index].id : comp[0];
+    }
+    h.goldShards = int.tryParse(q['shards'] ?? '') ?? h.goldShards;
+    final gs = goldSetById[q['gold'] ?? ''];
+    if (gs != null) {
+      for (final s in Slot.values) {
+        h.equip[s] = makeGoldItem(set: gs, slot: s, level: level, sect: h.sect, rng: rng);
+      }
+    }
+    if (q['season'] == '1') {
+      h.arenaRollDay(vnDayKey());
+      h.arenaPoints = 1260;
+      h.arenaSeasonResult = [arenaSeasonOf(vnDayKey()) - 1, 3, 1520, 320, 99000, 8, 4];
+    }
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();
     h.recompute();
@@ -256,6 +282,8 @@ Future<void> main() async {
     'outfits' => const _OutfitSheet(),
     'wardrobe' => const CharacterScreen(tab: 5),
     'mounts' => const PetScreen(tab: 1),
+    'comp' => const PetScreen(tab: 2),
+    'goldforge' => const CharacterScreen(tab: 6, forge: true),
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),
     'arena' => const ArenaScreen(),

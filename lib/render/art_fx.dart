@@ -592,7 +592,7 @@ void drawDrop(Canvas c, Drop d, double t) {
     return;
   }
   final it = d.item!;
-  final colr = it.rarity.color;
+  final colr = it.color;
   if (it.rarity.index >= Rarity.rare.index) {
     c.drawRect(Rect.fromCenter(center: Offset(d.x, d.y - 40), width: 6, height: 80),
         _glow(colr, 0.35 + 0.15 * math.sin(t * 5), 6));
