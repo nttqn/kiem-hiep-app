@@ -14,11 +14,14 @@ class SoundService {
   static final SoundService instance = SoundService._();
 
   static const _key = 'sound_enabled';
-  static const _files = [
+  static const sfxFiles = [
     'swing', 'hit', 'shoot', 'slash', 'magic', 'boom', 'ice', 'poison',
     'fire', 'dash', 'die', 'bossdie', 'potion', 'coin', 'loot', 'herodie',
     'levelup', 'quest', 'click', 'gong',
   ];
+
+  /// Effect [name]'s file under assets/audio/ (FlameAudio's cache prefix).
+  static String sfxAsset(String name) => '$name.wav';
 
   /// World cue (skill fx names and events) → sound file.
   static const _cues = {
@@ -117,21 +120,25 @@ class SoundService {
       _applyMusic();
     });
     if (_wanted != null) playMusic(_wanted!);
-    for (final f in _files) {
+    for (final f in sfxFiles) {
       final size = f == 'hit' || f == 'swing' || f == 'shoot' ? 3 : 2;
       // Android MediaPlayer crashes some phones (Galaxy J7, Android 8) when
       // a pooled effect completes: audioplayers stops and re-prepares it
       // from a native callback. SoundPool has no completion callback.
+      // If SoundPool fails, fall back to the MediaPlayer pool rather than
+      // going silent.
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         try {
-          _android[f] = await _LowLatencyPool.create('.wav', size)
+          _android[f] = await _LowLatencyPool.create(sfxAsset(f), size)
               .timeout(const Duration(seconds: 5));
-        } catch (_) {}
-        continue;
+          continue;
+        } catch (e) {
+          debugPrint('SoundPool load failed for $f: $e');
+        }
       }
       try {
         _pools[f] = await FlameAudio.createPool(
-          '$f.wav',
+          sfxAsset(f),
           minPlayers: 1,
           maxPlayers: size,
         ).timeout(const Duration(seconds: 5));
