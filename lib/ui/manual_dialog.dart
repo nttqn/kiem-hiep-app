@@ -15,6 +15,7 @@ Future<void> showManualDialog(BuildContext context, HeroData h, SkillDef sk) {
         final on = h.manualOf(sk.id);
         return AlertDialog(
           backgroundColor: lacquer,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
           title: Text('Bí kíp · ${sk.name}', style: titleStyle(18)),
           content: SizedBox(
             width: 560,
@@ -28,7 +29,15 @@ Future<void> showManualDialog(BuildContext context, HeroData h, SkillDef sk) {
                   style: small.copyWith(fontSize: 11),
                 ),
                 const SizedBox(height: 8),
-                for (final k in manualKindsFor(sk)) _row(h, sk, k, on == k, () => setState(() {})),
+                // Landscape phones only fit two or three schools; scroll the rest.
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final k in manualKindsFor(sk)) _row(h, sk, k, on == k, () => setState(() {})),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
