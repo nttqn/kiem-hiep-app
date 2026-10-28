@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/hero.dart';
+import '../core/sect_duty.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
@@ -18,6 +21,7 @@ import 'world_boss_screen.dart';
 import 'pet_screen.dart';
 import 'rebirth_screen.dart';
 import 'rewards_ui.dart';
+import 'sect_screen.dart';
 import 'cloud_panel.dart';
 import 'lists.dart';
 import 'play_screen.dart';
@@ -262,6 +266,13 @@ class _TownScreenState extends State<TownScreen> {
     return h.wbRunsLeft;
   }
 
+  /// A finished duty to hand in, or a khảo hạch ready.
+  int _sectBadge() {
+    if (!h.sectOpen) return 0;
+    h.sectRollDay(vnDayKey(), math.Random());
+    return ((h.sectDuty?.done ?? false) ? 1 : 0) + (h.sectCanTrial ? 1 : 0);
+  }
+
   /// Lôi đài duels still left today.
   int _arenaLeft() {
     if (!h.arenaOpen) return 0;
@@ -297,8 +308,14 @@ class _TownScreenState extends State<TownScreen> {
       }),
       _Tile('Năng động', Icons.local_fire_department, () => _go(const ActivityScreen()),
           badge: activityClaimable(h)),
-      _Tile('Hành trang', Icons.backpack, () => _go(const CharacterScreen(tab: 2)),
-          badge: 0),
+      _Tile('Sư môn', Icons.temple_buddhist, () {
+        if (!h.sectOpen) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Sư môn mở ở cấp $sectOpenLevel')));
+          return;
+        }
+        _go(const SectScreen());
+      }, badge: _sectBadge()),
       _Tile('Cửa hàng', Icons.storefront, () => _go(const ShopScreen())),
       _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
       _Tile('Thành tựu', Icons.emoji_events, () => _go(const AchievementsScreen()),

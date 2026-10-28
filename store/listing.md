@@ -50,6 +50,12 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.2.0, ≤ 500 ký tự)
+SƯ MÔN: mỗi ngày 10 nhiệm vụ môn phái, tích cống hiến, khảo hạch với trưởng bối để thăng chức từ Đệ tử lên Chưởng môn, đổi quà ở Tàng Kinh Các. BÍ KÍP VÕ CÔNG: mỗi chiêu học một thiên (Cuồng Bạo, Tật Phong, Bao La, Ngũ Hành, Trường Tồn) đổi cách ra đòn. ẢI ÁC MỘNG: 18 ải từ cấp 60 tới 99, ma khí đổi mỗi tuần, boss gọi đồng bọn. CÂU CÁ: hồ câu ở mọi bãi luyện công, 36 loài cá và Ngư phổ.
+
+## What's new (1.2.0, en-US)
+SECT DUTIES: 10 sect errands a day; earn merit, pass an elder's trial to rise from Disciple to Sect Master, and trade merit in the Scripture Library. SKILL MANUALS: each skill learns one school (Fury, Swiftwind, Vast, Five Elements, Enduring) that changes how it fights. NIGHTMARE DUNGEONS: 18 dungeons from level 60 to 99 with weekly curses and bosses that call for help. FISHING: a pond in every field, 36 fish and a fish journal.
+
 ## Có gì mới (bản 1.1.0, ≤ 500 ký tự)
 HIỆP KHÁCH ĐỒNG HÀNH: 5 hiệp khách ngũ phái (Tuệ Minh, Lam Diệp, Tô Thanh Vân, Mạc Liệt, Cổ Trường Phong) cùng ra trận, dùng chiêu thức môn phái, tăng hảo cảm để mở chiêu mới và nghe chuyện riêng của họ. TRANG BỊ HOÀNG KIM: 5 bộ ngũ hành, đủ 2/4/7 món kích hoạt hiệu ứng bộ, đủ bộ tung tuyệt chiêu khi đánh thường. MÙA GIẢI LÔI ĐÀI: mỗi 2 tuần trao thưởng theo hạng, bảng xếp hạng Lôi đài, 2 ngoại trang mới.
 

@@ -7,11 +7,13 @@ import '../core/gold_sets.dart';
 import '../core/hero.dart';
 import '../core/meridians.dart';
 import '../core/items.dart';
+import '../core/manuals.dart';
 import '../core/sects.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'gem_tab.dart';
 import 'gold_tab.dart';
+import 'manual_dialog.dart';
 import 'refine_tab.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -380,22 +382,58 @@ class _CharacterScreenState extends State<CharacterScreen> {
                         style: small.copyWith(color: locked ? const Color(0xFFFF8A7A) : cream)),
                   ],
                 ),
-                Text(sk.desc, style: small.copyWith(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(_skillNumbers(sk, math.max(1, lv)), style: small.copyWith(fontSize: 11, color: cream),
+                if (h.manualOf(sk.id) case final k?)
+                  Text('Bí kíp ${manualKinds[k]!.name} · tầng ${h.manualLevel(manualKey(sk.id, k))}',
+                      style: small.copyWith(fontSize: 11, color: const Color(0xFFE0C8FF)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis)
+                else
+                  Text(sk.desc, style: small.copyWith(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(_skillNumbers(h.castSkill(i), math.max(1, lv)), style: small.copyWith(fontSize: 11, color: cream),
                     maxLines: 2, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-          LButton(
-            label: '+',
-            small: true,
-            enabled: h.canLearn(i),
-            onTap: () {
-              h.learn(i);
-              _changed();
-            },
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              LButton(
+                label: '+',
+                small: true,
+                enabled: h.canLearn(i),
+                onTap: () {
+                  h.learn(i);
+                  _changed();
+                },
+              ),
+              if (h.manualOpen && !sk.isPassive) ...[
+                const SizedBox(height: 4),
+                _manualButton(sk),
+              ],
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  /// Opens the skill's bí kíp; shows the school it wears.
+  Widget _manualButton(SkillDef sk) {
+    final k = h.manualOf(sk.id);
+    final any = manualKindsFor(sk).any((m) => h.manualPagesOf(manualKey(sk.id, m)) > 0);
+    return GestureDetector(
+      onTap: () async {
+        await showManualDialog(context, h, sk);
+        _changed();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+        decoration: BoxDecoration(
+          color: k != null ? const Color(0xFF5A3A7A) : lacquer,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: any ? const Color(0xFFC88CFF) : gold.withValues(alpha: 0.4)),
+        ),
+        child: Icon(Icons.menu_book, size: 18, color: any ? const Color(0xFFE0C8FF) : creamDim),
       ),
     );
   }

@@ -4,11 +4,14 @@ import 'alchemy.dart';
 import 'arena.dart';
 import 'companions.dart';
 import 'content.dart';
+import 'fishing.dart';
 import 'gems.dart';
 import 'gold_sets.dart';
 import 'hanh.dart';
 import 'hero.dart';
 import 'items.dart';
+import 'manuals.dart';
+import 'nightmare.dart';
 import 'pets.dart';
 import 'scenery.dart';
 import 'sects.dart';
@@ -119,6 +122,9 @@ class Mob extends Actor {
 
   /// Bosses and elites: bigger loot, a name bar, a screen shake.
   bool get big => def.boss || elite;
+
+  /// Ma khí Cuồng bạo makes them run faster.
+  double speedMul = 1;
 }
 
 class Proj {
@@ -380,8 +386,86 @@ class World {
     player.maxHp = st.maxHp;
     player.hp = st.maxHp;
     player.mp = st.maxMp;
+    skills = [for (var i = 0; i < sect.skills.length; i++) hero.castSkill(i)];
+    if (debugPond && hasPond) {
+      player.x = pondX - 40;
+      player.y = pondY - pondRy - 40;
+    }
     _spawnPet();
     _spawnCompanion();
+  }
+
+  /// The sect's skills as this hero casts them, bí kíp included (they are
+  /// only changed in town).
+  late final List<SkillDef> skills;
+
+  // ------------------------------------------------------------ pond
+
+  /// Screenshot aid for the dev build: start on the pond's bank.
+  static bool debugPond = false;
+
+  /// The fishing pond by the gate of a field map.
+  bool get hasPond => mode == WorldMode.field;
+  double get pondX => pondDx;
+  double get pondY => height / 2 + pondDy;
+
+  bool get nearPond =>
+      hasPond && player.alive && _d2(player.x, player.y, pondX, pondY) < pondReach * pondReach;
+
+  /// Keeps the hero on the bank.
+  void _pondBank(Actor a) {
+    final dx = (a.x - pondX) / (pondRx + a.radius * 0.5), dy = (a.y - pondY) / (pondRy + a.radius * 0.5);
+    final d = math.sqrt(dx * dx + dy * dy);
+    if (d >= 1) return;
+    if (d < 1e-6) {
+      a.y = pondY - pondRy - a.radius * 0.5;
+      return;
+    }
+    a.x = pondX + dx / d * (pondRx + a.radius * 0.5);
+    a.y = pondY + dy / d * (pondRy + a.radius * 0.5);
+  }
+
+  // ------------------------------------------------------------ ác mộng
+
+  NmAffix? get affix => (dungeon?.isNightmare ?? false) ? NmAffix.values[dungeon!.affix] : null;
+
+  /// A nightmare monster: its ma khí on top of the level and multiplier.
+  void _nightmare(Mob m) {
+    switch (affix) {
+      case NmAffix.frenzy:
+        m.atk *= 1.25;
+        m.speedMul = 1.25;
+      case NmAffix.fortified:
+        m.maxHp *= 1.6;
+        m.hp = m.maxHp;
+      case NmAffix.volatile || NmAffix.chill || null:
+        break;
+    }
+  }
+
+  int _summons = 0;
+  final List<Mob> _newMobs = [];
+  final List<Zone> _newZones = [];
+
+  /// The nightmare boss calls for help as it weakens.
+  void _nightmareSummon(Mob m) {
+    if (_summons >= nightmareSummonAt.length || m.hp > m.maxHp * nightmareSummonAt[_summons]) return;
+    _summons++;
+    final d = dungeon!;
+    for (var k = 0; k < nightmareAdds; k++) {
+      final a = math.pi * 2 * k / nightmareAdds;
+      final def = mobById[map.mobs[rng.nextInt(map.mobs.length)]]!;
+      final add = Mob(_uid++, def, d.level, m.x + math.cos(a) * 140, m.y + math.sin(a) * 100)
+        ..state = MobState.chase;
+      add.maxHp *= 1.2;
+      add.hp = add.maxHp;
+      _scale(add, d.mul);
+      _nightmare(add);
+      _clamp(add);
+      _newMobs.add(add);
+      fx.add(Fx('spark_mob_${def.hanh.name}', add.x, add.y - 20, life: 0.4));
+    }
+    events.add(GameEvent(EvKind.boss, text: '${m.def.name} gọi đồng bọn!', color: 0xFFFF6A4A, big: true));
   }
 
   // ------------------------------------------------------------ pet
@@ -740,6 +824,7 @@ class World {
       if (time < n.readyAt || _d2(n.x, n.y, p.x, p.y) > 46 * 46) continue;
       n.readyAt = time + herbRegrow;
       hero.addHerb(n.tier);
+      hero.onHerbPicked();
       fx.add(Fx('potionHp', n.x, n.y, life: 0.5));
       events.add(GameEvent(EvKind.loot, text: 'Hái được ${herbNames[n.tier]}', color: herbColors[n.tier]));
       _sfx('loot');
@@ -783,6 +868,11 @@ class World {
       final m = Mob(_uid++, def, d.level + 1, width * 0.72, height / 2)
         ..state = MobState.chase;
       _scale(m, d.mul);
+      if (d.isNightmare) {
+        m.maxHp *= 1.5;
+        m.hp = m.maxHp;
+        _nightmare(m);
+      }
       mobs.add(m);
       boss = m;
       events.add(GameEvent(EvKind.boss, text: '${def.name} xuất hiện!',
@@ -818,6 +908,7 @@ class World {
     m.maxHp *= 1.2;
     m.hp = m.maxHp;
     _scale(m, d.mul);
+    _nightmare(m);
     mobs.add(m);
     fx.add(Fx('spark_mob_${def.hanh.name}', x, y - 20, life: 0.4));
   }
@@ -890,7 +981,7 @@ class World {
     if (finished) return;
     finished = true;
     finishTime = math.min(time, dungeon!.timeLimit);
-    rewardLines = hero.arenaResult(won, dungeon!.rival!);
+    rewardLines = dungeon!.trial ? hero.sectTrialResult(won) : hero.arenaResult(won, dungeon!.rival!);
     events.add(won ? GameEvent(EvKind.cleared, value: 1) : GameEvent(EvKind.failed, text: 'Thua trận'));
   }
 
@@ -931,6 +1022,11 @@ class World {
     _updatePet(dt);
     _updateCompanion(dt);
     _tickDots(player, dt, null);
+    // Monsters and zones born mid-loop (a boss's adds, a body bursting).
+    mobs.addAll(_newMobs);
+    _newMobs.clear();
+    zones.addAll(_newZones);
+    _newZones.clear();
     for (final f in fx) {
       f.t += dt;
       if (f.onHero) {
@@ -1041,6 +1137,11 @@ class World {
             return;
           }
           final stars = d.starsFor(time);
+          if (d.isNightmare) {
+            rewardLines = hero.nightmareReward(d, stars, rng);
+            events.add(GameEvent(EvKind.cleared, value: stars.toDouble()));
+            return;
+          }
           rewardLines = hero.dungeonReward(d, stars, rng);
           hero.onDungeonClear(d.id, stars, rng);
           events.add(GameEvent(EvKind.cleared, value: stars.toDouble()));
@@ -1140,6 +1241,7 @@ class World {
       p.moving = false;
     }
     _clamp(p);
+    if (hasPond) _pondBank(p);
   }
 
   double _hot(double dt) {
@@ -1278,7 +1380,7 @@ class World {
 
   /// Whether skill [i] could fire right now.
   bool ready(int i) {
-    final s = sect.skills[i];
+    final s = skills[i];
     return !s.isPassive &&
         hero.skillLv[i] > 0 &&
         player.cd[i] <= 0 &&
@@ -1287,7 +1389,7 @@ class World {
 
   void _cast(int i) {
     if (!ready(i) || !player.alive) return;
-    final s = sect.skills[i];
+    final s = skills[i];
     final lv = hero.skillLv[i];
     final p = player;
     p.mp -= s.mpAt(lv);
@@ -1334,7 +1436,11 @@ class World {
         for (var k = 0; k < s.count; k++) {
           final a = ang + math.pi * 2 * k / s.count;
           _fire(a, 560, s.range, 16, s.fx, pw,
-              pierce: s.pierce, skill: true);
+              pierce: s.pierce,
+              status: s.status,
+              statusPower: s.statusPower,
+              statusTime: s.statusTime,
+              skill: true);
         }
       case SkillKind.ground:
         double gx, gy;
@@ -1480,8 +1586,8 @@ class World {
 
     // Skills, biggest first; the tuyệt kỹ waits for a crowd or a boss.
     for (final i in const [6, 4, 2, 1, 0]) {
-      if (i >= sect.skills.length || !ready(i)) continue;
-      final s = sect.skills[i];
+      if (i >= skills.length || !ready(i)) continue;
+      final s = skills[i];
       if (s.ultimate && _countNear(260) < 3 && !(near?.def.boss ?? false)) continue;
       final use = switch (s.kind) {
         SkillKind.guard || SkillKind.shield =>
@@ -1685,6 +1791,7 @@ class World {
     if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
+    if (m == boss && m.hp > 0 && affix != null) _nightmareSummon(m);
     m.hurt = 0.15;
     _text(m.x + (rng.nextDouble() - 0.5) * 20, m.y - 40 * m.def.size - 10,
         dmg.round().toString(), color,
@@ -1741,6 +1848,24 @@ class World {
     if (m.big && m.level >= bossShardLevel && dungeon?.isTower != true && rng.nextDouble() < bossShardChance) {
       hero.goldShards++;
       events.add(GameEvent(EvKind.loot, text: 'Nhặt được 1 Mảnh Hoàng Kim', color: goldItemColor));
+    }
+    if (m.big && hero.manualOpen && dungeon?.isTower != true &&
+        rng.nextDouble() < (m.def.boss ? bossPageChance : elitePageChance)) {
+      events.add(GameEvent(EvKind.loot, text: 'Nhặt được ${hero.gainManualPage(rng)}', color: 0xFFC88CFF));
+    }
+    // Ma khí Bạo liệt: the body bursts a moment later.
+    if (affix == NmAffix.volatile && m != boss) {
+      _newZones.add(Zone(
+        fromHero: false,
+        x: m.x,
+        y: m.y,
+        r: 85,
+        delay: 1.0,
+        ticks: 1,
+        interval: 0,
+        power: m.atk * 1.2,
+        fx: 'bossSlam_${m.def.hanh.name}',
+      ));
     }
     if (mode == WorldMode.field) {
       if (m == boss) {
@@ -1990,9 +2115,13 @@ class World {
               radius: 12,
               fx: 'mob_${m.def.hanh.name}',
               power: m.atk,
+              status: affix == NmAffix.chill ? Status.slow : Status.none,
+              statusPower: 0.3,
+              statusTime: 2.5,
             ));
           } else {
             _hurtHero(m.atk, m.def.hanh);
+            if (affix == NmAffix.chill) _statusHero(Status.slow, 0.3, 2.5);
           }
         }
     }
@@ -2147,6 +2276,7 @@ class World {
   }
 
   void _moveMob(Mob m, double x, double y, double speed, double dt) {
+    speed *= m.speedMul;
     final d = _dist(m.x, m.y, x, y);
     if (d < 3) {
       m.moving = false;

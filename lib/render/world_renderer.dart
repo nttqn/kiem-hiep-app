@@ -4,6 +4,7 @@ import 'package:flutter/painting.dart';
 
 import '../core/alchemy.dart';
 import '../core/content.dart';
+import '../core/fishing.dart';
 import '../core/hanh.dart';
 import '../core/scenery.dart';
 import '../core/sects.dart';
@@ -95,6 +96,9 @@ class WorldRenderer {
     final view = Rect.fromLTRB(camX - halfW, camY - halfH, camX + halfW, camY + halfH);
 
     drawGround(c, w.scenery, view, w.width, w.height, t);
+    if (w.hasPond && view.inflate(160).contains(Offset(w.pondX, w.pondY))) {
+      _drawPond(c, w.pondX, w.pondY, w.map.theme, t, w.nearPond);
+    }
     for (final f in w.fx) {
       if (isGroundFx(f.kind)) drawFx(c, f, t);
     }
@@ -291,6 +295,98 @@ class WorldRenderer {
         hurt: p.hurt > 0.05 || !p.alive);
     setTint();
     c.restore();
+  }
+
+  /// The fishing pond: water by the map's theme in a rim of stones, reeds
+  /// and a small jetty; it glints when the hero is close enough to cast.
+  void _drawPond(Canvas c, double x, double y, MapTheme theme, double t, bool near) {
+    final (water, deep, rim) = switch (theme) {
+      MapTheme.cave => (const Color(0xFF2E6A72), const Color(0xFF16363C), const Color(0xFF4A4A52)),
+      MapTheme.desert => (const Color(0xFF3FA8B8), const Color(0xFF1E6A7A), const Color(0xFFC8A868)),
+      MapTheme.snow => (const Color(0xFF9CD4EA), const Color(0xFF3A7A9A), const Color(0xFFE8F2F8)),
+      MapTheme.volcano => (const Color(0xFFD86A3A), const Color(0xFF8A2A1A), const Color(0xFF4A3A36)),
+      MapTheme.cloud => (const Color(0xFFA8DCEC), const Color(0xFF5A9ABA), const Color(0xFFDCE6EE)),
+      MapTheme.fortress => (const Color(0xFF3A5A6A), const Color(0xFF1A2A36), const Color(0xFF5A5A62)),
+      _ => (const Color(0xFF4A9AB8), const Color(0xFF22587A), const Color(0xFF8A8A7A)),
+    };
+    const rx = pondRx, ry = pondRy;
+    final o = Offset(x, y);
+    c.drawOval(Rect.fromCenter(center: o + const Offset(0, 6), width: rx * 2 + 30, height: ry * 2 + 22),
+        Paint()..color = const Color(0x33000000));
+    c.drawOval(Rect.fromCenter(center: o, width: rx * 2 + 18, height: ry * 2 + 14), Paint()..color = rim);
+    final r = math.Random(7);
+    final stone = Paint()..color = Color.lerp(rim, const Color(0xFF000000), 0.25)!;
+    for (var i = 0; i < 16; i++) {
+      final a = i / 16 * math.pi * 2 + r.nextDouble() * 0.2;
+      c.drawOval(
+          Rect.fromCenter(
+              center: o + Offset(math.cos(a) * (rx + 8), math.sin(a) * (ry + 6)),
+              width: 12 + r.nextDouble() * 8,
+              height: 7 + r.nextDouble() * 4),
+          stone);
+    }
+    final pool = Rect.fromCenter(center: o, width: rx * 2, height: ry * 2);
+    c.drawOval(
+        pool,
+        Paint()
+          ..shader = RadialGradient(colors: [deep, water], stops: const [0.1, 1])
+              .createShader(pool));
+    if (theme == MapTheme.snow) {
+      // A frozen sheet with a hole cut for the line.
+      c.drawOval(pool.deflate(4), Paint()..color = const Color(0xCCEAF6FC));
+      c.drawOval(Rect.fromCenter(center: o + const Offset(20, 2), width: 54, height: 26), Paint()..color = deep);
+    }
+    // Ripples drifting outward.
+    for (var k = 0; k < 3; k++) {
+      final ph = (t * 0.35 + k / 3) % 1;
+      c.drawOval(
+          Rect.fromCenter(center: o + const Offset(20, 2), width: 20 + ph * 70, height: 8 + ph * 28),
+          Paint()
+            ..color = Color.fromRGBO(255, 255, 255, 0.35 * (1 - ph))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.4);
+    }
+    if (theme == MapTheme.volcano || theme == MapTheme.cloud) {
+      // Steam off a hot spring, mist over the cloud pool.
+      for (var k = 0; k < 4; k++) {
+        final ph = (t * 0.25 + k / 4) % 1;
+        c.drawCircle(o + Offset(-40 + k * 26.0, -ph * 50), 10 + ph * 12,
+            Paint()..color = Color.fromRGBO(255, 255, 255, 0.22 * (1 - ph)));
+      }
+    } else if (theme != MapTheme.snow) {
+      // Lily pads and reeds.
+      final pad = Paint()..color = const Color(0xFF3F8A3A);
+      c.drawOval(Rect.fromCenter(center: o + const Offset(-46, -10), width: 22, height: 10), pad);
+      c.drawOval(Rect.fromCenter(center: o + const Offset(-30, 16), width: 16, height: 8), pad);
+      c.drawCircle(o + const Offset(-46, -12), 3, Paint()..color = const Color(0xFFF2A8C8));
+      final reed = Paint()
+        ..color = const Color(0xFF5A7A2A)
+        ..strokeWidth = 2;
+      for (var k = 0; k < 5; k++) {
+        final bx = x + rx - 6 + k * 5.0, by = y - 4 + (k % 2) * 6.0;
+        final sway = math.sin(t * 1.5 + k) * 3;
+        c.drawLine(Offset(bx, by), Offset(bx + sway, by - 26 - k % 3 * 6), reed);
+      }
+    }
+    // The jetty on the near bank, where the hero stands to cast.
+    final plank = Paint()..color = const Color(0xFF8A5A32);
+    final line = Paint()
+      ..color = const Color(0xFF4A2E18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    for (var k = 0; k < 4; k++) {
+      final pr = Rect.fromLTWH(x - 72 + k * 9.0, y - ry - 18 + k * 9.0, 40, 8);
+      c.drawRect(pr, plank);
+      c.drawRect(pr, line);
+    }
+    if (near) {
+      final a = 0.5 + 0.5 * math.sin(t * 5);
+      c.drawOval(pool.inflate(10),
+          Paint()
+            ..color = Color.fromRGBO(255, 211, 74, 0.35 + 0.4 * a)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.5);
+    }
   }
 
   /// A herb plant: leaves round a glowing bud in the herb's colour.

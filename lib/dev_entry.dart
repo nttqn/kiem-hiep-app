@@ -8,8 +8,14 @@ import 'core/arena.dart';
 import 'core/companions.dart';
 import 'core/content.dart';
 import 'core/costumes.dart';
+import 'core/fishing.dart';
 import 'core/gold_sets.dart';
+import 'core/manuals.dart';
 import 'core/mounts.dart';
+import 'core/nightmare.dart';
+import 'core/sect_duty.dart';
+import 'ui/fishing_view.dart';
+import 'ui/sect_screen.dart';
 import 'ui/activity_screen.dart';
 import 'ui/alchemy_screen.dart';
 import 'ui/arena_screen.dart';
@@ -243,6 +249,46 @@ Future<void> main() async {
       h.arenaPoints = 1260;
       h.arenaSeasonResult = [arenaSeasonOf(vnDayKey()) - 1, 3, 1520, 320, 99000, 8, 4];
     }
+    // Sư môn: rank=<chức vị> contrib=<cống hiến, also spendable>.
+    h.sectRank = (int.tryParse(q['rank'] ?? '') ?? 0).clamp(0, maxSectRank);
+    final contrib = int.tryParse(q['contrib'] ?? '');
+    if (contrib != null) {
+      h.sectContrib = contrib;
+      h.sectCoins = contrib ~/ 3;
+    }
+    if (q['duty'] == 'done') {
+      h.sectRollDay(vnDayKey(), rng);
+      h.sectDone = 4;
+      h.sectDuty?.progress = h.sectDuty!.count;
+    }
+    // manual=<pages>: that many pages of every school, the first worn.
+    final manual = int.tryParse(q['manual'] ?? '');
+    if (manual != null) {
+      for (final i in manualSkills(h.sect)) {
+        final s = h.sect.skills[i];
+        final kinds = manualKindsFor(s);
+        for (var k = 0; k < kinds.length; k++) {
+          h.addManualPage(manualKey(s.id, kinds[k]), math.max(0, manual - k * 4));
+        }
+        h.setManual(s.id, kinds[i % kinds.length]);
+      }
+    }
+    // nm=<n>: the first n nightmares cleared with three stars.
+    final nm = int.tryParse(q['nm'] ?? '');
+    if (nm != null) {
+      for (var i = 1; i <= nm; i++) {
+        h.nmStars['nm$i'] = 3;
+      }
+    }
+    // fish=<n>: the first n fish caught; pond=1 starts by the pond.
+    final fish = int.tryParse(q['fish'] ?? '');
+    if (fish != null) {
+      for (final f in fishes.take(fish)) {
+        h.fishCaught[f.id] = 1 + rng.nextInt(9);
+      }
+    }
+    World.debugPond = q['pond'] == '1';
+    FishingPanel.debugBite = double.tryParse(q['bite'] ?? '');
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();
     h.recompute();
@@ -287,6 +333,11 @@ Future<void> main() async {
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),
     'arena' => const ArenaScreen(),
+    'sect' => const SectScreen(),
+    'nightmare' => const DungeonListScreen(nightmare: true),
+    'nmplay' => PlayScreen.dungeon(nightmareDef(int.tryParse(q['nmi'] ?? '') ?? 0,
+        NmAffix.values[int.tryParse(q['affix'] ?? '') ?? 0])),
+    'trial' => PlayScreen.dungeon(sectTrialDef(SaveService.instance.hero.sectExaminerNow())),
     'duel' => PlayScreen.dungeon(arenaDef(botRivals(
         power: SaveService.instance.hero.power,
         level: SaveService.instance.hero.level,

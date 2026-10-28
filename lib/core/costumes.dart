@@ -1,9 +1,10 @@
 import 'arena.dart';
+import 'sect_duty.dart';
 
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect }
 
 class CostumeDef {
   const CostumeDef({
@@ -40,6 +41,7 @@ class CostumeDef {
         CostumeSource.worldBoss => 'Boss Thế Giới: nhận mốc ${const ['100 nghìn', '500 nghìn', '2 triệu', '6 triệu', '15 triệu'][need]} sát thương',
         CostumeSource.gold => 'Mua với ${_thousands(need)} lượng',
         CostumeSource.arena => 'Kết thúc một mùa Lôi đài ở hạng ${arenaTiers[need].name}',
+        CostumeSource.sect => 'Sư môn: đạt chức ${sectRanks[need].name}',
       };
 }
 
@@ -117,6 +119,17 @@ const costumes = <CostumeDef>[
     source: CostumeSource.arena, need: 6,
     robe: 0xFFF4F0E6, trim: 0xFFFF6A4A, pants: 0xFFD8D0C0, cape: 0xFFFF6A4A, glow: 0xFFFF8A5A,
     aura: 0xFFFFC07A, armor: 4,
+  ),
+  CostumeDef(
+    id: 'truonglao', name: 'Trưởng Lão Bào', desc: 'Áo nâu viền lục của bậc trưởng lão, nghiêm cẩn mà ung dung.',
+    source: CostumeSource.sect, need: 4,
+    robe: 0xFF5A4030, trim: 0xFF7ACB8A, pants: 0xFF3A2A20, cape: 0xFF2E5A3E, armor: 2,
+  ),
+  CostumeDef(
+    id: 'chuongmon', name: 'Chưởng Môn Lễ Phục', desc: 'Lễ phục chưởng môn, áo đen thêu vàng, khoác hồng bào.',
+    source: CostumeSource.sect, need: 6,
+    robe: 0xFF1E1A22, trim: 0xFFFFD34A, pants: 0xFF141018, cape: 0xFF9A1E2A, glow: 0xFFFFD34A,
+    aura: 0xFFFFE8A0, armor: 3,
   ),
 ];
 

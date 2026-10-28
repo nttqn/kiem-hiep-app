@@ -129,6 +129,49 @@ class SkillDef {
 
   /// MP cost grows slowly with the skill's level.
   double mpAt(int lv) => mp * (1 + 0.08 * (lv - 1));
+
+  /// The same skill with some numbers changed (a bí kíp's version).
+  SkillDef copyWith({
+    double? cooldown,
+    double? mp,
+    double? power,
+    double? powerPerLv,
+    double? range,
+    double? radius,
+    int? count,
+    double? spread,
+    Status? status,
+    double? statusPower,
+    double? statusTime,
+    double? duration,
+    double? knock,
+  }) =>
+      SkillDef(
+        id: id,
+        name: name,
+        desc: desc,
+        kind: kind,
+        unlock: unlock,
+        cooldown: cooldown ?? this.cooldown,
+        mp: mp ?? this.mp,
+        power: power ?? this.power,
+        powerPerLv: powerPerLv ?? this.powerPerLv,
+        range: range ?? this.range,
+        radius: radius ?? this.radius,
+        count: count ?? this.count,
+        spread: spread ?? this.spread,
+        pierce: pierce,
+        status: status ?? this.status,
+        statusPower: statusPower ?? this.statusPower,
+        statusTime: statusTime ?? this.statusTime,
+        duration: duration ?? this.duration,
+        delay: delay,
+        ticks: ticks,
+        knock: knock ?? this.knock,
+        passive: passive,
+        fx: fx,
+        ultimate: ultimate,
+      );
 }
 
 const int maxSkillLevel = 10;

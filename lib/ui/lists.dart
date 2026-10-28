@@ -9,6 +9,8 @@ import '../core/luan_hoi.dart';
 import '../core/tower.dart';
 import '../services/save.dart';
 import 'bounty_view.dart';
+import 'fish_book.dart';
+import 'nightmare_view.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -22,6 +24,16 @@ class MapListScreen extends StatelessWidget {
     final last = maps.lastIndexWhere((m) => h.level >= m.entryLv);
     return SubScreen(
       title: 'Luyện công',
+      actions: [
+        if (h.fishOpen)
+          LButton(
+            label: 'Ngư phổ',
+            icon: Icons.phishing,
+            small: true,
+            color: const Color(0xFF2E6A8A),
+            onTap: () => showFishBook(context, h),
+          ),
+      ],
       child: _OpenAt(
         fraction: maps.length < 2 ? 0 : math.max(0, last) / (maps.length - 1),
         builder: (ctl) => ListView.separated(
@@ -220,16 +232,55 @@ class _ThemeSwatch extends StatelessWidget {
   }
 }
 
-class DungeonListScreen extends StatelessWidget {
-  const DungeonListScreen({super.key});
+class DungeonListScreen extends StatefulWidget {
+  const DungeonListScreen({super.key, this.nightmare = false});
+  final bool nightmare;
+
+  @override
+  State<DungeonListScreen> createState() => _DungeonListScreenState();
+}
+
+class _DungeonListScreenState extends State<DungeonListScreen> {
+  late bool _nm = widget.nightmare && SaveService.instance.hero.nightmareOpen;
+
+  Widget _mode(String label, bool nm) => Padding(
+        padding: const EdgeInsets.only(right: 6),
+        child: GestureDetector(
+          onTap: () => setState(() => _nm = nm),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            decoration: BoxDecoration(
+              color: _nm == nm ? (nm ? const Color(0xFF5A1A3A) : seal) : lacquer,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _nm == nm ? goldLight : gold.withValues(alpha: 0.5)),
+            ),
+            child: Text(label, style: bold.copyWith(fontSize: 13)),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
-    final last = dungeons.lastIndexWhere((d) => h.level >= d.level - 2);
     return SubScreen(
-      title: 'Vượt ải',
+      title: _nm ? 'Ải Ác Mộng' : 'Vượt ải',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (h.nightmareOpen)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(children: [_mode('Thường', false), _mode('Ác Mộng', true)]),
+            ),
+          Expanded(child: _nm ? const NightmareView() : _normal(h)),
+        ],
+      ),
+    );
+  }
+
+  Widget _normal(HeroData h) {
+    final last = dungeons.lastIndexWhere((d) => h.level >= d.level - 2);
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const TowerCard(),
@@ -299,8 +350,7 @@ class DungeonListScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
 

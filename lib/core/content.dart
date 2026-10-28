@@ -309,6 +309,9 @@ class DungeonDef {
     this.boss = true,
     this.worldBoss = '',
     this.rival,
+    this.trial = false,
+    this.nightmare = 0,
+    this.affix = 0,
   });
 
   final String id;
@@ -335,6 +338,14 @@ class DungeonDef {
   /// Lôi đài duel: this challenger alone, win by knocking them out.
   final ArenaRival? rival;
   bool get isArena => rival != null;
+
+  /// Sư môn khảo hạch: the duel is with an elder of the hero's sect.
+  final bool trial;
+
+  /// Ải Ác Mộng number (1-based, 0 for none) and its ma khí (NmAffix index).
+  final int nightmare;
+  final int affix;
+  bool get isNightmare => nightmare > 0;
 
   MapDef get map => mapById[mapId]!;
 

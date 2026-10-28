@@ -8,13 +8,17 @@ import 'companions.dart';
 import 'content.dart';
 import 'costumes.dart';
 import 'gold_sets.dart';
+import 'fishing.dart';
 import 'luan_hoi.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
+import 'manuals.dart';
 import 'meridians.dart';
 import 'mounts.dart';
+import 'nightmare.dart';
 import 'pets.dart';
+import 'sect_duty.dart';
 import 'tower.dart';
 import 'treasure.dart';
 import 'world_boss.dart';
@@ -283,6 +287,33 @@ class HeroData {
   int actWeekPoints = 0;
   int actWeekClaimed = 0;
 
+  // Sư môn: chức vị, cống hiến earned in all and on hand, and per day the
+  // duties handed in, plus the one under way.
+  int sectRank = 0;
+  int sectContrib = 0;
+  int sectCoins = 0;
+  String sectDay = '';
+  int sectDone = 0;
+  SectDuty? sectDuty;
+
+  // Bí kíp: pages by manualKey, and the school each skill wears (by skill
+  // id, ManualKind index).
+  final Map<String, int> manualPages = {};
+  final Map<String, int> manualOn = {};
+
+  // Câu cá: per day the baits used and ad baits, catches by fish, and the
+  // Ngư phổ pages paid (map ids).
+  String fishDay = '';
+  int fishUsed = 0;
+  int fishAds = 0;
+  final Map<String, int> fishCaught = {};
+  final Set<String> fishBooks = {};
+
+  // Ải Ác Mộng: best stars by id, and per day the paid clears.
+  final Map<String, int> nmStars = {};
+  String nmDay = '';
+  int nmRuns = 0;
+
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
 
@@ -363,6 +394,7 @@ class HeroData {
     add(goldSetBonuses(goldPieces(equip.values)));
     final comp = companionById[activeCompanion];
     if (comp != null) add({comp.bonus: comp.bonusAt(companionBonds[comp.id] ?? 1)});
+    add(sectRankBonus(hanh, sectRank));
     return out;
   }
 
@@ -723,6 +755,7 @@ class HeroData {
     // Bounties were rolled for level 99 maps: post new ones for level 10.
     bounties.clear();
     _fillBounties(math.Random(seed ^ rebirths), free: true);
+    if (sectDuty != null) sectDuty = _rollSectDuty(math.Random(seed ^ rebirths));
     return true;
   }
 
@@ -819,6 +852,11 @@ class HeroData {
       out.add(WantedElite(b.eliteKey, b.eliteName, b.target,
           (level + 2).clamp(m.minLv, math.min(maxLevel, m.maxLv + 2)), b.eliteHp, b.eliteAtk));
     }
+    final d = sectDuty;
+    if (d != null && d.kind == DutyKind.traitor && !d.done && d.map == mapId && m != null) {
+      out.add(WantedElite(d.eliteKey, d.traitorName, d.target,
+          (level + 1).clamp(m.minLv, math.min(maxLevel, m.maxLv + 2)), 5, 1.15));
+    }
     return out;
   }
 
@@ -829,6 +867,7 @@ class HeroData {
           q.target,
         for (final b in bounties)
           if (!b.done && b.kind != BountyKind.elite) b.target,
+        if (sectDuty case final d? when !d.done && (d.kind == DutyKind.kill || d.kind == DutyKind.boss)) d.target,
       };
 
   void onEliteKill(String key, math.Random rng) {
@@ -837,6 +876,7 @@ class HeroData {
       _rewardMain(q, rng);
     }
     _progressBounties((b) => b.kind == BountyKind.elite && b.eliteKey == key, 1);
+    _progressDuty((d) => d.kind == DutyKind.traitor && d.eliteKey == key);
   }
 
   // ------------------------------------------------------------- ngoại trang
@@ -849,6 +889,7 @@ class HeroData {
         // A rebirth means level 99 was reached.
         CostumeSource.level => level >= c.need || rebirths > 0,
         CostumeSource.arena => arenaBestTier >= c.need,
+        CostumeSource.sect => sectRank >= c.need,
         CostumeSource.worldBoss || CostumeSource.gold => false,
       };
 
@@ -954,6 +995,7 @@ class HeroData {
         (d.type == QuestType.kill && (d.target == '*' || d.target == m.id)) ||
         (d.type == QuestType.boss && d.target == m.id));
     _progressBounties((b) => b.kind != BountyKind.elite && b.target == m.id, 1);
+    _progressDuty((d) => (d.kind == DutyKind.kill || d.kind == DutyKind.boss) && d.target == m.id);
   }
 
   /// Pays for a cleared dungeon; the first clear pays most and adds an
@@ -1011,6 +1053,7 @@ class HeroData {
     }
     if (xp > 0) gainExp(xp);
     _progressDaily((d) => d.type == QuestType.dungeon);
+    _progressDuty((d) => d.kind == DutyKind.dungeon);
     addActivity(ActSource.dungeon);
     return lines;
   }
@@ -1549,6 +1592,7 @@ class HeroData {
       _rewardMain(q, rng);
     }
     _progressDaily((d) => d.type == QuestType.dungeon);
+    _progressDuty((d) => d.kind == DutyKind.dungeon);
     addActivity(ActSource.dungeon);
   }
 
@@ -1586,6 +1630,258 @@ class HeroData {
           : DailyQuest(
               type: QuestType.kill, target: '*', count: 60, exp: xp, gold: gp),
     ];
+  }
+
+  // ------------------------------------------------------------- sư môn
+
+  bool get sectOpen => level >= sectOpenLevel || rebirths > 0;
+
+  SectDuty _rollSectDuty(math.Random rng) =>
+      rollDuty(level, sectDone, rng, herbs: alchemyOpen, fish: fishOpen);
+
+  /// A new day resets the count of duties handed in; the chain goes on.
+  void sectRollDay(String day, math.Random rng) {
+    if (!sectOpen) return;
+    if (sectDay != day) {
+      sectDay = day;
+      sectDone = 0;
+    }
+    if (sectDuty == null && sectDone < sectDutiesPerDay) sectDuty = _rollSectDuty(rng);
+  }
+
+  void _progressDuty(bool Function(SectDuty d) matches, [int by = 1]) {
+    final d = sectDuty;
+    if (d == null || d.done || !matches(d)) return;
+    d.progress = math.min(d.count, d.progress + by);
+    if (d.done) notices.add(Notice('Sư môn xong: ${d.goal} · về thành phục mệnh', color: 0xFF8CE07A, big: true));
+  }
+
+  void onHerbPicked() => _progressDuty((d) => d.kind == DutyKind.herb);
+
+  /// Hands in the finished duty: cống hiến, EXP and gold, then the next one
+  /// while the day's chain lasts.
+  List<String>? sectClaim(math.Random rng) {
+    final d = sectDuty;
+    if (d == null || !d.done) return null;
+    final c = dutyContribution(sectDone);
+    sectContrib += c;
+    sectCoins += c;
+    final xp = level >= maxLevel ? 0.0 : expToNext(level) * dutyExpShare * (c > 25 ? 2 : 1);
+    final g = dutyGold(level) * (c > 25 ? 2 : 1);
+    gold += g;
+    if (xp > 0) gainExp(xp);
+    sectDone++;
+    sectDuty = sectDone < sectDutiesPerDay ? _rollSectDuty(rng) : null;
+    addActivity(ActSource.daily);
+    return ['+$c cống hiến', '+${_thousands(g)} lượng', if (xp > 0) '+${xp.round()} kinh nghiệm'];
+  }
+
+  /// Swaps an unfinished duty for another, for gold.
+  bool sectReroll(math.Random rng) {
+    final d = sectDuty;
+    final cost = dutyRerollCost(level);
+    if (d == null || d.done || gold < cost) return false;
+    gold -= cost;
+    SectDuty next;
+    var tries = 0;
+    do {
+      next = _rollSectDuty(rng);
+    } while (++tries < 8 && next.kind == d.kind && next.target == d.target);
+    sectDuty = next;
+    return true;
+  }
+
+  SectRank? get nextSectRank => sectRank < maxSectRank ? sectRanks[sectRank + 1] : null;
+
+  /// Enough cống hiến and level for the next chức vị's khảo hạch.
+  bool get sectCanTrial {
+    final n = nextSectRank;
+    return n != null && sectContrib >= n.need && (level >= n.level || rebirths > 0);
+  }
+
+  ArenaRival sectExaminerNow() => sectExaminerRival(hanh, sectRank + 1, level, rebirths, power);
+
+  /// Pays a khảo hạch: a win raises the chức vị.
+  List<String> sectTrialResult(bool won) {
+    if (!won || !sectCanTrial) return won ? const [] : const ['Khảo hạch chưa đạt, hãy luyện thêm.'];
+    sectRank++;
+    final g = 2000 * sectRank * sectRank;
+    gold += g;
+    notices.add(Notice('Thăng chức: ${sectRanks[sectRank].name}!', color: 0xFFFFD34A, big: true));
+    unlockCostumes();
+    recompute();
+    return ['Chức vị mới: ${sectRanks[sectRank].name}', '+${_thousands(g)} lượng'];
+  }
+
+  /// Buys from Tàng Kinh Các; [page] names the page for a page offer.
+  bool sectBuy(SectOffer o, math.Random rng, {String? page}) {
+    if (sectCoins < o.price || sectRank < o.rank) return false;
+    if (o.kind == SectWare.page && page == null) return false;
+    sectCoins -= o.price;
+    switch (o.kind) {
+      case SectWare.potions:
+        hpPots += 10;
+        mpPots += 10;
+      case SectWare.gem:
+        addGem(Gem(Hanh.values[rng.nextInt(5)], sectGemTier(sectRank)));
+      case SectWare.page:
+        addManualPage(page!);
+      case SectWare.shards:
+        goldShards += 3;
+    }
+    return true;
+  }
+
+  // ------------------------------------------------------------- bí kíp
+
+  bool get manualOpen => level >= manualOpenLevel || rebirths > 0;
+
+  int manualPagesOf(String key) => manualPages[key] ?? 0;
+
+  int manualLevel(String key) => manualLevelOf(manualPagesOf(key));
+
+  void addManualPage(String key, [int n = 1]) => manualPages[key] = manualPagesOf(key) + n;
+
+  /// A random page for one of the hero's skills; returns its name.
+  String gainManualPage(math.Random rng) {
+    final key = rollManualPage(sect, rng);
+    addManualPage(key);
+    return manualPageName(sect, key);
+  }
+
+  ManualKind? manualOf(String skillId) {
+    final k = manualOn[skillId];
+    return k == null ? null : ManualKind.values[k];
+  }
+
+  /// Wears school [k] on [skillId] (null takes it off); only learned ones.
+  bool setManual(String skillId, ManualKind? k) {
+    if (k == null) {
+      manualOn.remove(skillId);
+      return true;
+    }
+    if (manualLevel(manualKey(skillId, k)) <= 0) return false;
+    manualOn[skillId] = k.index;
+    return true;
+  }
+
+  /// Skill [i] as the hero casts it, with its bí kíp.
+  SkillDef castSkill(int i) {
+    final s = sect.skills[i];
+    final k = manualOf(s.id);
+    if (k == null) return s;
+    return applyManual(s, k, manualLevel(manualKey(s.id, k)), hanh);
+  }
+
+  // ------------------------------------------------------------- câu cá
+
+  bool get fishOpen => level >= fishOpenLevel || rebirths > 0;
+
+  void fishRollDay(String day) {
+    if (fishDay == day) return;
+    fishDay = day;
+    fishUsed = 0;
+    fishAds = 0;
+  }
+
+  int get fishBaitLeft => fishBaitPerDay + fishAds * fishAdBait - fishUsed;
+
+  /// Uses a bait for a cast; false when none are left.
+  bool fishCast(String day) {
+    fishRollDay(day);
+    if (fishBaitLeft <= 0) return false;
+    fishUsed++;
+    return true;
+  }
+
+  /// A rewarded ad adds [fishAdBait] baits, once a day.
+  bool fishAddAd(String day) {
+    fishRollDay(day);
+    if (fishAds >= 1) return false;
+    fishAds++;
+    return true;
+  }
+
+  /// Sells catch [f] and logs it; rare ones may hold a gem, legendary ones
+  /// a bí kíp page and Hoàng Kim shards.
+  List<String> catchFish(FishDef f, math.Random rng) {
+    final first = (fishCaught[f.id] ?? 0) == 0;
+    fishCaught[f.id] = (fishCaught[f.id] ?? 0) + 1;
+    final g = f.price * (first ? 1 + fishFirstBonus : 1);
+    gold += g;
+    final lines = ['+${_thousands(g)} lượng${first ? ' (lần đầu)' : ''}'];
+    if (f.rarity == FishRarity.rare && rng.nextDouble() < 0.3) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, 1 + f.mapIndex ~/ 2));
+      addGem(gem);
+      lines.add('Trong bụng cá có ${gem.name}');
+    }
+    if (f.rarity == FishRarity.legend) {
+      goldShards += 2;
+      lines.add('+2 Mảnh Hoàng Kim');
+      if (manualOpen) lines.add(gainManualPage(rng));
+    }
+    _progressDuty((d) => d.kind == DutyKind.fish);
+    return lines;
+  }
+
+  bool fishBookDone(String mapId) => fishOfMap(mapId).every((f) => (fishCaught[f.id] ?? 0) > 0);
+
+  /// Pays a finished page of the Ngư phổ once.
+  int fishBookClaim(String mapId) {
+    if (fishBooks.contains(mapId) || !fishBookDone(mapId)) return 0;
+    fishBooks.add(mapId);
+    final g = fishBookGold(maps.indexWhere((m) => m.id == mapId));
+    gold += g;
+    return g;
+  }
+
+  // ------------------------------------------------------------- ác mộng
+
+  bool get nightmareOpen => level >= nightmareOpenLevel || rebirths > 0;
+
+  /// Nightmare [i] (0-based) opens once the one before is cleared.
+  bool nightmareUnlocked(int i) => nightmareOpen && (i == 0 || (nmStars['nm$i'] ?? 0) > 0);
+
+  void nmRollDay(String day) {
+    if (nmDay == day) return;
+    nmDay = day;
+    nmRuns = 0;
+  }
+
+  int get nmRunsLeft => math.max(0, nightmarePaidRuns - nmRuns);
+
+  /// Pays a nightmare clear: the first ever pays big; after that the day's
+  /// first [nightmarePaidRuns] clears pay.
+  List<String> nightmareReward(DungeonDef d, int stars, math.Random rng, {String? day}) {
+    nmRollDay(day ?? vnDayKey());
+    final i = d.nightmare - 1;
+    final first = (nmStars[d.id] ?? 0) == 0;
+    nmStars[d.id] = math.max(nmStars[d.id] ?? 0, stars);
+    _progressDaily((q) => q.type == QuestType.dungeon);
+    _progressDuty((q) => q.kind == DutyKind.dungeon);
+    addActivity(ActSource.dungeon);
+    if (!first && nmRuns >= nightmarePaidRuns) {
+      lastDungeonGold = 0;
+      lastDungeonExp = 0;
+      return const ['Hết lượt thưởng Ác Mộng hôm nay'];
+    }
+    if (!first) nmRuns++;
+    final g = nightmareGold(i, stars);
+    final xp = level >= maxLevel ? 0.0 : expToNext(level) * 0.04;
+    gold += g;
+    lastDungeonGold = g;
+    lastDungeonExp = xp;
+    final shards = nightmareShards(i, stars) + (first ? nightmareFirstShards : 0);
+    goldShards += shards;
+    final lines = ['+${_thousands(g)} lượng', if (xp > 0) '+${xp.round()} kinh nghiệm', '+$shards Mảnh Hoàng Kim'];
+    if (first || rng.nextDouble() < nightmareGemChance) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], nightmareGemTier(i));
+      addGem(gem);
+      lines.add(gem.name);
+    }
+    if (manualOpen && (first || rng.nextDouble() < nightmarePageChance)) lines.add(gainManualPage(rng));
+    if (xp > 0) gainExp(xp);
+    return lines;
   }
 
   // ------------------------------------------------------------- save
@@ -1641,6 +1937,10 @@ class HeroData {
         'season': [arenaSeason, arenaSeasonFights, arenaBestTier, arenaSeasonResult],
         'shards': goldShards,
         'comp': [activeCompanion, companionBonds],
+        'sect': [sectRank, sectContrib, sectCoins, sectDay, sectDone, sectDuty?.toJson()],
+        'manual': [manualPages, manualOn],
+        'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
+        'nm': [nmStars, nmDay, nmRuns],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -1755,6 +2055,43 @@ class HeroData {
         if (companionById.containsKey(k) && v is int) h.companionBonds['$k'] = v.clamp(1, maxBond);
       });
       h.activeCompanion = h.companionBonds.containsKey(comp[0]) ? comp[0] as String : '';
+    }
+    final sect = m['sect'];
+    if (sect is List && sect.length == 6) {
+      h.sectRank = (sect[0] as int).clamp(0, maxSectRank);
+      h.sectContrib = math.max(0, sect[1] as int);
+      h.sectCoins = math.max(0, sect[2] as int);
+      h.sectDay = sect[3] as String;
+      h.sectDone = math.max(0, sect[4] as int);
+      final d = sect[5];
+      h.sectDuty = d is Map ? SectDuty.fromJson(d.cast<String, dynamic>()) : null;
+    }
+    final manual = m['manual'];
+    if (manual is List && manual.length == 2) {
+      (manual[0] as Map).forEach((k, v) {
+        if (v is int && v > 0) h.manualPages['$k'] = v;
+      });
+      (manual[1] as Map).forEach((k, v) {
+        if (v is int && v >= 0 && v < ManualKind.values.length) h.manualOn['$k'] = v;
+      });
+    }
+    final fish = m['fish'];
+    if (fish is List && fish.length == 5) {
+      h.fishDay = fish[0] as String;
+      h.fishUsed = math.max(0, fish[1] as int);
+      h.fishAds = math.max(0, fish[2] as int);
+      (fish[3] as Map).forEach((k, v) {
+        if (fishById.containsKey(k) && v is int && v > 0) h.fishCaught['$k'] = v;
+      });
+      h.fishBooks.addAll([for (final v in fish[4] as List) '$v']);
+    }
+    final nm = m['nm'];
+    if (nm is List && nm.length == 3) {
+      (nm[0] as Map).forEach((k, v) {
+        if (v is int) h.nmStars['$k'] = v.clamp(0, 3);
+      });
+      h.nmDay = nm[1] as String;
+      h.nmRuns = math.max(0, nm[2] as int);
     }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];

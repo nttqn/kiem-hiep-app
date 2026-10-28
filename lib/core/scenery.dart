@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'fishing.dart';
 
 /// A standing thing drawn sorted with the actors (trees, rocks, pillars).
 class Prop {
@@ -68,8 +69,9 @@ class Scenery {
         final ex = math.min(x, w - x), ey = math.min(y, h - y);
         if (ex > 150 && ey > 150) continue;
       } else {
-        // Leave the entrance clear.
+        // Leave the entrance and the fishing pond clear.
         if ((x - 220).abs() < 260 && (y - h / 2).abs() < 260) continue;
+        if ((x - pondDx).abs() < 190 && y > h / 2 + pondDy - 70 && y < h / 2 + pondDy + 180) continue;
       }
       if (props.any((p) =>
           (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < 90 * 90)) {
@@ -84,9 +86,10 @@ class Scenery {
         final cx = r.nextDouble() * w, cy = r.nextDouble() * h;
         if ((cx - 220).abs() < 400 && (cy - h / 2).abs() < 400) continue;
         for (var k = 0; k < 5; k++) {
-          props.add(Prop(kinds.first, cx + r.nextDouble() * 160 - 80,
-              cy + r.nextDouble() * 120 - 60, 0.9 + r.nextDouble() * 0.4,
-              r.nextInt(1000)));
+          final px = cx + r.nextDouble() * 160 - 80, py = cy + r.nextDouble() * 120 - 60;
+          final scale = 0.9 + r.nextDouble() * 0.4, v = r.nextInt(1000);
+          if ((px - pondDx).abs() < 190 && py > h / 2 + pondDy - 70 && py < h / 2 + pondDy + 180) continue;
+          props.add(Prop(kinds.first, px, py, scale, v));
         }
       }
     }

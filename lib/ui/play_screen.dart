@@ -16,6 +16,7 @@ import '../game/battle_game.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import 'fishing_view.dart';
 import 'hud.dart';
 import 'theme.dart';
 
@@ -49,6 +50,7 @@ class _PlayScreenState extends State<PlayScreen> {
   Color _bannerColor = goldLight;
   double _bannerAt = -10;
   bool _paused = false;
+  bool _fishing = false;
   bool _dead = false;
   bool? _cleared;
   int _stars = 0;
@@ -88,9 +90,9 @@ class _PlayScreenState extends State<PlayScreen> {
     _autosave?.cancel();
     _bannerTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
-    // Walking out of a duel concedes it.
+    // Walking out of a duel concedes it (a khảo hạch can just be retried).
     final d = widget.dungeon;
-    if (d != null && d.isArena && !world.finished) hero.arenaResult(false, d.rival!);
+    if (d != null && d.isArena && !d.trial && !world.finished) hero.arenaResult(false, d.rival!);
     SaveService.instance.save();
     super.dispose();
   }
@@ -150,7 +152,7 @@ class _PlayScreenState extends State<PlayScreen> {
           Leaderboard.instance.submitBoss(SaveService.instance.active, hero);
           Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
         } else if (d != null && d.isArena) {
-          Analytics.instance.log('arena_fight', {'won': 1, 'level': hero.level});
+          Analytics.instance.log(d.trial ? 'sect_trial' : 'arena_fight', {'won': 1, 'level': hero.level});
         } else if (d != null && !d.isTower) {
           Analytics.instance.log('dungeon_clear', {'id': d.id, 'stars': e.value.round()});
         }
@@ -161,7 +163,7 @@ class _PlayScreenState extends State<PlayScreen> {
       case EvKind.failed:
         SaveService.instance.save();
         if (widget.dungeon?.isArena ?? false) {
-          Analytics.instance.log('arena_fight', {'won': 0, 'level': hero.level});
+          Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : 'arena_fight', {'won': 0, 'level': hero.level});
         }
         setState(() => _cleared = false);
       case EvKind.shake:
@@ -171,8 +173,22 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _setPaused(bool v) {
     setState(() => _paused = v);
-    game.halted = v || _dead || _cleared != null;
+    game.halted = v || _fishing || _dead || _cleared != null;
     if (v) SaveService.instance.save();
+  }
+
+  /// The pond's mini-game pauses the field around it.
+  void _setFishing(bool v) {
+    setState(() => _fishing = v);
+    game.halted = v || _paused || _dead || _cleared != null;
+    if (v) {
+      world.input.attack = false;
+      world.input.moveX = 0;
+      world.input.moveY = 0;
+      _joyPointer = null;
+      _joyBase = null;
+      _joyKnob = Offset.zero;
+    }
   }
 
   void _leave() {
@@ -322,6 +338,10 @@ class _PlayScreenState extends State<PlayScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         if (_dead || _cleared != null) return;
+        if (_fishing) {
+          _setFishing(false);
+          return;
+        }
         _setPaused(!_paused);
       },
       child: Scaffold(
@@ -355,6 +375,8 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ),
                 if (_banner != null && _now - _bannerAt < 2.6) _bannerView(),
+                if (_fishing && !_paused)
+                  _dim(FishingPanel(mapId: world.map.id, onClose: () => _setFishing(false))),
                 if (_paused) _pauseOverlay(),
                 if (_dead) _deadOverlay(),
                 if (_cleared != null) _resultOverlay(),
@@ -421,6 +443,18 @@ class _PlayScreenState extends State<PlayScreen> {
           ),
         ),
         Positioned(left: 60, right: 60, bottom: 2, child: ExpStrip(hero: hero)),
+        if (world.nearPond && hero.fishOpen && !_fishing)
+          Positioned(
+            right: 330,
+            bottom: 30,
+            child: LButton(
+              label: 'Câu cá',
+              icon: Icons.phishing,
+              small: true,
+              color: const Color(0xFF2E6A8A),
+              onTap: () => _setFishing(true),
+            ),
+          ),
         if (_joyBase != null)
           Positioned(
             left: _joyBase!.dx - _joyRadius,
@@ -504,9 +538,9 @@ class _PlayScreenState extends State<PlayScreen> {
         size: s,
         learned: lv > 0,
         unlockLevel: sk.unlock,
-        cooldown: lv > 0 && cd > 0 ? (cd / (sk.cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
+        cooldown: lv > 0 && cd > 0 ? (cd / (world.skills[idx].cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
         cdText: cd >= 0.1 ? cd.toStringAsFixed(cd < 1 ? 1 : 0) : null,
-        noMp: lv > 0 && world.player.mp < sk.mpAt(lv),
+        noMp: lv > 0 && world.player.mp < world.skills[idx].mpAt(lv),
         onTap: () => world.input.skills.add(idx),
       ),
     );
@@ -527,9 +561,9 @@ class _PlayScreenState extends State<PlayScreen> {
         size: s,
         learned: lv > 0,
         unlockLevel: sk.unlock,
-        cooldown: lv > 0 && cd > 0 ? (cd / (sk.cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
+        cooldown: lv > 0 && cd > 0 ? (cd / (world.skills[idx].cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
         cdText: cd >= 0.1 ? cd.toStringAsFixed(cd < 1 ? 1 : 0) : null,
-        noMp: lv > 0 && world.player.mp < sk.mpAt(lv),
+        noMp: lv > 0 && world.player.mp < world.skills[idx].mpAt(lv),
         onTap: () => world.input.skills.add(idx),
       ),
     );
@@ -722,7 +756,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 const SizedBox(height: 6),
                 for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
                 const SizedBox(height: 10),
-                if (!_doubled)
+                if (!_doubled && hero.lastDungeonGold > 0)
                   _adButton('Nhân đôi lượng & kinh nghiệm', () {
                     hero.gold += hero.lastDungeonGold;
                     hero.gainExp(hero.lastDungeonExp);
@@ -731,7 +765,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     _toast('+${hero.lastDungeonGold} lượng · +${hero.lastDungeonExp.round()} kinh nghiệm',
                         goldLight);
                   })
-                else
+                else if (_doubled)
                   Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
               ] else
                 Text('Hãy luyện thêm cấp, nâng trang bị rồi quay lại.', style: body),
@@ -832,7 +866,7 @@ class _PlayScreenState extends State<PlayScreen> {
               const SizedBox(height: 8),
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
               const SizedBox(height: 14),
-              LButton(label: 'Về Lôi đài', color: jade, onTap: _leave),
+              LButton(label: d.trial ? 'Về Sư môn' : 'Về Lôi đài', color: jade, onTap: _leave),
             ],
           ),
         ),
