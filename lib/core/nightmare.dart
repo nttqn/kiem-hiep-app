@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'activity.dart';
 import 'content.dart';
+import 'gems.dart' show maxGemTier;
 import 'hero.dart' show mobHpAt;
 
 /// Ải Ác Mộng: the eighteen dungeons again for heroes past level 60, as a
@@ -74,17 +75,28 @@ DungeonDef nightmareDef(int i, NmAffix affix) {
 const nightmareSummonAt = [0.7, 0.35];
 const int nightmareAdds = 4;
 
+// Rewards climb with the tier so the hard end of the ladder is worth it:
+// nightmare 18 pays about 20x the gold of nightmare 1, three times the
+// shards, top-tier gems and near-certain pages.
+
 /// Gold for a paid clear of nightmare [i].
-int nightmareGold(int i, int stars) => ((400 + nightmareLevel(i) * 40) * (1 + i * 0.08) * (0.7 + stars * 0.1)).round();
+int nightmareGold(int i, int stars) =>
+    ((400 + nightmareLevel(i) * 40) * math.pow(1.2, i) * (0.7 + stars * 0.1)).round();
+
+/// Share of a level's EXP a paid clear gives.
+double nightmareExpShare(int i) => 0.04 + 0.004 * i;
 
 /// Mảnh Hoàng Kim for a paid clear.
-int nightmareShards(int i, int stars) => 1 + (stars >= 3 ? 1 : 0) + i ~/ 6;
+int nightmareShards(int i, int stars) => 1 + (stars >= 3 ? 1 : 0) + i ~/ 4;
 
 /// Gem tier a paid clear may drop.
-int nightmareGemTier(int i) => math.min(6, 3 + i ~/ 6);
+int nightmareGemTier(int i) => math.min(maxGemTier, 3 + i ~/ 4);
 
-const double nightmareGemChance = 0.3;
-const double nightmarePageChance = 0.35;
+double nightmareGemChance(int i) => 0.3 + 0.03 * i;
+double nightmarePageChance(int i) => 0.35 + 0.03 * i;
 
-/// First clear of any nightmare adds these shards.
-const int nightmareFirstShards = 5;
+/// From nightmare 13 on, a chance at a second bí kíp page.
+double nightmareExtraPageChance(int i) => i < 12 ? 0 : 0.1 * (i - 11);
+
+/// First clear of nightmare [i] adds these shards.
+int nightmareFirstShards(int i) => 5 + i ~/ 3;

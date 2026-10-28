@@ -1867,19 +1867,20 @@ class HeroData {
     }
     if (!first) nmRuns++;
     final g = nightmareGold(i, stars);
-    final xp = level >= maxLevel ? 0.0 : expToNext(level) * 0.04;
+    final xp = level >= maxLevel ? 0.0 : expToNext(level) * nightmareExpShare(i);
     gold += g;
     lastDungeonGold = g;
     lastDungeonExp = xp;
-    final shards = nightmareShards(i, stars) + (first ? nightmareFirstShards : 0);
+    final shards = nightmareShards(i, stars) + (first ? nightmareFirstShards(i) : 0);
     goldShards += shards;
     final lines = ['+${_thousands(g)} lượng', if (xp > 0) '+${xp.round()} kinh nghiệm', '+$shards Mảnh Hoàng Kim'];
-    if (first || rng.nextDouble() < nightmareGemChance) {
+    if (first || rng.nextDouble() < nightmareGemChance(i)) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], nightmareGemTier(i));
       addGem(gem);
       lines.add(gem.name);
     }
-    if (manualOpen && (first || rng.nextDouble() < nightmarePageChance)) lines.add(gainManualPage(rng));
+    if (manualOpen && (first || rng.nextDouble() < nightmarePageChance(i))) lines.add(gainManualPage(rng));
+    if (manualOpen && rng.nextDouble() < nightmareExtraPageChance(i)) lines.add(gainManualPage(rng));
     if (xp > 0) gainExp(xp);
     return lines;
   }

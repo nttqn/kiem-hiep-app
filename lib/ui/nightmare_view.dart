@@ -52,7 +52,7 @@ class NightmareView extends StatelessWidget {
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 270,
-              mainAxisExtent: 134,
+              mainAxisExtent: 150,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
@@ -86,6 +86,11 @@ class NightmareView extends StatelessWidget {
                                     ? const Color(0xFFF0C060)
                                     : const Color(0xFFF07A6A),
                           ),
+                        ),
+                        Text(
+                          'Thưởng ${fmt(nightmareGold(i, 3))} lượng · ${nightmareShards(i, 3)} mảnh · ngọc bậc ${nightmareGemTier(i)}',
+                          style: small.copyWith(fontSize: 11, color: goldLight),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text('Ma khí ${a.name}: ${a.desc}',
                             style: small.copyWith(color: cream, fontSize: 11),

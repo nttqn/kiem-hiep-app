@@ -8,6 +8,7 @@ import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/core/manuals.dart';
+import 'package:kiem_hiep/core/gems.dart';
 import 'package:kiem_hiep/core/nightmare.dart';
 import 'package:kiem_hiep/core/sect_duty.dart';
 import 'package:kiem_hiep/core/sects.dart';
@@ -313,7 +314,13 @@ void main() {
       for (var i = 1; i < nightmareCount; i++) {
         expect(nightmareLevel(i), greaterThanOrEqualTo(nightmareLevel(i - 1)));
         expect(nightmareMul(i), greaterThan(nightmareMul(i - 1)));
+        expect(nightmarePower(i), greaterThan(nightmarePower(i - 1)));
+        expect(nightmareGold(i, 3), greaterThan(nightmareGold(i - 1, 3)));
+        expect(nightmareShards(i, 3), greaterThanOrEqualTo(nightmareShards(i - 1, 3)));
+        expect(nightmareGemChance(i), lessThan(1));
+        expect(nightmarePageChance(i), lessThan(1));
       }
+      expect(nightmareGemTier(nightmareCount - 1), lessThanOrEqualTo(maxGemTier));
       expect(nightmareAffix(0, '20261026'), isNot(nightmareAffix(0, '20261102')));
       expect(nightmareAffix(0, '20261026'), nightmareAffix(4, '20261026'));
       final d = nightmareDef(3, NmAffix.chill);
@@ -337,7 +344,7 @@ void main() {
       final d = nightmareDef(0, NmAffix.frenzy);
       final shards = h.goldShards;
       final lines = h.nightmareReward(d, 3, rng, day: '20261101');
-      expect(h.goldShards, shards + nightmareShards(0, 3) + nightmareFirstShards);
+      expect(h.goldShards, shards + nightmareShards(0, 3) + nightmareFirstShards(0));
       expect(lines.where((l) => l.startsWith('Bí kíp')), hasLength(1));
       expect(h.nmStars['nm1'], 3);
       expect(h.nmRunsLeft, nightmarePaidRuns);
