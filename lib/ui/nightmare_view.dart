@@ -19,6 +19,7 @@ class NightmareView extends StatelessWidget {
     final day = vnDayKey();
     h.nmRollDay(day);
     final week = nightmareWeek(day);
+    final power = h.power;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -51,7 +52,7 @@ class NightmareView extends StatelessWidget {
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 270,
-              mainAxisExtent: 118,
+              mainAxisExtent: 134,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
@@ -74,8 +75,18 @@ class NightmareView extends StatelessWidget {
                       children: [
                         Text('Ác Mộng ${i + 1}: ${dungeons[i].name}',
                             style: bold.copyWith(color: const Color(0xFFF2B8E0)), overflow: TextOverflow.ellipsis),
-                        Text('Quái cấp ${d.level} · mạnh ×${d.mul.toStringAsFixed(2)} · ${d.map.name}',
-                            style: small, overflow: TextOverflow.ellipsis),
+                        Text('Quái cấp ${d.level} · ${d.map.name}', style: small, overflow: TextOverflow.ellipsis),
+                        Text(
+                          'Lực chiến đề nghị ${fmt(nightmarePower(i))}',
+                          style: small.copyWith(
+                            fontSize: 11.5,
+                            color: power >= nightmarePower(i)
+                                ? const Color(0xFF8CE07A)
+                                : power >= nightmarePower(i) * 0.6
+                                    ? const Color(0xFFF0C060)
+                                    : const Color(0xFFF07A6A),
+                          ),
+                        ),
                         Text('Ma khí ${a.name}: ${a.desc}',
                             style: small.copyWith(color: cream, fontSize: 11),
                             maxLines: 2,

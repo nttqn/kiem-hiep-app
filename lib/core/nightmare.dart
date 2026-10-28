@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'activity.dart';
 import 'content.dart';
+import 'hero.dart' show mobHpAt;
 
 /// Ải Ác Mộng: the eighteen dungeons again for heroes past level 60, as a
 /// ladder from monster level 60 to 99 with tougher packs, a boss that calls
@@ -30,8 +31,18 @@ int get nightmareCount => dungeons.length;
 /// Monster level of nightmare [i] (0-based): 60 for the first, 99 for the last.
 int nightmareLevel(int i) => 60 + (i * 39 / (nightmareCount - 1)).round();
 
-/// HP and attack multiplier on top of the level.
-double nightmareMul(int i) => 1.4 + 0.08 * i;
+/// Each nightmare asks for this much more lực chiến than the one before.
+const double nightmareGrowth = 1.27;
+
+/// Lực chiến a nightmare is tuned for: about 20k for the first, over a
+/// million for the last, so the ladder keeps up with gems, Hoàng Kim gear
+/// and rebirths instead of being one-shot by a strong hero.
+int nightmarePower(int i) => (20000 * math.pow(nightmareGrowth, i) / 1000).round() * 1000;
+
+/// HP and attack multiplier on top of the level: the monster grows with
+/// [nightmarePower], less what its level already adds.
+double nightmareMul(int i) =>
+    1.4 * math.pow(nightmareGrowth, i) * mobHpAt(nightmareLevel(0)) / mobHpAt(nightmareLevel(i));
 
 /// Ma khí of nightmare [i] in the week starting [weekKey] (a Monday,
 /// `20261026` style), so each one changes every Monday.
