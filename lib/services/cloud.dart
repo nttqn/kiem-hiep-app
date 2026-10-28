@@ -287,9 +287,11 @@ class CloudSave extends ChangeNotifier {
   Future<void> _upload(int slot, HeroData h) async {
     final info = _info(h);
     final old = cloudSlots[slot];
-    if (old != null && old.data != info.data && wouldLose(old, info)) await _stash(slot, old);
-    await _slots.doc('$slot').set(_doc(info));
-    cloudSlots[slot] = info;
+    if (old == null || old.data != info.data) {
+      if (old != null && wouldLose(old, info)) await _stash(slot, old);
+      await _slots.doc('$slot').set(_doc(info));
+      cloudSlots[slot] = info;
+    }
     await Leaderboard.instance.submit(slot, h);
   }
 
@@ -320,11 +322,12 @@ class CloudSave extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Called after every local save; uploads at most every 20 seconds.
+  /// Called after every local save; uploads at most every two minutes (and
+  /// on app pause), which keeps a busy day inside Firestore's free writes.
   void queueUpload(int slot) {
     if (!available || user == null || conflicts.contains(slot)) return;
     _dirty.add(slot);
-    _debounce ??= Timer(const Duration(seconds: 20), flush);
+    _debounce ??= Timer(const Duration(minutes: 2), flush);
   }
 
   /// Uploads pending slots now (also on app pause).

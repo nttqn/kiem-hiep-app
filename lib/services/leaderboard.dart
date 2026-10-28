@@ -104,24 +104,36 @@ class Leaderboard extends ChangeNotifier {
 
   CollectionReference<Map<String, dynamic>> get _col => FirebaseFirestore.instance.collection('leaderboard');
 
-  /// Writes [h] (in [slot]) to the board. Called with every cloud upload.
+  /// What was last written per row, so unchanged heroes cost no writes.
+  final Map<String, String> _sent = {};
+
+  /// Writes [h] (in [slot]) to the board. Called with every cloud upload;
+  /// skips the write when nothing on the row changed.
   Future<void> submit(int slot, HeroData h) async {
     final uid = myUid;
     if (hidden || uid == null || debugEntries != null) return;
+    final id = '${uid}_$slot';
+    final row = <String, Object>{
+      'uid': uid,
+      'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
+      'hanh': h.hanh.index,
+      'level': h.level,
+      'rebirths': h.rebirths,
+      'rank': h.rebirths * 100 + h.level,
+      'power': h.power,
+      'tower': h.towerBest,
+      'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,
+      'arenaS': arenaBoardValue(h),
+    };
+    final key = row.toString();
+    if (_sent[id] == key) return;
     try {
-      await _col.doc('${uid}_$slot').set({
-        'uid': uid,
-        'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
-        'hanh': h.hanh.index,
-        'level': h.level,
-        'rebirths': h.rebirths,
-        'rank': h.rebirths * 100 + h.level,
-        'power': h.power,
-        'tower': h.towerBest,
-        'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,
-        'arenaS': arenaBoardValue(h),
-        'updated': FieldValue.serverTimestamp(),
-      });
+      // A write only completes once the server takes it, which can be never
+      // when offline or over quota; don't hold the caller that long.
+      await _col.doc(id).set({...row, 'updated': FieldValue.serverTimestamp()}).timeout(
+            const Duration(seconds: 8),
+          );
+      _sent[id] = key;
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
     }
@@ -149,7 +161,7 @@ class Leaderboard extends ChangeNotifier {
         'rebirths': h.rebirths,
         'dmg': h.wbTotal,
         'updated': FieldValue.serverTimestamp(),
-      });
+      }).timeout(const Duration(seconds: 8));
     } catch (e) {
       debugPrint('boss submit failed: $e');
     }
@@ -173,7 +185,8 @@ class Leaderboard extends ChangeNotifier {
     final dbg = debugBoss;
     if (dbg != null) return dbg.where((e) => e.power > dmg).length + 1;
     try {
-      final agg = await _boss(day).where('dmg', isGreaterThan: dmg).count().get();
+      final agg =
+          await _boss(day).where('dmg', isGreaterThan: dmg).count().get().timeout(const Duration(seconds: 10));
       return (agg.count ?? 0) + 1;
     } catch (_) {
       return null;
@@ -263,7 +276,11 @@ class Leaderboard extends ChangeNotifier {
     final dbg = debugEntries;
     if (dbg != null) return dbg.where((e) => board.valueOf(e) > value).length + 1;
     try {
-      final agg = await _col.where(board.field, isGreaterThan: value).count().get();
+      final agg = await _col
+          .where(board.field, isGreaterThan: value)
+          .count()
+          .get()
+          .timeout(const Duration(seconds: 10));
       return (agg.count ?? 0) + 1;
     } catch (_) {
       return null;
