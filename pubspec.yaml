@@ -41,14 +41,18 @@ dependencies:
   # last pre-JNI release. Test a real release APK on a device before unpinning.
   shared_preferences_android: 2.4.28
   flame_audio: ^2.12.2
-  firebase_core: ^4.15.0
+  # Pinned: firebase_core picks the Firebase iOS SDK for every plugin;
+  # 4.15.2 wants FirebaseAnalytics 12.19.3, which is not on CocoaPods, so
+  # pod install fails. 4.15.0 (SDK 12.19.0) builds. firebase_database
+  # 12.6.1 needs core 4.15.1+, hence 12.6.0.
+  firebase_core: 4.15.0
   firebase_auth: ^6.7.0
   cloud_firestore: ^6.10.0
   firebase_analytics: 12.6.0
   google_sign_in: ^7.2.0
   google_mobile_ads: ^9.1.0
   app_tracking_transparency: 2.0.7
-  firebase_database: ^12.6.1
+  firebase_database: 12.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
