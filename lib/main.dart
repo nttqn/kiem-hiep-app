@@ -5,6 +5,7 @@ import 'services/ads.dart';
 import 'services/chat.dart';
 import 'services/cloud.dart';
 import 'services/leaderboard.dart';
+import 'services/notify.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
 import 'ui/theme.dart';
@@ -23,6 +24,8 @@ Future<void> main() async {
   await SaveService.instance.load();
   await Leaderboard.instance.load();
   await ChatService.instance.load();
+  // Not awaited: reminders are a nicety.
+  NotifyService.instance.init();
   // Not awaited either: the game starts offline and syncs when it can.
   CloudSave.instance.init();
   AdsService.instance.init();

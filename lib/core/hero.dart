@@ -14,9 +14,11 @@ import 'gold_sets.dart';
 import 'fishing.dart';
 import 'luan_hoi.dart';
 import 'mail.dart';
+import 'newbie.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
+import 'live_event.dart';
 import 'manuals.dart';
 import 'meridians.dart';
 import 'mounts.dart';
@@ -334,6 +336,10 @@ class HeroData {
   String bornDay = '';
   int deaths = 0;
   final Set<String> funnel = {};
+
+  // Tân thủ thất nhật: gifts taken and the Vietnam day of the last one.
+  int newbieClaimed = 0;
+  String newbieDay = '';
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -1096,7 +1102,10 @@ class HeroData {
     wbClaimed = 0;
   }
 
-  int get wbRunsLeft => worldBossFreeTries + wbAdRuns - wbRuns;
+  /// Free runs today, with any extra from an event.
+  int get wbFreeRuns => worldBossFreeTries + EventBoost(vnDayKey()).wbRuns;
+
+  int get wbRunsLeft => wbFreeRuns + wbAdRuns - wbRuns;
 
   /// Uses one run; false when none are left.
   bool wbStartRun(String day) {
@@ -1317,8 +1326,9 @@ class HeroData {
     return true;
   }
 
-  /// Monster EXP: Song Bội Đan, and the day's [fatigueMul].
-  double get expMul => (buffLeft('songboi') > 0 ? expPillMul : 1) * fatigueMul(fatigueSec);
+  /// Monster EXP: Song Bội Đan, today's event and the day's [fatigueMul].
+  double get expMul =>
+      (buffLeft('songboi') > 0 ? expPillMul : 1) * EventBoost(vnDayKey()).exp * fatigueMul(fatigueSec);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {
@@ -1340,7 +1350,8 @@ class HeroData {
       ));
     }
   }
-  double get goldMul => buffLeft('tubao') > 0 ? goldPillMul : 1;
+  /// Monster gold: Tụ Bảo Đan and today's event.
+  double get goldMul => (buffLeft('tubao') > 0 ? goldPillMul : 1) * EventBoost(vnDayKey()).gold;
 
   /// Counts buff time down while playing; true when one ran out.
   bool tickBuffs(double dt) {
@@ -1923,7 +1934,8 @@ class HeroData {
     lastDungeonExp = xp;
     final shards = nightmareShards(i, stars) + (first ? nightmareFirstShards(i) : 0);
     goldShards += shards;
-    final iron = nightmareIron(i) + (first ? nightmareFirstIron(i) : 0);
+    final baseIron = nightmareIron(i) + (first ? nightmareFirstIron(i) : 0);
+    final iron = (baseIron * EventBoost(day ?? vnDayKey()).iron).ceil();
     divineIron += iron;
     final lines = [
       '+${_thousands(g)} lượng',
@@ -1961,6 +1973,72 @@ class HeroData {
     recompute();
     notices.add(Notice('${divineStage(divine).toUpperCase()} TẦNG $divine!', color: divineColor(divine), big: true));
     return true;
+  }
+
+  // ------------------------------------------------------------- tân thủ
+
+  /// Gifts left: for heroes made since they exist, or still low level.
+  bool get newbieOpen =>
+      newbieClaimed < newbieDays && (bornDay.isNotEmpty || (rebirths == 0 && level <= newbieLegacyLevel));
+
+  /// Today's gift is waiting.
+  bool newbieReady(String day) => newbieOpen && newbieDay != day;
+
+  /// Takes today's gift; the lines say what came in.
+  List<String> claimNewbie(String day, math.Random rng) {
+    if (!newbieReady(day)) return const [];
+    final g = newbieGifts[newbieClaimed];
+    newbieClaimed++;
+    newbieDay = day;
+    var gold = g.gold;
+    final lines = <String>[];
+    if (g.costume.isNotEmpty) {
+      final c = costumeById[g.costume];
+      if (c != null && ownedCostumes.add(c.id)) {
+        lines.add('Ngoại trang ${c.name}');
+      } else {
+        gold += newbieOwnedGold;
+      }
+    }
+    if (g.mount.isNotEmpty) {
+      final mt = mountById[g.mount];
+      if (mt != null && !ownsMount(mt.id)) {
+        _grantMount(mt, quiet: true);
+        lines.add('Thú cưỡi ${mt.name}');
+      } else {
+        gold += newbieOwnedGold;
+      }
+    }
+    if (gold > 0) {
+      this.gold += gold;
+      lines.insert(0, '+${_thousands(gold)} lượng');
+    }
+    if (g.hpPots > 0) {
+      hpPots += g.hpPots;
+      lines.add('+${g.hpPots} Kim Sang Dược');
+    }
+    if (g.mpPots > 0) {
+      mpPots += g.mpPots;
+      lines.add('+${g.mpPots} Ngưng Thần Đan');
+    }
+    for (var i = 0; i < g.gems; i++) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], g.gemTier);
+      addGem(gem);
+      lines.add(gem.name);
+    }
+    if (g.item != null) {
+      final it = makeItem(
+        slot: Slot.values[rng.nextInt(Slot.values.length)],
+        level: level,
+        rarity: g.item!,
+        sect: sect,
+        rng: rng,
+      );
+      addItem(it);
+      lines.add('${it.name} [${it.rarity.label}]');
+    }
+    recompute();
+    return lines;
   }
 
   // ------------------------------------------------------------- hòm thư
@@ -2058,6 +2136,7 @@ class HeroData {
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
+        'newbie': [newbieClaimed, newbieDay],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2230,6 +2309,11 @@ class HeroData {
       // A hero from before the funnel: count what it already did as sent,
       // so it does not flood the steps of new players.
       h.funnel.addAll(funnelDue(h, ''));
+    }
+    final newbie = m['newbie'];
+    if (newbie is List && newbie.length == 2) {
+      h.newbieClaimed = (newbie[0] as int).clamp(0, newbieDays);
+      h.newbieDay = newbie[1] as String;
     }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];

@@ -12,7 +12,9 @@ import 'core/companions.dart';
 import 'core/content.dart';
 import 'core/costumes.dart';
 import 'core/divine.dart';
+import 'core/live_event.dart';
 import 'core/mail.dart';
+import 'core/newbie.dart';
 import 'services/mail.dart';
 import 'core/fishing.dart';
 import 'core/gold_sets.dart';
@@ -357,6 +359,21 @@ Future<void> main() async {
     if (fat != null) {
       h.fatigueRoll(vnDayKey());
       h.fatigueSec = fat * 60.0;
+    }
+    // newbie=<n> newbie gifts taken (a hero made today); otherwise none
+    // waiting, so they do not cover other screenshots.
+    final newbie = int.tryParse(q['newbie'] ?? '');
+    if (newbie != null) {
+      h.bornDay = vnDayKey();
+      h.newbieClaimed = newbie;
+    } else {
+      h.newbieClaimed = newbieDays;
+    }
+    // event=1: a weekend event running today.
+    if (q['event'] == '1') {
+      liveEvents = const [
+        LiveEvent(id: 'dev', name: 'Đại hội cuối tuần', desc: 'Giang hồ mở hội', exp: 2, gems: 2, wbRuns: 1),
+      ];
     }
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();

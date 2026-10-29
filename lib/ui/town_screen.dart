@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/fatigue.dart';
+import '../core/live_event.dart';
+import '../core/newbie.dart';
 import '../core/hero.dart';
 import '../core/sect_duty.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
 import '../services/mail.dart';
+import '../services/notify.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'activity_screen.dart';
@@ -28,6 +31,7 @@ import 'sect_screen.dart';
 import 'cloud_panel.dart';
 import 'lists.dart';
 import 'mail_dialog.dart';
+import 'newbie_dialog.dart';
 import 'play_screen.dart';
 import 'shop_screen.dart';
 import 'theme.dart';
@@ -70,7 +74,83 @@ class _TownScreenState extends State<TownScreen> {
       if (r != null && mounted) await showOfflineDialog(context, h, r);
     }
     if (mounted && h.lastLoginDate != todayKey()) await showLoginGiftDialog(context, h);
+    if (mounted && h.newbieReady(vnDayKey())) await showNewbieDialog(context);
+    // Ask for notifications once the player has stuck around a little.
+    if (h.level >= 5 || h.rebirths > 0) await NotifyService.instance.askOnce();
     if (mounted) setState(() {});
+  }
+
+  /// Strips between the quest and the grid: the newbie gifts while they
+  /// last, and today's events.
+  List<Widget> _banners() {
+    final day = vnDayKey();
+    final on = EventBoost(day).on;
+    // At most two, so the grid keeps its room on short screens.
+    return <Widget>[
+      if (h.newbieOpen)
+        _banner(
+          icon: Icons.redeem,
+          color: const Color(0xFF8CE07A),
+          title: h.newbieReady(day)
+              ? 'Quà tân thủ · ngày ${h.newbieClaimed + 1}/$newbieDays'
+              : 'Quà tân thủ · đã nhận ${h.newbieClaimed}/$newbieDays',
+          text: h.newbieReady(day)
+              ? 'Quà hôm nay đang chờ! Đủ 7 ngày nhận Thú cưỡi Bạch Mã.'
+              : 'Đã nhận hôm nay, mai quay lại nhận tiếp nhé.',
+          action: h.newbieReady(day) ? 'Nhận' : 'Xem',
+          onTap: () async {
+            await showNewbieDialog(context);
+            if (mounted) setState(() {});
+          },
+        ),
+      for (final e in on)
+        _banner(
+          icon: Icons.celebration,
+          color: const Color(0xFFFFB03A),
+          title: e.name,
+          text: [if (e.desc.isNotEmpty) e.desc, e.perks.join(' · ')].join(' · '),
+        ),
+    ].take(2).toList();
+  }
+
+  Widget _banner({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String text,
+    String? action,
+    VoidCallback? onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Panel(
+          border: color,
+          padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: '$title  ', style: bold.copyWith(fontSize: 13, color: color)),
+                    TextSpan(text: text, style: small.copyWith(fontSize: 11.5, color: cream)),
+                  ]),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (action != null) ...[
+                const SizedBox(width: 6),
+                LButton(label: action, small: true, color: jade, onTap: onTap),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _refresh() {
@@ -174,6 +254,26 @@ class _TownScreenState extends State<TownScreen> {
                                 icon: Icon(on ? Icons.volume_up : Icons.volume_off, color: goldLight),
                               ),
                             ),
+                            ListenableBuilder(
+                              listenable: NotifyService.instance,
+                              builder: (_, _) {
+                                final on = NotifyService.instance.enabled;
+                                return IconButton(
+                                  tooltip: on ? 'Tắt thông báo nhắc' : 'Bật thông báo nhắc',
+                                  onPressed: () {
+                                    NotifyService.instance.setEnabled(!on);
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text(on
+                                          ? 'Đã tắt thông báo nhắc.'
+                                          : 'Đã bật thông báo nhắc: bế quan đầy, quà mới mỗi tối.'),
+                                      duration: const Duration(seconds: 2),
+                                    ));
+                                  },
+                                  icon: Icon(on ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
+                                      color: goldLight),
+                                );
+                              },
+                            ),
                             IconButton(
                               tooltip: 'Hướng dẫn',
                               onPressed: () => showGuide(context),
@@ -188,6 +288,8 @@ class _TownScreenState extends State<TownScreen> {
                           ],
                         ),
                         if (q != null) _questCard(q),
+                        const SizedBox(height: 6),
+                        ..._banners(),
                         const Spacer(),
                         _grid(pending),
                       ],

@@ -11,6 +11,7 @@ import 'gold_sets.dart';
 import 'hanh.dart';
 import 'hero.dart';
 import 'items.dart';
+import 'live_event.dart';
 import 'manuals.dart';
 import 'nightmare.dart';
 import 'pets.dart';
@@ -1946,7 +1947,7 @@ class World {
       _text(m.x, m.y - 90, '+$n ${herbNames[tier]}', herbColors[tier], small: true);
     }
     // Gems take the monster's phase; bosses always drop one, a tier up.
-    if (m.big || rng.nextDouble() < gemDropChance) {
+    if (m.big || rng.nextDouble() < gemDropChance * EventBoost(vnDayKey()).gems) {
       drops.add(Drop(m.x + jx(), m.y + jx(),
           gem: Gem(m.def.hanh, dropTier(m.level, boss: m.big))));
     }

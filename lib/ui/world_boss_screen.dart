@@ -223,7 +223,7 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
         children: [
           Text(boss.name, style: titleStyle(20, color: hanhColor(boss.hanh)), textAlign: TextAlign.center),
           Expanded(child: Center(child: BossPreview(def: boss, size: 150))),
-          Text('Lượt còn: $left (${worldBossFreeTries + h.wbAdRuns} hôm nay)',
+          Text('Lượt còn: $left (${h.wbFreeRuns + h.wbAdRuns} hôm nay)',
               style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           Text('Cao nhất: ${fmt(h.wbBest)}', style: small, textAlign: TextAlign.center),
           const SizedBox(height: 6),

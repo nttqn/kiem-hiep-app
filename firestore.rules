@@ -63,6 +63,11 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // Sự kiện: boosts switched on by hand in the console (1.2.3+).
+    match /events/{id} {
+      allow read: if true;
+    }
+
     // Boss Thế Giới: one board per Vietnam day, same ownership rules.
     match /worldboss/{day}/hits/{id} {
       allow read: if true;

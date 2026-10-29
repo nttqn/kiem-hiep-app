@@ -4,13 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/hero.dart';
+import '../core/live_event.dart';
 import '../core/mail.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
 
-/// Hòm thư: reads the gifts posted in `mail` (Firebase console) that are
-/// still open. No sign-in needed; a handful of reads at most every few
-/// minutes, from the town.
+/// Hòm thư and Sự kiện: reads the gifts posted in `mail` and the boosts in
+/// `events` (Firebase console). No sign-in needed; a handful of reads at
+/// most every ten minutes, from the town.
 class MailService extends ChangeNotifier {
   MailService._();
   static final MailService instance = MailService._();
@@ -50,14 +51,24 @@ class MailService extends ChangeNotifier {
         ..removeWhere((m) => !m.openOn(today))
         ..sort((a, b) => b.from.compareTo(a.from));
       mails = out;
-      _fetched = DateTime.now();
-      notifyListeners();
     } catch (e) {
-      // Try again at the next interval, not on every save.
-      _fetched = DateTime.now();
       debugPrint('mail fetch failed: $e');
     }
+    // Sự kiện (`events`), read alongside: a few documents at most.
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('events')
+          .limit(10)
+          .get()
+          .timeout(const Duration(seconds: 10));
+      liveEvents = [for (final d in snap.docs) ?LiveEvent.fromMap(d.id, _days(d.data()))];
+    } catch (e) {
+      debugPrint('events fetch failed: $e');
+    }
+    // Try again at the next interval, whether it worked or not.
+    _fetched = DateTime.now();
     _busy = false;
+    notifyListeners();
   }
 
   /// [m] with console timestamps in `from` / `until` turned into Vietnam
