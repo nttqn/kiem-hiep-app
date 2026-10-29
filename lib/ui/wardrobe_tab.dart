@@ -67,7 +67,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
                       hanh: h.hanh,
                       female: h.female,
                       scale: 2,
-                      gear: HeroGear.of(h.equip, hideHat: h.hideHat),
+                      gear: HeroGear.of(h.equip, hideHat: h.hideHat, divine: h.divine),
                       costume: c,
                     ),
                   ),

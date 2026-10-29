@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/content.dart';
+import '../core/divine.dart';
 import '../core/hero.dart';
 import '../core/nightmare.dart';
 import '../core/world_boss.dart';
@@ -33,7 +34,7 @@ class NightmareView extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Quái mạnh hơn nhiều, boss gọi đồng bọn khi yếu máu, ma khí đổi mỗi thứ Hai. '
-                  'Thưởng Mảnh Hoàng Kim, ngọc và trang bí kíp; lần vượt đầu tiên thưởng lớn.',
+                  'Thưởng Mảnh Hoàng Kim, ngọc, trang bí kíp, từ ải 7 có Thần Thiết; lần vượt đầu tiên thưởng lớn.',
                   style: small.copyWith(fontSize: 11.5, color: cream),
                 ),
               ),
@@ -52,7 +53,7 @@ class NightmareView extends StatelessWidget {
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 270,
-              mainAxisExtent: 150,
+              mainAxisExtent: 168,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
@@ -88,8 +89,10 @@ class NightmareView extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Thưởng ${fmt(nightmareGold(i, 3))} lượng · ${nightmareShards(i, 3)} mảnh · ngọc bậc ${nightmareGemTier(i)}',
+                          'Thưởng ${fmt(nightmareGold(i, 3))} lượng · ${nightmareShards(i, 3)} mảnh · ngọc bậc ${nightmareGemTier(i)}'
+                          '${nightmareIron(i) > 0 ? ' · ${nightmareIron(i)} Thần Thiết' : ''}',
                           style: small.copyWith(fontSize: 11, color: goldLight),
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text('Ma khí ${a.name}: ${a.desc}',

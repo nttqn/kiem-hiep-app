@@ -134,17 +134,40 @@ class Leaderboard extends ChangeNotifier {
       'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,
       'arenaS': arenaBoardValue(h),
     };
+    // Play time goes along for the rules' sanity check, but on its own
+    // does not call for a write.
     final key = row.toString();
     if (_sent[id] == key) return;
     try {
       // A write only completes once the server takes it, which can be never
       // when offline or over quota; don't hold the caller that long.
-      await _col.doc(id).set({...row, 'updated': FieldValue.serverTimestamp()}).timeout(
+      await _col
+          .doc(id)
+          .set({...row, 'play': h.playSeconds.round(), 'updated': FieldValue.serverTimestamp()}).timeout(
             const Duration(seconds: 8),
           );
       _sent[id] = key;
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
+    }
+  }
+
+  /// Reports [e] as cheating (`lbReports/{row}_{uid}`, read in the
+  /// console). Once per row and player.
+  Future<bool> report(LbEntry e) async {
+    final uid = myUid;
+    if (uid == null || debugEntries != null) return debugEntries != null;
+    try {
+      await FirebaseFirestore.instance.collection('lbReports').doc('${e.id}_$uid').set({
+        'row': e.id,
+        'uid': uid,
+        'name': e.name,
+        'at': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 8));
+      return true;
+    } catch (err) {
+      debugPrint('leaderboard report failed: $err');
+      return false;
     }
   }
 

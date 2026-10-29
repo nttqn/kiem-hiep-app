@@ -27,13 +27,39 @@ service cloud.firestore {
         && request.resource.data.rank == request.resource.data.rebirths * 100 + request.resource.data.level
         && request.resource.data.power is int
         && request.resource.data.power >= 0 && request.resource.data.power <= 50000000
+        // No hero has more lực chiến than this for their level and rebirths.
+        && request.resource.data.power <= 20000 * (request.resource.data.rank + 10)
         && request.resource.data.tower is int
         && request.resource.data.tower >= 0 && request.resource.data.tower <= 5000
         // Lôi đài season * 100000 + points (1.0.10+; older apps omit it).
         && (!('arenaS' in request.resource.data)
             || (request.resource.data.arenaS is int
-                && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000));
+                && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000))
+        // Play seconds (1.2.2+; older apps omit it): at least 5 hours per
+        // rebirth and a minute per level.
+        && (!('play' in request.resource.data)
+            || (request.resource.data.play is int
+                && request.resource.data.play >= request.resource.data.rebirths * 18000
+                    + request.resource.data.level * 60))
+        // Muted by hand in the console: lbBans/{uid} (any fields).
+        && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Cheating reports from the leaderboard, read in the console.
+    match /lbReports/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.row is string
+        && id == request.resource.data.row + '_' + request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 24
+        && request.resource.data.keys().hasOnly(['row', 'uid', 'name', 'at']);
+    }
+
+    // Hòm thư: gifts written by hand in the console, read by every player.
+    match /mail/{id} {
+      allow read: if true;
     }
 
     // Boss Thế Giới: one board per Vietnam day, same ownership rules.
@@ -53,7 +79,8 @@ service cloud.firestore {
         && request.resource.data.rebirths is int
         && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 5
         && request.resource.data.dmg is int
-        && request.resource.data.dmg >= 0 && request.resource.data.dmg <= 1000000000000;
+        && request.resource.data.dmg >= 0 && request.resource.data.dmg <= 1000000000000
+        && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
   }

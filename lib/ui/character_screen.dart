@@ -11,6 +11,7 @@ import '../core/manuals.dart';
 import '../core/sects.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
+import 'divine_tab.dart';
 import 'gem_tab.dart';
 import 'gold_tab.dart';
 import 'manual_dialog.dart';
@@ -39,11 +40,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim'];
+    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh'];
     return SubScreen(
       title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
       actions: [
-        for (final i in widget.forge ? const [2, 3, 4, 6] : const [0, 1, 2, 3, 5])
+        for (final i in widget.forge ? const [2, 3, 4, 6, 7] : const [0, 1, 2, 3, 5])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: _TabChip(
@@ -61,6 +62,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
         3 => GemTab(onChanged: () => setState(() {}), openItem: _itemDialog),
         5 => WardrobeTab(onChanged: () => setState(() {})),
         6 => GoldTab(onChanged: () => setState(() {})),
+        7 => DivineTab(onChanged: () => setState(() {})),
         _ => RefineTab(onChanged: () => setState(() {})),
       },
     );

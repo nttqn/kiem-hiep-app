@@ -198,7 +198,7 @@ class FigurePreview extends StatefulWidget {
   FigurePreview.of(HeroData h, {super.key, this.scale = 2.4, bool aura = false})
       : hanh = h.hanh,
         female = h.female,
-        gear = HeroGear.of(h.equip, hideHat: h.hideHat),
+        gear = HeroGear.of(h.equip, hideHat: h.hideHat, divine: h.divine),
         costume = costumeById[h.costume],
         rebirths = aura ? h.rebirths : 0;
 

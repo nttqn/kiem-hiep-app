@@ -9,6 +9,7 @@ import '../core/sect_duty.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
+import '../services/mail.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'activity_screen.dart';
@@ -25,6 +26,7 @@ import 'rewards_ui.dart';
 import 'sect_screen.dart';
 import 'cloud_panel.dart';
 import 'lists.dart';
+import 'mail_dialog.dart';
 import 'play_screen.dart';
 import 'shop_screen.dart';
 import 'theme.dart';
@@ -48,6 +50,8 @@ class _TownScreenState extends State<TownScreen> {
     SaveService.instance.save();
     // Play screens replace the list that opened them, so refresh on saves.
     SaveService.instance.addListener(_refresh);
+    MailService.instance.addListener(_refresh);
+    MailService.instance.refresh();
     final away = SaveService.instance.pendingAway;
     SaveService.instance.pendingAway = null;
     WidgetsBinding.instance.addPostFrameCallback((_) => _welcome(away));
@@ -69,12 +73,16 @@ class _TownScreenState extends State<TownScreen> {
   }
 
   void _refresh() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    // Firebase may come up after the town opened; this is throttled.
+    MailService.instance.refresh();
   }
 
   @override
   void dispose() {
     SaveService.instance.removeListener(_refresh);
+    MailService.instance.removeListener(_refresh);
     super.dispose();
   }
 
@@ -130,6 +138,19 @@ class _TownScreenState extends State<TownScreen> {
                           children: [
                             Text('Thành Lạc An', style: titleStyle(24)),
                             const Spacer(),
+                            IconButton(
+                              tooltip: 'Hòm thư',
+                              onPressed: () async {
+                                await showMailDialog(context);
+                                if (mounted) setState(() {});
+                              },
+                              icon: Badge(
+                                isLabelVisible: MailService.instance.open(h).isNotEmpty,
+                                label: Text('${MailService.instance.open(h).length}'),
+                                backgroundColor: seal,
+                                child: const Icon(Icons.mail_outline, color: goldLight),
+                              ),
+                            ),
                             IconButton(
                               tooltip: 'Kênh Thế Giới',
                               onPressed: () => _go(const ChatScreen()),

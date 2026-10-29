@@ -11,6 +11,9 @@ import 'core/arena.dart';
 import 'core/companions.dart';
 import 'core/content.dart';
 import 'core/costumes.dart';
+import 'core/divine.dart';
+import 'core/mail.dart';
+import 'services/mail.dart';
 import 'core/fishing.dart';
 import 'core/gold_sets.dart';
 import 'core/manuals.dart';
@@ -125,6 +128,30 @@ Future<void> main() async {
     ];
     final cw = int.tryParse(q['chatwait'] ?? '');
     if (cw != null) ChatService.instance.lastSent = t0 - chatCooldown.inMilliseconds + cw * 1000;
+  }
+  // mail=1: a made-up Hòm thư.
+  if (q['mail'] == '1') {
+    MailService.instance.debugMails = const [
+      MailDef(
+        id: 'sorry',
+        title: 'Đền bù sự cố bảng xếp hạng',
+        body: 'Cảm ơn các hiệp khách đã kiên nhẫn trong lúc máy chủ quá tải.',
+        gold: 100000,
+        shards: 20,
+        iron: 10,
+        until: '20991231',
+      ),
+      MailDef(
+        id: 'welcome',
+        title: 'Mừng phiên bản 1.2.2',
+        body: 'Thần binh đã xuất thế! Vào Thợ rèn để thức tỉnh vũ khí.',
+        gems: 2,
+        gemTier: 5,
+        pages: 3,
+        hpPots: 20,
+        until: '20991231',
+      ),
+    ];
   }
   final sect = int.tryParse(q['sect'] ?? '') ?? 0;
   final level = int.tryParse(q['level'] ?? '') ?? 1;
@@ -322,6 +349,9 @@ Future<void> main() async {
     }
     World.debugPond = q['pond'] == '1';
     FishingPanel.debugBite = double.tryParse(q['bite'] ?? '');
+    // divine=<lv> Thần binh level, iron=<n> Thần Thiết.
+    h.divine = (int.tryParse(q['divine'] ?? '') ?? 0).clamp(0, divineMax);
+    h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();
     h.recompute();
@@ -364,6 +394,7 @@ Future<void> main() async {
     'mounts' => const PetScreen(tab: 1),
     'comp' => const PetScreen(tab: 2),
     'goldforge' => const CharacterScreen(tab: 6, forge: true),
+    'divine' => const CharacterScreen(tab: 7, forge: true),
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),
     'arena' => const ArenaScreen(),

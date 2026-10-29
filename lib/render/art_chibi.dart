@@ -768,12 +768,19 @@ void _chibiWeapon(Canvas c, HumanLook k, Offset hand, double ang) {
   if (k.weaponTier > 0) c.scale(1 + 0.06 * k.weaponTier);
   final guardCol = const [0xFFC9A040, 0xFFC9A040, _silver, _gold, _gold][k.weaponTier];
   if (k.glow != 0) {
+    final short = k.weapon == Weapon.darts || k.weapon == Weapon.dagger;
+    // Thần binh: a wide halo under the usual glow.
+    if (k.brightGlow) {
+      c.drawRect(
+          short ? const Rect.fromLTRB(-5, -9, 19, 9) : const Rect.fromLTRB(-6, -8, 40, 8),
+          Paint()
+            ..color = col(k.glow).withValues(alpha: 0.55)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+    }
     c.drawRect(
-        k.weapon == Weapon.darts || k.weapon == Weapon.dagger
-            ? const Rect.fromLTRB(-2, -5, 15, 5)
-            : const Rect.fromLTRB(-2, -4, 34, 4),
+        short ? const Rect.fromLTRB(-2, -5, 15, 5) : const Rect.fromLTRB(-2, -4, 34, 4),
         Paint()
-          ..color = col(k.glow).withValues(alpha: 0.5)
+          ..color = col(k.glow).withValues(alpha: k.brightGlow ? 0.75 : 0.5)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
   }
   switch (k.weapon) {

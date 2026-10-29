@@ -7,9 +7,11 @@ import 'bounty.dart';
 import 'companions.dart';
 import 'content.dart';
 import 'costumes.dart';
+import 'divine.dart';
 import 'gold_sets.dart';
 import 'fishing.dart';
 import 'luan_hoi.dart';
+import 'mail.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
@@ -314,6 +316,13 @@ class HeroData {
   String nmDay = '';
   int nmRuns = 0;
 
+  // Thần binh: the weapon's awakening level and Thần Thiết on hand.
+  int divine = 0;
+  int divineIron = 0;
+
+  /// Hòm thư gifts this hero has taken (mail ids).
+  final Set<String> mailClaimed = {};
+
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
 
@@ -395,6 +404,7 @@ class HeroData {
     final comp = companionById[activeCompanion];
     if (comp != null) add({comp.bonus: comp.bonusAt(companionBonds[comp.id] ?? 1)});
     add(sectRankBonus(hanh, sectRank));
+    add(divineBonuses(divine));
     return out;
   }
 
@@ -1051,6 +1061,11 @@ class HeroData {
       goldShards += shards;
       lines.add('+$shards Mảnh Hoàng Kim');
     }
+    final iron = towerIron(floor);
+    if (iron > 0) {
+      divineIron += iron;
+      lines.add('+$iron Thần Thiết');
+    }
     if (xp > 0) gainExp(xp);
     _progressDaily((d) => d.type == QuestType.dungeon);
     _progressDuty((d) => d.kind == DutyKind.dungeon);
@@ -1108,6 +1123,7 @@ class HeroData {
     wbClaimed |= 1 << i;
     gold += worldBossMilestoneGold(i);
     goldShards += worldBossGoldShards[i];
+    divineIron += worldBossIron[i];
     final g = Gem(Hanh.values[rng.nextInt(5)], worldBossMilestoneGem[i]);
     addGem(g);
     for (final c in costumes) {
@@ -1873,7 +1889,14 @@ class HeroData {
     lastDungeonExp = xp;
     final shards = nightmareShards(i, stars) + (first ? nightmareFirstShards(i) : 0);
     goldShards += shards;
-    final lines = ['+${_thousands(g)} lượng', if (xp > 0) '+${xp.round()} kinh nghiệm', '+$shards Mảnh Hoàng Kim'];
+    final iron = nightmareIron(i) + (first ? nightmareFirstIron(i) : 0);
+    divineIron += iron;
+    final lines = [
+      '+${_thousands(g)} lượng',
+      if (xp > 0) '+${xp.round()} kinh nghiệm',
+      '+$shards Mảnh Hoàng Kim',
+      if (iron > 0) '+$iron Thần Thiết',
+    ];
     if (first || rng.nextDouble() < nightmareGemChance(i)) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], nightmareGemTier(i));
       addGem(gem);
@@ -1882,6 +1905,61 @@ class HeroData {
     if (manualOpen && (first || rng.nextDouble() < nightmarePageChance(i))) lines.add(gainManualPage(rng));
     if (manualOpen && rng.nextDouble() < nightmareExtraPageChance(i)) lines.add(gainManualPage(rng));
     if (xp > 0) gainExp(xp);
+    return lines;
+  }
+
+  // ------------------------------------------------------------- thần binh
+
+  bool get divineOpen => rebirths >= divineOpenRebirths;
+
+  bool get canDivine =>
+      divineOpen &&
+      divine < divineMax &&
+      divineIron >= divineIronCost[divine] &&
+      gold >= divineGoldCost(divine);
+
+  /// Awakens the weapon one level; it always succeeds.
+  bool upgradeDivine() {
+    if (!canDivine) return false;
+    divineIron -= divineIronCost[divine];
+    gold -= divineGoldCost(divine);
+    divine++;
+    recompute();
+    notices.add(Notice('${divineStage(divine).toUpperCase()} TẦNG $divine!', color: divineColor(divine), big: true));
+    return true;
+  }
+
+  // ------------------------------------------------------------- hòm thư
+
+  bool canClaimMail(MailDef m, String day) =>
+      !mailClaimed.contains(m.id) && m.openOn(day) && (rebirths > 0 || level >= m.minLevel);
+
+  /// Takes [m]'s gifts; the lines say what came in.
+  List<String> claimMail(MailDef m, String day, math.Random rng) {
+    if (!canClaimMail(m, day)) return const [];
+    mailClaimed.add(m.id);
+    gold += m.gold;
+    goldShards += m.shards;
+    divineIron += m.iron;
+    hpPots += m.hpPots;
+    mpPots += m.mpPots;
+    final lines = [
+      if (m.gold > 0) '+${_thousands(m.gold)} lượng',
+      if (m.shards > 0) '+${m.shards} Mảnh Hoàng Kim',
+      if (m.iron > 0) '+${m.iron} Thần Thiết',
+      if (m.hpPots > 0) '+${m.hpPots} bình máu',
+      if (m.mpPots > 0) '+${m.mpPots} bình nội lực',
+    ];
+    for (var i = 0; i < m.gems; i++) {
+      final g = Gem(Hanh.values[rng.nextInt(5)], m.gemTier);
+      addGem(g);
+      lines.add(g.name);
+    }
+    if (manualOpen) {
+      for (var i = 0; i < m.pages; i++) {
+        lines.add(gainManualPage(rng));
+      }
+    }
     return lines;
   }
 
@@ -1942,6 +2020,8 @@ class HeroData {
         'manual': [manualPages, manualOn],
         'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
         'nm': [nmStars, nmDay, nmRuns],
+        'tb': [divine, divineIron],
+        'mail': mailClaimed.toList(),
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2094,6 +2174,12 @@ class HeroData {
       h.nmDay = nm[1] as String;
       h.nmRuns = math.max(0, nm[2] as int);
     }
+    final tb = m['tb'];
+    if (tb is List && tb.length == 2) {
+      h.divine = (tb[0] as int).clamp(0, divineMax);
+      h.divineIron = math.max(0, tb[1] as int);
+    }
+    h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];
     if (lh is List && lh.length == 2) {

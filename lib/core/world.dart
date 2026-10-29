@@ -4,6 +4,7 @@ import 'alchemy.dart';
 import 'arena.dart';
 import 'companions.dart';
 import 'content.dart';
+import 'divine.dart';
 import 'fishing.dart';
 import 'gems.dart';
 import 'gold_sets.dart';
@@ -1311,9 +1312,34 @@ class World {
       _sfx('shoot');
     }
     _goldBurst(t);
+    _divineStrike(t);
   }
 
   double _burstReady = 0;
+  double _divineReady = 0;
+
+  /// Thần binh from level 5: now and then a basic attack calls down Thần
+  /// Binh Giáng Thế, the hero's phase burst, on the target.
+  void _divineStrike(Mob? t) {
+    final lv = hero.divine;
+    if (lv < divineStrikeLevel || t == null || !t.alive || time < _divineReady) return;
+    if (rng.nextDouble() >= divineStrikeChance) return;
+    _divineReady = time + divineStrikeCd;
+    final look = goldSets.firstWhere((s) => s.hanh == hero.hanh, orElse: () => goldSets.first);
+    zones.add(Zone(
+      fromHero: true,
+      x: t.x,
+      y: t.y,
+      r: divineStrikeRadius,
+      delay: 0.15,
+      ticks: 1,
+      interval: 0,
+      power: divineStrikePower(lv),
+      fx: look.burstFx,
+      hanh: hero.hanh,
+    ));
+    _text(t.x, t.y - 120, 'Thần Binh Giáng Thế', divineColor(lv));
+  }
 
   /// A full Hoàng Kim set: now and then a basic attack sets off the set's
   /// phase burst around the target.

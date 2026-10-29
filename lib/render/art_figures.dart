@@ -5,6 +5,7 @@ import '../core/arena.dart';
 import '../core/companions.dart';
 import '../core/content.dart';
 import '../core/costumes.dart';
+import '../core/divine.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
@@ -41,6 +42,7 @@ class HumanLook {
     this.weaponTier = 0,
     this.pendant = 0,
     this.aura = 0,
+    this.brightGlow = false,
   });
 
   final int skin, robe, trim, pants, hairColor;
@@ -60,6 +62,9 @@ class HumanLook {
 
   /// Weapon glow colour (rare gear), 0 for none.
   final int glow;
+
+  /// A wider, stronger weapon glow (Thần binh).
+  final bool brightGlow;
 
   /// Worn gear look tiers, 0..[maxGearTier]; 0 draws the plain sect outfit.
   final int hat, armor, belt, boots, weaponTier;
@@ -94,9 +99,10 @@ class HeroGear {
     this.pendant = 0,
     this.glow = 0,
     this.cape = false,
+    this.divine = 0,
   });
 
-  factory HeroGear.of(Map<Slot, Item> equip, {bool hideHat = false}) {
+  factory HeroGear.of(Map<Slot, Item> equip, {bool hideHat = false, int divine = 0}) {
     final w = equip[Slot.weapon];
     final a = equip[Slot.armor];
     final am = equip[Slot.amulet];
@@ -109,6 +115,7 @@ class HeroGear {
       pendant: am == null ? 0 : (am.rarity == Rarity.common ? 0xFF8FCFA8 : am.color),
       glow: w != null && w.rarity.index >= Rarity.rare.index ? w.color : 0,
       cape: a != null && (gearTier(a) >= maxGearTier || a.rarity == Rarity.legend),
+      divine: divine,
     );
   }
 
@@ -116,6 +123,10 @@ class HeroGear {
 
   final int weapon, hat, armor, belt, boots, pendant, glow;
   final bool cape;
+
+  /// Thần binh level: the weapon glows in its stage colour, brighter, and
+  /// from Thánh binh motes rise around the hero.
+  final int divine;
 
   @override
   bool operator ==(Object other) =>
@@ -127,10 +138,11 @@ class HeroGear {
       other.boots == boots &&
       other.pendant == pendant &&
       other.glow == glow &&
-      other.cape == cape;
+      other.cape == cape &&
+      other.divine == divine;
 
   @override
-  int get hashCode => Object.hash(weapon, hat, armor, belt, boots, pendant, glow, cape);
+  int get hashCode => Object.hash(weapon, hat, armor, belt, boots, pendant, glow, cape, divine);
 }
 
 /// Current flash (0..1) toward white applied to every colour, for hits.
@@ -861,7 +873,9 @@ void _brute(Canvas c, MobDef d, double walk, bool moving, double attack, double 
 
 /// The hero as they appear: sect, worn gear and outfit.
 HumanLook lookOfHero(HeroData h) => heroLook(h.hanh,
-    female: h.female, gear: HeroGear.of(h.equip, hideHat: h.hideHat), costume: costumeById[h.costume]);
+    female: h.female,
+    gear: HeroGear.of(h.equip, hideHat: h.hideHat, divine: h.divine),
+    costume: costumeById[h.costume]);
 
 /// A Lôi đài challenger's gear look: every piece fits their level.
 HeroGear rivalGear(ArenaRival r) {
@@ -894,6 +908,7 @@ HumanLook heroLook(Hanh h,
   if (o != null && o.cape != 0) cape = o.cape;
   var glowCol = base.glow != 0 ? base.glow : (wt >= maxGearTier ? blade : 0);
   if (o != null && o.glow != 0) glowCol = o.glow;
+  if (gear.divine > 0) glowCol = divineColor(gear.divine);
   return HumanLook(
     skin: base.skin,
     robe: o?.robe ?? base.robe,
@@ -915,7 +930,8 @@ HumanLook heroLook(Hanh h,
     boots: gear.boots,
     weaponTier: wt,
     pendant: gear.pendant,
-    aura: o?.aura ?? 0,
+    aura: o != null && o.aura != 0 ? o.aura : (gear.divine >= 7 ? divineColor(gear.divine) : 0),
+    brightGlow: gear.divine > 0,
   );
 }
 
