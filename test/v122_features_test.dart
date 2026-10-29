@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/divine.dart';
+import 'package:kiem_hiep/core/fatigue.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/mail.dart';
@@ -148,6 +149,36 @@ void main() {
       expect(h.canClaimMail(high, '20261102'), isFalse);
       h.rebirths = 1;
       expect(h.canClaimMail(high, '20261102'), isTrue, reason: 'any rebirth counts');
+    });
+  });
+
+  group('Mệt mỏi', () {
+    test('monster EXP tapers after 4 and 6 hours, with a notice each step', () {
+      final h = HeroData(name: 'T', hanh: Hanh.moc)..fatigueRoll('20261101');
+      expect(h.expMul, 1);
+      h.tickFatigue(fatigueStart - 1);
+      expect(h.expMul, 1);
+      expect(h.notices, isEmpty);
+      h.tickFatigue(2);
+      expect(h.expMul, 0.5);
+      expect(h.notices.single.text, contains('50%'));
+      h.tickFatigue(fatigueHeavy - fatigueStart);
+      expect(h.expMul, 0.2);
+      expect(h.notices.length, 2);
+      h.buffs['songboi'] = 60;
+      expect(h.expMul, closeTo(0.2 * 2, 1e-9), reason: 'Song Bội Đan still doubles');
+    });
+
+    test('a new day starts fresh; the count is saved', () {
+      final h = HeroData(name: 'T', hanh: Hanh.moc)..fatigueRoll('20261101');
+      h.tickFatigue(fatigueHeavy + 10);
+      final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
+      expect(back.fatigueDay, '20261101');
+      expect(back.expMul, 0.2);
+      back.fatigueRoll('20261101');
+      expect(back.expMul, 0.2, reason: 'same day');
+      back.fatigueRoll('20261102');
+      expect(back.expMul, 1);
     });
   });
 

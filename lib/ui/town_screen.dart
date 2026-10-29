@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/alchemy.dart';
 import '../core/content.dart';
+import '../core/fatigue.dart';
 import '../core/hero.dart';
 import '../core/sect_duty.dart';
 import '../core/tower.dart';
@@ -218,6 +219,14 @@ class _TownScreenState extends State<TownScreen> {
           Text('Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           if (h.rebirths > 0)
             Text('Chuyển sinh lần ${h.rebirths}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
+          // Mệt mỏi, from an hour before monster EXP starts to drop.
+          if (h.fatigueDay == vnDayKey() && h.fatigueSec >= fatigueStart - 3600)
+            Text(
+              fatigueMul(h.fatigueSec) < 1
+                  ? 'Mệt mỏi: EXP quái ${(fatigueMul(h.fatigueSec) * 100).round()}%'
+                  : 'Đã luyện ${fatigueLabel(h.fatigueSec)} hôm nay',
+              style: small.copyWith(fontSize: 11, color: const Color(0xFFF0C060)),
+            ),
           const SizedBox(height: 6),
           Bar(
             value: (h.exp / h.expNeeded).clamp(0.0, 1.0),

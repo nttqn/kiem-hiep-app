@@ -16,6 +16,7 @@ import 'nightmare.dart';
 import 'pets.dart';
 import 'scenery.dart';
 import 'sects.dart';
+import 'world_boss.dart' show vnDayKey;
 
 const double heroRadius = 18;
 
@@ -1000,11 +1001,19 @@ class World {
   /// ready and a monster is close.
   static bool debugUltimate = false;
 
+  double _dayCheck = 0;
+
   void update(double dt) {
     if (finished) return;
     time += dt;
     if (debugUltimate && sect.skills.length > 6 && ready(6) && _countNear(240) > 0) input.skills.add(6);
     hero.playSeconds += dt;
+    // Mệt mỏi: the date is checked now and then, not every frame.
+    if (time >= _dayCheck) {
+      _dayCheck = time + 30;
+      hero.fatigueRoll(vnDayKey());
+    }
+    hero.tickFatigue(dt);
     if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
     if (mode == WorldMode.field) {

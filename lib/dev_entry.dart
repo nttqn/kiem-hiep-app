@@ -352,6 +352,12 @@ Future<void> main() async {
     // divine=<lv> Thần binh level, iron=<n> Thần Thiết.
     h.divine = (int.tryParse(q['divine'] ?? '') ?? 0).clamp(0, divineMax);
     h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
+    // fat=<minutes> fought today (Mệt mỏi).
+    final fat = int.tryParse(q['fat'] ?? '');
+    if (fat != null) {
+      h.fatigueRoll(vnDayKey());
+      h.fatigueSec = fat * 60.0;
+    }
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();
     h.recompute();

@@ -8,6 +8,7 @@ import 'companions.dart';
 import 'content.dart';
 import 'costumes.dart';
 import 'divine.dart';
+import 'fatigue.dart';
 import 'gold_sets.dart';
 import 'fishing.dart';
 import 'luan_hoi.dart';
@@ -322,6 +323,10 @@ class HeroData {
 
   /// Hòm thư gifts this hero has taken (mail ids).
   final Set<String> mailClaimed = {};
+
+  // Mệt mỏi: the Vietnam day and seconds fought in it.
+  String fatigueDay = '';
+  double fatigueSec = 0;
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -1305,7 +1310,29 @@ class HeroData {
     return true;
   }
 
-  double get expMul => buffLeft('songboi') > 0 ? expPillMul : 1;
+  /// Monster EXP: Song Bội Đan, and the day's [fatigueMul].
+  double get expMul => (buffLeft('songboi') > 0 ? expPillMul : 1) * fatigueMul(fatigueSec);
+
+  /// Starts a new Mệt mỏi day when the date changed.
+  void fatigueRoll(String day) {
+    if (fatigueDay == day) return;
+    fatigueDay = day;
+    fatigueSec = 0;
+  }
+
+  /// Adds fighting time, with a notice as monster EXP drops a step.
+  void tickFatigue(double dt) {
+    final before = fatigueMul(fatigueSec);
+    fatigueSec += dt;
+    final after = fatigueMul(fatigueSec);
+    if (after < before) {
+      notices.add(Notice(
+        'Đã luyện công ${fatigueSec ~/ 3600} giờ hôm nay: EXP từ quái còn ${(after * 100).round()}%',
+        color: 0xFFF0C060,
+        big: true,
+      ));
+    }
+  }
   double get goldMul => buffLeft('tubao') > 0 ? goldPillMul : 1;
 
   /// Counts buff time down while playing; true when one ran out.
@@ -2022,6 +2049,7 @@ class HeroData {
         'nm': [nmStars, nmDay, nmRuns],
         'tb': [divine, divineIron],
         'mail': mailClaimed.toList(),
+        'fat': [fatigueDay, fatigueSec.round()],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2180,6 +2208,11 @@ class HeroData {
       h.divineIron = math.max(0, tb[1] as int);
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
+    final fat = m['fat'];
+    if (fat is List && fat.length == 2) {
+      h.fatigueDay = fat[0] as String;
+      h.fatigueSec = math.max(0, (fat[1] as num).toDouble());
+    }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];
     if (lh is List && lh.length == 2) {
