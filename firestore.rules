@@ -35,11 +35,12 @@ service cloud.firestore {
         && (!('arenaS' in request.resource.data)
             || (request.resource.data.arenaS is int
                 && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000))
-        // Play seconds (1.2.2+; older apps omit it): at least 5 hours per
-        // rebirth and a minute per level.
+        // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
+        // rebirth and a minute per level. The fastest real hero seen (a
+        // non-stop auto-fight farmer) took about 4.5 hours per rebirth.
         && (!('play' in request.resource.data)
             || (request.resource.data.play is int
-                && request.resource.data.play >= request.resource.data.rebirths * 18000
+                && request.resource.data.play >= request.resource.data.rebirths * 7200
                     + request.resource.data.level * 60))
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
