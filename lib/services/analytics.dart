@@ -2,7 +2,9 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import '../core/funnel.dart';
 import '../core/hero.dart';
+import '../core/world_boss.dart' show vnDayKey;
 
 /// Firebase Analytics: where players get to and where they stop. No user ID
 /// is set, so events stay tied to an app-instance ID only. Everything is a
@@ -36,8 +38,15 @@ class Analytics {
     final now = [h.level, h.rebirths, h.towerBest, h.mainQuest];
     final was = _seen[slot];
     _seen[slot] = now;
-    if (was == null) return;
     final sect = h.sect.name;
+    // New-player funnel: each step once per hero (kept in the save), with
+    // the play time it took; also on the first save of a session, so a
+    // "came back on day N" step is sent when they open the game.
+    for (final step in funnelDue(h, vnDayKey())) {
+      h.funnel.add(step);
+      log(step, {'min': h.playSeconds ~/ 60, 'sect': sect});
+    }
+    if (was == null) return;
     if (now[1] > was[1]) {
       log('rebirth', {'count': now[1], 'sect': sect});
     } else if (now[0] > was[0]) {

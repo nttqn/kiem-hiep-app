@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/divine.dart';
 import 'package:kiem_hiep/core/fatigue.dart';
+import 'package:kiem_hiep/core/funnel.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/mail.dart';
@@ -179,6 +180,43 @@ void main() {
       expect(back.expMul, 0.2, reason: 'same day');
       back.fatigueRoll('20261102');
       expect(back.expMul, 1);
+    });
+  });
+
+  group('new-player funnel', () {
+    test('steps come due once as the hero gets there', () {
+      final h = HeroData(name: 'T', hanh: Hanh.hoa)..bornDay = '20261101';
+      expect(funnelDue(h, '20261101'), isEmpty);
+      while (h.level < 10) {
+        h.gainExp(h.expNeeded.toDouble());
+      }
+      h.deaths = 1;
+      final due = funnelDue(h, '20261101');
+      expect(due, containsAll(['f_lv3', 'f_lv5', 'f_lv10', 'f_death1']));
+      expect(due, isNot(contains('f_lv15')));
+      h.funnel.addAll(due);
+      expect(funnelDue(h, '20261101'), isEmpty, reason: 'sent once');
+      expect(funnelDue(h, '20261102'), ['f_day1']);
+      expect(funnelDue(h, '20261109'), ['f_day1', 'f_day2', 'f_day3', 'f_day7']);
+    });
+
+    test('a hero from an older save does not resend what it already did', () {
+      final h = reborn()..mainQuest = 25;
+      final m = h.toJson()..remove('fun');
+      final back = HeroData.fromJson(jsonDecode(jsonEncode(m)) as Map<String, dynamic>);
+      expect(funnelDue(back, '20261101'), isEmpty);
+      expect(back.bornDay, '');
+    });
+
+    test('kept in the save', () {
+      final h = HeroData(name: 'T', hanh: Hanh.hoa)
+        ..bornDay = '20261101'
+        ..deaths = 3
+        ..funnel.add('f_lv3');
+      final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
+      expect(back.bornDay, '20261101');
+      expect(back.deaths, 3);
+      expect(back.funnel, {'f_lv3'});
     });
   });
 

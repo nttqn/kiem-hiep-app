@@ -1987,6 +1987,7 @@ class World {
         events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));
       } else {
         // The screen offers a revive (an ad in dungeons) or a way out.
+        hero.deaths++;
         events.add(GameEvent(EvKind.heroDied));
       }
     }

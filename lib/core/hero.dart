@@ -9,6 +9,7 @@ import 'content.dart';
 import 'costumes.dart';
 import 'divine.dart';
 import 'fatigue.dart';
+import 'funnel.dart';
 import 'gold_sets.dart';
 import 'fishing.dart';
 import 'luan_hoi.dart';
@@ -327,6 +328,12 @@ class HeroData {
   // Mệt mỏi: the Vietnam day and seconds fought in it.
   String fatigueDay = '';
   double fatigueSec = 0;
+
+  // New-player funnel (analytics): the Vietnam day the hero was made, times
+  // knocked out, and the steps already sent (see funnel.dart).
+  String bornDay = '';
+  int deaths = 0;
+  final Set<String> funnel = {};
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -2050,6 +2057,7 @@ class HeroData {
         'tb': [divine, divineIron],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
+        'fun': [bornDay, deaths, funnel.toList()],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2212,6 +2220,16 @@ class HeroData {
     if (fat is List && fat.length == 2) {
       h.fatigueDay = fat[0] as String;
       h.fatigueSec = math.max(0, (fat[1] as num).toDouble());
+    }
+    final fun = m['fun'];
+    if (fun is List && fun.length == 3) {
+      h.bornDay = fun[0] as String;
+      h.deaths = math.max(0, fun[1] as int);
+      h.funnel.addAll([for (final v in fun[2] as List) '$v']);
+    } else {
+      // A hero from before the funnel: count what it already did as sent,
+      // so it does not flood the steps of new players.
+      h.funnel.addAll(funnelDue(h, ''));
     }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/hero.dart';
+import '../core/world_boss.dart' show vnDayKey;
 import 'analytics.dart';
 import 'cloud.dart';
 import 'sync_plan.dart';
@@ -120,6 +121,7 @@ class SaveService extends ChangeNotifier {
     slots[slot] = h;
     active = slot;
     h.seed = DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
+    h.bornDay = vnDayKey();
     await save();
   }
 
