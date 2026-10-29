@@ -25,6 +25,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? _error;
   int _req = 0;
 
+  /// Place of the first row: 1 from the top, else where "Vị trí của tôi"
+  /// starts.
+  int _start = 1;
+  bool _around = false;
+
+  /// Where the next page starts; null at the end or around this hero.
+  Object? _next;
+  bool _more = false;
+  final _meKey = GlobalKey();
+
   HeroData get h => SaveService.instance.hero;
   Leaderboard get lb => Leaderboard.instance;
 
@@ -62,22 +72,76 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       _rows = null;
       _place = null;
       _error = null;
+      _start = 1;
+      _around = false;
+      _next = null;
     });
     // Push this hero's latest numbers first so the player sees themselves.
     final slot = SaveService.instance.active;
     if (slot >= 0) await lb.submit(slot, h);
     try {
-      final rows = await lb.top(_board);
+      final page = await lb.top(_board);
       final place = lb.hidden ? null : await lb.placeOf(_board, _mine(_board));
       if (!mounted || req != _req) return;
       setState(() {
-        _rows = rows;
+        _rows = page.rows;
+        _next = page.next;
         _place = place;
       });
     } catch (e) {
       if (!mounted || req != _req) return;
       setState(() => _error = 'Không tải được bảng xếp hạng, thử lại sau.');
     }
+  }
+
+  /// The next [Leaderboard.pageSize] rows under those shown.
+  Future<void> _loadMore() async {
+    final rows = _rows;
+    if (_more || rows == null || _next == null) return;
+    final req = _req;
+    setState(() => _more = true);
+    try {
+      final page = await lb.top(_board, after: _next);
+      if (!mounted || req != _req) return;
+      setState(() {
+        _rows = [...rows, ...page.rows];
+        _next = page.next;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Không tải thêm được, thử lại sau.')));
+      }
+    }
+    if (mounted) setState(() => _more = false);
+  }
+
+  /// Rows around this hero's place, scrolled to it.
+  Future<void> _showMe() async {
+    final place = _place;
+    if (place == null || _more) return;
+    final req = ++_req;
+    setState(() => _more = true);
+    try {
+      final (above, rest) = await lb.around(_board, _mine(_board));
+      if (!mounted || req != _req) return;
+      setState(() {
+        _rows = [...above, ...rest];
+        _start = place - above.length;
+        _around = true;
+        _next = null;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final c = _meKey.currentContext;
+        if (c != null) Scrollable.ensureVisible(c, alignment: 0.4);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Không tải được, thử lại sau.')));
+      }
+    }
+    if (mounted) setState(() => _more = false);
   }
 
   @override
@@ -144,16 +208,45 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (rows == null) return const Center(child: CircularProgressIndicator(color: goldLight));
     if (rows.isEmpty) return Center(child: Text('Chưa có ai trên bảng. Hãy là người đầu tiên!', style: body));
     final me = lb.myUid;
+    // The row standing for this hero when around it: their own, else the
+    // first at or under their value.
+    final mineAt = !_around || _place == null ? -1 : (_place! - _start).clamp(0, rows.length - 1);
+    final footer = _around || _next != null;
     return ListView.builder(
-      itemCount: rows.length,
-      itemBuilder: (_, i) => _row(i + 1, rows[i], me != null && rows[i].id.startsWith('${me}_')),
+      itemCount: rows.length + (footer ? 1 : 0),
+      itemBuilder: (_, i) {
+        if (i == rows.length) return _footer();
+        final mine = me != null && rows[i].id.startsWith('${me}_');
+        return _row(_start + i, rows[i], mine, key: i == mineAt ? _meKey : null);
+      },
     );
   }
 
-  Widget _row(int place, LbEntry e, bool mine) {
+  Widget _footer() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Center(
+        child: _more
+            ? const SizedBox(
+                width: 24, height: 24, child: CircularProgressIndicator(color: goldLight, strokeWidth: 2.5))
+            : _around
+                ? LButton(label: 'Về top', icon: Icons.vertical_align_top, small: true, onTap: _load)
+                : LButton(
+                    label: 'Xem thêm ${Leaderboard.pageSize}',
+                    icon: Icons.expand_more,
+                    small: true,
+                    color: lacquerLight,
+                    onTap: _loadMore,
+                  ),
+      ),
+    );
+  }
+
+  Widget _row(int place, LbEntry e, bool mine, {Key? key}) {
     final hn = Hanh.values[e.hanh];
     final medal = place <= 3 ? const [Color(0xFFFFD34A), Color(0xFFD8DEE4), Color(0xFFD08A4A)][place - 1] : null;
     return Container(
+      key: key,
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -221,6 +314,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     ? 'Đấu một trận Lôi đài mùa này để lên bảng'
                     : (_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place'),
                 style: titleStyle(_board == LbBoard.arena && arenaBoardValue(h) == 0 ? 14 : 17, color: goldLight)),
+          if (_place != null && _rows != null && !_around) ...[
+            const SizedBox(height: 6),
+            LButton(label: 'Vị trí của tôi', icon: Icons.my_location, small: true, color: jade, onTap: _showMe),
+          ],
           const Spacer(),
           if (lb.available)
             Row(

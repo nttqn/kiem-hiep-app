@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +58,13 @@ class LbEntry {
       return null;
     }
   }
+}
+
+/// A page of a board, and where the next one starts (null at the end).
+class LbPage {
+  const LbPage(this.rows, this.next);
+  final List<LbEntry> rows;
+  final Object? next;
 }
 
 enum LbBoard { power, tower, rank, arena }
@@ -216,25 +225,66 @@ class Leaderboard extends ChangeNotifier {
     if (v) await withdraw();
   }
 
-  /// The best [limit] rows of [board].
-  Future<List<LbEntry>> top(LbBoard board, {int limit = 50}) async {
-    // The Lôi đài board lists this season only.
-    final floor = board == LbBoard.arena ? arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0) : 0;
+  /// Rows per page of [top].
+  static const int pageSize = 50;
+
+  /// The Lôi đài board lists this season only.
+  int _floor(LbBoard board) => board == LbBoard.arena ? arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0) : 0;
+
+  List<LbEntry> _debugSorted(LbBoard board) {
+    final floor = _floor(board);
+    return debugEntries!.where((e) => board.valueOf(e) >= floor).toList()
+      ..sort((a, b) => board.valueOf(b).compareTo(board.valueOf(a)));
+  }
+
+  /// One page of [board] from the top: the first [pageSize] rows, or the
+  /// ones after [after] (the [LbPage.next] of the page before).
+  Future<LbPage> top(LbBoard board, {Object? after, int limit = pageSize}) async {
+    final floor = _floor(board);
     final dbg = debugEntries;
     if (dbg != null) {
-      return (dbg.where((e) => board.valueOf(e) >= floor).toList()
-            ..sort((a, b) => board.valueOf(b).compareTo(board.valueOf(a))))
-          .take(limit)
-          .toList();
+      final all = _debugSorted(board);
+      final from = after as int? ?? 0;
+      final rows = all.skip(from).take(limit).toList();
+      return LbPage(rows, from + rows.length < all.length ? from + rows.length : null);
     }
     Query<Map<String, dynamic>> q = _col;
     if (floor > 0) q = q.where(board.field, isGreaterThanOrEqualTo: floor);
-    final snap = await q.orderBy(board.field, descending: true).limit(limit).get().timeout(
+    q = q.orderBy(board.field, descending: true);
+    if (after is DocumentSnapshot) q = q.startAfterDocument(after);
+    final snap = await q.limit(limit).get().timeout(const Duration(seconds: 15));
+    return LbPage(
+      [for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data())],
+      snap.docs.length == limit ? snap.docs.last : null,
+    );
+  }
+
+  /// The rows around a value of [value] on [board]: up to [span] above it,
+  /// then it and up to [span] below. The caller numbers them from its place.
+  Future<(List<LbEntry> above, List<LbEntry> rest)> around(LbBoard board, int value, {int span = 10}) async {
+    final floor = _floor(board);
+    final dbg = debugEntries;
+    if (dbg != null) {
+      final all = _debugSorted(board);
+      final above = all.where((e) => board.valueOf(e) > value).toList();
+      final rest = all.where((e) => board.valueOf(e) <= value).take(span + 1).toList();
+      return (above.sublist(math.max(0, above.length - span)), rest);
+    }
+    final up = await _col
+        .where(board.field, isGreaterThan: value)
+        .orderBy(board.field)
+        .limit(span)
+        .get()
+        .timeout(const Duration(seconds: 15));
+    Query<Map<String, dynamic>> q = _col.where(board.field, isLessThanOrEqualTo: value);
+    if (floor > 0) q = q.where(board.field, isGreaterThanOrEqualTo: floor);
+    final down = await q.orderBy(board.field, descending: true).limit(span + 1).get().timeout(
           const Duration(seconds: 15),
         );
-    return [
-      for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data()),
-    ];
+    return (
+      [for (final d in up.docs.reversed) ?LbEntry.fromDoc(d.id, d.data())],
+      [for (final d in down.docs) ?LbEntry.fromDoc(d.id, d.data())],
+    );
   }
 
   /// Other players' heroes with power near [power], as Lôi đài challengers.

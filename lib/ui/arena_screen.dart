@@ -155,11 +155,11 @@ class _ArenaScreenState extends State<ArenaScreen> {
         Expanded(
           child: !lb.available
               ? Text('Đăng nhập (nút mây ở Thành) để xem và lên bảng Lôi đài.', style: small)
-              : FutureBuilder<List<LbEntry>>(
+              : FutureBuilder<LbPage>(
                   future: lb.top(LbBoard.arena, limit: 30),
                   builder: (_, snap) {
                     if (snap.hasError) return Text('Không tải được bảng.', style: small);
-                    final rows = snap.data;
+                    final rows = snap.data?.rows;
                     if (rows == null) return const Center(child: CircularProgressIndicator(color: goldLight));
                     if (rows.isEmpty) return Text('Chưa ai lên bảng mùa này.', style: small);
                     return ListView(

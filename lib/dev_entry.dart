@@ -81,16 +81,18 @@ Future<void> main() async {
           tower: 0,
         ),
     ];
+    // lbn=<n>: that many rows (names repeat), to page through.
+    final n = int.tryParse(q['lbn'] ?? '') ?? names.length;
     Leaderboard.instance.debugEntries = [
-      for (var i = 0; i < names.length; i++)
+      for (var i = 0; i < n; i++)
         LbEntry(
           id: 'u${i}_0',
-          name: names[i],
+          name: i < names.length ? names[i] : '${names[i % names.length]} ${i ~/ names.length + 1}',
           hanh: i % 5,
-          level: 99 - i * 3,
+          level: math.max(1, 99 - i * 3 ~/ (n / names.length).ceil()),
           rebirths: math.max(0, 3 - i ~/ 2),
-          power: 160000 - i * 9000,
-          tower: 96 - i * 4,
+          power: n <= names.length ? 160000 - i * 9000 : 400000 - i * 2500,
+          tower: math.max(0, 96 - i * 4 ~/ (n / names.length).ceil()),
           title: i == 0 ? 'Ngũ Chuyển Chân Nhân' : (i < 4 ? 'Võ Thánh' : ''),
           arenaS: arenaSeasonScore(arenaSeasonOf(vnDayKey()), 2150 - i * 95),
         ),
