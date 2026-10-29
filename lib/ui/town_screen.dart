@@ -16,6 +16,7 @@ import 'alchemy_screen.dart';
 import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
+import 'chat_screen.dart';
 import 'leaderboard_screen.dart';
 import 'world_boss_screen.dart';
 import 'pet_screen.dart';
@@ -129,6 +130,11 @@ class _TownScreenState extends State<TownScreen> {
                           children: [
                             Text('Thành Lạc An', style: titleStyle(24)),
                             const Spacer(),
+                            IconButton(
+                              tooltip: 'Kênh Thế Giới',
+                              onPressed: () => _go(const ChatScreen()),
+                              icon: const Icon(Icons.forum_outlined, color: goldLight),
+                            ),
                             const CloudButton(),
                             ValueListenableBuilder<bool>(
                               valueListenable: SoundService.instance.musicOn,

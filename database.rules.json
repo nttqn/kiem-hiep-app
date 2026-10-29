@@ -1,0 +1,41 @@
+{
+  "rules": {
+    "chat": {
+      "msgs": {
+        ".read": true,
+        ".indexOn": ["at"],
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && !root.child('chat/bans/' + auth.uid).exists() && newData.parent().parent().child('last/' + auth.uid).val() === now) || (data.exists() && !newData.exists() && data.child('at').val() < now - 259200000))",
+          ".validate": "newData.hasChildren(['uid', 'name', 'hanh', 'level', 'rebirths', 'text', 'at'])",
+          "uid": { ".validate": "newData.isString()" },
+          "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24" },
+          "hanh": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4" },
+          "level": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 99" },
+          "rebirths": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
+          "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120" },
+          "at": { ".validate": "newData.val() === now" },
+          "$other": { ".validate": false }
+        }
+      },
+      "last": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && newData.val() === now && (!data.exists() || data.val() <= now - 600000)"
+        }
+      },
+      "bans": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "reports": {
+        "$msg": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !data.exists()",
+            ".validate": "newData.val() === true"
+          }
+        }
+      }
+    }
+  }
+}

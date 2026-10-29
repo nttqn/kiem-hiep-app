@@ -3,6 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'core/activity.dart';
+import 'core/chat.dart';
+import 'services/chat.dart';
+import 'ui/chat_screen.dart';
 import 'core/alchemy.dart';
 import 'core/arena.dart';
 import 'core/companions.dart';
@@ -92,6 +95,34 @@ Future<void> main() async {
           arenaS: arenaSeasonScore(arenaSeasonOf(vnDayKey()), 2150 - i * 95),
         ),
     ];
+  }
+  // chat=1: a made-up Kênh Thế Giới; chatwait=<s> seconds of cooldown left.
+  if (q['chat'] == '1') {
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    const lines = [
+      ('Kiều Phong', 4, 99, 2, 'Ai đi Ác Mộng 15 không, thiếu một người đánh boss'),
+      ('Hoàng Dung', 1, 92, 1, 'Ma khí tuần này là Bạo liệt, nhớ tránh xa xác quái nha'),
+      ('Đoàn Dự', 2, 64, 0, 'Bí kíp Hoả thiên với Kim thiên cái nào mạnh hơn mọi người?'),
+      ('Lệnh Hồ Xung', 3, 88, 1, 'Kim thiên tăng sát thương, Hoả thiên đốt máu, đánh boss thì Hoả'),
+      ('Tiểu Long Nữ', 0, 71, 0, 'Câu được cá Kim Long rồi, vui quá vcl'),
+      ('Hư Trúc', 4, 55, 0, 'Lôi đài mùa này ai top 1 vậy'),
+      ('Độc Cô Cầu Bại', 3, 99, 3, 'Tôi :) Tháp tầng 140 rồi'),
+    ];
+    ChatService.instance.debugMessages = [
+      for (var i = 0; i < lines.length; i++)
+        ChatMsg(
+          id: 'm$i',
+          uid: 'u$i',
+          name: lines[i].$1,
+          hanh: lines[i].$2,
+          level: lines[i].$3,
+          rebirths: lines[i].$4,
+          text: chatClean(lines[i].$5),
+          at: t0 - (lines.length - i) * 7 * 60000,
+        ),
+    ];
+    final cw = int.tryParse(q['chatwait'] ?? '');
+    if (cw != null) ChatService.instance.lastSent = t0 - chatCooldown.inMilliseconds + cw * 1000;
   }
   final sect = int.tryParse(q['sect'] ?? '') ?? 0;
   final level = int.tryParse(q['level'] ?? '') ?? 1;
@@ -308,6 +339,7 @@ Future<void> main() async {
         ? towerFloor(int.parse(q['tf']!))
         : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
     'rank' => const LeaderboardScreen(),
+    'chat' => const ChatScreen(),
     'challenge' => const ChallengeScreen(),
     'boss' => const WorldBossScreen(),
     'treasure' => const ShopScreen(tab: 1),

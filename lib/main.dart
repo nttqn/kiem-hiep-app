@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'services/ads.dart';
+import 'services/chat.dart';
 import 'services/cloud.dart';
 import 'services/leaderboard.dart';
 import 'services/save.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   SoundService.instance.init();
   await SaveService.instance.load();
   await Leaderboard.instance.load();
+  await ChatService.instance.load();
   // Not awaited either: the game starts offline and syncs when it can.
   CloudSave.instance.init();
   AdsService.instance.init();
