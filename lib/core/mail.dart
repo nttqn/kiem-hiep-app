@@ -5,7 +5,7 @@ import 'gems.dart' show maxGemTier;
 /// Hòm thư: gifts the developer posts for every player in the Firebase
 /// console (`mail/{id}`), claimed once per hero.
 ///
-/// Fields (all optional but `title`): `title`, `body` (strings); `from`,
+/// Fields (all optional; a default title stands in): `title`, `body` (strings); `from`,
 /// `until` (Vietnam days, `20261101` style, `until` inclusive); `minLevel`
 /// (needs this level or any rebirth); and the rewards `gold`, `shards`
 /// (Mảnh Hoàng Kim), `iron` (Thần Thiết), `gems` with `gemTier`, `pages`
@@ -49,8 +49,8 @@ class MailDef {
   /// Reads a console document; null when it is not a mail. Amounts are
   /// capped so a typo cannot hand out a fortune.
   static MailDef? fromMap(String id, Map<String, dynamic> m) {
-    final title = m['title'];
-    if (title is! String || title.trim().isEmpty) return null;
+    final t = m['title'];
+    final title = t is String && t.trim().isNotEmpty ? t : 'Thư từ nhà phát triển';
     int n(String k, int max) {
       final v = m[k];
       return v is num ? v.toInt().clamp(0, max) : 0;

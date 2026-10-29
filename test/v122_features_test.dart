@@ -111,8 +111,9 @@ void main() {
 
   group('Hòm thư', () {
     test('console documents are read defensively', () {
-      expect(MailDef.fromMap('a', {}), isNull);
-      expect(MailDef.fromMap('a', {'title': '  '}), isNull);
+      // No title: a default one rather than a lost gift.
+      expect(MailDef.fromMap('a', {'gold': 1})!.title, 'Thư từ nhà phát triển');
+      expect(MailDef.fromMap('a', {'title': '  '})!.title, 'Thư từ nhà phát triển');
       final m = MailDef.fromMap('a', {
         'title': 'Đền bù',
         'body': 'Xin lỗi vì sự cố',

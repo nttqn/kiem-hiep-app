@@ -38,13 +38,15 @@ class MailService extends ChangeNotifier {
     _busy = true;
     try {
       final today = vnDayKey();
+      // Every mail document (keep the collection small: delete old ones).
+      // `until` may be typed in the console as text or as a timestamp, so
+      // dates are filtered here rather than in the query.
       final snap = await FirebaseFirestore.instance
           .collection('mail')
-          .where('until', isGreaterThanOrEqualTo: today)
-          .limit(20)
+          .limit(30)
           .get()
           .timeout(const Duration(seconds: 10));
-      final out = [for (final d in snap.docs) ?MailDef.fromMap(d.id, d.data())]
+      final out = [for (final d in snap.docs) ?MailDef.fromMap(d.id, _days(d.data()))]
         ..removeWhere((m) => !m.openOn(today))
         ..sort((a, b) => b.from.compareTo(a.from));
       mails = out;
@@ -57,6 +59,12 @@ class MailService extends ChangeNotifier {
     }
     _busy = false;
   }
+
+  /// [m] with console timestamps in `from` / `until` turned into Vietnam
+  /// days.
+  static Map<String, dynamic> _days(Map<String, dynamic> m) => {
+        for (final e in m.entries) e.key: e.value is Timestamp ? vnDayKey((e.value as Timestamp).toDate()) : e.value,
+      };
 
   /// Gifts [h] can take today.
   List<MailDef> open(HeroData h) {
