@@ -865,9 +865,15 @@ class HeroData {
     return lines;
   }
 
-  /// Rerolls every unfinished bounty; [ad] uses one of the day's free
+  /// Bounties a refresh would reroll.
+  int get bountiesToReroll => bounties.where((b) => !b.done).length;
+
+  /// Rerolls every unfinished bounty, one for one (it never adds to the
+  /// board, so the day's quota holds); [ad] uses one of the day's free
   /// refreshes, otherwise it costs [bountyRefreshCost] gold.
   bool rerollBounties(math.Random rng, {bool ad = false}) {
+    final n = bountiesToReroll;
+    if (n == 0) return false;
     if (ad) {
       if (bountyAds >= bountyAdRefreshes) return false;
       bountyAds++;
@@ -877,7 +883,9 @@ class HeroData {
       gold -= cost;
     }
     bounties.removeWhere((b) => !b.done);
-    _fillBounties(rng, free: true);
+    for (var i = 0; i < n; i++) {
+      bounties.add(rollBounty(level, expToNext(level), rng));
+    }
     return true;
   }
 

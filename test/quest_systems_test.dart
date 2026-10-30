@@ -123,6 +123,28 @@ void main() {
     expect(h.bounties, hasLength(bountySlots));
   });
 
+  test('a refresh rerolls one for one and never refills past the quota', () {
+    final h = HeroData(name: 'T', hanh: Hanh.thuy);
+    _toLevel(h, 40);
+    h.refreshDaily('2026-10-26');
+    h.bountyLeft = 0;
+    // Hand in three, keep one going, then refresh: still one, not four.
+    for (var i = 0; i < 3; i++) {
+      h.bounties[0].progress = h.bounties[0].count;
+      h.claimBounty(0, math.Random(i));
+    }
+    expect(h.bounties, hasLength(1));
+    h.gold = 1000000;
+    expect(h.rerollBounties(math.Random(5)), isTrue);
+    expect(h.bounties, hasLength(1));
+    expect(h.bountyLeft, 0);
+    // Nothing unfinished: nothing to refresh, and no gold taken.
+    h.bounties[0].progress = h.bounties[0].count;
+    final gold = h.gold;
+    expect(h.rerollBounties(math.Random(6)), isFalse);
+    expect(h.gold, gold);
+  });
+
   test('rerolls cost gold or one of three ad refreshes, and saves keep the board', () {
     final h = HeroData(name: 'T', hanh: Hanh.thuy);
     _toLevel(h, 40);
