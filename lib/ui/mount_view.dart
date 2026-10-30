@@ -104,6 +104,7 @@ class _MountViewState extends State<MountView> {
                 switch (m.source) {
                   MountSource.tower => 'Tầng cao nhất: ${h.towerBest}/${m.need}',
                   MountSource.rebirth => 'Đã chuyển sinh: ${h.rebirths}/${m.need}',
+                  MountSource.abyss => 'Đã hạ Ma Tôn: ${h.abyssBossKills}/${m.need}',
                   _ => 'Uy danh: ${fmt(h.arenaCoins)}/${fmt(m.need)}',
                 },
                 style: small.copyWith(fontSize: 10.5, color: creamDim),

@@ -213,11 +213,29 @@ const mobs = <MobDef>[
       body: Body.human, c1: 0xFF3A1A4A, c2: 0xFF120A18, c3: 0xFFB04AFF,
       variant: 'ancient', size: 1.8, hp: 25, atk: 1.95, def: 1.8,
       speed: 105, exp: 18, boss: true),
+  // Cửu U Ma Vực (after the fifth rebirth): darker kin of Hoa Sơn's.
+  MobDef(
+      id: 'abyssTiger', name: 'Huyết Ảnh Hổ', hanh: Hanh.kim, body: Body.quad,
+      c1: 0xFF3A2A4A, c2: 0xFFB04AFF, c3: 0xFF120A18, variant: 'tiger',
+      size: 1.2, speed: 135, hp: 1.15, atk: 1.3),
+  MobDef(
+      id: 'abyssGolem', name: 'U Minh Thạch Khôi', hanh: Hanh.tho, body: Body.brute,
+      c1: 0xFF2E2A36, c2: 0xFFFF4A6A, variant: 'golem', size: 1.5,
+      hp: 1.8, atk: 1.2, def: 1.8, speed: 75),
+  MobDef(
+      id: 'abyssSoul', name: 'Cửu U Oan Hồn', hanh: Hanh.thuy, body: Body.flyer,
+      c1: 0xFF8A5AFF, c2: 0xFFE0D0FF, variant: 'ghost', ranged: true,
+      range: 280, hp: 0.9, atk: 1.25, attackCd: 1.6),
+  MobDef(
+      id: 'abyssLord', name: 'Cửu U Ma Tôn', hanh: Hanh.hoa,
+      body: Body.human, c1: 0xFF140A1A, c2: 0xFF2A0A12, c3: 0xFFFF3A5A,
+      variant: 'ancient', size: 1.9, hp: 28, atk: 2.0, def: 1.9,
+      speed: 110, exp: 20, boss: true),
 ];
 
 final Map<String, MobDef> mobById = {for (final m in mobs) m.id: m};
 
-enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit }
+enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss }
 
 class MapDef {
   const MapDef({
@@ -231,6 +249,8 @@ class MapDef {
     required this.boss,
     this.width = 3200,
     this.height = 2200,
+    this.rebirths = 0,
+    this.mul = 1,
   });
 
   final String id;
@@ -242,9 +262,37 @@ class MapDef {
   final String boss;
   final double width, height;
 
+  /// Rebirths needed to enter (Cửu U Ma Vực); such a map opens at
+  /// [abyssEntryLv] instead.
+  final int rebirths;
+
+  /// HP and attack multiplier on top of the monsters' level.
+  final double mul;
+
   /// The hero may enter a little below the map's range.
-  int get entryLv => minLv <= 1 ? 1 : minLv - 2;
+  int get entryLv => rebirths > 0 ? abyssEntryLv : (minLv <= 1 ? 1 : minLv - 2);
 }
+
+/// Cửu U Ma Vực: a field after the fifth rebirth, its monsters tuned for
+/// heroes of several hundred thousand lực chiến (about Ác Mộng 12), with
+/// Thần Thiết from every kill and an outfit and a mount from its boss.
+/// Kept out of [maps], whose order the story, bounties and herbs follow.
+const int abyssEntryLv = 90;
+const MapDef abyssMap = MapDef(
+    id: 'cuuu', name: 'Cửu U Ma Vực',
+    desc: 'Vực thẳm dưới Hoa Sơn, ma khí Cửu U chỉ bậc ngũ chuyển mới chịu nổi.',
+    minLv: 99, maxLv: 99, theme: MapTheme.abyss,
+    mobs: ['abyssTiger', 'abyssGolem', 'abyssSoul'], boss: 'abyssLord',
+    rebirths: 5, mul: abyssMul);
+
+/// About Ác Mộng 12 at level 99 (a 350k lực chiến hero), a little under as
+/// a field is fought for long stretches; a 60-100k hero dies here within
+/// minutes in a simulation.
+const double abyssMul = 8;
+
+/// Chance a monster there drops Thần Thiết, and the boss's handful.
+const double abyssIronChance = 0.03;
+const int abyssBossIron = 4;
 
 const maps = <MapDef>[
   MapDef(
@@ -294,7 +342,7 @@ const maps = <MapDef>[
       mobs: ['goldTiger', 'swordGolem', 'swordSoul'], boss: 'heavenDemon'),
 ];
 
-final Map<String, MapDef> mapById = {for (final m in maps) m.id: m};
+final Map<String, MapDef> mapById = {for (final m in maps) m.id: m, abyssMap.id: abyssMap};
 
 class DungeonDef {
   const DungeonDef({

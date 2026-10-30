@@ -117,6 +117,7 @@ const _propKinds = <MapTheme, List<String>>{
   MapTheme.fortress: ['lantern', 'pillar', 'banner', 'brazier'],
   MapTheme.cloud: ['mistPine', 'mistPine', 'rock', 'lantern', 'mistPine'],
   MapTheme.summit: ['plum', 'plum', 'swordStone', 'pillar', 'rock'],
+  MapTheme.abyss: ['rockSpire', 'deadTree', 'swordStone', 'crystal', 'brazier'],
 };
 
 const _decalKinds = <MapTheme, List<String>>{
@@ -129,4 +130,5 @@ const _decalKinds = <MapTheme, List<String>>{
   MapTheme.fortress: ['tile', 'tile', 'crack', 'blood'],
   MapTheme.cloud: ['tuft', 'pebble', 'mist', 'mist', 'tuft'],
   MapTheme.summit: ['petal', 'petal', 'tile', 'crack', 'pebble'],
+  MapTheme.abyss: ['crack', 'bones', 'ember', 'skull', 'crack'],
 };

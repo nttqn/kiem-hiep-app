@@ -11,10 +11,25 @@ class LiteMode {
 
   final ValueNotifier<bool> on = ValueNotifier(false);
 
+  /// Whether the player was already offered it after a slow battle.
+  bool offered = false;
+
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       _apply(prefs.getBool('lite_mode') ?? false);
+      offered = prefs.getBool('lite_offered') ?? false;
+    } catch (_) {}
+  }
+
+  /// Offered once per install, whatever the answer.
+  bool get shouldOffer => !on.value && !offered;
+
+  Future<void> markOffered() async {
+    offered = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('lite_offered', true);
     } catch (_) {}
   }
 

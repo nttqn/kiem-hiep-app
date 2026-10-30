@@ -9,12 +9,31 @@ import '../render/world_renderer.dart';
 /// Steps the [World] in small fixed slices and paints it. The HUD, buttons
 /// and dialogs are Flutter widgets on top.
 class BattleGame extends Game {
-  BattleGame({required this.world, required this.onEvent, required this.onSound});
+  BattleGame({required this.world, required this.onEvent, required this.onSound, this.onSlow});
 
   final World world;
   final WorldRenderer renderer = WorldRenderer();
   final void Function(GameEvent e) onEvent;
   final void Function(String cue) onSound;
+
+  /// Called once with the frame rate when the first [slowWindow] seconds of
+  /// play (after [slowSkip]) ran under [slowFps]: the phone struggles.
+  final void Function(double fps)? onSlow;
+  static const double slowSkip = 2, slowWindow = 10, slowFps = 35;
+  double _perfTime = 0;
+  int _perfFrames = 0;
+  bool _perfDone = false;
+
+  void _measure(double dt) {
+    if (_perfDone || onSlow == null || halted) return;
+    _perfTime += dt;
+    if (_perfTime <= slowSkip) return;
+    _perfFrames++;
+    if (_perfTime < slowSkip + slowWindow) return;
+    _perfDone = true;
+    final fps = _perfFrames / (_perfTime - slowSkip);
+    if (fps < slowFps) onSlow!(fps);
+  }
 
   /// Bumped about 15 times a second so the HUD rebuilds cheaply.
   final ValueNotifier<int> hudTick = ValueNotifier(0);
@@ -35,6 +54,7 @@ class BattleGame extends Game {
 
   @override
   void update(double dt) {
+    _measure(dt);
     _lastDt = dt.clamp(0, 0.1).toDouble();
     if (!halted) {
       var left = _lastDt * speed;

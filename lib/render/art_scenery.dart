@@ -27,6 +27,7 @@ const palettes = <MapTheme, Palette>{
       night: 0.12),
   MapTheme.cloud: Palette(0xFF7E9A8C, 0xFF98B2A4, 0xFF66806F, 0xFF2E3E3A),
   MapTheme.summit: Palette(0xFF9A928A, 0xFFB0A89E, 0xFF807870, 0xFF3A3430),
+  MapTheme.abyss: Palette(0xFF3A2E44, 0xFF4A3A56, 0xFF2A2032, 0xFF0E0A14, night: 0.3),
 };
 
 void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {

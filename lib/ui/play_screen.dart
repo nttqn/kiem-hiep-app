@@ -74,10 +74,13 @@ class _PlayScreenState extends State<PlayScreen> {
         ? World.dungeon(hero, widget.dungeon!)
         : World.field(hero, widget.map!);
     world.auto = SaveService.instance.autoFight;
-    game = BattleGame(world: world, onEvent: _onEvent, onSound: SoundService.instance.cue);
+    game = BattleGame(world: world, onEvent: _onEvent, onSound: SoundService.instance.cue, onSlow: _onSlow);
     SoundService.instance.setBattle(true);
     // Each map has its own tune; every dungeon shares the battle theme.
-    SoundService.instance.playMusic(widget.dungeon != null ? 'battle' : widget.map!.theme.name);
+    SoundService.instance.playMusic(widget.dungeon != null
+        ? 'battle'
+        // Cửu U Ma Vực borrows Ma Giáo's dark theme.
+        : (widget.map!.theme == MapTheme.abyss ? 'fortress' : widget.map!.theme.name));
     HardwareKeyboard.instance.addHandler(_onKey);
     _autosave = Timer.periodic(const Duration(seconds: 20), (_) => SaveService.instance.save());
     game.hudTick.addListener(_pruneToasts);
@@ -170,6 +173,37 @@ class _PlayScreenState extends State<PlayScreen> {
       case EvKind.shake:
         break;
     }
+  }
+
+  /// The battle ran slowly on this phone: offer Chế độ máy yếu, once.
+  void _onSlow(double fps) {
+    if (!LiteMode.instance.shouldOffer) return;
+    LiteMode.instance.markOffered();
+    Analytics.instance.log('slow_fps', {'fps': fps.round()});
+    Future.microtask(() async {
+      if (!mounted) return;
+      final was = game.halted;
+      game.halted = true;
+      final yes = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: lacquer,
+          title: Text('Máy đang hơi giật', style: titleStyle(20)),
+          content: Text(
+            'Trận đấu chỉ chạy khoảng ${fps.round()} khung hình/giây trên máy này. '
+            'Bật Chế độ máy yếu để bỏ rung màn hình và hiệu ứng mờ cho mượt hơn? '
+            'Có thể đổi lại bất cứ lúc nào bằng nút đồng hồ ở Thành hoặc trong menu Tạm dừng.',
+            style: body,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để sau')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Bật')),
+          ],
+        ),
+      );
+      if (yes == true && !LiteMode.instance.on.value) await LiteMode.instance.toggle();
+      if (mounted) game.halted = was || _paused || _fishing || _dead || _cleared != null;
+    });
   }
 
   void _setPaused(bool v) {

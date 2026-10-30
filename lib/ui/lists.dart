@@ -21,7 +21,10 @@ class MapListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
-    final last = maps.lastIndexWhere((m) => h.level >= m.entryLv);
+    // Cửu U Ma Vực last, shown to everyone as something to aim for.
+    const all = [...maps, abyssMap];
+    bool isOpen(MapDef m) => h.level >= m.entryLv && h.rebirths >= m.rebirths;
+    final last = all.lastIndexWhere(isOpen);
     return SubScreen(
       title: 'Luyện công',
       actions: [
@@ -35,15 +38,15 @@ class MapListScreen extends StatelessWidget {
           ),
       ],
       child: _OpenAt(
-        fraction: maps.length < 2 ? 0 : math.max(0, last) / (maps.length - 1),
+        fraction: math.max(0, last) / (all.length - 1),
         builder: (ctl) => ListView.separated(
           controller: ctl,
-          itemCount: maps.length,
+          itemCount: all.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
-            final m = maps[i];
-            final open = h.level >= m.entryLv;
-            final fit = h.level >= m.minLv && h.level <= m.maxLv + 2;
+            final m = all[i];
+            final open = isOpen(m);
+            final fit = open && (m.rebirths > 0 || (h.level >= m.minLv && h.level <= m.maxLv + 2));
             return Opacity(
               opacity: open ? 1 : 0.55,
               child: Panel(
@@ -61,7 +64,8 @@ class MapListScreen extends StatelessWidget {
                             children: [
                               Text(m.name, style: titleStyle(18, color: cream)),
                               const SizedBox(width: 10),
-                              Text('Cấp ${m.minLv}–${m.maxLv}', style: bold.copyWith(color: goldLight)),
+                              Text(m.rebirths > 0 ? 'Ngũ chuyển · Thần Thiết' : 'Cấp ${m.minLv}–${m.maxLv}',
+                                  style: bold.copyWith(color: goldLight)),
                               if (fit) ...[
                                 const SizedBox(width: 8),
                                 Text('Phù hợp', style: small.copyWith(color: const Color(0xFF8CE07A))),
@@ -87,7 +91,10 @@ class MapListScreen extends StatelessWidget {
                             color: fit ? jade : seal,
                             onTap: () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.field(m))),
                           )
-                        : Text('Cần cấp ${m.entryLv}', style: small),
+                        : Text(
+                            m.rebirths > 0 ? 'Cần Chuyển sinh ${m.rebirths}\ncấp ${m.entryLv}' : 'Cần cấp ${m.entryLv}',
+                            style: small,
+                            textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -218,6 +225,7 @@ class _ThemeSwatch extends StatelessWidget {
       MapTheme.fortress: [Color(0xFF8A0F1A), Color(0xFF1A1A20)],
       MapTheme.cloud: [Color(0xFFC8DCDC), Color(0xFF3E5A54)],
       MapTheme.summit: [Color(0xFFF4A8BC), Color(0xFF4A4240)],
+      MapTheme.abyss: [Color(0xFFB04AFF), Color(0xFF0E0A14)],
     };
     final c = colors[theme]!;
     return Container(

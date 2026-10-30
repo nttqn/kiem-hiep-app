@@ -408,7 +408,8 @@ class World {
   static bool debugPond = false;
 
   /// The fishing pond by the gate of a field map.
-  bool get hasPond => mode == WorldMode.field;
+  // Cửu U Ma Vực has no fish of its own.
+  bool get hasPond => mode == WorldMode.field && map.rebirths == 0;
   double get pondX => pondDx;
   double get pondY => height / 2 + pondDy;
 
@@ -807,7 +808,8 @@ class World {
   /// Herb plants of the map's tier, scattered away from the gate.
   final List<HerbNode> herbs = [];
 
-  int get _herbTier => herbTierOfMap(math.max(0, maps.indexOf(map)));
+  // Cửu U Ma Vực grows the top tier, as the last map does.
+  int get _herbTier => herbTierOfMap(map.rebirths > 0 ? maps.length - 1 : math.max(0, maps.indexOf(map)));
 
   void _plantHerbs() {
     final r = math.Random(map.id.hashCode ^ 0x5eed);
@@ -842,12 +844,14 @@ class World {
     final m = Mob(_uid++, c.def, lv, c.x + math.cos(a) * d,
         c.y + math.sin(a) * d)
       ..camp = ci;
+    _scale(m, map.mul);
     mobs.add(m);
   }
 
   void _spawnBoss() {
     final def = mobById[map.boss]!;
     final m = Mob(_uid++, def, map.maxLv, width - 320, height / 2);
+    _scale(m, map.mul);
     boss = m;
     mobs.add(m);
   }
@@ -1880,7 +1884,9 @@ class World {
         m.def.exp *
         (m.elite ? 12 : 1) *
         expLevelFactor(hero.level, m.level) *
-        hero.expMul;
+        hero.expMul *
+        // Tougher monsters of a field like Cửu U Ma Vực pay somewhat more.
+        (dungeon == null ? math.sqrt(map.mul) : 1);
     _text(m.x, m.y - 70, '+${xp.round()} EXP', 0xFFB8E0FF, small: true);
     hero.onKill(m.def, rng);
     if (m.elite) {
@@ -1899,6 +1905,15 @@ class World {
     if (m.big && m.level >= bossShardLevel && dungeon?.isTower != true && rng.nextDouble() < bossShardChance) {
       hero.goldShards++;
       events.add(GameEvent(EvKind.loot, text: 'Nhặt được 1 Mảnh Hoàng Kim', color: goldItemColor));
+    }
+    // Cửu U Ma Vực: Thần Thiết from any kill now and then, the boss's always.
+    if (dungeon == null && map.rebirths > 0) {
+      final iron = m.def.boss ? abyssBossIron : (rng.nextDouble() < abyssIronChance ? 1 : 0);
+      if (iron > 0) {
+        hero.divineIron += iron;
+        events.add(GameEvent(EvKind.loot, text: 'Nhặt được $iron Thần Thiết', color: 0xFF9FD8FF));
+      }
+      if (m.def.boss) hero.unlockCostumes();
     }
     if (m.big && hero.manualOpen && dungeon?.isTower != true &&
         rng.nextDouble() < (m.def.boss ? bossPageChance : elitePageChance)) {

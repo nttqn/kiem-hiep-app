@@ -954,6 +954,7 @@ class HeroData {
         CostumeSource.level => level >= c.need || rebirths > 0,
         CostumeSource.arena => arenaBestTier >= c.need,
         CostumeSource.sect => sectRank >= c.need,
+        CostumeSource.abyss => abyssBossKills >= c.need,
         CostumeSource.worldBoss || CostumeSource.gold => false,
       };
 
@@ -1248,12 +1249,16 @@ class HeroData {
 
   bool ownsMount(String id) => mountLevels.containsKey(id);
 
+  /// Cửu U Ma Tôn beaten, for its outfit and mount.
+  int get abyssBossKills => bossKillsById[abyssMap.boss] ?? 0;
+
   /// The mount under the hero, if any.
   MountDef? get ridingMount => riding ? mountById[activeMount] : null;
 
   bool mountGoalMet(MountDef m) => switch (m.source) {
         MountSource.tower => towerBest >= m.need,
         MountSource.rebirth => rebirths >= m.need,
+        MountSource.abyss => abyssBossKills >= m.need,
         MountSource.gold || MountSource.arena => false,
       };
 
