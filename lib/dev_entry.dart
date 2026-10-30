@@ -354,6 +354,8 @@ Future<void> main() async {
     // divine=<lv> Thần binh level, iron=<n> Thần Thiết.
     h.divine = (int.tryParse(q['divine'] ?? '') ?? 0).clamp(0, divineMax);
     h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
+    // money=<n> lượng.
+    h.gold = int.tryParse(q['money'] ?? '') ?? h.gold;
     // fat=<minutes> fought today (Mệt mỏi).
     final fat = int.tryParse(q['fat'] ?? '');
     if (fat != null) {
