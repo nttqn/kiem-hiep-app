@@ -143,7 +143,12 @@ class Leaderboard extends ChangeNotifier {
       // when offline or over quota; don't hold the caller that long.
       await _col
           .doc(id)
-          .set({...row, 'play': h.playSeconds.round(), 'updated': FieldValue.serverTimestamp()}).timeout(
+          .set({
+            ...row,
+            'play': h.playSeconds.round(),
+            'pts': h.potentialTotal,
+            'updated': FieldValue.serverTimestamp(),
+          }).timeout(
             const Duration(seconds: 8),
           );
       _sent[id] = key;
@@ -192,6 +197,7 @@ class Leaderboard extends ChangeNotifier {
         'level': h.level,
         'rebirths': h.rebirths,
         'dmg': h.wbTotal,
+        'pts': h.potentialTotal,
         'updated': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 8));
     } catch (e) {

@@ -4,10 +4,13 @@ import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/core/live_event.dart';
+import 'package:kiem_hiep/core/monthly.dart';
 import 'package:kiem_hiep/core/newbie.dart';
 import 'package:kiem_hiep/core/nightmare.dart';
 import 'package:kiem_hiep/core/reminders.dart';
+import 'package:kiem_hiep/core/rewards.dart';
 import 'package:kiem_hiep/core/world_boss.dart';
 
 HeroData fresh() => HeroData(name: 'Tiểu Hiệp', hanh: Hanh.kim)..bornDay = '20261101';
@@ -132,6 +135,39 @@ void main() {
       final h = fresh();
       final r = reminderPlan(h, DateTime.utc(2026, 11, 1, 3), newbieWaiting: true).firstWhere((r) => r.id == 2);
       expect(r.body, contains('ngày 1'));
+    });
+  });
+
+  group('Điểm danh tháng', () {
+    test('marks pay once as the days add up, and a new month starts over', () {
+      final h = HeroData(name: 'T', hanh: Hanh.kim)..level = 40;
+      final rng = math.Random(1);
+      final gold0 = h.gold;
+      expect(h.monthCheckIn('2026-11-1', rng), isEmpty);
+      expect(h.monthCheckIn('2026-11-2', rng), isEmpty);
+      final third = h.monthCheckIn('2026-11-5', rng);
+      expect(third.first, 'Điểm danh 3 ngày:');
+      expect(h.gold, gold0 + monthlyMarks[0].gold(40));
+      for (var d = 6; d <= 30; d++) {
+        h.monthCheckIn('2026-11-$d', rng);
+      }
+      expect(h.monthDaysOn('2026-11-30'), 28);
+      expect(h.divineIron, 8);
+      expect(h.pills['taytuy'], 1);
+      expect(h.bag.any((i) => i.rarity == Rarity.legend), isTrue);
+      expect(h.monthDaysOn('2026-12-1'), 0);
+      h.monthCheckIn('2026-12-1', rng);
+      expect(h.monthDaysOn('2026-12-1'), 1);
+    });
+
+    test('taken with the login gift, and saved', () {
+      final h = HeroData(name: 'T', hanh: Hanh.kim);
+      claimLoginGift(h, '2026-11-1', math.Random(1));
+      claimLoginGift(h, '2026-11-1', math.Random(1));
+      expect(h.monthDays, 1);
+      final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
+      expect(back.monthKey, '2026-11');
+      expect(back.monthDays, 1);
     });
   });
 

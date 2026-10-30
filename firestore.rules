@@ -42,6 +42,12 @@ service cloud.firestore {
             || (request.resource.data.play is int
                 && request.resource.data.play >= request.resource.data.rebirths * 7200
                     + request.resource.data.level * 60))
+        // Potential points (1.2.4+): no more than the game hands out, as in
+        // HeroData.maxPotential (5 a level, 40 a rebirth, 90 from pills, 100 slack).
+        && (!('pts' in request.resource.data)
+            || (request.resource.data.pts is int
+                && request.resource.data.pts <= (request.resource.data.level - 1) * 5
+                    + request.resource.data.rebirths * 40 + 190))
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
@@ -86,6 +92,10 @@ service cloud.firestore {
         && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 5
         && request.resource.data.dmg is int
         && request.resource.data.dmg >= 0 && request.resource.data.dmg <= 1000000000000
+        && (!('pts' in request.resource.data)
+            || (request.resource.data.pts is int
+                && request.resource.data.pts <= (request.resource.data.level - 1) * 5
+                    + request.resource.data.rebirths * 40 + 190))
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }

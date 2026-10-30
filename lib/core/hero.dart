@@ -21,6 +21,7 @@ import 'items.dart';
 import 'live_event.dart';
 import 'manuals.dart';
 import 'meridians.dart';
+import 'monthly.dart';
 import 'mounts.dart';
 import 'nightmare.dart';
 import 'pets.dart';
@@ -340,6 +341,10 @@ class HeroData {
   // Tân thủ thất nhật: gifts taken and the Vietnam day of the last one.
   int newbieClaimed = 0;
   String newbieDay = '';
+
+  // Điểm danh tháng: the month, and check-in days counted in it.
+  String monthKey = '';
+  int monthDays = 0;
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -2041,6 +2046,66 @@ class HeroData {
     return lines;
   }
 
+  // ------------------------------------------------------------- điểm danh
+
+  /// Check-in days so far in [day]'s month.
+  int monthDaysOn(String day) => monthKey == monthOf(day) ? monthDays : 0;
+
+  /// Counts [day] (taken once a day with the login gift) toward its month
+  /// and pays a mark reached; the lines say what came in.
+  List<String> monthCheckIn(String day, math.Random rng) {
+    final key = monthOf(day);
+    if (key != monthKey) {
+      monthKey = key;
+      monthDays = 0;
+    }
+    monthDays++;
+    final lines = <String>[];
+    for (final mk in monthlyMarks) {
+      if (mk.days != monthDays) continue;
+      lines.add('Điểm danh ${mk.days} ngày:');
+      final g = mk.gold(level);
+      if (g > 0) {
+        gold += g;
+        lines.add('+${_thousands(g)} lượng');
+      }
+      for (var i = 0; i < mk.gems; i++) {
+        final gem = Gem(Hanh.values[rng.nextInt(5)], mk.gemTier);
+        addGem(gem);
+        lines.add(gem.name);
+      }
+      if (mk.iron > 0) {
+        divineIron += mk.iron;
+        lines.add('+${mk.iron} Thần Thiết');
+      }
+      if (mk.shards > 0) {
+        goldShards += mk.shards;
+        lines.add('+${mk.shards} Mảnh Hoàng Kim');
+      }
+      if (mk.pots > 0) {
+        hpPots += mk.pots;
+        mpPots += mk.pots;
+        lines.add('+${mk.pots} Kim Sang Dược, +${mk.pots} Ngưng Thần Đan');
+      }
+      if (mk.pills > 0) {
+        pills['taytuy'] = (pills['taytuy'] ?? 0) + mk.pills;
+        lines.add('+${mk.pills} Tẩy Tủy Đan');
+      }
+      if (mk.item != null) {
+        final it = makeItem(
+          slot: Slot.values[rng.nextInt(Slot.values.length)],
+          level: level,
+          rarity: mk.item!,
+          sect: sect,
+          rng: rng,
+        );
+        addItem(it);
+        lines.add('${it.name} [${it.rarity.label}]');
+      }
+    }
+    return lines;
+  }
+
   // ------------------------------------------------------------- hòm thư
 
   bool canClaimMail(MailDef m, String day) =>
@@ -2137,6 +2202,7 @@ class HeroData {
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
         'newbie': [newbieClaimed, newbieDay],
+        'month': [monthKey, monthDays],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2315,6 +2381,11 @@ class HeroData {
       h.newbieClaimed = (newbie[0] as int).clamp(0, newbieDays);
       h.newbieDay = newbie[1] as String;
     }
+    final month = m['month'];
+    if (month is List && month.length == 2) {
+      h.monthKey = month[0] as String;
+      h.monthDays = (month[1] as int).clamp(0, 31);
+    }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];
     if (lh is List && lh.length == 2) {
@@ -2388,7 +2459,7 @@ class HeroData {
     }
     // An edited save (a billion potential points seen at level 31) gets every
     // point back and only what the hero could really have earned.
-    if (h.freePoints + h.spent.fold<int>(0, (a, b) => a + b) > h.maxPotential || h.freePoints < 0 || h.spent.any((p) => p < 0)) {
+    if (h.potentialTotal > h.maxPotential || h.freePoints < 0 || h.spent.any((p) => p < 0)) {
       h.spent.fillRange(0, 4, 0);
       h.freePoints = h.maxPotential;
     }
@@ -2396,8 +2467,13 @@ class HeroData {
     return h;
   }
 
+  /// Potential points spent and unspent; sent with leaderboard rows so the
+  /// Firestore rules can refuse a hero edited while the game runs.
+  int get potentialTotal => freePoints + spent.fold<int>(0, (a, b) => a + b);
+
   /// Every potential point a hero can have: [pointsPerLevel] a level,
-  /// [rebirthPoints] a rebirth, every Tẩy Tủy Đan, and some slack.
+  /// [rebirthPoints] a rebirth, every Tẩy Tủy Đan, and some slack. The
+  /// leaderboard rules repeat this sum.
   int get maxPotential =>
       (level - 1) * pointsPerLevel + rebirths * rebirthPoints + maxPotentialPills * potentialPerPill + 100;
 }

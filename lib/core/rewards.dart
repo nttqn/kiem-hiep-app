@@ -83,7 +83,9 @@ String? claimLoginGift(HeroData h, String today, math.Random rng) {
   }
   h.lastLoginDate = today;
   h.loginDay = (h.loginDay + 1) % 7;
-  return line;
+  final month = h.monthCheckIn(today, rng);
+  h.recompute();
+  return [line, ...month].join('\n');
 }
 
 // ------------------------------------------------------------- achievements
