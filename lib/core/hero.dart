@@ -2386,7 +2386,18 @@ class HeroData {
       h.actWeekPoints = act[4] as int;
       h.actWeekClaimed = act[5] as int;
     }
+    // An edited save (a billion potential points seen at level 31) gets every
+    // point back and only what the hero could really have earned.
+    if (h.freePoints + h.spent.fold<int>(0, (a, b) => a + b) > h.maxPotential || h.freePoints < 0 || h.spent.any((p) => p < 0)) {
+      h.spent.fillRange(0, 4, 0);
+      h.freePoints = h.maxPotential;
+    }
     h.recompute();
     return h;
   }
+
+  /// Every potential point a hero can have: [pointsPerLevel] a level,
+  /// [rebirthPoints] a rebirth, every Tẩy Tủy Đan, and some slack.
+  int get maxPotential =>
+      (level - 1) * pointsPerLevel + rebirths * rebirthPoints + maxPotentialPills * potentialPerPill + 100;
 }

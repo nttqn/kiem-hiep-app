@@ -134,4 +134,29 @@ void main() {
       expect(r.body, contains('ngày 1'));
     });
   });
+
+  group('Save sửa tay', () {
+    HeroData roundTrip(HeroData h) =>
+        HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
+
+    test('a billion potential points are taken back', () {
+      final h = HeroData(name: 'T', hanh: Hanh.thuy)..level = 31;
+      h.spent[3] = 49978;
+      h.freePoints = 999926201;
+      final back = roundTrip(h);
+      expect(back.spent, [0, 0, 0, 0]);
+      expect(back.freePoints, back.maxPotential);
+      expect(back.power, lessThan((h..recompute()).power));
+    });
+
+    test('an honest hero keeps their points, even after five rebirths and every pill', () {
+      final h = HeroData(name: 'T', hanh: Hanh.kim)
+        ..level = 99
+        ..rebirths = 5
+        ..potentialPills = 30;
+      h.spent[0] = 98 * pointsPerLevel + 5 * rebirthPoints + 90;
+      final back = roundTrip(h);
+      expect(back.spent[0], h.spent[0]);
+    });
+  });
 }
