@@ -13,6 +13,7 @@ import '../core/tower.dart';
 import '../core/week_goals.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
+import '../services/leaderboard.dart';
 import '../services/mail.dart';
 import '../services/notify.dart';
 import '../services/perf.dart';
@@ -78,9 +79,39 @@ class _TownScreenState extends State<TownScreen> {
     }
     if (mounted && h.lastLoginDate != todayKey()) await showLoginGiftDialog(context, h);
     if (mounted && h.newbieReady(vnDayKey())) await showNewbieDialog(context);
+    await _huntReward();
     // Ask for notifications once the player has stuck around a little.
     if (h.level >= 5 || h.rebirths > 0) await NotifyService.instance.askOnce();
     if (mounted) setState(() {});
+  }
+
+  /// Last week's Săn quái place and its reward, once the board can be
+  /// reached (else tried on the next visit to town).
+  Future<void> _huntReward() async {
+    h.huntRollDay(vnDayKey());
+    if (!h.huntRankDue || !Leaderboard.instance.available) return;
+    final place = await Leaderboard.instance.placeLastWeek(h.huntLastScore);
+    if (place == null || !mounted) return;
+    final lines = h.payHuntRank(place, math.Random());
+    await SaveService.instance.save();
+    if (lines.isEmpty || !mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Thưởng Săn quái tuần', style: titleStyle(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(lines.first, style: bold.copyWith(color: goldLight)),
+            const SizedBox(height: 6),
+            for (final l in lines.skip(1)) Text('• $l', style: body),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+      ),
+    );
   }
 
   /// Strips between the quest and the grid: the newbie gifts while they

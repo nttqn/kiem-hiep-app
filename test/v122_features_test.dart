@@ -35,7 +35,8 @@ void main() {
 
     test('each level costs iron and gold and raises lực chiến', () {
       final h = reborn()
-        ..divineIron = 1000
+        ..rebirths = divineTier2Rebirths
+        ..divineIron = 5000
         ..gold = 100000000;
       var iron = h.divineIron, gold = h.gold, power = h.power;
       for (var lv = 0; lv < divineMax; lv++) {
@@ -51,6 +52,18 @@ void main() {
       expect(h.upgradeDivine(), isFalse, reason: 'already at the top');
     });
 
+    test('tầng 11+ waits for the fourth rebirth', () {
+      final h = reborn()
+        ..divine = divineTier2From
+        ..divineIron = 5000
+        ..gold = 100000000;
+      expect(h.divineTier2Locked, isTrue);
+      expect(h.upgradeDivine(), isFalse);
+      h.rebirths = divineTier2Rebirths;
+      expect(h.upgradeDivine(), isTrue);
+      expect(h.divine, divineTier2From + 1);
+    });
+
     test('not enough Thần Thiết', () {
       final h = reborn()
         ..divineIron = divineIronCost[0] - 1
@@ -62,12 +75,13 @@ void main() {
       expect(divineBonuses(0), isEmpty);
       final top = divineBonuses(divineMax);
       expect(top[Bonus.atkPct], closeTo(divineStatPerLv * divineMax, 1e-9));
-      expect(top[Bonus.crit], 0.04);
-      expect(top[Bonus.critDmg], 0.2);
-      expect(top[Bonus.skillDmg], 0.1);
+      expect(top[Bonus.crit], closeTo(0.07, 1e-9));
+      expect(top[Bonus.critDmg], closeTo(0.45, 1e-9));
+      expect(top[Bonus.skillDmg], closeTo(0.22, 1e-9));
       expect(divineBonuses(2).containsKey(Bonus.crit), isFalse);
       expect(divineIronCost.length, divineMax);
-      expect(divineStage(divineMax), 'Thần binh');
+      expect(divineStage(divineTier2From), 'Thần binh');
+      expect(divineStage(divineMax), 'Tiên binh');
       expect(divineColor(0), 0);
     });
 

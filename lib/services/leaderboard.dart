@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/arena.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
 
@@ -22,6 +23,7 @@ class LbEntry {
     required this.tower,
     this.title = '',
     this.arenaS = 0,
+    this.wk = 0,
   });
 
   /// `{uid}_{slot}`.
@@ -38,6 +40,9 @@ class LbEntry {
   /// they have not fought this season.
   final int arenaS;
 
+  /// Săn quái tuần: week and kills as one number ([huntScore]).
+  final int wk;
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -53,6 +58,7 @@ class LbEntry {
         tower: (m['tower'] as num?)?.toInt() ?? 0,
         title: m['title'] as String? ?? '',
         arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
+        wk: (m['wk'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return null;
@@ -67,7 +73,7 @@ class LbPage {
   final Object? next;
 }
 
-enum LbBoard { power, tower, rank, arena }
+enum LbBoard { power, tower, rank, arena, hunt }
 
 extension LbBoardField on LbBoard {
   String get field => switch (this) {
@@ -75,6 +81,7 @@ extension LbBoardField on LbBoard {
         LbBoard.tower => 'tower',
         LbBoard.rank => 'rank',
         LbBoard.arena => 'arenaS',
+        LbBoard.hunt => 'wk',
       };
 
   int valueOf(LbEntry e) => switch (this) {
@@ -82,6 +89,7 @@ extension LbBoardField on LbBoard {
         LbBoard.tower => e.tower,
         LbBoard.rank => e.rank,
         LbBoard.arena => e.arenaS,
+        LbBoard.hunt => e.wk,
       };
 }
 
@@ -116,14 +124,17 @@ class Leaderboard extends ChangeNotifier {
   /// What was last written per row, so unchanged heroes cost no writes.
   final Map<String, String> _sent = {};
   final Map<String, int> _sentPower = {};
+  final Map<String, int> _sentHunt = {};
   final Map<String, DateTime> _sentAt = {};
   static const Duration _powerQuiet = Duration(minutes: 30);
 
   /// Writes [h] (in [slot]) to the board. Called with every cloud upload;
-  /// skips the write when nothing on the row changed.
-  Future<void> submit(int slot, HeroData h) async {
+  /// skips the write when nothing on the row changed, unless [force]d (the
+  /// player opening the board wants to see their latest numbers).
+  Future<void> submit(int slot, HeroData h, {bool force = false}) async {
     final uid = myUid;
     if (hidden || uid == null || debugEntries != null) return;
+    h.huntRollDay(vnDayKey());
     final id = '${uid}_$slot';
     final row = <String, Object>{
       'uid': uid,
@@ -137,17 +148,26 @@ class Leaderboard extends ChangeNotifier {
       'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,
       'arenaS': arenaBoardValue(h),
       if (h.arenaLastScore > 0) 'arenaLast': h.arenaLastScore,
+      'wk': h.huntBoardValue,
+      if (h.huntLastScore > 0) 'wkLast': h.huntLastScore,
     };
     // Play time goes along for the rules' sanity check, but on its own
-    // does not call for a write; nor does lực chiến creeping up by a little
-    // (a new gem, a pet level) more than every [_powerQuiet].
-    final key = (Map.of(row)..remove('power')).toString();
+    // does not call for a write; nor do lực chiến creeping up by a little
+    // (a new gem, a pet level) or this week's kills, more than every
+    // [_powerQuiet].
+    final key = (Map.of(row)
+          ..remove('power')
+          ..remove('wk'))
+        .toString();
     final last = _sentPower[id];
     final now = DateTime.now();
-    if (_sent[id] == key &&
+    final at = _sentAt[id];
+    final quiet = at != null && now.difference(at) < _powerQuiet;
+    if (!force &&
+        _sent[id] == key &&
         last != null &&
-        (last == h.power ||
-            ((h.power - last).abs() < last * 0.03 && now.difference(_sentAt[id]!) < _powerQuiet))) {
+        (last == h.power || ((h.power - last).abs() < last * 0.03 && quiet)) &&
+        (_sentHunt[id] == h.huntBoardValue || quiet)) {
       return;
     }
     try {
@@ -165,6 +185,7 @@ class Leaderboard extends ChangeNotifier {
           );
       _sent[id] = key;
       _sentPower[id] = h.power;
+      _sentHunt[id] = h.huntBoardValue;
       _sentAt[id] = now;
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
@@ -272,7 +293,11 @@ class Leaderboard extends ChangeNotifier {
   static const int pageSize = 50;
 
   /// The Lôi đài board lists this season only.
-  int _floor(LbBoard board) => board == LbBoard.arena ? arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0) : 0;
+  int _floor(LbBoard board) => switch (board) {
+        LbBoard.arena => arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0),
+        LbBoard.hunt => huntScore(huntWeekOf(vnDayKey()), 0),
+        _ => 0,
+      };
 
   List<LbEntry> _debugSorted(LbBoard board) {
     final floor = _floor(board);
@@ -383,9 +408,15 @@ class Leaderboard extends ChangeNotifier {
   /// 1-based place of [score] (an [arenaSeasonScore]) in its finished
   /// season. Players who have not opened the game since still carry it as
   /// `arenaS`; those who have, as `arenaLast`; each is counted once.
-  Future<int?> placeLastSeason(int score) async {
+  Future<int?> placeLastSeason(int score) => _placeLast(score, 100000, 'arenaS', 'arenaLast');
+
+  /// 1-based place of [score] (a [huntScore]) in its finished week, the
+  /// same way.
+  Future<int?> placeLastWeek(int score) => _placeLast(score, 1000000, 'wk', 'wkLast');
+
+  Future<int?> _placeLast(int score, int unit, String current, String last) async {
     if (debugEntries != null) return 2;
-    final top = (score ~/ 100000 + 1) * 100000;
+    final top = (score ~/ unit + 1) * unit;
     Future<int> above(String field) async {
       final agg = await _col
           .where(field, isGreaterThan: score)
@@ -397,7 +428,7 @@ class Leaderboard extends ChangeNotifier {
     }
 
     try {
-      final counts = await Future.wait([above('arenaS'), above('arenaLast')]);
+      final counts = await Future.wait([above(current), above(last)]);
       return counts[0] + counts[1] + 1;
     } catch (_) {
       return null;

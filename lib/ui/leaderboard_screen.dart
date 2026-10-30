@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/sects.dart';
+import '../core/weekly_hunt.dart';
+import '../core/world_boss.dart';
 import '../services/cloud.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
@@ -60,6 +62,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.tower => h.towerBest,
         LbBoard.rank => h.rebirths * 100 + h.level,
         LbBoard.arena => arenaBoardValue(h),
+        LbBoard.hunt => h.huntBoardValue,
       };
 
   Future<void> _load() async {
@@ -78,7 +81,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     });
     // Push this hero's latest numbers first so the player sees themselves.
     final slot = SaveService.instance.active;
-    if (slot >= 0) await lb.submit(slot, h);
+    if (slot >= 0) await lb.submit(slot, h, force: true);
     try {
       final page = await lb.top(_board);
       final place = lb.hidden ? null : await lb.placeOf(_board, _mine(_board));
@@ -148,9 +151,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget build(BuildContext context) {
     const names = {
       LbBoard.power: 'Lực chiến',
-      LbBoard.tower: 'Tháp Thử Luyện',
+      LbBoard.tower: 'Tháp',
       LbBoard.rank: 'Cấp độ',
       LbBoard.arena: 'Lôi đài',
+      LbBoard.hunt: 'Săn quái tuần',
     };
     return SubScreen(
       title: 'Xếp hạng',
@@ -328,7 +332,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.tower => 'Tầng ${e.tower}',
         LbBoard.rank => e.rebirths > 0 ? 'CS${e.rebirths} · ${e.level}' : 'Cấp ${e.level}',
         LbBoard.arena => '${e.arenaS % 100000} điểm',
+        LbBoard.hunt => '${fmt(e.wk % 1000000)} quái',
       };
+
+  bool get _offBoard =>
+      (_board == LbBoard.arena && arenaBoardValue(h) == 0) || (_board == LbBoard.hunt && h.huntBoardValue == 0);
 
   Widget _mePanel() {
     return Panel(
@@ -343,13 +351,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _stat('Tháp Thử Luyện', 'Tầng ${h.towerBest}'),
           _stat('Chuyển sinh', '${h.rebirths}'),
           _stat('Lôi đài', '${h.arenaPoints} điểm'),
+          _stat('Săn quái tuần', fmt(h.huntKills)),
           const SizedBox(height: 8),
           if (lb.available && !lb.hidden)
             Text(
-                _board == LbBoard.arena && arenaBoardValue(h) == 0
-                    ? 'Đấu một trận Lôi đài mùa này để lên bảng'
+                _offBoard
+                    ? (_board == LbBoard.arena
+                        ? 'Đấu một trận Lôi đài mùa này để lên bảng'
+                        : 'Hạ một con quái tuần này để lên bảng')
                     : (_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place'),
-                style: titleStyle(_board == LbBoard.arena && arenaBoardValue(h) == 0 ? 14 : 17, color: goldLight)),
+                style: titleStyle(_offBoard ? 14 : 17, color: goldLight)),
+          if (_board == LbBoard.hunt)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                  'Bảng mới mỗi thứ Hai, còn ${huntDaysLeft(vnDayKey())} ngày. Top 50 nhận Thần Thiết và ngọc, '
+                  'hạng 1 thêm danh hiệu « Săn Quái Vương ».',
+                  style: small.copyWith(fontSize: 10.5, color: goldLight)),
+            ),
           if (_place != null && _rows != null && !_around) ...[
             const SizedBox(height: 6),
             LButton(label: 'Vị trí của tôi', icon: Icons.my_location, small: true, color: jade, onTap: _showMe),
@@ -370,7 +389,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ],
             ),
           Text(
-              'Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp và điểm Lôi đài. '
+              'Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp, điểm Lôi đài và số quái tuần. '
               'Chạm vào người khác để báo cáo gian lận.',
               style: small.copyWith(fontSize: 10.5)),
         ],

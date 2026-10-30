@@ -29,6 +29,7 @@ import 'sect_duty.dart';
 import 'tower.dart';
 import 'treasure.dart';
 import 'week_goals.dart';
+import 'weekly_hunt.dart';
 import 'world_boss.dart';
 import 'sects.dart';
 
@@ -358,6 +359,14 @@ class HeroData {
   int arenaLastScore = 0;
   bool arenaRankDue = false;
   final Set<String> seasonTitles = {};
+
+  // Săn quái tuần: the week and its kills; the last finished week's score
+  // (kept on the leaderboard row as `wkLast`, as arenaLastScore is) and
+  // whether its rank is still to be paid.
+  int huntWeek = 0;
+  int huntKills = 0;
+  int huntLastScore = 0;
+  bool huntRankDue = false;
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -1026,6 +1035,8 @@ class HeroData {
 
   void onKill(MobDef m, math.Random rng) {
     kills++;
+    huntRollDay(vnDayKey());
+    huntKills = math.min(huntWeekMax, huntKills + 1);
     addActivity(ActSource.kills);
     if (m.boss) {
       bossKills++;
@@ -1978,9 +1989,13 @@ class HeroData {
 
   bool get divineOpen => rebirths >= divineOpenRebirths;
 
+  /// At the end of the first ten levels before the fourth rebirth.
+  bool get divineTier2Locked => divine >= divineTier2From && rebirths < divineTier2Rebirths;
+
   bool get canDivine =>
       divineOpen &&
       divine < divineMax &&
+      !divineTier2Locked &&
       divineIron >= divineIronCost[divine] &&
       gold >= divineGoldCost(divine);
 
@@ -2129,6 +2144,40 @@ class HeroData {
     arenaCoins += r.coins;
     divineIron += r.iron;
     final lines = ['Hạng $place mùa trước:', '+${_thousands(r.coins)} Uy danh', '+${r.iron} Thần Thiết'];
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    return lines;
+  }
+
+  // ------------------------------------------------------------- săn tuần
+
+  /// Moves to [day]'s week; a finished week with kills waits for its rank.
+  void huntRollDay(String day) {
+    final w = huntWeekOf(day);
+    if (w == huntWeek) return;
+    if (huntWeek > 0 && huntKills > 0 && w > huntWeek) {
+      huntLastScore = huntScore(huntWeek, huntKills);
+      huntRankDue = true;
+    }
+    huntWeek = w;
+    huntKills = 0;
+  }
+
+  /// This week's leaderboard value: 0 until the first kill.
+  int get huntBoardValue => huntWeek > 0 && huntKills > 0 ? huntScore(huntWeek, huntKills) : 0;
+
+  /// Pays the finished week's reward once its [place] is known.
+  List<String> payHuntRank(int place, math.Random rng) {
+    if (!huntRankDue) return const [];
+    huntRankDue = false;
+    final r = huntReward(place);
+    if (r == null) return const [];
+    divineIron += r.iron;
+    final lines = ['Hạng $place Săn quái tuần trước:', '+${r.iron} Thần Thiết'];
+    for (var i = 0; i < r.gems; i++) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], r.gemTier);
+      addGem(gem);
+      lines.add(gem.name);
+    }
     if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
     return lines;
   }
@@ -2292,6 +2341,7 @@ class HeroData {
         'month': [monthKey, monthDays],
         'week': [weekClaimed.toList(), weekChest],
         'arenaRk': [arenaLastScore, arenaRankDue, seasonTitles.toList()],
+        'hunt': [huntWeek, huntKills, huntLastScore, huntRankDue],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2485,6 +2535,13 @@ class HeroData {
       h.arenaLastScore = math.max(0, rk[0] as int);
       h.arenaRankDue = rk[1] as bool;
       h.seasonTitles.addAll([for (final v in rk[2] as List) '$v']);
+    }
+    final hunt = m['hunt'];
+    if (hunt is List && hunt.length == 4) {
+      h.huntWeek = math.max(0, hunt[0] as int);
+      h.huntKills = (hunt[1] as int).clamp(0, huntWeekMax);
+      h.huntLastScore = math.max(0, hunt[2] as int);
+      h.huntRankDue = hunt[3] as bool;
     }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];

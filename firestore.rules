@@ -39,6 +39,16 @@ service cloud.firestore {
         && (!('arenaLast' in request.resource.data)
             || (request.resource.data.arenaLast is int
                 && request.resource.data.arenaLast >= 0 && request.resource.data.arenaLast <= 100000000))
+        // Săn quái tuần (1.2.6+): week * 1000000 + kills, at most 300000 a
+        // week; and the last finished week's, for its rank reward.
+        && (!('wk' in request.resource.data)
+            || (request.resource.data.wk is int
+                && request.resource.data.wk >= 0 && request.resource.data.wk <= 1000000000
+                && request.resource.data.wk % 1000000 <= 300000))
+        && (!('wkLast' in request.resource.data)
+            || (request.resource.data.wkLast is int
+                && request.resource.data.wkLast >= 0 && request.resource.data.wkLast <= 1000000000
+                && request.resource.data.wkLast % 1000000 <= 300000))
         // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
         // rebirth and a minute per level. The fastest real hero seen (a
         // non-stop auto-fight farmer) took about 4.5 hours per rebirth.

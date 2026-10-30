@@ -99,7 +99,15 @@ class _DivineTabState extends State<DivineTab> {
         Expanded(
           child: ListView(
             children: [
-              for (var i = 1; i <= divineMax; i++) _levelRow(i, lv),
+              for (var i = 1; i <= divineMax; i++) ...[
+                if (i == divineTier2From + 1)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
+                    child: Text('Bậc hai · mở ở Chuyển sinh $divineTier2Rebirths',
+                        style: bold.copyWith(fontSize: 12, color: goldLight)),
+                  ),
+                _levelRow(i, lv),
+              ],
             ],
           ),
         ),
@@ -109,8 +117,10 @@ class _DivineTabState extends State<DivineTab> {
             Expanded(
               child: Text(
                 maxed
-                    ? 'Đã đạt Thần binh tầng cao nhất.'
-                    : 'Tầng ${lv + 1}: ${divineIronCost[lv]} Thần Thiết · ${fmt(divineGoldCost(lv))} lượng',
+                    ? 'Đã đạt Tiên binh, tầng cao nhất.'
+                    : h.divineTier2Locked
+                        ? 'Tầng ${lv + 1} trở lên mở ở Chuyển sinh $divineTier2Rebirths.'
+                        : 'Tầng ${lv + 1}: ${divineIronCost[lv]} Thần Thiết · ${fmt(divineGoldCost(lv))} lượng',
                 style: bold.copyWith(fontSize: 13, color: maxed ? goldLight : cream),
               ),
             ),
@@ -128,7 +138,7 @@ class _DivineTabState extends State<DivineTab> {
         const SizedBox(height: 4),
         Text(
           'Thần Thiết: Ải Ác Mộng 7 trở lên (vượt lần đầu được nhiều), mốc sát thương cao của Boss Thế Giới, '
-          'vượt tháp tầng 100 trở lên, và quà Hòm thư.',
+          'vượt tháp tầng 100 trở lên, top Săn quái tuần, và quà Hòm thư.',
           style: small.copyWith(fontSize: 10.5),
         ),
       ],
