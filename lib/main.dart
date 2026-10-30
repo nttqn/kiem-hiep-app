@@ -43,6 +43,16 @@ class KiemHiepApp extends StatelessWidget {
       title: gameTitle,
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
+      // Every screen is laid out for a landscape phone at the normal text
+      // size; a large system font size overflows the town grid, the HUD and
+      // the dialogs, so it is capped a little above normal.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: mq.textScaler.clamp(maxScaleFactor: 1.1)),
+          child: child!,
+        );
+      },
       home: const TitleScreen(),
     );
   }
