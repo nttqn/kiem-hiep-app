@@ -318,8 +318,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
           style: bold.copyWith(color: goldLight),
           items: [
             const DropdownMenuItem(value: '', child: Text('(không)')),
-            for (final a in achievements)
-              if (h.achClaimed.contains(a.id)) DropdownMenuItem(value: a.title, child: Text(a.title)),
+            // A set: two achievements share « Võ Lâm Chí Tôn ».
+            for (final t in {
+              for (final a in achievements)
+                if (h.achClaimed.contains(a.id)) a.title,
+              ...h.seasonTitles,
+            })
+              DropdownMenuItem(value: t, child: Text(t)),
           ],
           onChanged: (v) {
             h.title = v ?? '';

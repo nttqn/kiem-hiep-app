@@ -28,6 +28,7 @@ import 'pets.dart';
 import 'sect_duty.dart';
 import 'tower.dart';
 import 'treasure.dart';
+import 'week_goals.dart';
 import 'world_boss.dart';
 import 'sects.dart';
 
@@ -345,6 +346,18 @@ class HeroData {
   // Điểm danh tháng: the month, and check-in days counted in it.
   String monthKey = '';
   int monthDays = 0;
+
+  // Mục tiêu 7 ngày: goals taken, and whether the chest for all is.
+  final Set<String> weekClaimed = {};
+  bool weekChest = false;
+
+  // Lôi đài rank reward: the last settled season's score, kept on the
+  // leaderboard row (`arenaLast`) so players settling later can still be
+  // ranked against it; whether its rank is still to be looked up and paid;
+  // titles won that way.
+  int arenaLastScore = 0;
+  bool arenaRankDue = false;
+  final Set<String> seasonTitles = {};
 
   int lastDungeonGold = 0;
   double lastDungeonExp = 0;
@@ -1411,6 +1424,8 @@ class HeroData {
     if (r.gemTier > 0) addGem(Gem(Hanh.values[math.Random(seed ^ old).nextInt(5)], r.gemTier));
     arenaBestTier = math.max(arenaBestTier, tier);
     arenaSeasonResult = [old, tier, arenaPoints, r.coins, r.gold, r.shards, r.gemTier];
+    arenaLastScore = arenaSeasonScore(old, arenaPoints);
+    arenaRankDue = true;
     arenaPoints = arenaSeasonReset(arenaPoints);
     unlockCostumes();
     return true;
@@ -2046,6 +2061,78 @@ class HeroData {
     return lines;
   }
 
+  // ------------------------------------------------------------- 7 ngày
+
+  /// Goals shown: a hero made since they exist, until the chest is taken.
+  bool weekGoalsOpen(String today) => !weekChest && weekGoalDay(this, today) > 0;
+
+  bool canClaimWeekGoal(WeekGoal g, String today) =>
+      weekGoalsOpen(today) &&
+      weekGoalDay(this, today) >= g.day &&
+      !weekClaimed.contains(g.id) &&
+      g.progress(this) >= g.goal;
+
+  bool canClaimWeekChest(String today) =>
+      weekGoalsOpen(today) && weekClaimed.length >= weekGoals.length;
+
+  /// Goals and the chest waiting to be taken (town badge).
+  int weekGoalsReady(String today) =>
+      weekGoals.where((g) => canClaimWeekGoal(g, today)).length + (canClaimWeekChest(today) ? 1 : 0);
+
+  /// Takes [g]'s reward; the lines say what came in.
+  List<String> claimWeekGoal(WeekGoal g, String today, math.Random rng) {
+    if (!canClaimWeekGoal(g, today)) return const [];
+    weekClaimed.add(g.id);
+    gold += g.gold;
+    final lines = ['+${_thousands(g.gold)} lượng'];
+    if (g.pots > 0) {
+      hpPots += g.pots;
+      mpPots += g.pots;
+      lines.add('+${g.pots} Kim Sang Dược, +${g.pots} Ngưng Thần Đan');
+    }
+    for (var i = 0; i < g.gems; i++) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], g.gemTier);
+      addGem(gem);
+      lines.add(gem.name);
+    }
+    return lines;
+  }
+
+  List<String> claimWeekChest(String today, math.Random rng) {
+    if (!canClaimWeekChest(today)) return const [];
+    weekChest = true;
+    gold += weekChestGold;
+    divineIron += weekChestIron;
+    pills['taytuy'] = (pills['taytuy'] ?? 0) + weekChestPills;
+    final lines = [
+      '+${_thousands(weekChestGold)} lượng',
+      '+$weekChestIron Thần Thiết',
+      '+$weekChestPills Tẩy Tủy Đan',
+    ];
+    for (var i = 0; i < weekChestGems; i++) {
+      final gem = Gem(Hanh.values[rng.nextInt(5)], weekChestGemTier);
+      addGem(gem);
+      lines.add(gem.name);
+    }
+    return lines;
+  }
+
+  // ------------------------------------------------------------- hạng mùa
+
+  /// Pays the Lôi đài rank reward for the settled season once its [place]
+  /// is known; the lines say what came in (empty outside the top).
+  List<String> payArenaRank(int place) {
+    if (!arenaRankDue) return const [];
+    arenaRankDue = false;
+    final r = arenaRankReward(place);
+    if (r == null) return const [];
+    arenaCoins += r.coins;
+    divineIron += r.iron;
+    final lines = ['Hạng $place mùa trước:', '+${_thousands(r.coins)} Uy danh', '+${r.iron} Thần Thiết'];
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    return lines;
+  }
+
   // ------------------------------------------------------------- điểm danh
 
   /// Check-in days so far in [day]'s month.
@@ -2203,6 +2290,8 @@ class HeroData {
         'fun': [bornDay, deaths, funnel.toList()],
         'newbie': [newbieClaimed, newbieDay],
         'month': [monthKey, monthDays],
+        'week': [weekClaimed.toList(), weekChest],
+        'arenaRk': [arenaLastScore, arenaRankDue, seasonTitles.toList()],
         'act': [
           actDay,
           {for (final e in actCounts.entries) '${e.key.index}': e.value},
@@ -2385,6 +2474,17 @@ class HeroData {
     if (month is List && month.length == 2) {
       h.monthKey = month[0] as String;
       h.monthDays = (month[1] as int).clamp(0, 31);
+    }
+    final week = m['week'];
+    if (week is List && week.length == 2) {
+      h.weekClaimed.addAll([for (final v in week[0] as List) '$v']);
+      h.weekChest = week[1] as bool;
+    }
+    final rk = m['arenaRk'];
+    if (rk is List && rk.length == 3) {
+      h.arenaLastScore = math.max(0, rk[0] as int);
+      h.arenaRankDue = rk[1] as bool;
+      h.seasonTitles.addAll([for (final v in rk[2] as List) '$v']);
     }
     h.unlockCostumes(quiet: true);
     final lh = m['lh'];

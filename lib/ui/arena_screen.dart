@@ -37,8 +37,42 @@ class _ArenaScreenState extends State<ArenaScreen> {
     _load();
     if (h.arenaSeasonResult.isNotEmpty) {
       SaveService.instance.save();
-      WidgetsBinding.instance.addPostFrameCallback((_) => _seasonEnded());
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _seasonEnded();
+        await _rankReward();
+      });
+    } else if (h.arenaRankDue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _rankReward());
     }
+  }
+
+  /// Looks up the finished season's leaderboard place and pays the top 50
+  /// (tried again next visit when offline).
+  Future<void> _rankReward() async {
+    if (!h.arenaRankDue || !Leaderboard.instance.available) return;
+    final place = await Leaderboard.instance.placeLastSeason(h.arenaLastScore);
+    if (place == null || !mounted) return;
+    final lines = h.payArenaRank(place);
+    await SaveService.instance.save();
+    if (lines.isEmpty || !mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Thưởng xếp hạng mùa', style: titleStyle(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(lines.first, style: bold.copyWith(color: goldLight)),
+            const SizedBox(height: 6),
+            for (final l in lines.skip(1)) Text('• $l', style: body),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   /// Tells how the last season ended and what it paid, once.
@@ -99,6 +133,11 @@ class _ArenaScreenState extends State<ArenaScreen> {
                             for (var i = arenaTiers.length - 1; i >= 0; i--) _rewardRow(i),
                           ],
                         ),
+                      ),
+                      Text(
+                        'Thêm theo thứ hạng trên bảng: hạng 1 « Lôi Đài Bá Chủ » +1500 Uy danh +20 Thần Thiết; '
+                        'top 3 « Lôi Đài Tam Hùng » +1000, +12; top 10 « Lôi Đài Thập Kiệt » +600, +6; top 50 +300, +3.',
+                        style: small.copyWith(fontSize: 10.5, color: goldLight),
                       ),
                       Text(
                         'Sang mùa mới: điểm = 1000 + một nửa phần vượt 1000. '

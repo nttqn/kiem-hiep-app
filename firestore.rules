@@ -35,6 +35,10 @@ service cloud.firestore {
         && (!('arenaS' in request.resource.data)
             || (request.resource.data.arenaS is int
                 && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000))
+        // The last finished season's score, for its rank reward (1.2.5+).
+        && (!('arenaLast' in request.resource.data)
+            || (request.resource.data.arenaLast is int
+                && request.resource.data.arenaLast >= 0 && request.resource.data.arenaLast <= 100000000))
         // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
         // rebirth and a minute per level. The fastest real hero seen (a
         // non-stop auto-fight farmer) took about 4.5 hours per rebirth.

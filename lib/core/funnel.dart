@@ -26,7 +26,7 @@ List<String> funnelDue(HeroData h, String today) {
   step('f_dungeon1', h.dungeonStars.isNotEmpty);
   step('f_death1', h.deaths > 0);
   step('f_cs1', reborn);
-  final days = _daysBetween(h.bornDay, today);
+  final days = daysBetween(h.bornDay, today);
   if (days != null) {
     for (final d in funnelDays) {
       step('f_day$d', days >= d);
@@ -37,7 +37,7 @@ List<String> funnelDue(HeroData h, String today) {
 
 /// Whole days from [from] to [to] (`20261101` style), null if either is not
 /// a day.
-int? _daysBetween(String from, String to) {
+int? daysBetween(String from, String to) {
   DateTime? p(String s) => s.length == 8 && int.tryParse(s) != null
       ? DateTime.utc(int.parse(s.substring(0, 4)), int.parse(s.substring(4, 6)), int.parse(s.substring(6, 8)))
       : null;

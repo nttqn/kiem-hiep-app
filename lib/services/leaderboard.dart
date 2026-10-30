@@ -115,6 +115,9 @@ class Leaderboard extends ChangeNotifier {
 
   /// What was last written per row, so unchanged heroes cost no writes.
   final Map<String, String> _sent = {};
+  final Map<String, int> _sentPower = {};
+  final Map<String, DateTime> _sentAt = {};
+  static const Duration _powerQuiet = Duration(minutes: 30);
 
   /// Writes [h] (in [slot]) to the board. Called with every cloud upload;
   /// skips the write when nothing on the row changed.
@@ -133,11 +136,20 @@ class Leaderboard extends ChangeNotifier {
       'tower': h.towerBest,
       'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,
       'arenaS': arenaBoardValue(h),
+      if (h.arenaLastScore > 0) 'arenaLast': h.arenaLastScore,
     };
     // Play time goes along for the rules' sanity check, but on its own
-    // does not call for a write.
-    final key = row.toString();
-    if (_sent[id] == key) return;
+    // does not call for a write; nor does lực chiến creeping up by a little
+    // (a new gem, a pet level) more than every [_powerQuiet].
+    final key = (Map.of(row)..remove('power')).toString();
+    final last = _sentPower[id];
+    final now = DateTime.now();
+    if (_sent[id] == key &&
+        last != null &&
+        (last == h.power ||
+            ((h.power - last).abs() < last * 0.03 && now.difference(_sentAt[id]!) < _powerQuiet))) {
+      return;
+    }
     try {
       // A write only completes once the server takes it, which can be never
       // when offline or over quota; don't hold the caller that long.
@@ -152,6 +164,8 @@ class Leaderboard extends ChangeNotifier {
             const Duration(seconds: 8),
           );
       _sent[id] = key;
+      _sentPower[id] = h.power;
+      _sentAt[id] = now;
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
     }
@@ -361,6 +375,30 @@ class Leaderboard extends ChangeNotifier {
           .get()
           .timeout(const Duration(seconds: 10));
       return (agg.count ?? 0) + 1;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 1-based place of [score] (an [arenaSeasonScore]) in its finished
+  /// season. Players who have not opened the game since still carry it as
+  /// `arenaS`; those who have, as `arenaLast`; each is counted once.
+  Future<int?> placeLastSeason(int score) async {
+    if (debugEntries != null) return 2;
+    final top = (score ~/ 100000 + 1) * 100000;
+    Future<int> above(String field) async {
+      final agg = await _col
+          .where(field, isGreaterThan: score)
+          .where(field, isLessThan: top)
+          .count()
+          .get()
+          .timeout(const Duration(seconds: 10));
+      return agg.count ?? 0;
+    }
+
+    try {
+      final counts = await Future.wait([above('arenaS'), above('arenaLast')]);
+      return counts[0] + counts[1] + 1;
     } catch (_) {
       return null;
     }

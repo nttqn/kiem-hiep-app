@@ -146,7 +146,24 @@ ArenaSeasonReward arenaSeasonReward(int tier, int level) => ArenaSeasonReward(
       shards: const [0, 2, 5, 8, 12, 20, 30][tier],
     );
 
-const _surnames = ['Lý', 'Trần', 'Đoàn', 'Mộ Dung', 'Âu Dương', 'Lệnh Hồ', 'Tiêu', 'Hoa', 'Đông Phương', 'Nhạc', 'Vân', 'Bạch'];
+/// Paid on top of the tier reward to the season's best by leaderboard rank.
+class ArenaRankReward {
+  const ArenaRankReward(this.coins, this.iron, this.title);
+  final int coins, iron;
+
+  /// A title kept for good; empty for none.
+  final String title;
+}
+
+ArenaRankReward? arenaRankReward(int place) => switch (place) {
+      1 => const ArenaRankReward(1500, 20, 'Lôi Đài Bá Chủ'),
+      <= 3 => const ArenaRankReward(1000, 12, 'Lôi Đài Tam Hùng'),
+      <= 10 => const ArenaRankReward(600, 6, 'Lôi Đài Thập Kiệt'),
+      <= 50 => const ArenaRankReward(300, 3, ''),
+      _ => null,
+    };
+
+const _surnames =['Lý', 'Trần', 'Đoàn', 'Mộ Dung', 'Âu Dương', 'Lệnh Hồ', 'Tiêu', 'Hoa', 'Đông Phương', 'Nhạc', 'Vân', 'Bạch'];
 const _given = ['Phong', 'Vô Kỵ', 'Thiên Long', 'Tuyết', 'Bất Phàm', 'Kiếm Tâm', 'Lăng Ba', 'Hàn', 'Thanh Y', 'Vô Song', 'Nguyệt', 'Hạo Nhiên'];
 
 /// Three challengers around [power]: weaker, even and stronger, invented

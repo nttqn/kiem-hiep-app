@@ -10,6 +10,7 @@ import '../core/newbie.dart';
 import '../core/hero.dart';
 import '../core/sect_duty.dart';
 import '../core/tower.dart';
+import '../core/week_goals.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
 import '../services/mail.dart';
@@ -36,6 +37,7 @@ import 'play_screen.dart';
 import 'shop_screen.dart';
 import 'theme.dart';
 import 'title_screen.dart';
+import 'week_goals_dialog.dart';
 
 class TownScreen extends StatefulWidget {
   const TownScreen({super.key, this.firstVisit = false});
@@ -100,6 +102,20 @@ class _TownScreenState extends State<TownScreen> {
           action: h.newbieReady(day) ? 'Nhận' : 'Xem',
           onTap: () async {
             await showNewbieDialog(context);
+            if (mounted) setState(() {});
+          },
+        ),
+      if (h.weekGoalsOpen(day))
+        _banner(
+          icon: Icons.flag,
+          color: goldLight,
+          title: 'Mục tiêu 7 ngày · ${h.weekClaimed.length}/${weekGoals.length}',
+          text: h.weekGoalsReady(day) > 0
+              ? '${h.weekGoalsReady(day)} phần thưởng đang chờ nhận!'
+              : 'Làm mục tiêu mỗi ngày, đủ 21 mục mở Rương 7 ngày.',
+          action: h.weekGoalsReady(day) > 0 ? 'Nhận' : 'Xem',
+          onTap: () async {
+            await showWeekGoalsDialog(context);
             if (mounted) setState(() {});
           },
         ),
