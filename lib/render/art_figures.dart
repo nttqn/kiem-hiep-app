@@ -10,6 +10,7 @@ import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
 import 'art_chibi.dart';
+import 'quality.dart';
 
 /// Figures are drawn in local units with the feet at (0, 0), facing right;
 /// the caller flips and scales the canvas. A humanoid is about 64 tall.
@@ -427,7 +428,7 @@ void _weapon(Canvas c, HumanLook k, double x, double y, double ang, double attac
   if (k.glow != 0) {
     final g = Paint()
       ..color = col(k.glow).withValues(alpha: 0.45 * _alpha)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      ..maskFilter = softBlur(4);
     c.drawRect(const Rect.fromLTRB(-2, -3, 30, 3), g);
   }
   switch (w) {
@@ -808,7 +809,7 @@ void _flyer(Canvas c, MobDef d, double walk, bool moving, double attack, double 
       c.translate(0, hover);
       final glow = Paint()
         ..color = col(d.c1).withValues(alpha: 0.35 * _alpha)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+        ..maskFilter = softBlur(8);
       c.drawCircle(Offset.zero, 16, glow);
       final f = Path()
         ..moveTo(-9, 2)
@@ -844,7 +845,7 @@ void _brute(Canvas c, MobDef d, double walk, bool moving, double attack, double 
     c.drawLine(const Offset(6, -42), const Offset(9, -30), crack);
     final g = Paint()
       ..color = col(d.c2).withValues(alpha: 0.5 * _alpha)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      ..maskFilter = softBlur(5);
     c.drawCircle(const Offset(0, -34), 6, g);
   } else {
     c.drawOval(const Rect.fromLTRB(-16, -50, 16, -14), fillOf(d.c1));

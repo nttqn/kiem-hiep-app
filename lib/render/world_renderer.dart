@@ -13,6 +13,7 @@ import 'art_chibi.dart';
 import 'art_figures.dart';
 import 'art_fx.dart';
 import 'art_scenery.dart';
+import 'quality.dart';
 
 /// Rough head height of each body plan, for bars and labels.
 double mobTop(MobDef d) => switch (d.body) {
@@ -162,7 +163,11 @@ class WorldRenderer {
       final show = m == tg || m.hp < m.maxHp || m.big;
       if (show && !debugClean) _mobBar(c, m, m == tg);
     }
-    for (final ft in debugClean ? const <FloatText>[] : w.texts) {
+    // Chế độ máy yếu draws only the newest few numbers.
+    final texts = debugClean
+        ? const <FloatText>[]
+        : (liteGraphics && w.texts.length > 8 ? w.texts.sublist(w.texts.length - 8) : w.texts);
+    for (final ft in texts) {
       final rise = ft.t * 46;
       final a = ft.t < 0.7 ? 1.0 : (1 - (ft.t - 0.7) / 0.3);
       final pop = ft.big ? 1 + math.max(0.0, 0.3 - ft.t) * 2 : 1.0;
@@ -198,7 +203,9 @@ class WorldRenderer {
 
   void _drawProp(Canvas c, Prop pr, Player p, double t) {
     // See-through when the hero walks behind it.
-    final behind = p.y < pr.y &&
+    // An offscreen layer per prop is too much for Chế độ máy yếu.
+    final behind = !liteGraphics &&
+        p.y < pr.y &&
         p.y > pr.y - propHeight(pr) - 10 &&
         (p.x - pr.x).abs() < propHalfWidth(pr) + 10;
     if (behind) {
@@ -254,7 +261,7 @@ class WorldRenderer {
       c.drawOval(Rect.fromCenter(center: Offset(m.x, m.y), width: m.radius * 2.4, height: m.radius),
           Paint()..color = const Color(0x557FD4FF));
     }
-    for (final dot in m.dots) {
+    for (final dot in m.dots.where((_) => !liteGraphics)) {
       final colr = dot.kind.name == 'poison' ? const Color(0xAA8CE05A) : const Color(0xAAFF8A3D);
       for (var i = 0; i < 2; i++) {
         final rise = (t * 1.5 + i * 0.5 + m.uid * 0.13) % 1;

@@ -5,6 +5,7 @@ import '../core/hanh.dart';
 import '../core/items.dart';
 import '../core/world.dart';
 import 'art_figures.dart';
+import 'quality.dart';
 
 /// Colour of the rebirth aura after [n] rebirths: jade, sky, violet,
 /// crimson, then gold.
@@ -28,12 +29,12 @@ void drawRebirthAura(Canvas c, int n, double t) {
       Rect.fromCenter(center: const Offset(0, -34), width: 46 * k, height: 84),
       Paint()
         ..color = colr.withValues(alpha: 0.16 + 0.05 * math.sin(t * 2))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14));
+        ..maskFilter = softBlur(14));
   // Ground glow and ring.
   c.drawOval(Rect.fromCenter(center: Offset.zero, width: 62 * k, height: 22 * k),
       Paint()
         ..color = colr.withValues(alpha: 0.28)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+        ..maskFilter = softBlur(6));
   final ring = Paint()
     ..color = colr.withValues(alpha: 0.85)
     ..style = PaintingStyle.stroke
@@ -75,7 +76,7 @@ const _earth = 0xFFC9A15A;
 
 Paint _glow(int argb, double alpha, double blur) => Paint()
   ..color = Color(argb).withValues(alpha: alpha.clamp(0, 1))
-  ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
+  ..maskFilter = softBlur(blur);
 
 Paint _a(int argb, double alpha) =>
     Paint()..color = Color(argb).withValues(alpha: alpha.clamp(0, 1));
@@ -369,7 +370,7 @@ void drawProj(Canvas c, Proj pr, double t) {
             ..color = Color(colr).withValues(alpha: 0.6)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 8
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+            ..maskFilter = softBlur(5));
     case 'taiji':
       c.rotate(t * 12);
       final r = pr.radius;

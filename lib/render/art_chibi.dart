@@ -5,6 +5,7 @@ import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/mounts.dart';
 import 'art_figures.dart';
+import 'quality.dart';
 
 /// Chibi-style figures: big heads, dark outlines, two-tone shading, wide
 /// sleeves and cloth that trails behind. Same local frame as
@@ -274,7 +275,7 @@ void drawChibi(Canvas c, HumanLook k,
 void _motes(Canvas c, int argb, double t, {required bool behind}) {
   final p = Paint()
     ..isAntiAlias = true
-    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+    ..maskFilter = softBlur(1.2);
   for (var i = behind ? 0 : 1; i < 8; i += 2) {
     final ph = (t * 0.45 + i / 8) % 1;
     final x = math.sin(i * 2.3 + t * 1.3) * (10 + i);
@@ -775,13 +776,13 @@ void _chibiWeapon(Canvas c, HumanLook k, Offset hand, double ang) {
           short ? const Rect.fromLTRB(-5, -9, 19, 9) : const Rect.fromLTRB(-6, -8, 40, 8),
           Paint()
             ..color = col(k.glow).withValues(alpha: 0.55)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+            ..maskFilter = softBlur(10));
     }
     c.drawRect(
         short ? const Rect.fromLTRB(-2, -5, 15, 5) : const Rect.fromLTRB(-2, -4, 34, 4),
         Paint()
           ..color = col(k.glow).withValues(alpha: k.brightGlow ? 0.75 : 0.5)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+          ..maskFilter = softBlur(5));
   }
   switch (k.weapon) {
     case Weapon.staff:
@@ -1368,7 +1369,7 @@ void drawFlyerChibi(Canvas c, MobDef d,
           16,
           Paint()
             ..color = col(d.c2).withValues(alpha: 0.25)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+            ..maskFilter = softBlur(8));
       final body = Path()
         ..moveTo(-11, 0)
         ..quadraticBezierTo(-12, -22, 0, -21)
@@ -1396,7 +1397,7 @@ void drawFlyerChibi(Canvas c, MobDef d,
             2.4,
             Paint()
               ..color = col(d.c2)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+              ..maskFilter = softBlur(2));
         c.drawCircle(Offset(1 + s * 3.2, -10), 1.2, _flat(0xFFFFFFFF));
       }
       final reach = attack > 0 ? 5.0 : 0.0;
@@ -1414,7 +1415,7 @@ void drawFlyerChibi(Canvas c, MobDef d,
           18,
           Paint()
             ..color = col(d.c1).withValues(alpha: 0.4)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+            ..maskFilter = softBlur(10));
       final flick = math.sin(t * 9) * 3, flick2 = math.cos(t * 7) * 2;
       final flame = Path()
         ..moveTo(-11, 2)
@@ -1501,7 +1502,7 @@ void drawBruteChibi(Canvas c, MobDef d,
           ..color = col(d.c2).withValues(alpha: 0.6 * glow)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 5
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+          ..maskFilter = softBlur(3));
     c.drawPath(
         seam,
         _o
@@ -1568,7 +1569,7 @@ void drawBruteChibi(Canvas c, MobDef d,
           2.6,
           Paint()
             ..color = col(d.c2)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+            ..maskFilter = softBlur(2));
       c.drawCircle(Offset(x, hy - 1), 1.3, _flat(0xFFFFF0A0));
     }
   }

@@ -3,6 +3,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/world.dart';
+import '../render/quality.dart';
 import '../render/world_renderer.dart';
 
 /// Steps the [World] in small fixed slices and paints it. The HUD, buttons
@@ -49,7 +50,7 @@ class BattleGame extends Game {
       world.events.clear();
       for (final e in events) {
         if (e.kind == EvKind.shake) {
-          renderer.shake = (renderer.shake + e.value).clamp(0, 14).toDouble();
+          if (!liteGraphics) renderer.shake = (renderer.shake + e.value).clamp(0, 14).toDouble();
         } else {
           onEvent(e);
         }

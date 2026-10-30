@@ -15,6 +15,7 @@ import '../core/world_boss.dart';
 import '../services/ads.dart';
 import '../services/mail.dart';
 import '../services/notify.dart';
+import '../services/perf.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'activity_screen.dart';
@@ -268,6 +269,22 @@ class _TownScreenState extends State<TownScreen> {
                                 tooltip: on ? 'Tắt tiếng hiệu ứng' : 'Bật tiếng hiệu ứng',
                                 onPressed: SoundService.instance.toggleSfx,
                                 icon: Icon(on ? Icons.volume_up : Icons.volume_off, color: goldLight),
+                              ),
+                            ),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: LiteMode.instance.on,
+                              builder: (_, on, _) => IconButton(
+                                tooltip: on ? 'Tắt chế độ máy yếu' : 'Bật chế độ máy yếu',
+                                onPressed: () {
+                                  LiteMode.instance.toggle();
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text(on
+                                        ? 'Đã tắt chế độ máy yếu: hiệu ứng đầy đủ.'
+                                        : 'Đã bật chế độ máy yếu: bỏ rung màn hình, hiệu ứng mờ và trang trí.'),
+                                    duration: const Duration(seconds: 2),
+                                  ));
+                                },
+                                icon: Icon(Icons.speed, color: on ? const Color(0xFF8CE07A) : goldLight),
                               ),
                             ),
                             ListenableBuilder(

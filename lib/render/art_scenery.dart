@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../core/content.dart';
 import '../core/scenery.dart';
 import 'art_figures.dart';
+import 'quality.dart';
 
 class Palette {
   const Palette(this.ground, this.light, this.dark, this.edge, {this.night = 0});
@@ -55,7 +56,7 @@ void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
     ..color = Color(pal.edge).withValues(alpha: 0.6)
     ..style = PaintingStyle.stroke
     ..strokeWidth = 40
-    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
+    ..maskFilter = softBlur(14);
   c.drawRect(Rect.fromLTWH(0, 0, w, h), edge);
 }
 
@@ -148,7 +149,7 @@ void _decal(Canvas c, Decal d, Palette pal, double t) {
           Rect.fromCenter(center: Offset(x + dx, y), width: 150 * s, height: 40 * s),
           Paint()
             ..color = Color.fromRGBO(240, 246, 248, 0.3 + 0.08 * math.sin(t * 0.5 + d.v))
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16));
+            ..maskFilter = softBlur(16));
     case 'petal':
       for (var i = 0; i < 3; i++) {
         c.save();
@@ -261,7 +262,7 @@ void drawProp(Canvas c, Prop p, double t) {
       final colr = v.isEven ? 0xFF9C6AF0 : 0xFF5AD0F0;
       final glow = Paint()
         ..color = Color(colr).withValues(alpha: 0.3 + 0.15 * math.sin(t * 2 + v))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+        ..maskFilter = softBlur(12);
       c.drawCircle(const Offset(0, -18), 22, glow);
       for (var i = -1; i <= 1; i++) {
         final hgt = 28.0 - i.abs() * 8;
@@ -345,7 +346,7 @@ void drawProp(Canvas c, Prop p, double t) {
           Rect.fromCenter(center: Offset(drift, -22), width: 70, height: 14),
           Paint()
             ..color = const Color(0x55F2F6F8)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+            ..maskFilter = softBlur(6));
     case 'plum':
       drawShadow(c, 26);
       final bark = lineOf(0xFF3A2620, 6);
@@ -396,7 +397,7 @@ void drawProp(Canvas c, Prop p, double t) {
           10,
           Paint()
             ..color = Color.fromRGBO(200, 230, 255, 0.25 * glint)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+            ..maskFilter = softBlur(8));
     case 'pine':
       drawShadow(c, 24);
       c.drawRect(const Rect.fromLTRB(-4, -16, 4, 0), fillOf(0xFF5A3A22));
@@ -502,7 +503,7 @@ void drawProp(Canvas c, Prop p, double t) {
       c.drawCircle(Offset(0, -34 + math.sin(t * 7) * 2), 3, fillOf(0xFFFFE08A));
       final glow = Paint()
         ..color = const Color(0x55FF8A3D)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
+        ..maskFilter = softBlur(16);
       c.drawCircle(const Offset(0, -30), 22, glow);
   }
   c.restore();

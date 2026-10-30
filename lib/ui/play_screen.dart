@@ -14,6 +14,7 @@ import '../core/hero.dart';
 import '../core/world.dart';
 import '../game/battle_game.dart';
 import '../services/ads.dart';
+import '../services/perf.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'fishing_view.dart';
@@ -603,8 +604,12 @@ class _PlayScreenState extends State<PlayScreen> {
       );
 
   Widget _pauseOverlay() {
-    return _dim(
-      Panel(
+    // Scrolls on short landscape phones.
+    return _dim(SingleChildScrollView(child: _pausePanel()));
+  }
+
+  Widget _pausePanel() {
+    return Panel(
         padding: const EdgeInsets.all(18),
         child: SizedBox(
           width: 340,
@@ -647,14 +652,27 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              ValueListenableBuilder<bool>(
+                valueListenable: LiteMode.instance.on,
+                builder: (_, on, _) => LButton(
+                  label: on ? 'Máy yếu: Bật' : 'Máy yếu: Tắt',
+                  width: 240,
+                  small: true,
+                  color: on ? jade : const Color(0xFF5A4A3A),
+                  icon: Icons.speed,
+                  onTap: LiteMode.instance.toggle,
+                ),
+              ),
+              Text('Giật, lag? Bật để bỏ rung màn hình và hiệu ứng mờ.',
+                  style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
               const SizedBox(height: 12),
               Text('Bàn phím: WASD đi · J/Space đánh · 1-4 chiêu · Q/E thuốc · T tự động',
                   style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   void _resume() {

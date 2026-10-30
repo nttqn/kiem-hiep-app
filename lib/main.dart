@@ -6,6 +6,7 @@ import 'services/chat.dart';
 import 'services/cloud.dart';
 import 'services/leaderboard.dart';
 import 'services/notify.dart';
+import 'services/perf.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
 import 'ui/theme.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   // Not awaited: a slow or broken audio asset must never delay the first frame.
   SoundService.instance.init();
+  await LiteMode.instance.load();
   await SaveService.instance.load();
   await Leaderboard.instance.load();
   await ChatService.instance.load();
