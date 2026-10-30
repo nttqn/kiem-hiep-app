@@ -1680,6 +1680,21 @@ class World {
       _walkTo(loot.x, loot.y);
       return;
     }
+    // Linh thảo grown back nearby, between fights.
+    HerbNode? herb;
+    var hd = 500.0 * 500;
+    for (final n in herbs) {
+      if (time < n.readyAt) continue;
+      final dd = _d2(n.x, n.y, p.x, p.y);
+      if (dd < hd) {
+        hd = dd;
+        herb = n;
+      }
+    }
+    if (herb != null) {
+      _walkTo(herb.x, herb.y);
+      return;
+    }
     // Head for the nearest living monster, quest targets preferred.
     Mob? best;
     var bd = double.infinity;

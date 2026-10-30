@@ -2,13 +2,18 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/core/weekly_hunt.dart';
+import 'package:kiem_hiep/core/world.dart';
 
 HeroData roundTrip(HeroData h) => HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
 
 void main() {
+  autoSellAndHerbs();
   group('Săn quái tuần', () {
     test('weeks run Monday to Sunday from 26/10/2026', () {
       expect(huntWeekOf('20261026'), 1);
@@ -56,5 +61,50 @@ void main() {
       expect(far.payHuntRank(51, math.Random(1)), isEmpty);
       expect(far.huntRankDue, isFalse);
     });
+  });
+}
+
+void autoSellAndHerbs() {
+  group('Tự bán', () {
+    Item piece(Rarity r) => makeItem(slot: Slot.weapon, level: 10, rarity: r, sect: sectOf(Hanh.kim), rng: math.Random(1));
+
+    test('sells up to the chosen rarity, keeps the rest', () {
+      final h = HeroData(name: 'T', hanh: Hanh.kim)..autoSellUpTo = Rarity.rare.index;
+      final gold = h.gold;
+      expect(h.addItem(piece(Rarity.common)), isFalse);
+      expect(h.addItem(piece(Rarity.fine)), isFalse);
+      expect(h.addItem(piece(Rarity.rare)), isFalse);
+      expect(h.addItem(piece(Rarity.epic)), isTrue);
+      expect(h.gold, greaterThan(gold));
+      expect(h.bag.length, 1);
+    });
+
+    test('the old switch still loads, and the level is saved', () {
+      final h = HeroData(name: 'T', hanh: Hanh.kim);
+      final m = h.toJson()
+        ..remove('autoSellR')
+        ..['autoSell'] = true;
+      expect(HeroData.fromJson(jsonDecode(jsonEncode(m)) as Map<String, dynamic>).autoSellUpTo, 0);
+      h.autoSellUpTo = 1;
+      expect(roundTrip(h).autoSellUpTo, 1);
+    });
+  });
+
+  test('autopilot walks to a linh thảo between fights and picks it', () {
+    final h = HeroData(name: 'T', hanh: Hanh.kim);
+    final w = World.field(h, maps.first, seed: 3)..auto = true;
+    w.mobs.clear();
+    w.drops.clear();
+    for (final n in w.herbs) {
+      n.readyAt = 1e9;
+    }
+    w.herbs.add(HerbNode(w.player.x + 300, w.player.y, 0));
+    int total() => h.herbs.fold<int>(0, (a, b) => a + b);
+    final before = total();
+    for (var i = 0; i < 60 * 6; i++) {
+      w.mobs.clear();
+      w.update(1 / 60);
+    }
+    expect(total(), greaterThan(before));
   });
 }

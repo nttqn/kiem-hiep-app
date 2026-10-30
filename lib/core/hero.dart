@@ -187,7 +187,9 @@ class HeroData {
   final Map<String, int> dungeonStars = {};
   int kills = 0;
   double playSeconds = 0;
-  bool autoSellCommon = false;
+  /// Tự bán: picked-up gear of this rarity (index) or lower is sold at
+  /// once; -1 keeps everything.
+  int autoSellUpTo = -1;
   int seed = 0;
 
   /// When this save was last written (ms since epoch); cloud sync keeps
@@ -732,12 +734,11 @@ class HeroData {
 
   // ------------------------------------------------------------- items
 
-  /// Puts [it] in the bag, or sells it if the bag is full or it is a
-  /// common item and auto-sell is on. Returns false if sold.
+  /// Puts [it] in the bag, or sells it if the bag is full or auto-sell
+  /// covers its rarity (never a Hoàng Kim set piece). Returns false if sold.
   bool addItem(Item it) {
     if (it.rarity == Rarity.legend) ownedLegend = true;
-    if ((autoSellCommon && it.rarity == Rarity.common) ||
-        bag.length >= bagSize) {
+    if ((it.rarity.index <= autoSellUpTo && !it.golden) || bag.length >= bagSize) {
       gold += it.sellPrice;
       return false;
     }
@@ -2301,7 +2302,9 @@ class HeroData {
         'stars': dungeonStars,
         'kills': kills,
         'time': playSeconds,
-        'autoSell': autoSellCommon,
+        // The old switch too, for an older app on another device.
+        'autoSell': autoSellUpTo >= 0,
+        'autoSellR': autoSellUpTo,
         'seed': seed,
         'savedAt': savedAt,
         'loginDate': lastLoginDate,
@@ -2394,7 +2397,8 @@ class HeroData {
     (m['stars'] as Map).forEach((k, v) => h.dungeonStars['$k'] = v as int);
     h.kills = m['kills'] as int;
     h.playSeconds = (m['time'] as num).toDouble();
-    h.autoSellCommon = m['autoSell'] as bool? ?? false;
+    h.autoSellUpTo = ((m['autoSellR'] as int?) ?? ((m['autoSell'] as bool? ?? false) ? 0 : -1))
+        .clamp(-1, Rarity.rare.index);
     h.seed = m['seed'] as int? ?? 0;
     h.savedAt = m['savedAt'] as int? ?? 0;
     h.lastLoginDate = m['loginDate'] as String? ?? '';

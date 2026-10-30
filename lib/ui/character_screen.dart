@@ -38,6 +38,42 @@ class _CharacterScreenState extends State<CharacterScreen> {
     setState(() {});
   }
 
+  /// The bag's sell button goes as far as auto-sell does, Thường at least.
+  int get _sellUpTo => math.max(0, h.autoSellUpTo);
+
+  static String _sellLabel(int r) => switch (r) {
+        0 => 'đồ Thường',
+        1 => 'đến Tinh xảo (xanh)',
+        _ => 'đến Quý (vàng)',
+      };
+
+  bool _bulkSells(Item it) => it.rarity.index <= _sellUpTo && !it.golden;
+
+  /// Sells the bag's gear up to [_sellUpTo]; asks first past Thường, since
+  /// a Quý piece can still beat what is worn.
+  Future<void> _bulkSell() async {
+    final list = h.bag.where(_bulkSells).toList();
+    if (list.isEmpty) return;
+    if (_sellUpTo > 0) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: lacquer,
+          content: Text('Bán ${list.length} món ${_sellLabel(_sellUpTo)}? Đồ Hoàng Kim được giữ lại.', style: body),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Bán')),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    for (final it in list) {
+      h.sell(it);
+    }
+    _changed();
+  }
+
   @override
   Widget build(BuildContext context) {
     const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh'];
@@ -542,31 +578,31 @@ class _CharacterScreenState extends State<CharacterScreen> {
                     ),
                     const SizedBox(width: 6),
                     LButton(
-                      label: 'Bán đồ Thường',
+                      label: 'Bán ${_sellLabel(_sellUpTo)}',
                       small: true,
-                      enabled: h.bag.any((i) => i.rarity == Rarity.common),
-                      onTap: () {
-                        for (final it in List<Item>.of(h.bag)) {
-                          if (it.rarity == Rarity.common) h.sell(it);
-                        }
-                        _changed();
-                      },
+                      enabled: h.bag.any(_bulkSells),
+                      onTap: () => _bulkSell(),
                     ),
                   ],
                 ),
                 Row(
                   children: [
-                    SizedBox(
-                      height: 30,
-                      child: Checkbox(
-                        value: h.autoSellCommon,
-                        onChanged: (v) {
-                          h.autoSellCommon = v ?? false;
-                          _changed();
-                        },
-                      ),
+                    Text('Tự bán khi nhặt: ', style: small),
+                    DropdownButton<int>(
+                      value: h.autoSellUpTo,
+                      isDense: true,
+                      dropdownColor: lacquer,
+                      underline: const SizedBox.shrink(),
+                      style: small.copyWith(color: goldLight),
+                      items: [
+                        for (var r = -1; r <= Rarity.rare.index; r++)
+                          DropdownMenuItem(value: r, child: Text(r < 0 ? 'Không' : _sellLabel(r))),
+                      ],
+                      onChanged: (v) {
+                        h.autoSellUpTo = v ?? -1;
+                        _changed();
+                      },
                     ),
-                    Text('Tự bán đồ Thường khi nhặt', style: small),
                   ],
                 ),
                 Expanded(
