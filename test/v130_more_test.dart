@@ -88,6 +88,22 @@ void main() {
       expect(hunter.state, MobState.chase);
     });
 
+    test('a biến cố stops the autopilot and hands control back', () {
+      final h = geared(14, Hanh.hoa);
+      final w = realmWorld(h, seedWith(RealmEvent.wanderer))..auto = true;
+      w.update(1 / 30);
+      expect(w.auto, isTrue);
+      w.time = wandererAt;
+      w.update(1 / 30);
+      expect(w.auto, isFalse);
+      expect(w.events.any((e) => e.text.contains('Đã tắt tự động')), isTrue);
+      // The thương nhân coming into sight does the same.
+      final w2 = realmWorld(h, seedWith(RealmEvent.merchant))..auto = true;
+      final m = w2.realm!.of(PoiKind.merchant).first;
+      stepOn(w2, m.x - 300, m.y, 8);
+      expect(w2.auto, isFalse);
+    });
+
     test('the thương nhân sells for gold, once you have it', () {
       final h = HeroData(name: 'T', hanh: Hanh.hoa)..level = 30;
       final wares = h.merchantWares(30);

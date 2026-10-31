@@ -11,7 +11,10 @@ import 'sim.dart';
 
 /// Plays a bí cảnh on autopilot; returns the stars, or -1 for a failure.
 (int, World) runRealm(HeroData h, int i, {int seed = 7}) {
-  final w = World.dungeon(h, realmDungeon(i, h.level), seed: seed)..auto = true;
+  final w = World.dungeon(h, realmDungeon(i, h.level), seed: seed)
+    ..auto = true
+    // The bot plays the biến cố too, where a player is handed control.
+    ..pauseAutoOnEvents = false;
   var stars = -1;
   while (!w.finished) {
     w.update(1 / 30);

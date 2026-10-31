@@ -1284,6 +1284,7 @@ class World {
       }
       _shake(5);
       events.add(GameEvent(EvKind.wave, text: 'Mưa sao băng! Nhặt rương sao quanh bạn', color: 0xFFFFE08A, big: true));
+      _pauseAuto();
     }
     if (hasEvent(RealmEvent.wanderer) && !_wandererCame && time >= wandererAt && player.alive) {
       _wandererCame = true;
@@ -1300,7 +1301,32 @@ class World {
       m.atk *= 1.5;
       mobs.add(m);
       events.add(GameEvent(EvKind.boss, text: 'Ma Đầu Lang Bạt đang truy đuổi bạn!', color: 0xFFFF6A4A, big: true));
+      _pauseAuto();
     }
+    // The thương nhân or the mật thất coming into sight is the player's to
+    // deal with.
+    for (final o in realm!.pois) {
+      if (o.kind != PoiKind.merchant && o.kind != PoiKind.vault) continue;
+      if (o.done || _seen.contains(o) || !revealedAt(o.x, o.y)) continue;
+      _seen.add(o);
+      events.add(GameEvent(EvKind.notice,
+          text: o.kind == PoiKind.merchant ? 'Phát hiện Thương nhân bí ẩn gần đây!' : 'Phát hiện cửa Mật thất gần đây!',
+          color: 0xFFB8F0E0, big: true));
+      _pauseAuto();
+    }
+  }
+
+  final Set<Poi> _seen = {};
+
+  /// A biến cố hands control back: the autopilot stops for this run until
+  /// switched on again (the saved preference is left alone).
+  bool pauseAutoOnEvents = true;
+
+  void _pauseAuto() {
+    if (!auto || !pauseAutoOnEvents) return;
+    auto = false;
+    engaged = false;
+    events.add(GameEvent(EvKind.loot, text: 'Biến cố! Đã tắt tự động, hãy tự thao tác', color: 0xFFFFD34A));
   }
 
   /// A lever pulled: right in turn lights it, wrong locks them all again.
