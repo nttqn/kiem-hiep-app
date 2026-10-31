@@ -45,6 +45,11 @@ String _thousands(int v) {
 }
 
 const int maxLevel = 99;
+
+/// Linh Phách Đơn: share of a level-99 bar per pill, and pills per Thần
+/// Thiết at Kỳ Trân Các.
+const double soulPillShare = 0.5;
+const int soulPillsPerIron = 5;
 const int pointsPerLevel = 5;
 
 // Chuyển sinh: at level 99 with a full EXP bar the hero may be reborn at
@@ -329,6 +334,11 @@ class HeroData {
   int divine = 0;
   int divineIron = 0;
 
+  /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
+  /// into pills ([soulExp] toward the next) and kept for a later rebirth.
+  int soulPills = 0;
+  int soulExp = 0;
+
   /// Hòm thư gifts this hero has taken (mail ids).
   final Set<String> mailClaimed = {};
 
@@ -591,7 +601,10 @@ class HeroData {
     amount *= 1 + rebirthExp * rebirths;
     if (level >= maxLevel) {
       final cap = expToNext(maxLevel);
-      if (exp >= cap) return 0;
+      if (exp >= cap) {
+        if (rebirths >= maxRebirths) _condenseSoul(amount);
+        return 0;
+      }
       exp = math.min(cap, exp + amount.round());
       if (exp >= cap && rebirths < maxRebirths) {
         notices.add(Notice('Kinh nghiệm đã đầy! Về thành để chuyển sinh.', color: 0xFFFFD34A, big: true));
@@ -615,6 +628,27 @@ class HeroData {
       unlockCostumes();
     }
     return gained;
+  }
+
+  void _condenseSoul(double amount) {
+    soulExp += amount.round();
+    final per = soulPillExp;
+    while (soulExp >= per) {
+      soulExp -= per;
+      soulPills++;
+      notices.add(Notice('+1 Linh Phách Đơn ($soulPills)', color: 0xFF9FE8FF));
+    }
+  }
+
+  /// EXP in one Linh Phách Đơn: half a level-99 bar.
+  int get soulPillExp => (expToNext(maxLevel) * soulPillShare).round();
+
+  /// Linh Phách Đơn → Thần Thiết, [soulPillsPerIron] for one.
+  bool soulToIron() {
+    if (soulPills < soulPillsPerIron) return false;
+    soulPills -= soulPillsPerIron;
+    divineIron++;
+    return true;
   }
 
   bool spendPoint(int attr, [int n = 1]) {
@@ -2350,6 +2384,7 @@ class HeroData {
         'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
         'nm': [nmStars, nmDay, nmRuns],
         'tb': [divine, divineIron],
+        'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
@@ -2515,6 +2550,11 @@ class HeroData {
     if (tb is List && tb.length == 2) {
       h.divine = (tb[0] as int).clamp(0, divineMax);
       h.divineIron = math.max(0, tb[1] as int);
+    }
+    final lpd = m['lpd'];
+    if (lpd is List && lpd.length == 2) {
+      h.soulPills = math.max(0, lpd[0] as int);
+      h.soulExp = math.max(0, lpd[1] as int);
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
     final fat = m['fat'];

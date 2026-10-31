@@ -341,15 +341,21 @@ class ExpStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final v = (hero.exp / hero.expNeeded).clamp(0.0, 1.0);
+    // Past the last rebirth the bar fills Linh Phách Đơn instead.
+    final soul = hero.expFull && !hero.canRebirth;
+    final v = soul
+        ? (hero.soulExp / hero.soulPillExp).clamp(0.0, 1.0)
+        : (hero.exp / hero.expNeeded).clamp(0.0, 1.0);
     return IgnorePointer(
       child: Bar(
         value: v,
-        color: expGold,
+        color: soul ? const Color(0xFF6FC8E8) : expGold,
         height: 9,
-        label: hero.expFull
-            ? (hero.canRebirth ? 'Kinh nghiệm đầy · có thể chuyển sinh' : 'Cấp tối đa')
-            : 'Cấp ${hero.level} · ${(v * 100).toStringAsFixed(1)}%',
+        label: soul
+            ? 'Linh Phách Đơn ${hero.soulPills} · ${(v * 100).toStringAsFixed(1)}%'
+            : hero.expFull
+                ? 'Kinh nghiệm đầy · có thể chuyển sinh'
+                : 'Cấp ${hero.level} · ${(v * 100).toStringAsFixed(1)}%',
       ),
     );
   }

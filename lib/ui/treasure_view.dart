@@ -92,11 +92,43 @@ class _TreasureViewState extends State<TreasureView> {
               itemBuilder: (_, i) => _offer(i, offers[i]),
             ),
           ),
+          if (h.soulPills > 0 || h.rebirths >= maxRebirths) _soulRow(),
           if (_msg != null) Text(_msg!, style: small.copyWith(color: cream)),
         ],
       ),
     );
   }
+
+  /// Linh Phách Đơn on hand, and trading some for Thần Thiết.
+  Widget _soulRow() => Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Row(
+          children: [
+            const Icon(Icons.blur_circular, color: Color(0xFF6FC8E8), size: 26),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Linh Phách Đơn: ${h.soulPills} viên. EXP dư sau Chuyển sinh $maxRebirths, cất dành cho lần chuyển sinh sau.',
+                style: small.copyWith(fontSize: 11),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 6),
+            LButton(
+              label: '$soulPillsPerIron viên → 1 Thần Thiết',
+              small: true,
+              color: const Color(0xFF2F6E8A),
+              enabled: h.soulPills >= soulPillsPerIron,
+              onTap: () {
+                if (!h.soulToIron()) return;
+                Analytics.instance.log('soul_to_iron', {'left': h.soulPills});
+                _done('Đã đổi $soulPillsPerIron Linh Phách Đơn lấy 1 Thần Thiết.');
+              },
+            ),
+          ],
+        ),
+      );
 
   Widget _offer(int i, TreasureOffer o) {
     final bought = h.shopBought.contains(i);
