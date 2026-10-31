@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/hero.dart';
+import 'analytics.dart';
 import 'leaderboard.dart';
 import 'save.dart';
 import 'sync_plan.dart';
@@ -83,16 +84,32 @@ class CloudSave extends ChangeNotifier {
   // ------------------------------------------------------------ sign-in
 
   Future<bool> signInGoogle() => _signIn(() async {
-        final g = GoogleSignIn.instance;
-        if (!_googleReady) {
-          await g.initialize(clientId: isApplePlatform ? _iosClientId : null);
-          _googleReady = true;
+        try {
+          final g = GoogleSignIn.instance;
+          if (!_googleReady) {
+            await g.initialize(clientId: isApplePlatform ? _iosClientId : null);
+            _googleReady = true;
+          }
+          final account = await g.authenticate();
+          final idToken = account.authentication.idToken;
+          if (idToken == null) throw StateError('no id token');
+          await FirebaseAuth.instance.signInWithCredential(GoogleAuthProvider.credential(idToken: idToken));
+        } on GoogleSignInException catch (e) {
+          if (e.code == GoogleSignInExceptionCode.canceled || isApplePlatform) rethrow;
+          // Credential Manager fails on some Android phones (old Play
+          // services, OEM builds): sign in through a browser page instead.
+          _logFail('gsi_${e.code.name}', e.description);
+          await FirebaseAuth.instance.signInWithProvider(GoogleAuthProvider());
         }
-        final account = await g.authenticate();
-        final idToken = account.authentication.idToken;
-        if (idToken == null) throw StateError('no id token');
-        await FirebaseAuth.instance.signInWithCredential(GoogleAuthProvider.credential(idToken: idToken));
       });
+
+  void _logFail(String code, Object? detail) {
+    final d = '$detail';
+    Analytics.instance.log('signin_fail', {
+      'code': code,
+      'detail': d.length > 90 ? d.substring(0, 90) : d,
+    });
+  }
 
   Future<bool> signInApple() => _signIn(() async {
         final apple = AppleAuthProvider()..addScope('email');
@@ -111,9 +128,16 @@ class CloudSave extends ChangeNotifier {
       await sync();
       return user != null;
     } on GoogleSignInException catch (e) {
-      message = e.code == GoogleSignInExceptionCode.canceled ? null : 'Đăng nhập Google thất bại';
+      if (e.code != GoogleSignInExceptionCode.canceled) _logFail('gsi_${e.code.name}', e.description);
+      message = e.code == GoogleSignInExceptionCode.canceled ? null : 'Đăng nhập Google thất bại (${e.code.name})';
+    } on FirebaseAuthException catch (e) {
+      _logFail('fb_${e.code}', e.message);
+      message = e.code == 'web-context-canceled' || e.code == 'canceled'
+          ? null
+          : 'Không đăng nhập được (${e.code}), thử lại sau';
     } catch (e) {
       debugPrint('sign-in failed: $e');
+      _logFail('other', e);
       message = 'Không đăng nhập được, thử lại sau';
     }
     busy = false;
