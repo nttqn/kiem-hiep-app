@@ -12,7 +12,7 @@ void main() {
       return h;
     }
 
-    test('half a level-99 bar of EXP past the last rebirth makes one pill', () {
+    test('a million EXP past the last rebirth makes one pill', () {
       final h = maxed();
       final raw = h.soulPillExp / (1 + rebirthExp * h.rebirths);
       h.gainExp(raw * 0.99);

@@ -46,9 +46,8 @@ String _thousands(int v) {
 
 const int maxLevel = 99;
 
-/// Linh Phách Đơn: share of a level-99 bar per pill, and pills per Thần
-/// Thiết at Kỳ Trân Các.
-const double soulPillShare = 0.5;
+/// Linh Phách Đơn: EXP per pill, and pills per Thần Thiết at Kỳ Trân Các.
+const int soulPillExpCost = 1000000;
 const int soulPillsPerIron = 5;
 const int pointsPerLevel = 5;
 
@@ -640,8 +639,8 @@ class HeroData {
     }
   }
 
-  /// EXP in one Linh Phách Đơn: half a level-99 bar.
-  int get soulPillExp => (expToNext(maxLevel) * soulPillShare).round();
+  /// EXP in one Linh Phách Đơn.
+  int get soulPillExp => soulPillExpCost;
 
   /// Linh Phách Đơn → Thần Thiết, [soulPillsPerIron] for one.
   bool soulToIron() {
