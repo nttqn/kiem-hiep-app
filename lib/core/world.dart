@@ -364,6 +364,10 @@ class World {
   double time = 0;
   bool auto = false;
 
+  /// One tap on the attack button: keep fighting the nearest monsters, as
+  /// if it were held, until the joystick moves or none is left in reach.
+  bool engaged = false;
+
   /// Manual movement pauses the autopilot for a moment.
   double manualUntil = 0;
   Mob? target;
@@ -1198,7 +1202,10 @@ class World {
 
     final c = input;
     final manual = c.moveX.abs() + c.moveY.abs() > 0.05;
-    if (manual) manualUntil = time + 1.2;
+    if (manual) {
+      manualUntil = time + 1.2;
+      engaged = false;
+    }
     final autoOn = auto && !manual && time >= manualUntil;
     if (autoOn) _autopilot();
 
@@ -1215,9 +1222,11 @@ class World {
     var mx = c.moveX, my = c.moveY;
     final kiting = autoOn && _kite;
     _kite = false;
-    if (!manual && !kiting && (c.attack || autoOn)) {
+    final fight = c.attack || engaged;
+    if (!manual && !kiting && (fight || autoOn)) {
       final t = _pickTarget(
           sect.basic == BasicKind.melee ? 260 : sect.basicRange + 60);
+      if (t == null) engaged = false;
       if (t != null) {
         target = t;
         final reach = sect.basic == BasicKind.melee
@@ -1229,7 +1238,7 @@ class World {
           my = (t.y - p.y) / d;
         } else {
           _aimAt(t.x, t.y);
-          if (c.attack || autoOn) _basicAttack(t);
+          _basicAttack(t);
         }
       } else if (c.attack) {
         _basicAttack(null);

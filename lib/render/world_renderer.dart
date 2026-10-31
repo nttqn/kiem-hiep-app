@@ -33,6 +33,20 @@ class WorldRenderer {
   /// World units visible top to bottom (the player's Tầm nhìn).
   double get viewHeight => viewSpan;
   double camX = 0, camY = 0;
+  double _camVX = 0, _camVY = 0;
+
+  /// Camera lag behind the hero, in seconds.
+  static const double camSmooth = 0.16;
+
+  /// One step of a critically damped spring from [cur] toward [to].
+  static (double, double) _follow(double cur, double to, double vel, double dt) {
+    const omega = 2 / camSmooth;
+    final x = omega * dt;
+    final decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+    final change = cur - to;
+    final temp = (vel + omega * change) * dt;
+    return (to + (change + temp) * decay, (vel - omega * temp) * decay);
+  }
   bool _placed = false;
   double shake = 0;
   final math.Random _r = math.Random(3);
@@ -74,13 +88,17 @@ class WorldRenderer {
       camY = ty;
       _placed = true;
     }
-    final k = 1 - math.pow(0.0005, dt).toDouble();
-    camX += (tx - camX) * k;
-    camY += (ty - camY) * k;
-    camX = w.width > halfW * 2 ? camX.clamp(halfW, w.width - halfW) : w.width / 2;
-    camY = w.height > halfH * 2
-        ? camY.clamp(halfH - 100, w.height - halfH + 30)
+    // A critically damped spring: no jolt when the hero starts or stops.
+    final (fx, vx) = _follow(camX, tx, _camVX, dt);
+    final (fy, vy) = _follow(camY, ty, _camVY, dt);
+    final cx = w.width > halfW * 2 ? fx.clamp(halfW, w.width - halfW) : w.width / 2;
+    final cy = w.height > halfH * 2
+        ? fy.clamp(halfH - 100, w.height - halfH + 30)
         : w.height / 2;
+    _camVX = cx == fx ? vx : 0;
+    _camVY = cy == fy ? vy : 0;
+    camX = cx.toDouble();
+    camY = cy.toDouble();
     var sx = 0.0, sy = 0.0;
     if (shake > 0.2) {
       sx = (_r.nextDouble() - 0.5) * shake;

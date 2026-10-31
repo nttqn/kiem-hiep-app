@@ -521,6 +521,8 @@ class _PlayScreenState extends State<PlayScreen> {
                     hanh: hero.hanh,
                     onDown: () => world.input.attack = true,
                     onUp: () => world.input.attack = false,
+                    engaged: world.engaged,
+                    onEngage: (v) => world.engaged = v,
                   ),
                 ),
                 for (var k = 0; k < ids.length && k < 4; k++)

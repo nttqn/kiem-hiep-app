@@ -51,11 +51,19 @@ class BattleGame extends Game {
   double _clock = 0;
   double _sinceHud = 0;
   double _lastDt = 1 / 60;
+  double _smoothDt = 1 / 60, _dtDebt = 0;
 
   @override
   void update(double dt) {
     _measure(dt);
-    _lastDt = dt.clamp(0, 0.1).toDouble();
+    // Frame times wobble on weak phones (16, 33, 20 ms...); moving the world
+    // by each raw gap makes walking and the camera judder. Ease toward it,
+    // and carry what is left over so game time never drifts.
+    final raw = dt.clamp(0, 0.1).toDouble() + _dtDebt;
+    _smoothDt += (raw - _smoothDt) * 0.25;
+    _lastDt = raw < _smoothDt ? raw : _smoothDt;
+    _dtDebt = raw - _lastDt;
+    if (_dtDebt > 0.1) _dtDebt = 0;
     if (!halted) {
       var left = _lastDt * speed;
       while (left > 0) {

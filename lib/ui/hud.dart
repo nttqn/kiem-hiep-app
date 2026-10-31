@@ -395,10 +395,23 @@ class _JoyPainter extends CustomPainter {
 }
 
 class AttackButton extends StatefulWidget {
-  const AttackButton({super.key, required this.hanh, required this.onDown, required this.onUp});
+  const AttackButton({
+    super.key,
+    required this.hanh,
+    required this.onDown,
+    required this.onUp,
+    this.engaged = false,
+    this.onEngage,
+  });
   final Hanh hanh;
   final VoidCallback onDown;
   final VoidCallback onUp;
+
+  /// Fighting on its own after a tap: the button glows.
+  final bool engaged;
+
+  /// A short tap (not a hold): true to start fighting on, false to stop.
+  final ValueChanged<bool>? onEngage;
 
   @override
   State<AttackButton> createState() => _AttackButtonState();
@@ -406,15 +419,28 @@ class AttackButton extends StatefulWidget {
 
 class _AttackButtonState extends State<AttackButton> {
   bool _down = false;
+  bool _wasEngaged = false;
+  final Stopwatch _held = Stopwatch();
 
   void _set(bool v) {
     setState(() => _down = v);
-    v ? widget.onDown() : widget.onUp();
+    if (v) {
+      _wasEngaged = widget.engaged;
+      _held
+        ..reset()
+        ..start();
+      widget.onDown();
+    } else {
+      widget.onUp();
+      // A tap toggles fighting on; a hold only attacks while held.
+      widget.onEngage?.call(_held.elapsedMilliseconds < 300 && !_wasEngaged);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final c = hanhColor(widget.hanh);
+    final on = widget.engaged && !_down;
     return Listener(
       onPointerDown: (_) => _set(true),
       onPointerUp: (_) => _set(false),
@@ -431,8 +457,11 @@ class _AttackButtonState extends State<AttackButton> {
               Color.lerp(c, Colors.white, 0.3)!,
               Color.lerp(c, Colors.black, 0.5)!,
             ]),
-            border: Border.all(color: goldLight, width: 2.5),
-            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 6)],
+            border: Border.all(color: on ? Colors.white : goldLight, width: on ? 4 : 2.5),
+            boxShadow: [
+              const BoxShadow(color: Colors.black54, blurRadius: 6),
+              if (on) BoxShadow(color: goldLight.withValues(alpha: 0.8), blurRadius: 14, spreadRadius: 2),
+            ],
           ),
           child: const Icon(Icons.flash_on, color: Colors.white, size: 40),
         ),
