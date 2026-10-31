@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/rewards.dart';
 
 void main() {
   group('Linh Phách Đơn', () {
@@ -42,6 +43,12 @@ void main() {
       final back = HeroData.fromJson(h.toJson());
       expect(back.soulPills, 2);
       expect(back.soulExp, 123);
+    });
+
+    test('Bế quan EXP counts once all rebirths are done, not while one waits', () {
+      const away = Duration(hours: 8);
+      expect(offlineReward(maxed(), away)!.exp, greaterThan(0));
+      expect(offlineReward(maxed(rebirths: maxRebirths - 1), away)!.exp, 0);
     });
   });
 }

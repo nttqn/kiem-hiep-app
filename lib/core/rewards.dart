@@ -25,7 +25,8 @@ OfflineReward? offlineReward(HeroData h, Duration away) {
   final minutes = t.inSeconds / 60;
   final exp = (mobExpAt(h.level) * 2 * minutes).round();
   final gold = ((1 + 0.4 * h.level) * 1.0 * minutes).round();
-  return OfflineReward(t, h.expFull ? 0 : exp, gold);
+  // A full bar waits for a rebirth; past the last one it fills Linh Phách Đơn.
+  return OfflineReward(t, h.canRebirth ? 0 : exp, gold);
 }
 
 // ------------------------------------------------------------- login gifts

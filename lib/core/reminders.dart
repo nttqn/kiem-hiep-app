@@ -31,7 +31,7 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
   final tomorrow = vnAt(now, 1, reminderHour, reminderMinute);
   final full = now.toUtc().add(offlineCap);
   final fullHour = vnNow(full).hour;
-  if (!h.expFull && fullHour >= 8 && fullHour < 22 && full.difference(tomorrow).inMinutes.abs() > 180) {
+  if (!h.canRebirth && fullHour >= 8 && fullHour < 22 && full.difference(tomorrow).inMinutes.abs() > 180) {
     out.add(Reminder(1, full, 'Bế quan đã đầy',
         '${h.name} đã bế quan đủ ${offlineCap.inHours} giờ. Về nhận kinh nghiệm và lượng nào!'));
   }
