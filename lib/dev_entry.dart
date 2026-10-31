@@ -358,6 +358,13 @@ Future<void> main() async {
     h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
     // money=<n> lượng.
     h.gold = int.tryParse(q['money'] ?? '') ?? h.gold;
+    // lpd=<n> Linh Phách Đơn, with the level-99 bar full and a pill 40% on.
+    final lpd = int.tryParse(q['lpd'] ?? '');
+    if (lpd != null) {
+      h.exp = expToNext(maxLevel);
+      h.soulPills = lpd;
+      h.soulExp = h.soulPillExp * 2 ~/ 5;
+    }
     // view=0|1|2 Tầm nhìn Gần/Vừa/Xa.
     final view = int.tryParse(q['view'] ?? '');
     if (view != null) viewSpan = ViewRange.spans[view.clamp(0, 2)];

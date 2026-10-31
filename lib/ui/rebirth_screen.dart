@@ -88,11 +88,25 @@ class _RebirthScreenState extends State<RebirthScreen> {
                     label: atMax ? '${fmt(h.exp)} / ${fmt(cap)}' : 'Cần cấp $maxLevel',
                   ),
                   const SizedBox(height: 10),
-                  Text('Khi chuyển sinh', style: bold.copyWith(color: goldLight)),
-                  _line('Trở về cấp $rebirthLevel, trả lại điểm tiềm năng và tặng thêm $rebirthPoints điểm.'),
-                  _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),
-                  _line('Mỗi lần: Sinh lực ${_pct(rebirthHpAtk)}, Công lực ${_pct(rebirthHpAtk)}, '
-                      'Phòng thủ ${_pct(rebirthDef)}, Kinh nghiệm nhận ${_pct(rebirthExp)}, vĩnh viễn.'),
+                  if (done) ...[
+                    // Past the last rebirth, EXP goes into Linh Phách Đơn.
+                    Text('Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF))),
+                    const SizedBox(height: 4),
+                    Bar(
+                      value: h.expFull ? (h.soulExp / h.soulPillExp).clamp(0.0, 1.0) : 0,
+                      color: const Color(0xFF6FC8E8),
+                      height: 13,
+                      label: h.expFull ? '${fmt(h.soulExp)} / ${fmt(h.soulPillExp)}' : 'Cần đầy kinh nghiệm cấp $maxLevel',
+                    ),
+                    _line('Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn, cất dành cho lần chuyển sinh sau.'),
+                    _line('Đổi $soulPillsPerIron viên lấy 1 Thần Thiết ở Kỳ Trân Các.'),
+                  ] else ...[
+                    Text('Khi chuyển sinh', style: bold.copyWith(color: goldLight)),
+                    _line('Trở về cấp $rebirthLevel, trả lại điểm tiềm năng và tặng thêm $rebirthPoints điểm.'),
+                    _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),
+                    _line('Mỗi lần: Sinh lực ${_pct(rebirthHpAtk)}, Công lực ${_pct(rebirthHpAtk)}, '
+                        'Phòng thủ ${_pct(rebirthDef)}, Kinh nghiệm nhận ${_pct(rebirthExp)}, vĩnh viễn.'),
+                  ],
                   const Spacer(),
                   Center(
                     child: LButton(
