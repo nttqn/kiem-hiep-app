@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources named only at runtime, kept from resource shrinking: the
+     reminder icon (named from Dart) and Google sign-in's web client id.
+     Never name this file keep.xml: that would replace google_sign_in's own
+     res/raw/keep.xml, the client id gets shrunk away and sign-in breaks. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_notify,@string/default_web_client_id" />
