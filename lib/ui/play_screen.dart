@@ -148,6 +148,7 @@ class _PlayScreenState extends State<PlayScreen> {
         SoundService.instance.cue('gong');
         _showBanner(e.text, Color(e.color));
       case EvKind.heroDied:
+        _resultAt = _now;
         setState(() => _dead = true);
       case EvKind.cleared:
         SaveService.instance.save();
@@ -160,6 +161,7 @@ class _PlayScreenState extends State<PlayScreen> {
         } else if (d != null && !d.isTower) {
           Analytics.instance.log('dungeon_clear', {'id': d.id, 'stars': e.value.round()});
         }
+        _resultAt = _now;
         setState(() {
           _cleared = true;
           _stars = e.value.round();
@@ -169,6 +171,7 @@ class _PlayScreenState extends State<PlayScreen> {
         if (widget.dungeon?.isArena ?? false) {
           Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : 'arena_fight', {'won': 0, 'level': hero.level});
         }
+        _resultAt = _now;
         setState(() => _cleared = false);
       case EvKind.shake:
         break;
@@ -240,6 +243,9 @@ class _PlayScreenState extends State<PlayScreen> {
   bool _doubled = false;
   bool _adBusy = false;
 
+  /// When the death, victory or defeat panel came up.
+  double _resultAt = -10;
+
   /// Plays a rewarded ad and runs [reward] if it was watched through.
   Future<void> _watchAd(VoidCallback reward) async {
     if (_adBusy) return;
@@ -263,7 +269,12 @@ class _PlayScreenState extends State<PlayScreen> {
         width: 280,
         color: const Color(0xFF8A5A10),
         enabled: ready && !_adBusy,
-        onTap: () => _watchAd(reward),
+        onTap: () {
+          // The result panel pops up mid-fight: a tap still meant for the
+          // attack button must not start an ad.
+          if (_now - _resultAt < 1) return;
+          _watchAd(reward);
+        },
       ),
     );
   }

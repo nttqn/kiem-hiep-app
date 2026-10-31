@@ -246,7 +246,9 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                         ),
                 ),
                 const SizedBox(width: 8),
-                if (!playing && h.fishAds == 0)
+                // Shown (greyed) while reeling too: popping in when a fish
+                // landed put it under a finger still tapping "Giật cần!".
+                if (h.fishAds == 0)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: LButton(
@@ -254,7 +256,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                       icon: Icons.ondemand_video,
                       small: true,
                       color: const Color(0xFF7A5A1A),
-                      enabled: !_adBusy,
+                      enabled: !playing && !_adBusy,
                       onTap: _adBait,
                     ),
                   ),

@@ -41,6 +41,7 @@ class KiemHiepApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: AdsService.navigatorKey,
       title: gameTitle,
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),

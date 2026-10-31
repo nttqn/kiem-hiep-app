@@ -18,6 +18,38 @@ class AdsService {
   AdsService._();
   static final AdsService instance = AdsService._();
 
+  /// The app's navigator, for the lead-in screen before each ad.
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  /// Players tap fast (attacking, reeling a fish); an ad that opened at once
+  /// caught the next taps as clicks. A short screen that swallows every tap
+  /// comes first, so only a deliberate tap reaches the ad.
+  static const leadIn = Duration(milliseconds: 900);
+
+  Future<void> _leadIn() async {
+    final overlay = navigatorKey.currentState?.overlay;
+    if (overlay == null) return;
+    final entry = OverlayEntry(
+      builder: (_) => const Positioned.fill(
+        child: AbsorbPointer(
+          child: ColoredBox(
+            color: Color(0xCC000000),
+            child: Center(
+              child: Text(
+                'Quảng cáo sắp bắt đầu…',
+                textDirection: TextDirection.ltr,
+                style: TextStyle(color: Color(0xFFF3E6C8), fontSize: 16, decoration: TextDecoration.none),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(entry);
+    await Future<void>.delayed(leadIn);
+    entry.remove();
+  }
+
   static bool get _supported =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
@@ -151,6 +183,7 @@ class AdsService {
         if (!result.isCompleted) result.complete(false);
       },
     );
+    await _leadIn();
     await ad.show(onUserEarnedReward: (_, _) {
       earned = true;
       Analytics.instance.log('ad_reward');
@@ -194,6 +227,6 @@ class AdsService {
         _loadInterstitial();
       },
     );
-    ad.show();
+    _leadIn().then((_) => ad.show());
   }
 }
