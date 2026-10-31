@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../app_version.dart';
 import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/fatigue.dart';
@@ -17,9 +18,7 @@ import '../services/ads.dart';
 import '../services/leaderboard.dart';
 import '../services/mail.dart';
 import '../services/notify.dart';
-import '../services/perf.dart';
 import '../services/save.dart';
-import '../services/sound.dart';
 import 'activity_screen.dart';
 import 'alchemy_screen.dart';
 import 'backdrop.dart';
@@ -32,7 +31,7 @@ import 'pet_screen.dart';
 import 'rebirth_screen.dart';
 import 'rewards_ui.dart';
 import 'sect_screen.dart';
-import 'cloud_panel.dart';
+import 'settings_dialog.dart';
 import 'lists.dart';
 import 'mail_dialog.dart';
 import 'newbie_dialog.dart';
@@ -389,64 +388,7 @@ class _TownScreenState extends State<TownScreen> {
                               onPressed: () => _go(const ChatScreen()),
                               icon: const Icon(Icons.forum_outlined, color: goldLight),
                             ),
-                            const CloudButton(),
-                            ValueListenableBuilder<bool>(
-                              valueListenable: SoundService.instance.musicOn,
-                              builder: (_, on, _) => IconButton(
-                                tooltip: on ? 'Tắt nhạc nền' : 'Bật nhạc nền',
-                                onPressed: SoundService.instance.toggleMusic,
-                                icon: Icon(on ? Icons.music_note : Icons.music_off, color: goldLight),
-                              ),
-                            ),
-                            ValueListenableBuilder<bool>(
-                              valueListenable: SoundService.instance.sfxOn,
-                              builder: (_, on, _) => IconButton(
-                                tooltip: on ? 'Tắt tiếng hiệu ứng' : 'Bật tiếng hiệu ứng',
-                                onPressed: SoundService.instance.toggleSfx,
-                                icon: Icon(on ? Icons.volume_up : Icons.volume_off, color: goldLight),
-                              ),
-                            ),
-                            ValueListenableBuilder<bool>(
-                              valueListenable: LiteMode.instance.on,
-                              builder: (_, on, _) => IconButton(
-                                tooltip: on ? 'Tắt chế độ máy yếu' : 'Bật chế độ máy yếu',
-                                onPressed: () {
-                                  LiteMode.instance.toggle();
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                    content: Text(on
-                                        ? 'Đã tắt chế độ máy yếu: hiệu ứng đầy đủ.'
-                                        : 'Đã bật chế độ máy yếu: bỏ rung màn hình, hiệu ứng mờ và trang trí.'),
-                                    duration: const Duration(seconds: 2),
-                                  ));
-                                },
-                                icon: Icon(Icons.speed, color: on ? const Color(0xFF8CE07A) : goldLight),
-                              ),
-                            ),
-                            ListenableBuilder(
-                              listenable: NotifyService.instance,
-                              builder: (_, _) {
-                                final on = NotifyService.instance.enabled;
-                                return IconButton(
-                                  tooltip: on ? 'Tắt thông báo nhắc' : 'Bật thông báo nhắc',
-                                  onPressed: () {
-                                    NotifyService.instance.setEnabled(!on);
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                      content: Text(on
-                                          ? 'Đã tắt thông báo nhắc.'
-                                          : 'Đã bật thông báo nhắc: bế quan đầy, quà mới mỗi tối.'),
-                                      duration: const Duration(seconds: 2),
-                                    ));
-                                  },
-                                  icon: Icon(on ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
-                                      color: goldLight),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              tooltip: 'Hướng dẫn',
-                              onPressed: () => showGuide(context),
-                              icon: const Icon(Icons.help_outline, color: goldLight),
-                            ),
+                            const SettingsButton(),
                             IconButton(
                               tooltip: 'Đổi nhân vật',
                               onPressed: () => Navigator.of(context)
@@ -711,20 +653,29 @@ void showGuide(BuildContext context) {
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
-          child: Text(
-            '• Kéo bên trái màn hình để di chuyển. Giữ nút lớn bên phải để đánh, '
-            'chạm các nút nhỏ để ra chiêu.\n'
-            '• Bật TỰ ĐỘNG để nhân vật tự tìm quái, ra chiêu và uống thuốc. '
-            'Di chuyển tay sẽ tạm dừng tự động.\n'
-            '• Mỗi cấp được 5 điểm tiềm năng và 1 điểm kỹ năng. Vào Nhân vật để cộng.\n'
-            '• Ngũ hành: Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, '
-            'Hỏa khắc Kim. Đánh quái bị khắc gây thêm 25% sát thương.\n'
-            '• Làm nhiệm vụ chính tuyến để nhận nhiều kinh nghiệm và trang bị quý. '
-            'Nhiệm vụ hằng ngày làm mới mỗi ngày.\n'
-            '• Vượt ải càng nhanh càng được nhiều sao. Đầu lĩnh có đòn đánh lan '
-            'báo trước bằng vòng đỏ — hãy tránh ra!\n'
-            '• Thợ rèn cường hóa trang bị tới +10, thất bại chỉ mất bạc.',
-            style: body.copyWith(height: 1.45),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '• Kéo bên trái màn hình để di chuyển. Giữ nút lớn bên phải để đánh, '
+                'chạm các nút nhỏ để ra chiêu.\n'
+                '• Bật TỰ ĐỘNG để nhân vật tự tìm quái, ra chiêu và uống thuốc. '
+                'Di chuyển tay sẽ tạm dừng tự động.\n'
+                '• Mỗi cấp được 5 điểm tiềm năng và 1 điểm kỹ năng. Vào Nhân vật để cộng.\n'
+                '• Ngũ hành: Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, '
+                'Hỏa khắc Kim. Đánh quái bị khắc gây thêm 25% sát thương.\n'
+                '• Làm nhiệm vụ chính tuyến để nhận nhiều kinh nghiệm và trang bị quý. '
+                'Nhiệm vụ hằng ngày làm mới mỗi ngày.\n'
+                '• Vượt ải càng nhanh càng được nhiều sao. Đầu lĩnh có đòn đánh lan '
+                'báo trước bằng vòng đỏ — hãy tránh ra!\n'
+                '• Thợ rèn cường hóa trang bị tới +10, thất bại chỉ mất bạc.\n'
+                '• Ra bản đồ luyện công nhặt Tàng Bảo Đồ, vào Vượt ải → Bí cảnh để thám hiểm.',
+                style: body.copyWith(height: 1.45),
+              ),
+              const Divider(color: gold, height: 18),
+              // The version and where to write, as the last line.
+              Text('Phiên bản $appVersion · Hỗ trợ: $supportEmail', style: small.copyWith(color: creamDim)),
+            ],
           ),
         ),
       ),
