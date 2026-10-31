@@ -22,6 +22,8 @@ import 'core/manuals.dart';
 import 'core/mounts.dart';
 import 'core/nightmare.dart';
 import 'core/realm.dart';
+import 'core/tang_bao.dart';
+import 'core/weather.dart';
 import 'core/sect_duty.dart';
 import 'ui/fishing_view.dart';
 import 'ui/sect_screen.dart';
@@ -71,6 +73,14 @@ Future<void> main() async {
   World.debugRealmLit = int.tryParse(q['rlit'] ?? '') ?? 0;
   // rwin=1 (with rlit=3): the master falls at once, for the result board.
   World.debugRealmWin = q['rwin'] == '1';
+  // revent=merchant|wanderer|starfall|vault: that biến cố in every run.
+  World.debugRealmEvent = RealmEvent.values.where((e) => e.name == q['revent']).firstOrNull;
+  // Sky: weather=rain|fog|snow|sand|ash|petals|clear, night=1|0.
+  World.debugWeather = Weather.values.where((w) => w.name == q['weather']).firstOrNull;
+  World.debugNight = q['night'] == null ? null : q['night'] == '1';
+  // Tàng Bảo Đồ: tbd=<outcome> for every dig, tbdnear=1 marks beside the hero.
+  World.debugTbd = TbdOutcome.values.where((o) => o.name == q['tbd']).firstOrNull;
+  World.debugTbdNear = q['tbdnear'] == '1';
   // slow=4 runs battles at quarter speed for smooth screen recordings.
   BattleGame.debugSpeed = 1 / (double.tryParse(q['slow'] ?? '') ?? 1);
   PlayScreen.debugHideHud = q['hud'] == '0';
@@ -241,6 +251,7 @@ Future<void> main() async {
         ));
       }
       h.gold = 1200 * level;
+      h.tbdMaps = int.tryParse(q['tbdmaps'] ?? '') ?? 0;
       // Some gems and pets to show off the gem and pet screens.
       for (final hn in Hanh.values) {
         h.addGem(Gem(hn, 1 + rng.nextInt(3)), 1 + rng.nextInt(4));

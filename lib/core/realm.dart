@@ -101,7 +101,28 @@ DungeonDef realmDungeon(int i, int heroLevel) {
   );
 }
 
-enum PoiKind { chest, pillar, shrine, captive, lair }
+enum PoiKind { chest, pillar, shrine, captive, lair, merchant, vault, lever, star }
+
+/// Biến cố: one or two of these happen in every run.
+enum RealmEvent {
+  merchant('Thương nhân bí ẩn', 'một thương nhân lạ bày hàng giá hời đâu đó'),
+  wanderer('Ma đầu lang bạt', 'một ma đầu sẽ truy đuổi bạn, hạ được thì thưởng lớn'),
+  starfall('Mưa sao băng', 'giữa chừng sao rơi quanh bạn, nhặt lấy rương sao'),
+  vault('Mật thất cơ quan', 'bật 3 cơ quan đúng thứ tự để mở mật thất');
+
+  const RealmEvent(this.label, this.desc);
+  final String label, desc;
+}
+
+/// The three lever marks of a mật thất, in the order they are drawn.
+const vaultSymbols = ['Nhật', 'Nguyệt', 'Tinh'];
+
+/// When the stars fall, and how many.
+const double starfallFrom = 100, starfallTo = 260;
+const int starfallChests = 5;
+
+/// When the ma đầu shows up.
+const double wandererAt = 75;
 
 /// Blessings of the stone shrines, for the rest of the run.
 enum RealmBuff {
@@ -119,7 +140,8 @@ class Poi {
   final PoiKind kind;
   final double x, y;
 
-  /// Shrine: its [RealmBuff]; captive: who they are.
+  /// Shrine: its [RealmBuff]; captive: who they are; lever: its mark in
+  /// [vaultSymbols].
   final int index;
 
   /// Opened, lit, prayed at or freed.
@@ -149,9 +171,16 @@ class RealmCamp {
 
 /// One run's layout.
 class RealmLayout {
-  RealmLayout(this.pois, this.camps);
+  RealmLayout(this.pois, this.camps, {this.events = const [], this.vaultOrder = const []});
   final List<Poi> pois;
   final List<RealmCamp> camps;
+
+  /// This run's biến cố.
+  final List<RealmEvent> events;
+
+  /// The lever marks ([vaultSymbols] indexes) in the order that opens the
+  /// mật thất.
+  final List<int> vaultOrder;
 
   Iterable<Poi> of(PoiKind k) => pois.where((p) => p.kind == k);
   Poi get lair => pois.firstWhere((p) => p.kind == PoiKind.lair);
@@ -160,7 +189,7 @@ class RealmLayout {
   static const double gateX = 260;
   static double get gateY => realmHeight / 2;
 
-  static RealmLayout generate(int seed, {int kinds = 3}) {
+  static RealmLayout generate(int seed, {int kinds = 3, RealmEvent? force}) {
     final r = math.Random(seed);
     final placed = <List<double>>[];
     const w = realmWidth, h = realmHeight;
@@ -206,13 +235,36 @@ class RealmLayout {
       final (x, y) = spot(800, w - 600, 450);
       pois.add(Poi(PoiKind.captive, x, y, index: who[i]));
     }
+    // Biến cố: one, half the time two.
+    final events = ([...RealmEvent.values]..shuffle(r)).take(r.nextBool() ? 2 : 1).toList();
+    if (force != null && !events.contains(force)) events[0] = force;
+    var vaultOrder = const <int>[];
+    if (events.contains(RealmEvent.merchant)) {
+      final (x, y) = spot(900, w - 900, 450);
+      pois.add(Poi(PoiKind.merchant, x, y));
+    }
+    if (events.contains(RealmEvent.vault)) {
+      final (x, y) = spot(1000, w - 900, 700);
+      pois.add(Poi(PoiKind.vault, x, y));
+      // The levers in a ring around the door, their marks shuffled.
+      final marks = [0, 1, 2]..shuffle(r);
+      final a0 = r.nextDouble() * math.pi * 2;
+      for (var i = 0; i < 3; i++) {
+        final a = a0 + i * math.pi * 2 / 3;
+        pois.add(Poi(PoiKind.lever, (x + math.cos(a) * 260).clamp(220.0, w - 220),
+            (y + math.sin(a) * 180).clamp(220.0, h - 220), index: marks[i]));
+      }
+      vaultOrder = [0, 1, 2]..shuffle(r);
+    }
 
     // Camps: by every trận nhãn and captive and some chests, then scattered,
     // thicker toward the east.
     final camps = <RealmCamp>[];
     int kindAt(double x) => ((x / w) * 2.2 + r.nextDouble() * 0.9).floor().clamp(0, kinds - 1);
     for (final p in pois) {
-      if (p.kind == PoiKind.lair || p.kind == PoiKind.shrine) continue;
+      if (p.kind == PoiKind.lair || p.kind == PoiKind.shrine || p.kind == PoiKind.merchant || p.kind == PoiKind.lever) {
+        continue;
+      }
       if (p.kind == PoiKind.chest && r.nextDouble() < 0.4) continue;
       final a = r.nextDouble() * math.pi * 2;
       final cx = (p.x + math.cos(a) * 150).clamp(120.0, w - 120);
@@ -232,9 +284,26 @@ class RealmLayout {
       campPts.add([x, y]);
       camps.add(RealmCamp(x, y, kindAt(x), 3 + r.nextInt(3)));
     }
-    return RealmLayout(pois, camps);
+    return RealmLayout(pois, camps, events: events, vaultOrder: vaultOrder);
   }
 }
+
+/// What the thương nhân bí ẩn sells.
+enum MerchantWare { epicItem, gem, potions }
+
+class MerchantOffer {
+  const MerchantOffer(this.ware, this.label, this.price);
+  final MerchantWare ware;
+  final String label;
+  final int price;
+}
+
+/// The thương nhân's three offers at [level]; [gemTier] is the gem sold.
+List<MerchantOffer> merchantOffers(int level, int gemTier, int potionPrice) => [
+      MerchantOffer(MerchantWare.epicItem, 'Trang bị Hiếm cấp $level', realmChestGold(level) * 12),
+      MerchantOffer(MerchantWare.gem, 'Ngọc ngũ hành bậc $gemTier', realmChestGold(level) * 5),
+      MerchantOffer(MerchantWare.potions, '20 Kim Sang Dược (giảm nửa giá)', potionPrice * 10),
+    ];
 
 /// Gold in a chest at [level]: about a dungeon's repeat clear.
 int realmChestGold(int level) => 40 + level * 6;

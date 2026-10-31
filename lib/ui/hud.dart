@@ -9,6 +9,7 @@ import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/realm.dart';
 import '../core/sects.dart';
+import '../core/weather.dart';
 import '../core/world.dart';
 import 'theme.dart';
 
@@ -161,6 +162,11 @@ class RealmTracker extends StatelessWidget {
             Text(step, style: body.copyWith(fontSize: 11.5)),
             Text('Cứu người ${w.captivesFreed}/$realmCaptives${buffs.isEmpty ? '' : ' · Phúc: $buffs'}',
                 style: body.copyWith(fontSize: 11, color: creamDim)),
+            if (w.realm!.events.isNotEmpty)
+              Text(
+                  'Biến cố: ${w.realm!.events.map((e) => e.label).join(', ')}'
+                  '${w.vaultHintKnown && w.vaultStep < 3 ? ' · Cơ quan: ${w.vaultHint}' : ''}',
+                  style: body.copyWith(fontSize: 11, color: const Color(0xFFB8F0E0))),
           ],
         ),
       ),
@@ -193,7 +199,21 @@ class TopInfo extends StatelessWidget {
               border: Border.all(color: gold.withValues(alpha: 0.5)),
             ),
             child: d == null
-                ? Text(world.map.name, style: bold.copyWith(fontSize: 13, color: goldLight))
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(world.map.name, style: bold.copyWith(fontSize: 13, color: goldLight)),
+                      if (world.night) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.nightlight_round, size: 14, color: Color(0xFFB8C8F0)),
+                        Text(' Đêm', style: body.copyWith(fontSize: 12, color: const Color(0xFFB8C8F0))),
+                      ],
+                      if (world.weather != Weather.clear) ...[
+                        const SizedBox(width: 8),
+                        Text(world.weather.label, style: body.copyWith(fontSize: 12)),
+                      ],
+                    ],
+                  )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -369,6 +389,15 @@ class _MiniMapPainter extends CustomPainter {
         c.drawCircle(o, 1.5, m.def.id == quest ? q : normal);
       }
     }
+    final dig = w.digSpot;
+    if (dig != null) {
+      final o = Offset(dig.x * sx, dig.y * sy);
+      final x = Paint()
+        ..color = const Color(0xFFFF4A3A)
+        ..strokeWidth = 2.2;
+      c.drawLine(o + const Offset(-4, -4), o + const Offset(4, 4), x);
+      c.drawLine(o + const Offset(-4, 4), o + const Offset(4, -4), x);
+    }
     final p = w.player;
     c.drawCircle(Offset(p.x * sx, p.y * sy), 3.2, Paint()..color = Colors.white);
     c.drawCircle(Offset(220 * sx, w.height / 2 * sy), 3, Paint()
@@ -412,6 +441,15 @@ class _MiniMapPainter extends CustomPainter {
         case PoiKind.lair:
           c.drawCircle(at, 4.5, Paint()..color = w.lairOpen ? const Color(0xFFFF5A4A) : const Color(0xFFB57BF0));
           c.drawCircle(at, 4.5, ring);
+        case PoiKind.merchant:
+          c.drawCircle(at, 3, Paint()..color = const Color(0xFFFF9A3A));
+          c.drawCircle(at, 3, ring);
+        case PoiKind.vault:
+          c.drawRect(Rect.fromCenter(center: at, width: 6, height: 6), Paint()..color = const Color(0xFF9FE8FF));
+        case PoiKind.lever:
+          c.drawCircle(at, 1.6, Paint()..color = const Color(0xFF9FE8FF));
+        case PoiKind.star:
+          c.drawCircle(at, 2.2, Paint()..color = const Color(0xFFFFF4C0));
       }
     }
     final mob = Paint()..color = const Color(0xFFD8503A);

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/content.dart';
+import '../core/newbie.dart';
 import '../core/realm.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
@@ -184,7 +185,67 @@ class _PlayScreenState extends State<PlayScreen> {
         setState(() => _cleared = false);
       case EvKind.shake:
         break;
+      case EvKind.merchant:
+        Future.microtask(_merchant);
     }
+  }
+
+  /// Thương nhân bí ẩn: three wares, each bought once, the battle paused.
+  Future<void> _merchant() async {
+    if (!mounted) return;
+    game.halted = true;
+    world.input
+      ..attack = false
+      ..moveX = 0
+      ..moveY = 0;
+    final level = widget.dungeon!.level;
+    final wares = hero.merchantWares(level);
+    final bought = <int>{};
+    final rng = math.Random();
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          backgroundColor: lacquer,
+          title: Text('Thương nhân bí ẩn', style: titleStyle(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('"Hàng hiếm khó tìm, đại hiệp xem qua. Ta chỉ dừng chân một lát thôi."',
+                  style: small.copyWith(fontStyle: FontStyle.italic, color: cream)),
+              const SizedBox(height: 4),
+              Text('Lượng: ${fmt(hero.gold)}', style: bold.copyWith(color: goldLight, fontSize: 13)),
+              for (var i = 0; i < wares.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(wares[i].label, style: body.copyWith(fontSize: 13))),
+                      LButton(
+                        label: bought.contains(i) ? 'Đã mua' : fmt(wares[i].price),
+                        icon: bought.contains(i) ? null : Icons.monetization_on,
+                        small: true,
+                        color: jade,
+                        enabled: !bought.contains(i) && hero.gold >= wares[i].price,
+                        onTap: () {
+                          final got = hero.buyMerchant(wares[i], level, rng);
+                          if (got == null) return;
+                          setD(() => bought.add(i));
+                          _toast('Mua được $got', goldLight);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đi tiếp'))],
+        ),
+      ),
+    );
+    await SaveService.instance.save();
+    if (mounted) game.halted = _paused || _fishing || _dead || _cleared != null;
   }
 
   /// The battle ran slowly on this phone: offer Chế độ máy yếu, once.
@@ -501,6 +562,35 @@ class _PlayScreenState extends State<PlayScreen> {
           ),
         ),
         Positioned(left: 60, right: 60, bottom: 2, child: ExpStrip(hero: hero)),
+        // Tàng Bảo Đồ: read one here, or a reminder of where the spot is.
+        if (world.canReadMap)
+          Positioned(
+            right: 8,
+            top: 118,
+            child: LButton(
+              label: 'Tàng Bảo Đồ (${hero.tbdMaps})',
+              icon: Icons.map,
+              small: true,
+              color: const Color(0xFF8A5A10),
+              onTap: () {
+                world.readTreasureMap();
+                SaveService.instance.save();
+              },
+            ),
+          )
+        else if (world.mode == WorldMode.field && hero.tbdSpot != null && world.digSpot == null)
+          Positioned(
+            right: 8,
+            top: 118,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: const Color(0x99120A08), borderRadius: BorderRadius.circular(6)),
+                child: Text('Điểm đào ở ${mapById[hero.tbdSpot!.mapId]!.name}',
+                    style: small.copyWith(fontSize: 11, color: goldLight)),
+              ),
+            ),
+          ),
         if (world.nearPond && hero.fishOpen && !_fishing)
           Positioned(
             right: 330,
@@ -769,7 +859,9 @@ class _PlayScreenState extends State<PlayScreen> {
               Text(
                 inDungeon
                     ? 'Bạn ngã xuống giữa ${widget.dungeon!.isRealm ? 'bí cảnh' : 'ải'}. Có thể hồi sinh tại chỗ một lần.'
-                    : 'Bạn bị đánh bại. Hồi sinh ở cổng sẽ mất 3% kinh nghiệm của cấp hiện tại.',
+                    : hero.level < newbieShieldLevel && hero.rebirths == 0
+                        ? 'Bạn bị đánh bại. Dưới cấp $newbieShieldLevel hồi sinh ở cổng không mất kinh nghiệm.'
+                        : 'Bạn bị đánh bại. Hồi sinh ở cổng sẽ mất 3% kinh nghiệm của cấp hiện tại.',
                 style: body,
                 textAlign: TextAlign.center,
               ),

@@ -27,8 +27,133 @@ void drawPoi(Canvas c, Poi o, double t, {bool lairOpen = false}) {
       if (!o.done) _captive(c, o.index, t + o.x);
     case PoiKind.lair:
       _lair(c, o.done, t);
+    case PoiKind.merchant:
+      if (!o.done) _merchant(c, t + o.x);
+    case PoiKind.vault:
+      _vault(c, o.done, t);
+    case PoiKind.lever:
+      _lever(c, o.index, o.done, t + o.x);
+    case PoiKind.star:
+      if (!o.done) _star(c, t + o.x);
   }
   c.restore();
+}
+
+const _merchantLook = HumanLook(
+    skin: 0xFFE0B088, robe: 0xFF5A3A6A, trim: 0xFFE0B040, pants: 0xFF3A2A3A, hair: Hair.straw);
+
+void _merchant(Canvas c, double t) {
+  // A stall: a cloth on the ground, wares, a parasol, the trader beside.
+  drawShadow(c, 40);
+  c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-46, -14, 64, 18), const Radius.circular(3)), _fill(0xFF8A2A2A));
+  c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-46, -14, 64, 18), const Radius.circular(3)), _line(0xFF3A1010, 1.2));
+  c.drawCircle(const Offset(-34, -18), 6, _fill(0xFFF0C850));
+  c.drawCircle(const Offset(-20, -19), 5, _fill(0xFF7FDBFF));
+  c.drawRect(const Rect.fromLTWH(-10, -26, 10, 12), _fill(0xFF6A4A2A));
+  c.drawCircle(const Offset(8, -18), 5, _fill(0xFFE84B4A));
+  c.drawLine(const Offset(-14, -10), const Offset(-14, -96), _line(0xFF4A3018, 2.5));
+  final canopy = Path()
+    ..moveTo(-62, -82)
+    ..quadraticBezierTo(-14, -128, 34, -82)
+    ..close();
+  c.drawPath(canopy, _fill(0xFFC8503A));
+  c.drawPath(canopy, _line(0xFF4A1A10, 1.5));
+  c.save();
+  c.translate(36, 0);
+  c.scale(-0.95, 0.95);
+  drawChibi(c, _merchantLook, t: t);
+  c.restore();
+  final bob = math.sin(t * 3) * 3;
+  final coin = Paint()..color = const Color(0xFFFFD34A);
+  c.drawCircle(Offset(36, -96 + bob), 8, coin);
+  c.drawCircle(Offset(36, -96 + bob), 8, _line(0xFF7A5A10, 1.5));
+}
+
+void _vault(Canvas c, bool open, double t) {
+  // A door cut in a rock face.
+  drawShadow(c, 60);
+  final rock = Path()
+    ..moveTo(-80, 0)
+    ..lineTo(-74, -70)
+    ..lineTo(-40, -108)
+    ..lineTo(30, -114)
+    ..lineTo(72, -78)
+    ..lineTo(80, 0)
+    ..close();
+  c.drawPath(rock, _fill(0xFF5A5450));
+  c.drawPath(rock, _line(0xFF221E1A, 2));
+  final door = RRect.fromRectAndCorners(const Rect.fromLTWH(-30, -80, 60, 80),
+      topLeft: const Radius.circular(30), topRight: const Radius.circular(30));
+  if (open) {
+    c.drawRRect(door, _fill(0xFF120C0A));
+    c.drawRRect(door, Paint()
+      ..color = const Color(0x55FFD34A)
+      ..maskFilter = softBlur(10));
+  } else {
+    c.drawRRect(door, _fill(0xFF6A4A2A));
+    c.drawLine(const Offset(0, -80), Offset.zero, _line(0xFF2A1808, 2));
+    for (final y in const [-60.0, -30.0]) {
+      c.drawLine(Offset(-28, y), Offset(28, y), _line(0xFFB8903A, 3));
+    }
+    final glow = 0.5 + 0.5 * math.sin(t * 2.4);
+    c.drawCircle(const Offset(0, -45), 9, Paint()..color = Color.fromRGBO(160, 230, 255, 0.4 + 0.4 * glow));
+  }
+  c.drawRRect(door, _line(0xFF221E1A, 2));
+}
+
+void _lever(Canvas c, int mark, bool on, double t) {
+  final col = on ? const Color(0xFF9FF0FF) : const Color(0xFFB8B0A0);
+  c.drawOval(Rect.fromCenter(center: Offset.zero, width: 70, height: 26),
+      Paint()..color = col.withValues(alpha: on ? 0.35 : 0.15));
+  drawShadow(c, 18);
+  c.drawRect(const Rect.fromLTWH(-12, -54, 24, 54), _fill(0xFF6A6460));
+  c.drawRect(const Rect.fromLTWH(-12, -54, 24, 54), _line(0xFF221E1A, 1.5));
+  c.drawCircle(const Offset(0, -66), 15, _fill(0xFF4A4440));
+  c.drawCircle(const Offset(0, -66), 15, _line(0xFF221E1A, 1.5));
+  final p = Paint()..color = on ? col : const Color(0xFFE8DCC0);
+  switch (mark) {
+    case 0: // Nhật: a sun.
+      c.drawCircle(const Offset(0, -66), 6, p);
+      for (var i = 0; i < 8; i++) {
+        final a = i * math.pi / 4;
+        c.drawLine(Offset(math.cos(a) * 8, -66 + math.sin(a) * 8), Offset(math.cos(a) * 11.5, -66 + math.sin(a) * 11.5),
+            Paint()
+              ..color = p.color
+              ..strokeWidth = 1.8);
+      }
+    case 1: // Nguyệt: a crescent.
+      c.drawPath(
+          Path.combine(PathOperation.difference, Path()..addOval(Rect.fromCircle(center: const Offset(0, -66), radius: 9)),
+              Path()..addOval(Rect.fromCircle(center: const Offset(4, -69), radius: 8))),
+          p);
+    default: // Tinh: a star.
+      final s = Path();
+      for (var i = 0; i < 10; i++) {
+        final a = -math.pi / 2 + i * math.pi / 5;
+        final r = i.isEven ? 10.0 : 4.2;
+        final pt = Offset(math.cos(a) * r, -66 + math.sin(a) * r);
+        i == 0 ? s.moveTo(pt.dx, pt.dy) : s.lineTo(pt.dx, pt.dy);
+      }
+      s.close();
+      c.drawPath(s, p);
+  }
+  if (on) {
+    c.drawCircle(const Offset(0, -66), 20, Paint()
+      ..color = col.withValues(alpha: 0.3 + 0.2 * math.sin(t * 4))
+      ..maskFilter = softBlur(6));
+  }
+}
+
+void _star(Canvas c, double t) {
+  final glow = 0.5 + 0.5 * math.sin(t * 5);
+  drawShadow(c, 14);
+  c.drawCircle(const Offset(0, -14), 22, Paint()
+    ..color = Color.fromRGBO(255, 230, 140, 0.25 + 0.2 * glow)
+    ..maskFilter = softBlur(8));
+  c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-13, -20, 26, 18), const Radius.circular(3)), _fill(0xFF3A4A8A));
+  c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-13, -20, 26, 18), const Radius.circular(3)), _line(0xFF141A3A, 1.2));
+  c.drawRect(const Rect.fromLTWH(-13, -14, 26, 3), _fill(0xFFFFE08A));
+  c.drawCircle(const Offset(0, -24), 3 + glow * 1.5, _fill(0xFFFFF4C0));
 }
 
 Paint _fill(int c) => Paint()..color = Color(c);
@@ -220,6 +345,50 @@ void _lair(Canvas c, bool open, double t) {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4
         ..maskFilter = softBlur(4));
+}
+
+/// A Tàng Bảo Đồ spot: a red X dug into the ground, glinting.
+void drawDigMark(Canvas c, double x, double y, double t) {
+  final pulse = 0.5 + 0.5 * math.sin(t * 4);
+  c.save();
+  c.translate(x, y);
+  c.drawOval(Rect.fromCenter(center: Offset.zero, width: 90, height: 34),
+      Paint()
+        ..color = Color.fromRGBO(255, 200, 80, 0.15 + 0.15 * pulse)
+        ..maskFilter = softBlur(8));
+  c.drawOval(Rect.fromCenter(center: Offset.zero, width: 56, height: 22), _fill(0x553A2414));
+  final x1 = Paint()
+    ..color = const Color(0xFFD8302A)
+    ..strokeWidth = 6
+    ..strokeCap = StrokeCap.round;
+  c.drawLine(const Offset(-18, -8), const Offset(18, 8), x1);
+  c.drawLine(const Offset(-18, 8), const Offset(18, -8), x1);
+  // A spade stuck in the ground beside it.
+  c.drawLine(const Offset(26, -2), const Offset(36, -46), _line(0xFF6A4A2A, 3));
+  c.drawPath(Path()
+    ..moveTo(20, -2)
+    ..lineTo(32, -2)
+    ..lineTo(28, 12)
+    ..close(), _fill(0xFFB8B8C0));
+  c.restore();
+}
+
+/// The dig spot is off screen: an arrow by the hero's feet pointing there.
+void drawDigArrow(Canvas c, double hx, double hy, double tx, double ty, double t) {
+  final a = math.atan2(ty - hy, tx - hx);
+  final r = 70 + math.sin(t * 5) * 5;
+  c.save();
+  c.translate(hx + math.cos(a) * r, hy - 20 + math.sin(a) * r * 0.6);
+  c.rotate(a);
+  final path = Path()
+    ..moveTo(14, 0)
+    ..lineTo(-8, -10)
+    ..lineTo(-3, 0)
+    ..lineTo(-8, 10)
+    ..close();
+  c.drawPath(path, _fill(0xEEFFD34A));
+  c.drawPath(path, _line(0xFF7A3A10, 1.5));
+  c.restore();
 }
 
 /// Darkness over the cells of [w] the hero has not seen, in [view].

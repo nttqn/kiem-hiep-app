@@ -14,6 +14,7 @@ import 'art_chibi.dart';
 import 'art_figures.dart';
 import 'art_fx.dart';
 import 'art_realm.dart';
+import 'art_weather.dart';
 import 'art_scenery.dart';
 import 'quality.dart';
 
@@ -148,6 +149,14 @@ class WorldRenderer {
     for (final pr in w.scenery.props) {
       if (pad.contains(Offset(pr.x, pr.y))) items.add(_Drawable(pr.y, prop: pr));
     }
+    final dig = w.digSpot;
+    if (dig != null) {
+      if (view.inflate(80).contains(Offset(dig.x, dig.y))) {
+        drawDigMark(c, dig.x, dig.y, t);
+      } else if (p.alive) {
+        drawDigArrow(c, p.x, p.y, dig.x, dig.y, t);
+      }
+    }
     final realm = w.realm;
     if (realm != null) {
       for (final o in realm.pois) {
@@ -217,7 +226,10 @@ class WorldRenderer {
     if (realm != null) drawFog(c, w, view.inflate(fogCell));
     c.restore();
 
-    final night = palettes[w.scenery.theme]!.night;
+    drawWeather(c, size, w.weather, t);
+    // Ngày đêm: a blue cast and a darker rim at night.
+    if (w.night) c.drawRect(Offset.zero & size, Paint()..color = const Color(0x3A0A1640));
+    final night = math.max(palettes[w.scenery.theme]!.night, w.night ? 0.32 : 0.0);
     if (night > 0) {
       final ctr = Offset(size.width / 2 + (p.x - camX) * zoom,
           size.height / 2 + (p.y - 30 - camY) * zoom);
@@ -259,6 +271,16 @@ class WorldRenderer {
     setTint(alpha: dying ? m.hurt / 0.6 : 1);
     // Elites: a pulsing gold ring and a bigger body.
     final size = d.size * (m.elite ? 1.3 : 1);
+    // Dạ Yêu: a violet ring and glow.
+    if (m.nightborn && !dying) {
+      final pulse = 0.5 + 0.5 * math.sin(t * 3 + m.uid);
+      c.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: m.radius * 3.2, height: m.radius * 1.2),
+          Paint()
+            ..color = Color.fromRGBO(180, 110, 255, 0.4 + 0.3 * pulse)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.5);
+    }
     if (m.elite && !dying) {
       final pulse = 0.5 + 0.5 * math.sin(t * 4 + m.uid);
       c.drawOval(

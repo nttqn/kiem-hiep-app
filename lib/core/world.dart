@@ -13,11 +13,14 @@ import 'hero.dart';
 import 'items.dart';
 import 'live_event.dart';
 import 'manuals.dart';
+import 'newbie.dart';
 import 'nightmare.dart';
 import 'pets.dart';
 import 'realm.dart';
 import 'scenery.dart';
 import 'sects.dart';
+import 'tang_bao.dart';
+import 'weather.dart';
 import 'world_boss.dart' show vnDayKey;
 
 const double heroRadius = 18;
@@ -115,6 +118,9 @@ class Mob extends Actor {
   String? eliteKey;
   String eliteName = '';
   bool get elite => eliteKey != null;
+
+  /// A Dạ Yêu: a night-born monster of the field.
+  bool nightborn = false;
 
   /// Set on a Lôi đài challenger, drawn as a hero of their sect.
   ArenaRival? rival;
@@ -272,7 +278,7 @@ class Drop {
   bool taken = false;
 }
 
-enum EvKind { notice, heroDied, wave, cleared, failed, boss, loot, shake }
+enum EvKind { notice, heroDied, wave, cleared, failed, boss, loot, shake, merchant }
 
 class GameEvent {
   GameEvent(this.kind, {this.text = '', this.color = 0xFFFFF3C4,
@@ -392,7 +398,24 @@ class World {
   double finishTime = 0;
   List<String> rewardLines = const [];
 
+  /// Sky over a field map or bí cảnh (dungeon arenas stay clear and lit).
+  Weather weather = Weather.clear;
+  bool night = false;
+
+  /// Dev build: force the sky.
+  static Weather? debugWeather;
+  static bool? debugNight;
+
+  bool get _outdoors => mode == WorldMode.field || (dungeon?.isRealm ?? false);
+
+  void _sky() {
+    if (!_outdoors) return;
+    weather = debugWeather ?? weatherOf(map.id, map.theme);
+    night = debugNight ?? isNight();
+  }
+
   void _init() {
+    _sky();
     hero.recompute();
     player.maxHp = st.maxHp;
     player.hp = st.maxHp;
@@ -853,6 +876,13 @@ class World {
         c.y + math.sin(a) * d)
       ..camp = ci;
     _scale(m, map.mul);
+    // At night some come back as Dạ Yêu: tougher, better paid.
+    if (night && rng.nextDouble() < nightMobChance) {
+      m.nightborn = true;
+      m.maxHp *= nightMobHp;
+      m.hp = m.maxHp;
+      m.atk *= nightMobAtk;
+    }
     mobs.add(m);
   }
 
@@ -1008,6 +1038,120 @@ class World {
     m.atk *= mul;
   }
 
+  // ------------------------------------------------------------ tàng bảo đồ
+
+  /// The marked dig spot, if it is on this field map.
+  TbdSpot? get digSpot {
+    final s = hero.tbdSpot;
+    return mode == WorldMode.field && s != null && s.mapId == map.id ? s : null;
+  }
+
+  bool get canReadMap => mode == WorldMode.field && hero.tbdMaps > 0 && hero.tbdSpot == null;
+
+  final Set<int> _ambush = {};
+  double _ambushX = 0, _ambushY = 0;
+
+  /// Dev build: what the next dig turns up, and a spot marked beside the
+  /// gate.
+  static TbdOutcome? debugTbd;
+  static bool debugTbdNear = false;
+
+  /// Reads a Tàng Bảo Đồ: marks a spot well away from the hero.
+  void readTreasureMap() {
+    if (!canReadMap) return;
+    final p = player;
+    var x = 0.0, y = 0.0;
+    for (var i = 0; i < 300; i++) {
+      x = 300 + rng.nextDouble() * (width - 600);
+      y = 220 + rng.nextDouble() * (height - 440);
+      final far = _d2(x, y, p.x, p.y) >= tbdMinDistance * tbdMinDistance;
+      final dry = !hasPond || _d2(x, y, pondX, pondY) > 320 * 320;
+      if (far && dry) break;
+    }
+    if (debugTbdNear) {
+      x = p.x + 220;
+      y = p.y;
+    }
+    hero.tbdMaps--;
+    hero.tbdSpot = TbdSpot(map.id, x, y);
+    _sfx('loot');
+    events.add(GameEvent(EvKind.notice,
+        text: 'Tàng Bảo Đồ chỉ về phía ${compassWord(p.x, p.y, x, y)}: tìm dấu X trên bản đồ nhỏ',
+        color: 0xFFFFD34A, big: true));
+  }
+
+  void _updateDig() {
+    if (_ambush.isNotEmpty && !mobs.any((m) => _ambush.contains(m.uid) && m.alive)) {
+      _ambush.clear();
+      _tbdChest(_ambushX, _ambushY, math.min(hero.level, map.maxLv));
+      events.add(GameEvent(EvKind.wave, text: 'Đã dẹp phục binh, rương báu là của bạn!', color: 0xFFFFD34A, big: true));
+    }
+    final s = digSpot;
+    final p = player;
+    if (s == null || !p.alive || _d2(s.x, s.y, p.x, p.y) > tbdDigRadius * tbdDigRadius) return;
+    hero.tbdSpot = null;
+    final lv = math.min(hero.level, map.maxLv);
+    final o = debugTbd ?? rollTbd(rng);
+    fx.add(Fx('quake', s.x, s.y, life: 0.6, radius: 90));
+    _shake(5);
+    switch (o) {
+      case TbdOutcome.chest:
+        _tbdChest(s.x, s.y, lv);
+      case TbdOutcome.portal:
+        _tbdChest(s.x, s.y, lv);
+        hero.tbdPortal(vnDayKey());
+        fx.add(Fx('buddha', s.x, s.y, life: 1, radius: 200));
+        events.add(GameEvent(EvKind.wave,
+            text: 'Cổng Bí cảnh hé mở! +1 lượt thám hiểm hôm nay', color: 0xFF8CE0C8, big: true));
+      case TbdOutcome.ambush:
+        _ambushX = s.x;
+        _ambushY = s.y;
+        for (var i = 0; i < tbdAmbushSize; i++) {
+          final a = i * math.pi * 2 / tbdAmbushSize + rng.nextDouble() * 0.5;
+          final def = mobById[map.mobs[rng.nextInt(map.mobs.length)]]!;
+          final m = Mob(_uid++, def, lv, (s.x + math.cos(a) * 220).clamp(60.0, width - 60),
+              (s.y + math.sin(a) * 160).clamp(80.0, height - 60))
+            ..state = MobState.chase;
+          _scale(m, map.mul);
+          _ambush.add(m.uid);
+          mobs.add(m);
+          fx.add(Fx('spark_mob_${def.hanh.name}', m.x, m.y - 20, life: 0.4));
+        }
+        events.add(GameEvent(EvKind.boss, text: 'Phục binh! Hạ hết để lấy rương', color: 0xFFFF6A4A, big: true));
+      case TbdOutcome.guardian:
+        final def = mobById[map.mobs.last]!;
+        final m = Mob(_uid++, def, lv + 1, s.x + 60, s.y)
+          ..eliteKey = 'tbd_guard'
+          ..eliteName = 'Hộ Bảo Tinh Anh'
+          ..state = MobState.chase;
+        m.maxHp *= 8 * map.mul;
+        m.hp = m.maxHp;
+        m.atk *= 1.4 * map.mul;
+        mobs.add(m);
+        events.add(GameEvent(EvKind.boss, text: 'Hộ Bảo Tinh Anh trỗi dậy canh giữ kho báu!', color: 0xFFFF6A4A, big: true));
+    }
+  }
+
+  void _tbdChest(double x, double y, int lv) {
+    final g = hero.tbdChestGold(lv);
+    double j() => (rng.nextDouble() - 0.5) * 80;
+    drops.add(Drop(x + j(), y + 30 + j() / 2,
+        item: makeItem(
+          slot: Slot.values[rng.nextInt(Slot.values.length)],
+          level: math.min(maxLevel, lv),
+          rarity: rollRarity(rng, boss: true),
+          sect: sect,
+          rng: rng,
+        )));
+    if (rng.nextDouble() < 0.5) {
+      drops.add(Drop(x + j(), y + 30, gem: Gem(Hanh.values[rng.nextInt(5)], dropTier(lv, boss: true))));
+    }
+    hero.addHerb(_herbTier, 2);
+    fx.add(Fx('buddha', x, y, life: 0.6, radius: 90));
+    _sfx('loot');
+    events.add(GameEvent(EvKind.loot, text: 'Đào được rương báu: +$g lượng', color: 0xFFFFD34A));
+  }
+
   // ------------------------------------------------------------ bí cảnh
 
   /// This run's bí cảnh (null outside one).
@@ -1035,7 +1179,7 @@ class World {
 
   void _buildRealm(int seed) {
     final d = dungeon!;
-    final lay = RealmLayout.generate(seed, kinds: map.mobs.length);
+    final lay = RealmLayout.generate(seed, kinds: map.mobs.length, force: debugRealmEvent);
     realm = lay;
     // No tree may stand on a chest or a shrine.
     scenery.props.removeWhere((pr) => lay.pois.any((o) =>
@@ -1084,6 +1228,7 @@ class World {
   static String debugRealmNear = '';
   static int debugRealmLit = 0;
   static bool debugRealmWin = false;
+  static RealmEvent? debugRealmEvent;
 
   void _updateRealm(double dt) {
     final d = dungeon!;
@@ -1102,8 +1247,123 @@ class World {
       _reveal();
     }
     _touchPois();
+    _realmEvents();
     final b = boss;
     if (b != null && !b.alive) _realmEndAt = time + 2.5;
+  }
+
+  bool _eventsTold = false;
+  bool _starsFell = false;
+  bool _wandererCame = false;
+  late final double _starAt = starfallFrom + rng.nextDouble() * (starfallTo - starfallFrom);
+
+  /// Mật thất: whether the hero has read the door, and the levers pulled
+  /// in the right order so far.
+  bool vaultHintKnown = false;
+  int vaultStep = 0;
+  Poi? _onLever;
+
+  bool hasEvent(RealmEvent e) => realm?.events.contains(e) ?? false;
+
+  String get vaultHint => realm!.vaultOrder.map((i) => vaultSymbols[i]).join(' → ');
+
+  void _realmEvents() {
+    if (!_eventsTold && time > 3) {
+      _eventsTold = true;
+      events.add(GameEvent(EvKind.notice,
+          text: 'Biến cố: ${realm!.events.map((e) => e.label).join(' · ')}', color: 0xFFB8F0E0, big: true));
+    }
+    if (hasEvent(RealmEvent.starfall) && !_starsFell && time >= _starAt && player.alive) {
+      _starsFell = true;
+      for (var i = 0; i < starfallChests; i++) {
+        final a = rng.nextDouble() * math.pi * 2, r = 250 + rng.nextDouble() * 400;
+        final x = (player.x + math.cos(a) * r).clamp(150.0, width - 150);
+        final y = (player.y + math.sin(a) * r * 0.75).clamp(180.0, height - 150);
+        realm!.pois.add(Poi(PoiKind.star, x, y));
+        fx.add(Fx('buddha', x, y, life: 0.7, radius: 70));
+      }
+      _shake(5);
+      events.add(GameEvent(EvKind.wave, text: 'Mưa sao băng! Nhặt rương sao quanh bạn', color: 0xFFFFE08A, big: true));
+    }
+    if (hasEvent(RealmEvent.wanderer) && !_wandererCame && time >= wandererAt && player.alive) {
+      _wandererCame = true;
+      final a = rng.nextDouble() * math.pi * 2;
+      final x = (player.x + math.cos(a) * 900).clamp(150.0, width - 150);
+      final y = (player.y + math.sin(a) * 700).clamp(180.0, height - 150);
+      final def = mobById[map.mobs.last]!;
+      final m = Mob(_uid++, def, dungeon!.level + 2, x, y)
+        ..eliteKey = 'realm_hunter'
+        ..eliteName = 'Ma Đầu Lang Bạt'
+        ..state = MobState.chase;
+      m.maxHp *= 9;
+      m.hp = m.maxHp;
+      m.atk *= 1.5;
+      mobs.add(m);
+      events.add(GameEvent(EvKind.boss, text: 'Ma Đầu Lang Bạt đang truy đuổi bạn!', color: 0xFFFF6A4A, big: true));
+    }
+  }
+
+  /// A lever pulled: right in turn lights it, wrong locks them all again.
+  void _pullLever(Poi o) {
+    final order = realm!.vaultOrder;
+    if (o.index == order[vaultStep]) {
+      o.done = true;
+      vaultStep++;
+      fx.add(Fx('buddha', o.x, o.y, life: 0.5, radius: 70));
+      _sfx('loot');
+      if (vaultStep >= order.length) {
+        _openVault();
+      } else {
+        events.add(GameEvent(EvKind.loot, text: 'Cơ quan ${vaultSymbols[o.index]} đã mở ($vaultStep/3)', color: 0xFF9FE8FF));
+      }
+      return;
+    }
+    vaultStep = 0;
+    for (final l in realm!.of(PoiKind.lever)) {
+      l.done = false;
+    }
+    _shake(4);
+    events.add(GameEvent(EvKind.notice,
+        text: vaultHintKnown ? 'Sai thứ tự! Cơ quan khóa lại ($vaultHint)' : 'Sai thứ tự! Hãy đọc bia khắc trên cửa mật thất',
+        color: 0xFFFF8A7A));
+  }
+
+  void _openVault() {
+    final v = realm!.of(PoiKind.vault).first;
+    v.done = true;
+    final lv = dungeon!.level;
+    final g = (realmChestGold(lv) * 3 * hero.goldMul).round();
+    hero.gold += g;
+    double j() => (rng.nextDouble() - 0.5) * 120;
+    for (var i = 0; i < 3; i++) {
+      drops.add(Drop(v.x + j(), v.y + 50 + j() / 3,
+          item: makeItem(
+            slot: Slot.values[rng.nextInt(Slot.values.length)],
+            level: math.min(maxLevel, lv),
+            rarity: i == 0 ? Rarity.epic : rollRarity(rng, boss: true),
+            sect: sect,
+            rng: rng,
+          )));
+    }
+    drops.add(Drop(v.x + j(), v.y + 50, gem: Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, dropTier(lv, boss: true) + 1))));
+    fx.add(Fx('buddha', v.x, v.y, life: 1, radius: 200));
+    _shake(6);
+    events.add(GameEvent(EvKind.wave, text: 'Mật thất đã mở! +$g lượng', color: 0xFFFFD34A, big: true));
+  }
+
+  void _openStar(Poi o) {
+    o.done = true;
+    final lv = dungeon!.level;
+    final g = (realmChestGold(lv) * 0.5 * hero.goldMul).round();
+    hero.gold += g;
+    if (rng.nextDouble() < 0.35) {
+      drops.add(Drop(o.x, o.y + 30, gem: Gem(Hanh.values[rng.nextInt(5)], dropTier(lv))));
+    } else {
+      drops.add(Drop(o.x, o.y + 30, potion: rng.nextBool() ? 1 : 2));
+    }
+    fx.add(Fx('buddha', o.x, o.y, life: 0.5, radius: 60));
+    _sfx('loot');
+    events.add(GameEvent(EvKind.loot, text: 'Rương sao: +$g lượng', color: 0xFFFFE08A));
   }
 
   void _endRealm() {
@@ -1142,10 +1402,31 @@ class World {
   void _touchPois() {
     final p = player;
     if (!p.alive) return;
-    for (final o in realm!.pois) {
-      if (o.done || o.kind == PoiKind.lair) continue;
+    // A lever works on stepping onto it, not on standing there.
+    final lever = realm!.of(PoiKind.lever).where((o) => _d2(o.x, o.y, p.x, p.y) <= 64 * 64).firstOrNull;
+    if (lever != _onLever) {
+      _onLever = lever;
+      if (lever != null && !lever.done && vaultStep < 3) _pullLever(lever);
+    }
+    for (final o in List<Poi>.of(realm!.pois)) {
+      if (o.done || o.kind == PoiKind.lair || o.kind == PoiKind.lever) continue;
       if (_d2(o.x, o.y, p.x, p.y) > 64 * 64) continue;
       switch (o.kind) {
+        case PoiKind.merchant:
+          o.done = true;
+          _sfx('loot');
+          events.add(GameEvent(EvKind.merchant, text: 'Thương nhân bí ẩn'));
+        case PoiKind.vault:
+          if (!vaultHintKnown) {
+            vaultHintKnown = true;
+            events.add(GameEvent(EvKind.notice, text: 'Bia khắc trên cửa: $vaultHint', color: 0xFF9FE8FF, big: true));
+          } else {
+            _nag('Mở cơ quan theo thứ tự: $vaultHint');
+          }
+        case PoiKind.star:
+          _openStar(o);
+        case PoiKind.lever:
+          break;
         case PoiKind.chest:
           _openChest(o);
         case PoiKind.pillar:
@@ -1234,8 +1515,12 @@ class World {
     final p = player;
     (double, double)? best;
     var bd = double.infinity;
-    for (final o in realm!.pois) {
+    final lay = realm!;
+    for (final o in lay.pois) {
       if (o.done || o.kind == PoiKind.lair || !revealedAt(o.x, o.y)) continue;
+      // The door first, to read the order; then the levers, in it.
+      if (o.kind == PoiKind.vault && vaultHintKnown) continue;
+      if (o.kind == PoiKind.lever && (!vaultHintKnown || o.index != lay.vaultOrder[vaultStep])) continue;
       final d = _d2(o.x, o.y, p.x, p.y);
       if (d < bd) {
         bd = d;
@@ -1274,11 +1559,21 @@ class World {
     if (time >= _dayCheck) {
       _dayCheck = time + 30;
       hero.fatigueRoll(vnDayKey());
+      final wasNight = night;
+      _sky();
+      if (night != wasNight) {
+        events.add(GameEvent(EvKind.notice,
+            text: night ? 'Màn đêm buông xuống: Dạ Yêu bắt đầu xuất hiện' : 'Trời đã sáng',
+            color: 0xFFB8C8F0, big: true));
+      }
     }
     hero.tickFatigue(dt);
     if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
-    if (mode == WorldMode.field) _updateField();
+    if (mode == WorldMode.field) {
+      _updateField();
+      _updateDig();
+    }
     if (mode == WorldMode.field || realm != null) _updateHerbs();
     if (player.alive) {
       _updatePlayer(dt);
@@ -1346,8 +1641,8 @@ class World {
       _eliteCheck = time + 1;
       _spawnElites();
     }
-    // Elites do not respawn: clear them once they have faded.
-    mobs.removeWhere((m) => m.elite && !m.alive && m.hurt <= 0);
+    // Elites and an ambush do not respawn: clear them once they have faded.
+    mobs.removeWhere((m) => (m.elite || (m.camp < 0 && m != boss)) && !m.alive && m.hurt <= 0);
     for (final m in mobs) {
       if (m.alive || m.respawnAt < 0 || time < m.respawnAt) continue;
       if (m == boss) continue;
@@ -1464,6 +1759,10 @@ class World {
     }
     final autoOn = auto && !manual && time >= manualUntil;
     if (autoOn) _autopilot();
+    // Tân thủ hộ thể: a new hero drinks by themselves when nearly down.
+    if (!autoOn && hero.level < newbieShieldLevel && hero.rebirths == 0 && p.hp < p.maxHp * newbieAutoPotion) {
+      c.hpPot = true;
+    }
 
     if (c.hpPot) _usePotion(true);
     if (c.mpPot) _usePotion(false);
@@ -1964,6 +2263,12 @@ class World {
       _walkTo(herb.x, herb.y);
       return;
     }
+    // A Tàng Bảo Đồ spot to dig.
+    final dig = digSpot;
+    if (dig != null) {
+      _walkTo(dig.x, dig.y);
+      return;
+    }
     // In a bí cảnh: on to the next find, or into the fog.
     if (realm != null) {
       final wp = _realmWaypoint();
@@ -2157,6 +2462,7 @@ class World {
     final xp = mobExpAt(m.level) *
         m.def.exp *
         (m.elite ? 12 : 1) *
+        (m.nightborn ? nightMobExp : 1) *
         expLevelFactor(hero.level, m.level) *
         hero.expMul *
         // Tougher monsters of a field like Cửu U Ma Vực pay somewhat more.
@@ -2166,6 +2472,19 @@ class World {
     if (m.elite) {
       hero.onEliteKill(m.eliteKey!, rng);
       _eliteAgain[m.eliteKey!] = time + 20;
+    }
+    // Bí cảnh's ma đầu lang bạt: an Epic piece and a better gem on top.
+    if (m.eliteKey == 'realm_hunter') {
+      drops.add(Drop(m.x + 30, m.y,
+          item: makeItem(
+            slot: Slot.values[rng.nextInt(Slot.values.length)],
+            level: math.min(maxLevel, m.level),
+            rarity: Rarity.epic,
+            sect: sect,
+            rng: rng,
+          )));
+      drops.add(Drop(m.x - 30, m.y, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(m.level, boss: true) + 1))));
+      events.add(GameEvent(EvKind.wave, text: 'Đã hạ Ma Đầu Lang Bạt!', color: 0xFFFFD34A, big: true));
     }
     hero.gainExp(xp);
     if (m.def.boss) {
@@ -2208,9 +2527,16 @@ class World {
       ));
     }
     if (mode == WorldMode.field) {
+      if (hero.rollTreasureMap(vnDayKey(), m.big, rng)) {
+        events.add(GameEvent(EvKind.loot, text: 'Nhặt được Tàng Bảo Đồ (${hero.tbdMaps})', color: 0xFFFFD34A));
+      }
+      if (m.eliteKey == 'tbd_guard') {
+        _tbdChest(m.x, m.y, m.level);
+        drops.add(Drop(m.x - 30, m.y, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(m.level, boss: true) + 1))));
+      }
       if (m == boss) {
         bossRespawnAt = time + 150;
-      } else if (!m.elite) {
+      } else if (!m.elite && m.camp >= 0) {
         m.respawnAt = time + 9 + rng.nextDouble() * 6;
       }
     }
@@ -2220,11 +2546,12 @@ class World {
 
   void _rollDrops(Mob m) {
     double jx() => (rng.nextDouble() - 0.5) * 60;
-    final goldChance = m.big ? 1.0 : 0.5;
+    final goldChance = m.big || m.nightborn ? 1.0 : 0.5;
     if (rng.nextDouble() < goldChance) {
       final g = ((1 + m.level * 0.4) *
               (0.7 + rng.nextDouble() * 0.6) *
               (m.big ? 15 : 1) *
+              (m.nightborn ? nightMobGold : 1) *
               hero.goldMul)
           .round();
       drops.add(Drop(m.x + jx(), m.y + jx(), gold: g));
@@ -2251,7 +2578,7 @@ class World {
       _text(m.x, m.y - 90, '+$n ${herbNames[tier]}', herbColors[tier], small: true);
     }
     // Gems take the monster's phase; bosses always drop one, a tier up.
-    if (m.big || rng.nextDouble() < gemDropChance * EventBoost(vnDayKey()).gems) {
+    if (m.big || m.nightborn || rng.nextDouble() < gemDropChance * EventBoost(vnDayKey()).gems) {
       drops.add(Drop(m.x + jx(), m.y + jx(),
           gem: Gem(m.def.hanh, dropTier(m.level, boss: m.big))));
     }
@@ -2335,8 +2662,11 @@ class World {
   /// Field death: back on your feet at the map entrance, EXP docked.
   void revive() {
     final p = player;
-    final loss = (hero.expNeeded * 0.03).round();
-    hero.exp = math.max(0, hero.exp - loss);
+    // A new hero loses nothing for a fall.
+    if (hero.level >= newbieShieldLevel || hero.rebirths > 0) {
+      final loss = (hero.expNeeded * 0.03).round();
+      hero.exp = math.max(0, hero.exp - loss);
+    }
     p.hp = p.maxHp;
     p.mp = st.maxMp;
     p.x = 220;
@@ -2423,7 +2753,7 @@ class World {
         }
       case MobState.chase:
         if (!p.alive ||
-            ((mode == WorldMode.field || realm != null) && home > 650 && dp > 200)) {
+            ((mode == WorldMode.field || realm != null) && home > 650 && dp > 200 && m.eliteKey != 'realm_hunter')) {
           m.state = MobState.leash;
           break;
         }

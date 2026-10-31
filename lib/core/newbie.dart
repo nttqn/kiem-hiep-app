@@ -42,6 +42,21 @@ const newbieGifts = <NewbieGift>[
   NewbieGift(mount: 'bachma', gems: 2, gemTier: 4),
 ];
 
+/// Quà mốc cấp: early levels pay at once, so the first hour feels like
+/// progress (most new players left within a few days).
+const levelGifts = <int, NewbieGift>{
+  5: NewbieGift(gold: 2000, hpPots: 20),
+  10: NewbieGift(item: Rarity.rare, mpPots: 15),
+  15: NewbieGift(gold: 6000, gems: 2, gemTier: 1),
+  20: NewbieGift(item: Rarity.epic, hpPots: 20),
+  25: NewbieGift(gold: 15000, gems: 2, gemTier: 2),
+};
+
+/// Below this level a death in the field costs no EXP, and a low HP bar
+/// drinks a potion by itself.
+const int newbieShieldLevel = 20;
+const double newbieAutoPotion = 0.35;
+
 /// Short labels of [g], for the gift board.
 List<String> newbieLabels(NewbieGift g, {String Function(String id)? costumeName, String Function(String id)? mountName}) => [
       if (g.gold > 0) '${_dots(g.gold)} lượng',

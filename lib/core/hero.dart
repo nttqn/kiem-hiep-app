@@ -27,6 +27,7 @@ import 'nightmare.dart';
 import 'pets.dart';
 import 'realm.dart';
 import 'sect_duty.dart';
+import 'tang_bao.dart';
 import 'tower.dart';
 import 'treasure.dart';
 import 'week_goals.dart';
@@ -330,6 +331,13 @@ class HeroData {
   String nmDay = '';
   int nmRuns = 0;
 
+  // Tàng Bảo Đồ: maps held, the marked spot, maps dropped today, digs ever.
+  int tbdMaps = 0;
+  TbdSpot? tbdSpot;
+  String tbdDay = '';
+  int tbdDropped = 0;
+  int tbdDug = 0;
+
   // Bí cảnh: best stars by id, and per day the runs taken and ad runs added.
   final Map<String, int> realmStars = {};
   String realmDay = '';
@@ -630,6 +638,7 @@ class HeroData {
     if (gained > 0) {
       recompute();
       notices.add(Notice('THĂNG CẤP $level!', color: 0xFFFFD34A, big: true));
+      _levelGifts(level - gained, level);
       _checkLevelQuests();
       unlockCostumes();
     }
@@ -810,6 +819,16 @@ class HeroData {
   }
 
   /// Equips every bag item that scores higher than what is worn.
+  /// Pieces in the bag, wearable now, better than what is worn there.
+  int get betterGearCount {
+    var n = 0;
+    for (final slot in Slot.values) {
+      final worn = equip[slot];
+      if (bag.any((it) => it.slot == slot && it.level <= level && (worn == null || it.score > worn.score))) n++;
+    }
+    return n;
+  }
+
   int autoEquip() {
     var n = 0;
     for (final slot in Slot.values) {
@@ -2039,6 +2058,35 @@ class HeroData {
     return lines;
   }
 
+  // ------------------------------------------------------------- tàng bảo đồ
+
+  /// Rolls a treasure map off a field kill; true if one dropped.
+  bool rollTreasureMap(String day, bool big, math.Random rng) {
+    if (tbdDay != day) {
+      tbdDay = day;
+      tbdDropped = 0;
+    }
+    if (tbdDropped >= tbdDailyDrops || tbdMaps >= tbdMaxHeld) return false;
+    if (rng.nextDouble() >= (big ? tbdBigChance : tbdDropChance)) return false;
+    tbdDropped++;
+    tbdMaps++;
+    return true;
+  }
+
+  /// A dug-up chest at [level]: gold now; the rest the world drops.
+  int tbdChestGold(int level) {
+    final g = (realmChestGold(level) * 2 * goldMul).round();
+    gold += g;
+    tbdDug++;
+    return g;
+  }
+
+  /// The dig opened a way into a bí cảnh: one more run today.
+  void tbdPortal(String day) {
+    realmRollDay(day);
+    realmRuns--;
+  }
+
   // ------------------------------------------------------------- bí cảnh
 
   bool realmOpen(int i) => level >= realms[i].openLv || rebirths > 0;
@@ -2073,6 +2121,35 @@ class HeroData {
     final g = (realmChestGold(level) * goldMul).round();
     gold += g;
     return g;
+  }
+
+  /// The thương nhân bí ẩn's wares for a realm of [level].
+  List<MerchantOffer> merchantWares(int level) =>
+      merchantOffers(level, math.min(maxDropTier, dropTier(level, boss: true) + 1), potionPrice(this.level));
+
+  /// Buys [o]; returns what was got, or null without the gold.
+  String? buyMerchant(MerchantOffer o, int level, math.Random rng) {
+    if (gold < o.price) return null;
+    gold -= o.price;
+    switch (o.ware) {
+      case MerchantWare.epicItem:
+        final it = makeItem(
+          slot: Slot.values[rng.nextInt(Slot.values.length)],
+          level: math.min(maxLevel, level),
+          rarity: Rarity.epic,
+          sect: sect,
+          rng: rng,
+        );
+        addItem(it);
+        return '${it.name} [${it.rarity.label}]';
+      case MerchantWare.gem:
+        final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, dropTier(level, boss: true) + 1));
+        addGem(gem);
+        return gem.name;
+      case MerchantWare.potions:
+        hpPots += 20;
+        return '20 Kim Sang Dược';
+    }
   }
 
   /// A freed captive's thanks: some EXP and gold.
@@ -2157,6 +2234,21 @@ class HeroData {
     final g = newbieGifts[newbieClaimed];
     newbieClaimed++;
     newbieDay = day;
+    return _grantGift(g, rng);
+  }
+
+  /// Quà mốc cấp: a gift at each of [levelGifts]' levels the first time
+  /// up (never again after a rebirth), told as notices.
+  void _levelGifts(int from, int to) {
+    if (rebirths > 0) return;
+    for (final e in levelGifts.entries) {
+      if (e.key <= from || e.key > to) continue;
+      final lines = _grantGift(e.value, math.Random());
+      notices.add(Notice('Quà mốc cấp ${e.key}: ${lines.join(', ')}', color: 0xFF8CE07A, big: true));
+    }
+  }
+
+  List<String> _grantGift(NewbieGift g, math.Random rng) {
     var gold = g.gold;
     final lines = <String>[];
     if (g.costume.isNotEmpty) {
@@ -2468,6 +2560,7 @@ class HeroData {
         'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
         'nm': [nmStars, nmDay, nmRuns],
         'realm': [realmStars, realmDay, realmRuns, realmAds],
+        'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
         'tb': [divine, divineIron],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -2639,6 +2732,15 @@ class HeroData {
       h.realmDay = rl[1] as String;
       h.realmRuns = math.max(0, rl[2] as int);
       h.realmAds = (rl[3] as int).clamp(0, realmAdRuns);
+    }
+    final tbd = m['tbd'];
+    if (tbd is List && tbd.length == 7) {
+      h.tbdMaps = (tbd[0] as int).clamp(0, tbdMaxHeld);
+      final id = tbd[1] as String;
+      if (mapById.containsKey(id)) h.tbdSpot = TbdSpot(id, (tbd[2] as num).toDouble(), (tbd[3] as num).toDouble());
+      h.tbdDay = tbd[4] as String;
+      h.tbdDropped = math.max(0, tbd[5] as int);
+      h.tbdDug = math.max(0, tbd[6] as int);
     }
     final tb = m['tb'];
     if (tb is List && tb.length == 2) {

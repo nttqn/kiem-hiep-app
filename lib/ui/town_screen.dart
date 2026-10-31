@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/fatigue.dart';
+import '../core/guide.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
 import '../core/hero.dart';
@@ -119,8 +120,22 @@ class _TownScreenState extends State<TownScreen> {
   List<Widget> _banners() {
     final day = vnDayKey();
     final on = EventBoost(day).on;
+    // A new hero sees the next thing worth doing first.
+    // The story quest has its own card just above.
+    final steps = h.rebirths == 0 && h.level < 30
+        ? nextSteps(h, day).where((s) => s.kind != StepKind.quest).toList()
+        : const <NextStep>[];
     // At most two, so the grid keeps its room on short screens.
     return <Widget>[
+      if (steps.isNotEmpty)
+        _banner(
+          icon: Icons.lightbulb,
+          color: const Color(0xFFFFE08A),
+          title: 'Nên làm: ${steps.first.title}',
+          text: steps.first.text,
+          action: steps.first.action,
+          onTap: () => _doStep(steps.first),
+        ),
       if (h.newbieOpen)
         _banner(
           icon: Icons.redeem,
@@ -222,6 +237,87 @@ class _TownScreenState extends State<TownScreen> {
     if (mounted) setState(() {});
   }
 
+  /// Carries out a "Nên làm gì tiếp" step.
+  Future<void> _doStep(NextStep s) async {
+    switch (s.kind) {
+      case StepKind.rebirth:
+        await _go(const RebirthScreen());
+      case StepKind.equip:
+        final n = h.autoEquip();
+        await SaveService.instance.save();
+        if (!mounted) return;
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Đã mặc $n món tốt hơn. Lực chiến ${fmt(h.power)}'),
+          duration: const Duration(seconds: 2),
+        ));
+      case StepKind.points:
+        await _go(const CharacterScreen(tab: 0));
+      case StepKind.skills:
+        await _go(const CharacterScreen(tab: 1));
+      case StepKind.potions:
+        await _go(const ShopScreen());
+      case StepKind.quest:
+        _goQuest();
+      case StepKind.train:
+        await _go(PlayScreen.field(trainingMap(h)));
+      case StepKind.realm:
+        await _go(const DungeonListScreen(realm: true));
+      case StepKind.treasure:
+        final s = h.tbdSpot;
+        await _go(s != null ? PlayScreen.field(mapById[s.mapId]!) : PlayScreen.field(trainingMap(h)));
+    }
+  }
+
+  /// Every step worth doing now, in a list.
+  Future<void> _showSteps() async {
+    final steps = nextSteps(h, vnDayKey());
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Nên làm gì tiếp', style: titleStyle(20)),
+        content: SizedBox(
+          width: 440,
+          child: steps.isEmpty
+              ? Text('Mọi việc đã xong, hãy luyện công hoặc thử thách bản thân!', style: body)
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final s in steps)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text.rich(TextSpan(children: [
+                                  TextSpan(text: '${s.title}  ', style: bold.copyWith(fontSize: 13, color: goldLight)),
+                                  TextSpan(text: s.text, style: small.copyWith(fontSize: 12, color: cream)),
+                                ])),
+                              ),
+                              const SizedBox(width: 6),
+                              LButton(
+                                label: s.action,
+                                small: true,
+                                color: jade,
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  _doStep(s);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+      ),
+    );
+  }
+
   /// Jumps straight to whatever the current main quest needs.
   void _goQuest() {
     final q = h.currentMain;
@@ -265,8 +361,16 @@ class _TownScreenState extends State<TownScreen> {
                       children: [
                         Row(
                           children: [
-                            Text('Thành Lạc An', style: titleStyle(24)),
-                            const Spacer(),
+                            // Shrinks rather than push the icons off a narrow screen.
+                            Expanded(
+                              child: Text('Thành Lạc An',
+                                  style: titleStyle(24), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                            IconButton(
+                              tooltip: 'Nên làm gì tiếp',
+                              onPressed: _showSteps,
+                              icon: const Icon(Icons.lightbulb_outline, color: goldLight),
+                            ),
                             IconButton(
                               tooltip: 'Hòm thư',
                               onPressed: () async {
