@@ -45,9 +45,21 @@ class _PetScreenState extends State<PetScreen> {
       child: switch (_tab) {
         1 => const MountView(),
         2 => const CompanionView(),
-        _ => Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [for (final p in pets) Expanded(child: _card(p))],
+        // Cards keep a readable width; on small phones the row slides.
+        _ => LayoutBuilder(
+            builder: (_, box) {
+              const minCard = 168.0;
+              if (box.maxWidth >= minCard * pets.length) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [for (final p in pets) Expanded(child: _card(p))],
+                );
+              }
+              return ListView(
+                scrollDirection: Axis.horizontal,
+                children: [for (final p in pets) SizedBox(width: minCard, child: _card(p))],
+              );
+            },
           ),
       },
     );

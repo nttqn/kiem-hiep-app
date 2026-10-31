@@ -75,39 +75,49 @@ class _RebirthScreenState extends State<RebirthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Đã chuyển sinh ${h.rebirths}/$maxRebirths lần', style: titleStyle(18, color: cream)),
-                  const SizedBox(height: 8),
-                  Text('Điều kiện', style: bold.copyWith(color: goldLight)),
-                  _check('Đạt cấp $maxLevel (hiện tại cấp ${h.level})', atMax),
-                  _check('Kinh nghiệm cấp $maxLevel đầy', h.expFull),
-                  const SizedBox(height: 4),
-                  Bar(
-                    value: atMax ? (h.exp / cap).clamp(0.0, 1.0) : 0,
-                    color: expGold,
-                    height: 13,
-                    label: atMax ? '${fmt(h.exp)} / ${fmt(cap)}' : 'Cần cấp $maxLevel',
-                  ),
-                  const SizedBox(height: 10),
-                  if (done) ...[
-                    // Past the last rebirth, EXP goes into Linh Phách Đơn.
-                    Text('Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF))),
-                    const SizedBox(height: 4),
-                    Bar(
-                      value: h.expFull ? (h.soulExp / h.soulPillExp).clamp(0.0, 1.0) : 0,
-                      color: const Color(0xFF6FC8E8),
-                      height: 13,
-                      label: h.expFull ? '${fmt(h.soulExp)} / ${fmt(h.soulPillExp)}' : 'Cần đầy kinh nghiệm cấp $maxLevel',
+                  // The text scrolls on short screens; the button stays in view.
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Đã chuyển sinh ${h.rebirths}/$maxRebirths lần', style: titleStyle(18, color: cream)),
+                          const SizedBox(height: 8),
+                          Text('Điều kiện', style: bold.copyWith(color: goldLight)),
+                          _check('Đạt cấp $maxLevel (hiện tại cấp ${h.level})', atMax),
+                          _check('Kinh nghiệm cấp $maxLevel đầy', h.expFull),
+                          const SizedBox(height: 4),
+                          Bar(
+                            value: atMax ? (h.exp / cap).clamp(0.0, 1.0) : 0,
+                            color: expGold,
+                            height: 13,
+                            label: atMax ? '${fmt(h.exp)} / ${fmt(cap)}' : 'Cần cấp $maxLevel',
+                          ),
+                          const SizedBox(height: 10),
+                          if (done) ...[
+                            // Past the last rebirth, EXP goes into Linh Phách Đơn.
+                            Text('Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF))),
+                            const SizedBox(height: 4),
+                            Bar(
+                              value: h.expFull ? (h.soulExp / h.soulPillExp).clamp(0.0, 1.0) : 0,
+                              color: const Color(0xFF6FC8E8),
+                              height: 13,
+                              label: h.expFull ? '${fmt(h.soulExp)} / ${fmt(h.soulPillExp)}' : 'Cần đầy kinh nghiệm cấp $maxLevel',
+                            ),
+                            _line('Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn, cất dành cho lần chuyển sinh sau.'),
+                            _line('Đổi $soulPillsPerIron viên lấy 1 Thần Thiết ở Kỳ Trân Các.'),
+                          ] else ...[
+                            Text('Khi chuyển sinh', style: bold.copyWith(color: goldLight)),
+                            _line('Trở về cấp $rebirthLevel, trả lại điểm tiềm năng và tặng thêm $rebirthPoints điểm.'),
+                            _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),
+                            _line('Mỗi lần: Sinh lực ${_pct(rebirthHpAtk)}, Công lực ${_pct(rebirthHpAtk)}, '
+                                'Phòng thủ ${_pct(rebirthDef)}, Kinh nghiệm nhận ${_pct(rebirthExp)}, vĩnh viễn.'),
+                          ],
+                        ],
+                      ),
                     ),
-                    _line('Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn, cất dành cho lần chuyển sinh sau.'),
-                    _line('Đổi $soulPillsPerIron viên lấy 1 Thần Thiết ở Kỳ Trân Các.'),
-                  ] else ...[
-                    Text('Khi chuyển sinh', style: bold.copyWith(color: goldLight)),
-                    _line('Trở về cấp $rebirthLevel, trả lại điểm tiềm năng và tặng thêm $rebirthPoints điểm.'),
-                    _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),
-                    _line('Mỗi lần: Sinh lực ${_pct(rebirthHpAtk)}, Công lực ${_pct(rebirthHpAtk)}, '
-                        'Phòng thủ ${_pct(rebirthDef)}, Kinh nghiệm nhận ${_pct(rebirthExp)}, vĩnh viễn.'),
-                  ],
-                  const Spacer(),
+                  ),
+                  const SizedBox(height: 6),
                   Center(
                     child: LButton(
                       label: done ? 'Đã đạt tối đa' : 'Chuyển sinh lần ${h.rebirths + 1}',

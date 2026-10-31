@@ -120,8 +120,11 @@ class _SectScreenState extends State<SectScreen> {
         children: [
           Row(
             children: [
-              Text('Nhiệm vụ sư môn', style: titleStyle(18)),
-              const Spacer(),
+              Expanded(
+                child: Text('Nhiệm vụ sư môn',
+                    style: titleStyle(18), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 6),
               Text('Hôm nay ${h.sectDone}/$sectDutiesPerDay', style: bold.copyWith(fontSize: 13)),
             ],
           ),
@@ -184,10 +187,12 @@ class _SectScreenState extends State<SectScreen> {
                     ),
                   )
                 else ...[
-                  Expanded(child: LButton(label: 'Đi ngay', color: jade, onTap: () => _go(d))),
-                  const SizedBox(width: 8),
+                  Expanded(child: LButton(label: 'Đi ngay', small: true, color: jade, onTap: () => _go(d))),
+                  const SizedBox(width: 6),
+                  // Short label: on small phones "Đi ngay" needs the room.
                   LButton(
-                    label: 'Đổi việc ${fmt(dutyRerollCost(h.level))}',
+                    label: fmt(dutyRerollCost(h.level)),
+                    icon: Icons.refresh,
                     small: true,
                     color: const Color(0xFF5A4A3A),
                     enabled: h.gold >= dutyRerollCost(h.level),

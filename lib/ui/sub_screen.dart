@@ -14,6 +14,8 @@ class SubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
+    // Small phones: tabs and the level do not all fit beside the title.
+    final narrow = actions.isNotEmpty && MediaQuery.sizeOf(context).width < 860;
     return Scaffold(
       body: Backdrop(
         town: true,
@@ -32,8 +34,16 @@ class SubScreen extends StatelessWidget {
                         icon: const Icon(Icons.arrow_back, color: goldLight),
                       ),
                       Text(title, style: titleStyle(22)),
-                      const Spacer(),
-                      ...actions,
+                      // Tabs slide sideways when the screen is too narrow.
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(mainAxisSize: MainAxisSize.min, children: actions),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       ListenableBuilder(
                         listenable: SaveService.instance,
@@ -42,8 +52,10 @@ class SubScreen extends StatelessWidget {
                             const Icon(Icons.monetization_on, color: goldLight, size: 18),
                             const SizedBox(width: 4),
                             Text(fmt(h.gold), style: bold),
-                            const SizedBox(width: 12),
-                            Text('Cấp ${h.level}', style: bold.copyWith(color: goldLight)),
+                            if (!narrow) ...[
+                              const SizedBox(width: 12),
+                              Text('Cấp ${h.level}', style: bold.copyWith(color: goldLight)),
+                            ],
                           ],
                         ),
                       ),

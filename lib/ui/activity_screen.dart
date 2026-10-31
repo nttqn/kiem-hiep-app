@@ -183,11 +183,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
           child: Column(
             children: [
               Text('$mark điểm', style: bold.copyWith(fontSize: 12, color: goldLight)),
+              // Shrinks rather than covering the text on short screens.
               Expanded(
-                child: Icon(
-                  claimed ? Icons.check_circle : (can ? Icons.redeem : Icons.inventory_2_outlined),
-                  color: claimed ? const Color(0xFF8CE07A) : (can ? goldLight : creamDim),
-                  size: 30,
+                child: FittedBox(
+                  child: Icon(
+                    claimed ? Icons.check_circle : (can ? Icons.redeem : Icons.inventory_2_outlined),
+                    color: claimed ? const Color(0xFF8CE07A) : (can ? goldLight : creamDim),
+                    size: 30,
+                  ),
                 ),
               ),
               Text(claimed ? 'Đã nhận' : (can ? 'Chạm để mở!' : what),
