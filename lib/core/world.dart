@@ -15,6 +15,7 @@ import 'live_event.dart';
 import 'manuals.dart';
 import 'nightmare.dart';
 import 'pets.dart';
+import 'realm.dart';
 import 'scenery.dart';
 import 'sects.dart';
 import 'world_boss.dart' show vnDayKey;
@@ -334,13 +335,16 @@ class World {
       : mode = WorldMode.dungeon,
         dungeon = d,
         map = d.map,
-        width = 1700,
-        height = 1150,
+        width = d.isRealm ? realmWidth : 1700,
+        height = d.isRealm ? realmHeight : 1150,
         rng = math.Random(seed ?? DateTime.now().millisecondsSinceEpoch),
-        scenery = Scenery.generate(d.map.theme, 1700, 1150, d.id.hashCode,
-            arena: true),
-        player = Player(300, 1150 / 2) {
+        scenery = d.isRealm
+            ? Scenery.generate(d.map.theme, realmWidth, realmHeight, d.id.hashCode ^ (seed ?? 0x5ea1))
+            : Scenery.generate(d.map.theme, 1700, 1150, d.id.hashCode,
+                arena: true),
+        player = d.isRealm ? Player(RealmLayout.gateX, RealmLayout.gateY) : Player(300, 1150 / 2) {
     _init();
+    if (d.isRealm) _buildRealm(seed ?? rng.nextInt(1 << 30));
   }
 
   final HeroData hero;
@@ -1004,6 +1008,255 @@ class World {
     m.atk *= mul;
   }
 
+  // ------------------------------------------------------------ bí cảnh
+
+  /// This run's bí cảnh (null outside one).
+  RealmLayout? realm;
+
+  /// Fog cells uncovered (row by row), and how many.
+  late final List<bool> fog = List.filled(fogCols * fogRows, false);
+  int fogOpen = 0;
+
+  double get explored => fogOpen / fog.length;
+
+  bool revealedAt(double x, double y) {
+    final c = (x / fogCell).floor().clamp(0, fogCols - 1);
+    final r = (y / fogCell).floor().clamp(0, fogRows - 1);
+    return fog[r * fogCols + c];
+  }
+
+  final Set<RealmBuff> realmBuffs = {};
+  int chestsOpened = 0, pillarsLit = 0, captivesFreed = 0;
+  bool get lairOpen => pillarsLit >= realmPillars;
+
+  double _fogCheck = 0;
+  double _nagAt = 0;
+  double _realmEndAt = -1;
+
+  void _buildRealm(int seed) {
+    final d = dungeon!;
+    final lay = RealmLayout.generate(seed, kinds: map.mobs.length);
+    realm = lay;
+    // No tree may stand on a chest or a shrine.
+    scenery.props.removeWhere((pr) => lay.pois.any((o) =>
+        _d2(o.x, o.y, pr.x, pr.y) < (o.kind == PoiKind.lair ? 200 * 200 : 90 * 90)));
+    for (final c in lay.camps) {
+      _camps.add(_Camp(c.x, c.y, mobById[map.mobs[c.kind]]!, d.level, c.count));
+      for (var k = 0; k < c.count; k++) {
+        _spawnInCamp(_camps.length - 1);
+      }
+    }
+    // Each trận nhãn has its Hộ Trận Sứ, a tinh anh of the land.
+    for (final p in lay.of(PoiKind.pillar)) {
+      final def = mobById[map.mobs[rng.nextInt(map.mobs.length)]]!;
+      final m = Mob(_uid++, def, d.level + 1, p.x + 80, p.y + 20)
+        ..eliteKey = 'realm_guard'
+        ..eliteName = 'Hộ Trận Sứ';
+      m.maxHp *= 6;
+      m.hp = m.maxHp;
+      m.atk *= 1.4;
+      p.guard = m.uid;
+      mobs.add(m);
+    }
+    _plantHerbs();
+    // Screenshot aids for the dev build.
+    for (final p in lay.of(PoiKind.pillar).take(debugRealmLit)) {
+      mobs.removeWhere((m) => m.uid == p.guard);
+      p.done = true;
+      pillarsLit++;
+    }
+    if (lairOpen) _openLair();
+    if (debugRealmWin && boss != null) {
+      boss!.hp = 0;
+      _realmEndAt = 0.5;
+    }
+    if (debugRealmNear.isNotEmpty) {
+      final o = lay.pois.firstWhere((o) => o.kind.name == debugRealmNear, orElse: () => lay.lair);
+      player
+        ..x = o.x - 150
+        ..y = o.y + 40;
+    }
+    _reveal();
+  }
+
+  /// Dev build: start next to a place of this [PoiKind] name, with this
+  /// many trận nhãn already lit.
+  static String debugRealmNear = '';
+  static int debugRealmLit = 0;
+  static bool debugRealmWin = false;
+
+  void _updateRealm(double dt) {
+    final d = dungeon!;
+    if (_realmEndAt >= 0) {
+      // The master is down: a moment to pick up the spoils.
+      if (time >= _realmEndAt) _endRealm();
+      return;
+    }
+    if (time > d.timeLimit) {
+      finished = true;
+      events.add(GameEvent(EvKind.failed, text: 'Hết giờ!'));
+      return;
+    }
+    if (time >= _fogCheck) {
+      _fogCheck = time + 0.2;
+      _reveal();
+    }
+    _touchPois();
+    final b = boss;
+    if (b != null && !b.alive) _realmEndAt = time + 2.5;
+  }
+
+  void _endRealm() {
+    finished = true;
+    finishTime = time;
+    final stars = realmStarsFor(boss: true, chests: chestsOpened, explored: explored);
+    rewardLines = hero.realmReward(dungeon!, stars, rng);
+    events.add(GameEvent(EvKind.cleared, value: stars.toDouble()));
+  }
+
+  /// Lifts the fog around the hero.
+  void _reveal() {
+    final p = player;
+    final c0 = ((p.x - realmSight) / fogCell).floor().clamp(0, fogCols - 1);
+    final c1 = ((p.x + realmSight) / fogCell).floor().clamp(0, fogCols - 1);
+    final r0 = ((p.y - realmSight) / fogCell).floor().clamp(0, fogRows - 1);
+    final r1 = ((p.y + realmSight) / fogCell).floor().clamp(0, fogRows - 1);
+    for (var r = r0; r <= r1; r++) {
+      for (var c = c0; c <= c1; c++) {
+        final i = r * fogCols + c;
+        if (fog[i]) continue;
+        if (_d2((c + 0.5) * fogCell, (r + 0.5) * fogCell, p.x, p.y) > realmSight * realmSight) continue;
+        fog[i] = true;
+        fogOpen++;
+      }
+    }
+  }
+
+  void _nag(String text) {
+    if (time < _nagAt) return;
+    _nagAt = time + 4;
+    events.add(GameEvent(EvKind.notice, text: text, color: 0xFFFFD34A));
+  }
+
+  /// Chests, trận nhãn, shrines and captives work by walking up to them.
+  void _touchPois() {
+    final p = player;
+    if (!p.alive) return;
+    for (final o in realm!.pois) {
+      if (o.done || o.kind == PoiKind.lair) continue;
+      if (_d2(o.x, o.y, p.x, p.y) > 64 * 64) continue;
+      switch (o.kind) {
+        case PoiKind.chest:
+          _openChest(o);
+        case PoiKind.pillar:
+          if (mobs.any((m) => m.uid == o.guard && m.alive)) {
+            _nag('Hạ Hộ Trận Sứ trước đã');
+            continue;
+          }
+          o.done = true;
+          pillarsLit++;
+          fx.add(Fx('buddha', o.x, o.y, life: 0.8, radius: 160));
+          _sfx('loot');
+          events.add(GameEvent(EvKind.wave,
+              text: 'Trận nhãn $pillarsLit/$realmPillars đã sáng', color: 0xFF9FE8FF, big: true));
+          if (lairOpen) _openLair();
+        case PoiKind.shrine:
+          o.done = true;
+          final b = RealmBuff.values[o.index];
+          realmBuffs.add(b);
+          fx.add(Fx('buddha', o.x, o.y, life: 0.8, radius: 120));
+          _sfx('loot');
+          events.add(GameEvent(EvKind.notice, text: 'Bia cổ ban phúc: ${b.label}', color: 0xFF8CE07A, big: true));
+        case PoiKind.captive:
+          if (mobs.any((m) => m.alive && _d2(m.x, m.y, o.x, o.y) < 240 * 240)) {
+            _nag('Quái còn canh giữ, hãy dẹp chúng trước');
+            continue;
+          }
+          o.done = true;
+          captivesFreed++;
+          final (who, line) = realmCaptiveLines[o.index];
+          _sfx('loot');
+          events.add(GameEvent(EvKind.notice, text: '$who: “$line”', color: 0xFFF3E6C8, big: true));
+          for (final l in hero.realmCaptiveFreed(dungeon!.level)) {
+            events.add(GameEvent(EvKind.loot, text: l, color: 0xFFFFD34A));
+          }
+        case PoiKind.lair:
+          break;
+      }
+    }
+  }
+
+  void _openChest(Poi o) {
+    o.done = true;
+    chestsOpened++;
+    final lv = dungeon!.level;
+    final g = hero.realmChestOpened(lv);
+    double j() => (rng.nextDouble() - 0.5) * 80;
+    drops.add(Drop(o.x + j(), o.y + 34 + j() / 2,
+        item: makeItem(
+          slot: Slot.values[rng.nextInt(Slot.values.length)],
+          level: math.min(maxLevel, lv),
+          rarity: rollRarity(rng, boss: true),
+          sect: sect,
+          rng: rng,
+        )));
+    if (rng.nextDouble() < 0.5) {
+      drops.add(Drop(o.x + j(), o.y + 34 + j() / 2, gem: Gem(Hanh.values[rng.nextInt(5)], dropTier(lv, boss: true))));
+    }
+    if (rng.nextDouble() < 0.3) drops.add(Drop(o.x + j(), o.y + 34 + j() / 2, potion: rng.nextBool() ? 1 : 2));
+    hero.addHerb(_herbTier, 2);
+    fx.add(Fx('buddha', o.x, o.y, life: 0.6, radius: 90));
+    _sfx('loot');
+    events.add(GameEvent(EvKind.loot,
+        text: 'Rương báu $chestsOpened/$realmChests: +${g.toString()} lượng, +2 ${herbNames[_herbTier]}',
+        color: 0xFFFFD34A));
+  }
+
+  /// All three trận nhãn lit: the seal breaks and the master comes out.
+  void _openLair() {
+    final l = realm!.lair;
+    l.done = true;
+    final def = mobById[map.boss]!;
+    final m = Mob(_uid++, def, dungeon!.level + 2, l.x, l.y);
+    m.maxHp *= 1.6;
+    m.hp = m.maxHp;
+    boss = m;
+    mobs.add(m);
+    fx.add(Fx('buddha', l.x, l.y, life: 1, radius: 260));
+    _shake(8);
+    events.add(GameEvent(EvKind.boss,
+        text: 'Phong ấn đã phá! ${def.name} hiện thân ở phía đông', color: 0xFFFF6A4A, big: true));
+  }
+
+  /// Where the autopilot heads between fights: the nearest place of
+  /// interest in sight, else the master once out, else the nearest fog.
+  (double, double)? _realmWaypoint() {
+    final p = player;
+    (double, double)? best;
+    var bd = double.infinity;
+    for (final o in realm!.pois) {
+      if (o.done || o.kind == PoiKind.lair || !revealedAt(o.x, o.y)) continue;
+      final d = _d2(o.x, o.y, p.x, p.y);
+      if (d < bd) {
+        bd = d;
+        best = (o.x, o.y);
+      }
+    }
+    if (best != null) return best;
+    final b = boss;
+    if (b != null && b.alive) return (b.x, b.y);
+    for (var i = 0; i < fog.length; i++) {
+      if (fog[i]) continue;
+      final x = (i % fogCols + 0.5) * fogCell, y = (i ~/ fogCols + 0.5) * fogCell;
+      final d = _d2(x, y, p.x, p.y);
+      if (d < bd) {
+        bd = d;
+        best = (x.clamp(80.0, width - 80), y.clamp(100.0, height - 80));
+      }
+    }
+    return best;
+  }
+
   // ------------------------------------------------------------ loop
 
   /// Screenshot aid for the dev build: fire the tuyệt kỹ whenever it is
@@ -1025,10 +1278,8 @@ class World {
     hero.tickFatigue(dt);
     if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
-    if (mode == WorldMode.field) {
-      _updateField();
-      _updateHerbs();
-    }
+    if (mode == WorldMode.field) _updateField();
+    if (mode == WorldMode.field || realm != null) _updateHerbs();
     if (player.alive) {
       _updatePlayer(dt);
     }
@@ -1126,6 +1377,10 @@ class World {
 
   void _updateDungeon(double dt) {
     final d = dungeon!;
+    if (d.isRealm) {
+      _updateRealm(dt);
+      return;
+    }
     if (d.isWorldBoss && time > d.timeLimit) {
       _endWorldBoss();
       return;
@@ -1190,7 +1445,8 @@ class World {
     // Regen, faster out of combat.
     final calm = time - p.lastHurt > 5;
     p.hp = math.min(p.maxHp,
-        p.hp + st.hpRegen * (calm ? 4 : 1) * dt + _hot(dt));
+        p.hp + st.hpRegen * (calm ? 4 : 1) * dt + _hot(dt) +
+            (realmBuffs.contains(RealmBuff.vigor) ? p.maxHp * 0.02 * dt : 0));
     p.mp = math.min(st.maxMp, p.mp + st.mpRegen * (calm ? 2 : 1) * dt);
     if (time > p.shieldUntil) p.shield = 0;
 
@@ -1253,7 +1509,7 @@ class World {
 
     final len = math.sqrt(mx * mx + my * my);
     if (len > 0.05) {
-      final sp = st.move * math.min(1, len) * _slowMul(p);
+      final sp = st.move * math.min(1, len) * _slowMul(p) * (realmBuffs.contains(RealmBuff.swift) ? 1.3 : 1);
       p.x += mx / len * sp * dt;
       p.y += my / len * sp * dt;
       p.aimX = mx / len;
@@ -1708,6 +1964,14 @@ class World {
       _walkTo(herb.x, herb.y);
       return;
     }
+    // In a bí cảnh: on to the next find, or into the fog.
+    if (realm != null) {
+      final wp = _realmWaypoint();
+      if (wp != null) {
+        _walkTo(wp.$1, wp.$2);
+        return;
+      }
+    }
     // Head for the nearest living monster, quest targets preferred.
     Mob? best;
     var bd = double.infinity;
@@ -1821,6 +2085,7 @@ class World {
       Hanh? as}) {
     if (!m.alive) return;
     var dmg = st.atk * mult * (skill ? 1 + st.skillDmg : 1);
+    if (realmBuffs.contains(RealmBuff.power)) dmg *= 1.25;
     dmg *= hanhFactor(as ?? hero.hanh, m.def.hanh);
     final crit = rng.nextDouble() < st.crit;
     if (crit) dmg *= st.critDmg;
@@ -2158,7 +2423,7 @@ class World {
         }
       case MobState.chase:
         if (!p.alive ||
-            (mode == WorldMode.field && home > 650 && dp > 200)) {
+            ((mode == WorldMode.field || realm != null) && home > 650 && dp > 200)) {
           m.state = MobState.leash;
           break;
         }

@@ -360,6 +360,7 @@ class DungeonDef {
     this.trial = false,
     this.nightmare = 0,
     this.affix = 0,
+    this.realm = 0,
   });
 
   final String id;
@@ -394,6 +395,10 @@ class DungeonDef {
   final int nightmare;
   final int affix;
   bool get isNightmare => nightmare > 0;
+
+  /// Bí cảnh number (1-based, 0 for none): a wide land explored, not waves.
+  final int realm;
+  bool get isRealm => realm > 0;
 
   MapDef get map => mapById[mapId]!;
 

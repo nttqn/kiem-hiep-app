@@ -12,6 +12,7 @@ import 'bounty_view.dart';
 import 'fish_book.dart';
 import 'nightmare_view.dart';
 import 'play_screen.dart';
+import 'realm_view.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -241,28 +242,43 @@ class _ThemeSwatch extends StatelessWidget {
 }
 
 class DungeonListScreen extends StatefulWidget {
-  const DungeonListScreen({super.key, this.nightmare = false});
+  const DungeonListScreen({super.key, this.nightmare = false, this.realm = false});
   final bool nightmare;
+  final bool realm;
 
   @override
   State<DungeonListScreen> createState() => _DungeonListScreenState();
 }
 
 class _DungeonListScreenState extends State<DungeonListScreen> {
-  late bool _nm = widget.nightmare && SaveService.instance.hero.nightmareOpen;
+  /// 0 the regular dungeons, 1 Bí cảnh, 2 Ác Mộng.
+  late int _mode = widget.nightmare && SaveService.instance.hero.nightmareOpen
+      ? 2
+      : (widget.realm && SaveService.instance.hero.realmOpen(0) ? 1 : 0);
 
-  Widget _mode(String label, bool nm) => Padding(
+  static const _modeColors = [seal, Color(0xFF1E5A4A), Color(0xFF5A1A3A)];
+
+  Widget _chip(String label, int mode, {bool fresh = false}) => Padding(
         padding: const EdgeInsets.only(right: 6),
         child: GestureDetector(
-          onTap: () => setState(() => _nm = nm),
+          onTap: () => setState(() => _mode = mode),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             decoration: BoxDecoration(
-              color: _nm == nm ? (nm ? const Color(0xFF5A1A3A) : seal) : lacquer,
+              color: _mode == mode ? _modeColors[mode] : lacquer,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _nm == nm ? goldLight : gold.withValues(alpha: 0.5)),
+              border: Border.all(color: _mode == mode ? goldLight : gold.withValues(alpha: 0.5)),
             ),
-            child: Text(label, style: bold.copyWith(fontSize: 13)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: bold.copyWith(fontSize: 13)),
+                if (fresh) ...[
+                  const SizedBox(width: 4),
+                  Text('MỚI', style: bold.copyWith(fontSize: 9.5, color: const Color(0xFFFFD34A))),
+                ],
+              ],
+            ),
           ),
         ),
       );
@@ -270,17 +286,28 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
   @override
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
+    final realmOpen = h.realmOpen(0);
     return SubScreen(
-      title: _nm ? 'Ải Ác Mộng' : 'Vượt ải',
+      title: const ['Vượt ải', 'Bí cảnh', 'Ải Ác Mộng'][_mode],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (h.nightmareOpen)
+          if (h.nightmareOpen || realmOpen)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: Row(children: [_mode('Thường', false), _mode('Ác Mộng', true)]),
+              child: Row(children: [
+                _chip('Thường', 0),
+                if (realmOpen) _chip('Bí cảnh', 1, fresh: h.realmStars.isEmpty),
+                if (h.nightmareOpen) _chip('Ác Mộng', 2),
+              ]),
             ),
-          Expanded(child: _nm ? const NightmareView() : _normal(h)),
+          Expanded(
+            child: switch (_mode) {
+              1 => const RealmView(),
+              2 => const NightmareView(),
+              _ => _normal(h),
+            },
+          ),
         ],
       ),
     );

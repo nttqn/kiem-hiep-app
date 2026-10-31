@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/content.dart';
+import '../core/realm.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
 import '../services/analytics.dart';
@@ -76,9 +77,11 @@ class _PlayScreenState extends State<PlayScreen> {
     world.auto = SaveService.instance.autoFight;
     game = BattleGame(world: world, onEvent: _onEvent, onSound: SoundService.instance.cue, onSlow: _onSlow);
     SoundService.instance.setBattle(true);
-    // Each map has its own tune; every dungeon shares the battle theme.
-    SoundService.instance.playMusic(widget.dungeon != null
-        ? 'battle'
+    // Each map has its own tune; every dungeon shares the battle theme. A
+    // bí cảnh plays its land's tune.
+    final d = widget.dungeon;
+    SoundService.instance.playMusic(d != null
+        ? (d.isRealm ? d.map.theme.name : 'battle')
         // Cửu U Ma Vực borrows Ma Giáo's dark theme.
         : (widget.map!.theme == MapTheme.abyss ? 'fortress' : widget.map!.theme.name));
     HardwareKeyboard.instance.addHandler(_onKey);
@@ -158,6 +161,9 @@ class _PlayScreenState extends State<PlayScreen> {
           Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
         } else if (d != null && d.isArena) {
           Analytics.instance.log(d.trial ? 'sect_trial' : 'arena_fight', {'won': 1, 'level': hero.level});
+        } else if (d != null && d.isRealm) {
+          Analytics.instance.log('realm_clear',
+              {'id': d.id, 'stars': e.value.round(), 'explored': (world.explored * 100).round(), 'level': hero.level});
         } else if (d != null && !d.isTower) {
           Analytics.instance.log('dungeon_clear', {'id': d.id, 'stars': e.value.round()});
         }
@@ -170,6 +176,9 @@ class _PlayScreenState extends State<PlayScreen> {
         SaveService.instance.save();
         if (widget.dungeon?.isArena ?? false) {
           Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : 'arena_fight', {'won': 0, 'level': hero.level});
+        }
+        if (widget.dungeon?.isRealm ?? false) {
+          Analytics.instance.log('realm_fail', {'id': widget.dungeon!.id, 'pillars': world.pillarsLit, 'level': hero.level});
         }
         _resultAt = _now;
         setState(() => _cleared = false);
@@ -439,7 +448,10 @@ class _PlayScreenState extends State<PlayScreen> {
     return Stack(
       children: [
         Positioned(left: 8, top: 6, child: HeroFrame(world: world)),
-        Positioned(left: 8, top: 80, child: QuestTracker(hero: hero)),
+        Positioned(
+            left: 8,
+            top: 80,
+            child: world.realm != null ? RealmTracker(world: world) : QuestTracker(hero: hero)),
         Positioned(
           left: 0,
           right: 0,
@@ -484,7 +496,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 ],
               ),
               const SizedBox(width: 6),
-              if (world.mode == WorldMode.field) MiniMap(world: world),
+              if (world.mode == WorldMode.field || world.realm != null) MiniMap(world: world),
             ],
           ),
         ),
@@ -756,7 +768,7 @@ class _PlayScreenState extends State<PlayScreen> {
               const SizedBox(height: 6),
               Text(
                 inDungeon
-                    ? 'Bạn ngã xuống giữa ải. Có thể hồi sinh tại chỗ một lần.'
+                    ? 'Bạn ngã xuống giữa ${widget.dungeon!.isRealm ? 'bí cảnh' : 'ải'}. Có thể hồi sinh tại chỗ một lần.'
                     : 'Bạn bị đánh bại. Hồi sinh ở cổng sẽ mất 3% kinh nghiệm của cấp hiện tại.',
                 style: body,
                 textAlign: TextAlign.center,
@@ -810,6 +822,7 @@ class _PlayScreenState extends State<PlayScreen> {
     if (d.isTower) return _towerResult(ok, d);
     if (d.isWorldBoss) return _bossResult();
     if (d.isArena) return _arenaResult(ok, d);
+    if (d.isRealm) return _realmResult(ok, d);
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -860,6 +873,82 @@ class _PlayScreenState extends State<PlayScreen> {
                     onTap: () {
                       SaveService.instance.save();
                       Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d)));
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Bí cảnh run over: what was found, the pay, another run.
+  Widget _realmResult(bool ok, DungeonDef d) {
+    final day = vnDayKey();
+    hero.realmRollDay(day);
+    final left = hero.realmRunsLeft;
+    final explored = (world.explored * 100).floor();
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(ok ? 'Thám hiểm thành công!' : 'Thám hiểm thất bại',
+                  style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A))),
+              const SizedBox(height: 4),
+              if (ok)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < 3; i++)
+                      Icon(i < _stars ? Icons.star : Icons.star_border, color: goldLight, size: 36),
+                  ],
+                ),
+              Text(
+                'Khám phá $explored% · Rương ${world.chestsOpened}/$realmChests · '
+                'Cứu ${world.captivesFreed}/$realmCaptives người',
+                style: small.copyWith(color: cream),
+              ),
+              Text(
+                ok
+                    ? '★ hạ đầu lĩnh · ★ mở đủ $realmChests rương · ★ khám phá ${(realmExploreStar * 100).round()}%'
+                    : 'Đồ nhặt và lượng từ rương vẫn được giữ.',
+                style: small.copyWith(fontSize: 11),
+              ),
+              const SizedBox(height: 6),
+              // One wrapped line: a short screen has no room for five.
+              if (world.rewardLines.isNotEmpty)
+                Text(world.rewardLines.join(' · '), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+              const SizedBox(height: 10),
+              if (ok && !_doubled && hero.lastDungeonGold > 0)
+                _adButton('Nhân đôi lượng & kinh nghiệm', () {
+                  hero.gold += hero.lastDungeonGold;
+                  hero.gainExp(hero.lastDungeonExp);
+                  SaveService.instance.save();
+                  setState(() => _doubled = true);
+                  _toast('+${hero.lastDungeonGold} lượng · +${hero.lastDungeonExp.round()} kinh nghiệm', goldLight);
+                })
+              else if (_doubled)
+                Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LButton(label: 'Về thành', onTap: _leave),
+                  const SizedBox(width: 10),
+                  LButton(
+                    label: left > 0 ? 'Thám hiểm lại ($left)' : 'Hết lượt hôm nay',
+                    color: jade,
+                    enabled: left > 0,
+                    onTap: () {
+                      if (!hero.realmStartRun(day)) return;
+                      SaveService.instance.save();
+                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(realmDungeon(d.realm - 1, hero.level))));
                     },
                   ),
                 ],

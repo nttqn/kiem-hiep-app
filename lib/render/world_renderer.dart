@@ -6,12 +6,14 @@ import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/fishing.dart';
 import '../core/hanh.dart';
+import '../core/realm.dart';
 import '../core/scenery.dart';
 import '../core/sects.dart';
 import '../core/world.dart';
 import 'art_chibi.dart';
 import 'art_figures.dart';
 import 'art_fx.dart';
+import 'art_realm.dart';
 import 'art_scenery.dart';
 import 'quality.dart';
 
@@ -146,6 +148,18 @@ class WorldRenderer {
     for (final pr in w.scenery.props) {
       if (pad.contains(Offset(pr.x, pr.y))) items.add(_Drawable(pr.y, prop: pr));
     }
+    final realm = w.realm;
+    if (realm != null) {
+      for (final o in realm.pois) {
+        if (!view.inflate(320).contains(Offset(o.x, o.y))) continue;
+        // The lair's seal lies on the ground under everything.
+        if (o.kind == PoiKind.lair) {
+          drawPoi(c, o, t);
+        } else {
+          items.add(_Drawable(o.y, poi: o));
+        }
+      }
+    }
     for (final m in w.mobs) {
       if (!m.alive && m.hurt <= 0) continue;
       if (pad.contains(Offset(m.x, m.y))) items.add(_Drawable(m.y, mob: m));
@@ -159,6 +173,8 @@ class WorldRenderer {
     for (final it in items) {
       if (it.prop != null) {
         _drawProp(c, it.prop!, p, t);
+      } else if (it.poi != null) {
+        drawPoi(c, it.poi!, t);
       } else if (it.mob != null) {
         _drawMob(c, it.mob!, t);
       } else if (it.pet) {
@@ -198,6 +214,7 @@ class WorldRenderer {
       tp.paint(c, Offset(-tp.width / 2, -tp.height / 2));
       c.restore();
     }
+    if (realm != null) drawFog(c, w, view.inflate(fogCell));
     c.restore();
 
     final night = palettes[w.scenery.theme]!.night;
@@ -506,9 +523,10 @@ class WorldRenderer {
 }
 
 class _Drawable {
-  _Drawable(this.y, {this.prop, this.mob, this.hero = false, this.pet = false, this.companion = false});
+  _Drawable(this.y, {this.prop, this.poi, this.mob, this.hero = false, this.pet = false, this.companion = false});
   final double y;
   final Prop? prop;
+  final Poi? poi;
   final Mob? mob;
   final bool hero;
   final bool pet;

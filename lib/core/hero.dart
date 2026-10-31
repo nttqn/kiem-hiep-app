@@ -25,6 +25,7 @@ import 'monthly.dart';
 import 'mounts.dart';
 import 'nightmare.dart';
 import 'pets.dart';
+import 'realm.dart';
 import 'sect_duty.dart';
 import 'tower.dart';
 import 'treasure.dart';
@@ -328,6 +329,12 @@ class HeroData {
   final Map<String, int> nmStars = {};
   String nmDay = '';
   int nmRuns = 0;
+
+  // Bí cảnh: best stars by id, and per day the runs taken and ad runs added.
+  final Map<String, int> realmStars = {};
+  String realmDay = '';
+  int realmRuns = 0;
+  int realmAds = 0;
 
   // Thần binh: the weapon's awakening level and Thần Thiết on hand.
   int divine = 0;
@@ -2032,6 +2039,84 @@ class HeroData {
     return lines;
   }
 
+  // ------------------------------------------------------------- bí cảnh
+
+  bool realmOpen(int i) => level >= realms[i].openLv || rebirths > 0;
+
+  void realmRollDay(String day) {
+    if (realmDay == day) return;
+    realmDay = day;
+    realmRuns = 0;
+    realmAds = 0;
+  }
+
+  int get realmRunsLeft => math.max(0, realmFreeRuns + realmAds - realmRuns);
+
+  /// Takes one of the day's runs on the way in.
+  bool realmStartRun(String day) {
+    realmRollDay(day);
+    if (realmRunsLeft <= 0) return false;
+    realmRuns++;
+    return true;
+  }
+
+  /// A rewarded ad adds a run (at most [realmAdRuns] a day).
+  bool realmAddAdRun(String day) {
+    realmRollDay(day);
+    if (realmAds >= realmAdRuns) return false;
+    realmAds++;
+    return true;
+  }
+
+  /// Opens a chest: its gold now, the rest is dropped on the ground.
+  int realmChestOpened(int level) {
+    final g = (realmChestGold(level) * goldMul).round();
+    gold += g;
+    return g;
+  }
+
+  /// A freed captive's thanks: some EXP and gold.
+  List<String> realmCaptiveFreed(int level) {
+    final g = (realmChestGold(level) * 0.6 * goldMul).round();
+    final xp = expToNext(this.level) * realmCaptiveExp;
+    gold += g;
+    gainExp(xp);
+    return ['+${xp.round()} kinh nghiệm', '+${_thousands(g)} lượng'];
+  }
+
+  /// Pays a finished run; the first clear of a realm adds an Epic item (a
+  /// Legend one with all three stars).
+  List<String> realmReward(DungeonDef d, int stars, math.Random rng) {
+    final first = (realmStars[d.id] ?? 0) == 0;
+    realmStars[d.id] = math.max(realmStars[d.id] ?? 0, stars);
+    _progressDaily((q) => q.type == QuestType.dungeon);
+    _progressDuty((q) => q.kind == DutyKind.dungeon);
+    addActivity(ActSource.dungeon);
+    final xp = expToNext(level) * (first ? 0.25 : 0.1) * (0.7 + stars * 0.1);
+    final g = ((300 + d.level * 50) * (first ? 1.5 : 1) * (0.7 + stars * 0.1)).round();
+    gold += g;
+    lastDungeonGold = g;
+    lastDungeonExp = xp;
+    final lines = ['+${xp.round()} kinh nghiệm', '+${_thousands(g)} lượng'];
+    final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, dropTier(d.level, boss: true) + (stars >= 3 ? 1 : 0)));
+    addGem(gem);
+    lines.add(gem.name);
+    if (first) {
+      final it = makeItem(
+        slot: Slot.values[rng.nextInt(Slot.values.length)],
+        level: math.min(maxLevel, d.level + 1),
+        rarity: stars >= 3 ? Rarity.legend : Rarity.epic,
+        sect: sect,
+        rng: rng,
+      );
+      addItem(it);
+      lines.add('${it.name} [${it.rarity.label}]');
+    }
+    if (manualOpen && rng.nextDouble() < 0.5) lines.add(gainManualPage(rng));
+    gainExp(xp);
+    return lines;
+  }
+
   // ------------------------------------------------------------- thần binh
 
   bool get divineOpen => rebirths >= divineOpenRebirths;
@@ -2382,6 +2467,7 @@ class HeroData {
         'manual': [manualPages, manualOn],
         'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
         'nm': [nmStars, nmDay, nmRuns],
+        'realm': [realmStars, realmDay, realmRuns, realmAds],
         'tb': [divine, divineIron],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -2544,6 +2630,15 @@ class HeroData {
       });
       h.nmDay = nm[1] as String;
       h.nmRuns = math.max(0, nm[2] as int);
+    }
+    final rl = m['realm'];
+    if (rl is List && rl.length == 4) {
+      (rl[0] as Map).forEach((k, v) {
+        if (v is int) h.realmStars['$k'] = v.clamp(0, 3);
+      });
+      h.realmDay = rl[1] as String;
+      h.realmRuns = math.max(0, rl[2] as int);
+      h.realmAds = (rl[3] as int).clamp(0, realmAdRuns);
     }
     final tb = m['tb'];
     if (tb is List && tb.length == 2) {

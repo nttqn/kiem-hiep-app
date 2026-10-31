@@ -475,6 +475,13 @@ class _TownScreenState extends State<TownScreen> {
     return ((h.sectDuty?.done ?? false) ? 1 : 0) + (h.sectCanTrial ? 1 : 0);
   }
 
+  /// Bí cảnh runs still left today, for the Vượt ải badge.
+  int _realmRunsLeft() {
+    if (!h.realmOpen(0)) return 0;
+    h.realmRollDay(vnDayKey());
+    return h.realmRunsLeft;
+  }
+
   /// Lôi đài duels still left today.
   int _arenaLeft() {
     if (!h.arenaOpen) return 0;
@@ -485,7 +492,7 @@ class _TownScreenState extends State<TownScreen> {
   Widget _grid(bool pending) {
     final tiles = [
       _Tile('Luyện công', Icons.landscape, () => _go(const MapListScreen())),
-      _Tile('Vượt ải', Icons.castle, () => _go(const DungeonListScreen())),
+      _Tile('Vượt ải', Icons.castle, () => _go(const DungeonListScreen()), badge: _realmRunsLeft()),
       _Tile('Thử thách', Icons.whatshot, () {
         if (h.level < towerOpenLevel && h.rebirths == 0) {
           ScaffoldMessenger.of(context)

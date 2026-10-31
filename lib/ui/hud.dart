@@ -7,6 +7,7 @@ import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/realm.dart';
 import '../core/sects.dart';
 import '../core/world.dart';
 import 'theme.dart';
@@ -132,6 +133,41 @@ class QuestTracker extends StatelessWidget {
   }
 }
 
+/// In a bí cảnh, the next step in place of the story quest.
+class RealmTracker extends StatelessWidget {
+  const RealmTracker({super.key, required this.world});
+  final World world;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = world;
+    final step = w.lairOpen
+        ? 'Phong ấn đã phá: hạ ${mobById[w.map.boss]!.name} ở phía đông'
+        : 'Hạ Hộ Trận Sứ rồi chạm trận nhãn (${w.pillarsLit}/$realmPillars) để phá phong ấn';
+    final buffs = w.realmBuffs.map((b) => b.label.split(':').first).join(', ');
+    return IgnorePointer(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0x99120A08),
+          borderRadius: BorderRadius.circular(6),
+          border: Border(left: BorderSide(color: const Color(0xFF8CE0C8).withValues(alpha: 0.8), width: 3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Thám hiểm', style: bold.copyWith(fontSize: 11.5, color: const Color(0xFF8CE0C8))),
+            Text(step, style: body.copyWith(fontSize: 11.5)),
+            Text('Cứu người ${w.captivesFreed}/$realmCaptives${buffs.isEmpty ? '' : ' · Phúc: $buffs'}',
+                style: body.copyWith(fontSize: 11, color: creamDim)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class TopInfo extends StatelessWidget {
   const TopInfo({super.key, required this.world});
   final World world;
@@ -166,6 +202,9 @@ class TopInfo extends StatelessWidget {
                       Text(
                         d.isWorldBoss
                             ? 'Sát thương ${fmt(world.bossDamage.round())}'
+                            : d.isRealm
+                            ? '${world.lairOpen ? 'Đầu lĩnh' : 'Trận nhãn ${world.pillarsLit}/$realmPillars'}'
+                                ' · Rương ${world.chestsOpened}/$realmChests · ${(world.explored * 100).floor()}%'
                             : d.isArena
                                 ? 'Bình máu ${arenaPotions - world.arenaPotsUsed}/$arenaPotions'
                                 : world.bossWave
@@ -177,10 +216,13 @@ class TopInfo extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Icon(Icons.timer, size: 14, color: world.timeLeft < 30 ? hpRed : cream),
-                      Text(' ${world.timeLeft.ceil()}s',
+                      Text(
+                          d.isRealm
+                              ? ' ${world.timeLeft.ceil() ~/ 60}:${(world.timeLeft.ceil() % 60).toString().padLeft(2, '0')}'
+                              : ' ${world.timeLeft.ceil()}s',
                           style: bold.copyWith(fontSize: 13, color: world.timeLeft < 30 ? hpRed : cream)),
                       const SizedBox(width: 6),
-                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena ? 0 : 3); i++)
+                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena || d.isRealm ? 0 : 3); i++)
                         Icon(
                           world.time <= (i == 0 ? d.timeLimit : (i == 1 ? d.twoStar : d.threeStar))
                               ? Icons.star
@@ -301,6 +343,10 @@ class _MiniMapPainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     final sx = s.width / w.width, sy = s.height / w.height;
+    if (w.realm != null) {
+      _realm(c, s, sx, sy);
+      return;
+    }
     final quest = w.hero.currentMain?.target;
     final normal = Paint()..color = const Color(0xFFD8503A);
     final q = Paint()..color = const Color(0xFFFFE04A);
@@ -329,6 +375,52 @@ class _MiniMapPainter extends CustomPainter {
       ..color = const Color(0xFF7AD0FF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2);
+  }
+
+  /// Bí cảnh: only what the hero has seen, with its finds marked.
+  void _realm(Canvas c, Size s, double sx, double sy) {
+    final cw = fogCell * sx, ch = fogCell * sy;
+    final seen = Paint()..color = const Color(0xFF4A3A2A);
+    for (var r = 0; r < fogRows; r++) {
+      for (var col = 0; col < fogCols; col++) {
+        if (w.fog[r * fogCols + col]) c.drawRect(Rect.fromLTWH(col * cw, r * ch, cw + 0.5, ch + 0.5), seen);
+      }
+    }
+    final ring = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (final o in w.realm!.pois) {
+      final lair = o.kind == PoiKind.lair;
+      // The lair shows from the start once its seal breaks.
+      if (!w.revealedAt(o.x, o.y) && !(lair && w.lairOpen)) continue;
+      if (o.done && !lair) {
+        if (o.kind == PoiKind.pillar) c.drawCircle(Offset(o.x * sx, o.y * sy), 3, Paint()..color = const Color(0xFF7FE8FF));
+        continue;
+      }
+      final at = Offset(o.x * sx, o.y * sy);
+      switch (o.kind) {
+        case PoiKind.chest:
+          c.drawRect(Rect.fromCenter(center: at, width: 5, height: 4), Paint()..color = const Color(0xFFFFD34A));
+        case PoiKind.pillar:
+          c.drawCircle(at, 3, Paint()..color = const Color(0xFF8A8A9A));
+          c.drawCircle(at, 3, ring);
+        case PoiKind.shrine:
+          c.drawCircle(at, 2.5, Paint()..color = const Color(0xFF8CE07A));
+        case PoiKind.captive:
+          c.drawCircle(at, 2.5, Paint()..color = Colors.white);
+        case PoiKind.lair:
+          c.drawCircle(at, 4.5, Paint()..color = w.lairOpen ? const Color(0xFFFF5A4A) : const Color(0xFFB57BF0));
+          c.drawCircle(at, 4.5, ring);
+      }
+    }
+    final mob = Paint()..color = const Color(0xFFD8503A);
+    for (final m in w.mobs) {
+      if (!m.alive || !w.revealedAt(m.x, m.y)) continue;
+      c.drawCircle(Offset(m.x * sx, m.y * sy), m.big ? 3 : 1.4, m.elite ? (Paint()..color = const Color(0xFFFFD34A)) : mob);
+    }
+    final p = w.player;
+    c.drawCircle(Offset(p.x * sx, p.y * sy), 3.2, Paint()..color = Colors.white);
   }
 
   @override

@@ -21,6 +21,7 @@ import 'core/gold_sets.dart';
 import 'core/manuals.dart';
 import 'core/mounts.dart';
 import 'core/nightmare.dart';
+import 'core/realm.dart';
 import 'core/sect_duty.dart';
 import 'ui/fishing_view.dart';
 import 'ui/sect_screen.dart';
@@ -65,6 +66,11 @@ Future<void> main() async {
   final screen = q['screen'] ?? 'town';
   World.debugUltimate = q['ult'] == '1';
   World.debugHerbNear = q['herb'] == '1';
+  // Bí cảnh: rnear=chest|pillar|shrine|captive|lair, rlit=<n> trận nhãn lit.
+  World.debugRealmNear = q['rnear'] ?? '';
+  World.debugRealmLit = int.tryParse(q['rlit'] ?? '') ?? 0;
+  // rwin=1 (with rlit=3): the master falls at once, for the result board.
+  World.debugRealmWin = q['rwin'] == '1';
   // slow=4 runs battles at quarter speed for smooth screen recordings.
   BattleGame.debugSpeed = 1 / (double.tryParse(q['slow'] ?? '') ?? 1);
   PlayScreen.debugHideHud = q['hud'] == '0';
@@ -437,6 +443,8 @@ Future<void> main() async {
     'arena' => const ArenaScreen(),
     'sect' => const SectScreen(),
     'nightmare' => const DungeonListScreen(nightmare: true),
+    'realm' => const DungeonListScreen(realm: true),
+    'rplay' => PlayScreen.dungeon(realmDungeon(int.tryParse(q['ri'] ?? '') ?? 0, SaveService.instance.hero.level)),
     'nmplay' => PlayScreen.dungeon(nightmareDef(int.tryParse(q['nmi'] ?? '') ?? 0,
         NmAffix.values[int.tryParse(q['affix'] ?? '') ?? 0])),
     'trial' => PlayScreen.dungeon(sectTrialDef(SaveService.instance.hero.sectExaminerNow())),
