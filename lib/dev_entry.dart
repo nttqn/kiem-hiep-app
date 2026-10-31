@@ -33,7 +33,9 @@ import 'core/hero.dart';
 import 'core/world.dart';
 import 'game/battle_game.dart';
 import 'render/art_figures.dart';
+import 'render/quality.dart';
 import 'render/world_renderer.dart';
+import 'services/perf.dart';
 import 'ui/backdrop.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/world_boss_screen.dart';
@@ -356,6 +358,9 @@ Future<void> main() async {
     h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
     // money=<n> lượng.
     h.gold = int.tryParse(q['money'] ?? '') ?? h.gold;
+    // view=0|1|2 Tầm nhìn Gần/Vừa/Xa.
+    final view = int.tryParse(q['view'] ?? '');
+    if (view != null) viewSpan = ViewRange.spans[view.clamp(0, 2)];
     // fat=<minutes> fought today (Mệt mỏi).
     final fat = int.tryParse(q['fat'] ?? '');
     if (fat != null) {

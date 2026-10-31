@@ -46,3 +46,36 @@ class LiteMode {
     liteGraphics = v;
   }
 }
+
+/// Tầm nhìn: how much of the map a battle shows. Gần was the only view
+/// before 1.2.8; players on long screens found it narrow.
+class ViewRange {
+  ViewRange._();
+  static final ViewRange instance = ViewRange._();
+
+  static const names = ['Gần', 'Vừa', 'Xa'];
+  static const spans = [400.0, 460.0, 520.0];
+
+  final ValueNotifier<int> level = ValueNotifier(1);
+
+  Future<void> load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _apply(prefs.getInt('view_range') ?? 1);
+    } catch (_) {}
+  }
+
+  /// Gần → Vừa → Xa → Gần.
+  Future<void> next() async {
+    _apply((level.value + 1) % spans.length);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('view_range', level.value);
+    } catch (_) {}
+  }
+
+  void _apply(int v) {
+    level.value = v.clamp(0, spans.length - 1);
+    viewSpan = spans[level.value];
+  }
+}

@@ -30,8 +30,8 @@ class WorldRenderer {
   /// Dev build only: no damage numbers or monster bars (clean thumbnails).
   static bool debugClean = false;
 
-  /// World units visible top to bottom.
-  double viewHeight = 400;
+  /// World units visible top to bottom (the player's Tầm nhìn).
+  double get viewHeight => viewSpan;
   double camX = 0, camY = 0;
   bool _placed = false;
   double shake = 0;

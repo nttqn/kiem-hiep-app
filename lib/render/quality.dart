@@ -5,6 +5,10 @@ import 'dart:ui';
 /// LiteMode (services/perf.dart).
 bool liteGraphics = false;
 
+/// World units visible top to bottom in battle (Tầm nhìn); set from
+/// ViewRange (services/perf.dart).
+double viewSpan = 460;
+
 final Map<double, MaskFilter> _blurs = {};
 
 /// A soft glow of [sigma], or none in Chế độ máy yếu.

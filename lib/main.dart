@@ -23,6 +23,7 @@ Future<void> main() async {
   // Not awaited: a slow or broken audio asset must never delay the first frame.
   SoundService.instance.init();
   await LiteMode.instance.load();
+  await ViewRange.instance.load();
   await SaveService.instance.load();
   await Leaderboard.instance.load();
   await ChatService.instance.load();
