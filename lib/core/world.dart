@@ -2313,7 +2313,8 @@ class World {
               close = m;
             }
           }
-          if (close != null && (p.basicCd > 0.1 || count >= 2)) {
+          // A boss is faced squarely: no dancing in and out.
+          if (close != null && !close.def.boss && (p.basicCd > 0.1 || count >= 2)) {
             _backFrom = close;
             _backUntil = time + autoBackTime;
             _backRestUntil = _backUntil + autoBackRest;
@@ -2322,8 +2323,12 @@ class World {
           }
         }
       }
-      // Close in; the basic attack takes over once in reach.
-      _walkTo(near.x, near.y);
+      // Close in only until the basic attack reaches, then stand there:
+      // a ranged hero shoots from afar instead of walking into the monster.
+      final reach = sect.basic == BasicKind.melee
+          ? sect.basicRange + near.radius * 0.5
+          : sect.basicRange - 20;
+      if (_dist(p.x, p.y, near.x, near.y) > reach) _walkTo(near.x, near.y);
       return;
     }
     // Pick up loot nearby.
