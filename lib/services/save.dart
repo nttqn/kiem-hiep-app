@@ -38,6 +38,8 @@ class SaveService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       autoFight = prefs.getBool('auto_fight') ?? true;
+      owner = prefs.getString('save_owner');
+      ownerWho = prefs.getString('save_owner_who') ?? '';
       for (var i = 0; i < slotCount; i++) {
         final raw = prefs.getString(_key(i));
         if (raw == null) continue;
@@ -144,6 +146,86 @@ class SaveService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('auto_fight', v);
     } catch (_) {}
+  }
+
+  // ------------------------------------------------------------ owner
+
+  /// The cloud account these device slots belong to (its uid and how it is
+  /// shown), null before any sign-in. Signing in to another account must
+  /// not push them into it unasked.
+  String? owner;
+  String ownerWho = '';
+
+  bool get hasHeroes => slots.any((s) => s != null);
+
+  Future<void> setOwner(String? uid, String who) async {
+    owner = uid;
+    ownerWho = who;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (uid == null) {
+        await prefs.remove('save_owner');
+        await prefs.remove('save_owner_who');
+      } else {
+        await prefs.setString('save_owner', uid);
+        await prefs.setString('save_owner_who', who);
+      }
+    } catch (_) {}
+  }
+
+  static String _archiveKey(String uid) => 'save_archive_$uid';
+
+  /// Puts every slot and backup aside on this device under [uid] (the
+  /// account they belong to) and empties the slots, so another account can
+  /// play here; [restoreArchive] brings them back when [uid] signs in again.
+  Future<void> archiveAndClear(String? uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (uid != null && (hasHeroes || backups.any((b) => b != null))) {
+        await prefs.setString(
+            _archiveKey(uid),
+            jsonEncode({
+              'slots': [for (final h in slots) h?.toJson()],
+              'backups': [for (final h in backups) h?.toJson()],
+            }));
+      }
+      for (var i = 0; i < slotCount; i++) {
+        slots[i] = null;
+        backups[i] = null;
+        await prefs.remove(_key(i));
+        await prefs.remove(_bakKey(i));
+      }
+    } catch (e) {
+      debugPrint('archive failed: $e');
+    }
+    active = -1;
+    notifyListeners();
+  }
+
+  /// Brings back what [archiveAndClear] put aside for [uid], into empty
+  /// slots; true if there was something.
+  Future<bool> restoreArchive(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_archiveKey(uid));
+      if (raw == null) return false;
+      final m = jsonDecode(raw) as Map<String, dynamic>;
+      HeroData? read(Object? j) => j is Map<String, dynamic> ? HeroData.fromJson(j) : null;
+      final s = m['slots'] as List, b = m['backups'] as List;
+      for (var i = 0; i < slotCount && i < s.length; i++) {
+        slots[i] ??= read(s[i]);
+        if (i < b.length) backups[i] ??= read(b[i]);
+        await writeSlot(i);
+        final bk = backups[i];
+        if (bk != null) await prefs.setString(_bakKey(i), jsonEncode(bk.toJson()));
+      }
+      await prefs.remove(_archiveKey(uid));
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('archive unreadable: $e');
+      return false;
+    }
   }
 }
 

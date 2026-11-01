@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../services/ads.dart';
 import '../services/cloud.dart';
 import '../services/save.dart';
 import '../services/sync_plan.dart';
 import 'theme.dart';
+import 'title_screen.dart';
 
 /// Cloud icon showing sync state; opens the cloud panel. Hidden when the
 /// build has no Firebase config (web, or before setup).
@@ -31,7 +33,7 @@ class CloudButton extends StatelessWidget {
                   bottom: -4,
                   child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)),
                 ),
-              if (cloud.conflicts.isNotEmpty)
+              if (cloud.needsChoice)
                 Positioned(
                   right: -3,
                   top: -3,
@@ -51,7 +53,94 @@ class CloudButton extends StatelessWidget {
 
 Future<void> showCloudPanel(BuildContext context) async {
   await showDialog<void>(context: context, builder: (_) => const _CloudPanel());
+  if (context.mounted && CloudSave.instance.switchPending) {
+    await askAccountSwitch(context);
+    return;
+  }
   if (context.mounted) await resolveConflicts(context);
+}
+
+bool _asking = false;
+
+/// Signed in to an account that does not own the heroes on this device:
+/// play that account here (the heroes are set aside for their own account),
+/// or move them into it.
+Future<void> askAccountSwitch(BuildContext context) async {
+  final cloud = CloudSave.instance;
+  if (_asking || !cloud.switchPending) return;
+  _asking = true;
+  String? pick;
+  try {
+    final save = SaveService.instance;
+    final other = save.ownerWho.isEmpty ? 'tài khoản trước' : save.ownerWho;
+    pick = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Đổi tài khoản', style: titleStyle(20)),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Bạn vừa đăng nhập ${cloud.who}, nhưng nhân vật trên máy này thuộc $other.', style: body),
+                const SizedBox(height: 10),
+                Text(
+                    '• Chơi tài khoản này: nhân vật của $other được cất riêng trên máy (và vẫn còn trên mây '
+                    'của tài khoản đó), đăng nhập lại là có. Máy tải nhân vật của ${cloud.who} về.',
+                    style: small.copyWith(color: cream)),
+                const SizedBox(height: 6),
+                Text('• Chuyển sang tài khoản này: các nhân vật trên máy được lưu vào ${cloud.who}.',
+                    style: small.copyWith(color: cream)),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, 'out'), child: const Text('Đăng xuất')),
+          TextButton(onPressed: () => Navigator.pop(ctx, 'move'), child: const Text('Chuyển sang tài khoản này')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'use'),
+            child: const Text('Chơi tài khoản này', style: TextStyle(color: goldLight, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+    switch (pick) {
+      case 'use':
+        // The slots empty out: leave any screen that shows a hero first.
+        AdsService.navigatorKey.currentState?.pushAndRemoveUntil(fadeRoute(const TitleScreen()), (_) => false);
+        await cloud.useThisAccount();
+      case 'move':
+        if (!context.mounted) return;
+        final sure = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: lacquer,
+            title: Text('Chuyển nhân vật?', style: titleStyle(20)),
+            content: Text('Mọi nhân vật trên máy sẽ được lưu vào ${cloud.who}.', style: body),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Chuyển')),
+            ],
+          ),
+        );
+        if (sure == true) {
+          await cloud.bringHeroesHere();
+        } else {
+          pick = 'again';
+        }
+      case 'out':
+        await cloud.signOut();
+    }
+  } finally {
+    _asking = false;
+  }
+  // Backed out of moving them: ask again.
+  if (pick == 'again' && context.mounted) await askAccountSwitch(context);
 }
 
 class _CloudPanel extends StatelessWidget {
@@ -107,6 +196,22 @@ class _CloudPanel extends StatelessWidget {
                   ],
                 ] else ...[
                   Text('Tài khoản: ${cloud.who}', style: bold),
+                  if (cloud.switchPending) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Máy này đang giữ nhân vật của tài khoản khác'
+                      '${SaveService.instance.ownerWho.isEmpty ? '' : ' (${SaveService.instance.ownerWho})'}. '
+                      'Chưa đồng bộ gì cho tới khi bạn chọn.',
+                      style: body.copyWith(color: const Color(0xFFFFD34A)),
+                    ),
+                    const SizedBox(height: 6),
+                    LButton(
+                      label: 'Chọn cách xử lý',
+                      small: true,
+                      color: jade,
+                      onTap: () => Navigator.pop(context),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     cloud.lastSync == null
@@ -122,7 +227,7 @@ class _CloudPanel extends StatelessWidget {
                         label: 'Đồng bộ ngay',
                         small: true,
                         color: jade,
-                        enabled: !cloud.busy,
+                        enabled: !cloud.busy && !cloud.switchPending,
                         onTap: () async {
                           await cloud.flush();
                           await cloud.sync();

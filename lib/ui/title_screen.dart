@@ -37,9 +37,14 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   void _checkConflicts() {
-    if (!mounted || CloudSave.instance.conflicts.isEmpty) return;
+    if (!mounted || !CloudSave.instance.needsChoice) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) resolveConflicts(context);
+      if (!mounted) return;
+      if (CloudSave.instance.switchPending) {
+        askAccountSwitch(context);
+      } else {
+        resolveConflicts(context);
+      }
     });
   }
 
