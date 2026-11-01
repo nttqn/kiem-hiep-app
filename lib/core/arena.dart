@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'content.dart';
 import 'hanh.dart';
+import 'mounts.dart';
 
 /// Lôi đài: duels with copies of other players' heroes (from the public
 /// leaderboard) or, offline, invented challengers. Wins and losses move the
@@ -50,6 +51,8 @@ class ArenaRival {
     this.female = false,
     this.title = '',
     this.bot = false,
+    this.mount = '',
+    this.mountLv = 1,
   });
 
   final String name;
@@ -60,6 +63,36 @@ class ArenaRival {
 
   /// Invented, not another player's hero.
   final bool bot;
+
+  /// The mount they ride (MountDef id, '' for none) and its level. Its stat
+  /// is already in [power]; it adds their running speed and their look.
+  final String mount;
+  final int mountLv;
+
+  MountDef? get mountDef => mountById[mount];
+
+  /// Running speed in a duel: a rider is as quick as their mount makes
+  /// them (the duelist on foot runs at 150).
+  double get duelSpeed {
+    final m = mountDef;
+    return m == null ? 150 : math.min(260, 150 * (1 + m.moveAt(mountLv)));
+  }
+}
+
+/// A mount an invented challenger of [level] plausibly rides, by [r].
+(String, int) botMount(int level, int rebirths, math.Random r) {
+  if (level < mountOpenLevel && rebirths == 0) return ('', 1);
+  final pool = [
+    'nau',
+    if (level >= 25 || rebirths > 0) 'bachma',
+    if (level >= 40 || rebirths > 0) 'hanhuyet',
+    if (level >= 50 || rebirths > 0) 'bachho',
+    if (rebirths >= 2) 'thanloc',
+    if (rebirths >= 4) 'kylan',
+  ];
+  // One in five goes on foot.
+  if (r.nextInt(5) == 0) return ('', 1);
+  return (pool[r.nextInt(pool.length)], 1 + r.nextInt(math.max(1, level ~/ 5)));
 }
 
 /// Points won or lost against a rival [ratio] times the hero's power.
@@ -181,6 +214,8 @@ List<ArenaRival> botRivals({required int power, required int level, required int
         rebirths: rebirths,
         power: (power * k * (0.95 + r.nextDouble() * 0.1)).round(),
         bot: true,
+        mount: botMount(level, rebirths, r).$1,
+        mountLv: 1 + level ~/ 6,
       ),
   ];
 }

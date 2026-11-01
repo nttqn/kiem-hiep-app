@@ -426,7 +426,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                 style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
             Expanded(
               child: FittedBox(
-                child: FigurePreview(hanh: r.hanh, female: r.female, scale: 1.6, gear: rivalGear(r), rebirths: r.rebirths),
+                child: FigurePreview(
+                    hanh: r.hanh, female: r.female, scale: 1.6, gear: rivalGear(r), rebirths: r.rebirths, mount: r.mountDef),
               ),
             ),
             Text('Lực chiến ${fmt(r.power)}', style: small.copyWith(fontSize: 11, color: goldLight), textAlign: TextAlign.center),

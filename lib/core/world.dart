@@ -1024,7 +1024,7 @@ class World {
       c2: 0xFF2A2A2A,
       ranged: sectOf(r.hanh).basic == BasicKind.ranged,
       range: 300,
-      speed: 150,
+      speed: r.duelSpeed,
       attackCd: arenaRivalCd,
       boss: true,
     );

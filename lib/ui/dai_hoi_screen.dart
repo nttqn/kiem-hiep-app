@@ -282,7 +282,12 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
             Expanded(
               child: FittedBox(
                 child: FigurePreview(
-                    hanh: foe.hanh, female: foe.female, scale: 1.4, gear: rivalGear(foe), rebirths: foe.rebirths),
+                    hanh: foe.hanh,
+                    female: foe.female,
+                    scale: 1.4,
+                    gear: rivalGear(foe),
+                    rebirths: foe.rebirths,
+                    mount: foe.mountDef),
               ),
             ),
             LButton(label: 'Vào trận', icon: Icons.sports_kabaddi, color: jade, onTap: _fight),

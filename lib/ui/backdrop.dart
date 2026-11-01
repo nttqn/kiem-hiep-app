@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../core/hanh.dart';
 import '../core/costumes.dart';
+import '../core/mounts.dart';
 import '../core/hero.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
@@ -192,7 +193,8 @@ class FigurePreview extends StatefulWidget {
       this.scale = 2.4,
       this.gear = HeroGear.none,
       this.costume,
-      this.rebirths = 0});
+      this.rebirths = 0,
+      this.mount});
 
   /// [h] as they appear, with their gear and outfit.
   FigurePreview.of(HeroData h, {super.key, this.scale = 2.4, bool aura = false})
@@ -200,7 +202,8 @@ class FigurePreview extends StatefulWidget {
         female = h.female,
         gear = HeroGear.of(h.equip, hideHat: h.hideHat, divine: h.divine),
         costume = costumeById[h.costume],
-        rebirths = aura ? h.rebirths : 0;
+        rebirths = aura ? h.rebirths : 0,
+        mount = null;
 
   final Hanh hanh;
   final bool female;
@@ -208,6 +211,9 @@ class FigurePreview extends StatefulWidget {
   final HeroGear gear;
   final CostumeDef? costume;
   final int rebirths;
+
+  /// Shown riding it (a Lôi đài challenger).
+  final MountDef? mount;
 
   @override
   State<FigurePreview> createState() => _FigurePreviewState();
@@ -232,14 +238,15 @@ class _FigurePreviewState extends State<FigurePreview> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: Size(76 * widget.scale, 92 * widget.scale),
-      painter: _FigurePainter(_t, widget.hanh, widget.female, widget.scale, widget.gear, widget.costume, widget.rebirths),
+      size: Size((widget.mount == null ? 76 : 96) * widget.scale, (widget.mount == null ? 92 : 120) * widget.scale),
+      painter: _FigurePainter(
+          _t, widget.hanh, widget.female, widget.scale, widget.gear, widget.costume, widget.rebirths, widget.mount),
     );
   }
 }
 
 class _FigurePainter extends CustomPainter {
-  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.gear, this.costume, this.rebirths)
+  _FigurePainter(this.t, this.hanh, this.female, this.scale, this.gear, this.costume, this.rebirths, this.mount)
       : super(repaint: t);
   final ValueNotifier<double> t;
   final Hanh hanh;
@@ -248,6 +255,7 @@ class _FigurePainter extends CustomPainter {
   final HeroGear gear;
   final CostumeDef? costume;
   final int rebirths;
+  final MountDef? mount;
 
   @override
   void paint(Canvas c, Size s) {
@@ -262,6 +270,11 @@ class _FigurePainter extends CustomPainter {
     drawRebirthAura(c, rebirths, time);
     drawShadow(c, 16);
     setClock(time);
+    final m = mount;
+    if (m != null) {
+      drawMount(c, m, t: time);
+      c.translate(0, -mountSeatOf(m));
+    }
     drawChibi(c, heroLook(hanh, female: female, gear: gear, costume: costume),
         attack: attack, cast: hanh == Hanh.moc || hanh == Hanh.thuy || hanh == Hanh.tho, t: time);
     c.restore();
@@ -273,5 +286,6 @@ class _FigurePainter extends CustomPainter {
       old.female != female ||
       old.gear != gear ||
       old.costume != costume ||
-      old.rebirths != rebirths;
+      old.rebirths != rebirths ||
+      old.mount != mount;
 }

@@ -25,6 +25,8 @@ class LbEntry {
     this.arenaS = 0,
     this.wk = 0,
     this.dhC = 0,
+    this.mount = '',
+    this.mountLv = 1,
   });
 
   /// `{uid}_{slot}`.
@@ -47,6 +49,10 @@ class LbEntry {
   /// Võ Lâm Đại Hội titles won.
   final int dhC;
 
+  /// The mount ridden (1.4.0+), for Lôi đài copies.
+  final String mount;
+  final int mountLv;
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -64,6 +70,8 @@ class LbEntry {
         arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
         wk: (m['wk'] as num?)?.toInt() ?? 0,
         dhC: (m['dhC'] as num?)?.toInt() ?? 0,
+        mount: m['mount'] as String? ?? '',
+        mountLv: (m['mountLv'] as num?)?.toInt() ?? 1,
       );
     } catch (_) {
       return null;
@@ -158,6 +166,8 @@ class Leaderboard extends ChangeNotifier {
       'wk': h.huntBoardValue,
       if (h.huntLastScore > 0) 'wkLast': h.huntLastScore,
       if (h.dhChamps > 0) 'dhC': h.dhChamps,
+      'mount': h.ridingMount?.id ?? '',
+      'mountLv': h.mountLevels[h.activeMount] ?? 1,
     };
     // Play time goes along for the rules' sanity check, but on its own
     // does not call for a write; nor do lực chiến creeping up by a little
@@ -409,6 +419,8 @@ class Leaderboard extends ChangeNotifier {
             power: e.power,
             title: e.title,
             female: e.id.hashCode.isOdd,
+            mount: e.mount,
+            mountLv: e.mountLv,
           ),
     ];
   }

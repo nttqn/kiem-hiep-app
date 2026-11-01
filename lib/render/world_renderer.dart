@@ -299,8 +299,19 @@ class WorldRenderer {
       alpha: dying ? m.hurt / 0.6 : 1,
     );
     if (rival != null) {
+      // A player's copy rides their mount, as they do.
+      final mount = rival.mountDef;
+      if (mount != null) {
+        drawMount(c, mount, walk: m.walk, moving: m.moving, t: t);
+        c.translate(0, -mountSeatOf(mount));
+      }
       drawChibi(c, rivalLook(rival),
-          walk: m.walk, moving: m.moving, attack: m.attackAnim, cast: d.ranged, t: t, hurt: dying);
+          walk: m.walk,
+          moving: m.moving && mount == null,
+          attack: m.attackAnim,
+          cast: d.ranged,
+          t: t,
+          hurt: dying);
     } else {
       drawMob(c, d, walk: m.walk, moving: m.moving, attack: m.attackAnim, t: t + m.uid);
     }
