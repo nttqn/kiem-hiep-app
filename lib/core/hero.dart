@@ -1447,9 +1447,11 @@ class HeroData {
     return true;
   }
 
-  /// Monster EXP: Song Bội Đan, today's event and the day's [fatigueMul].
+  /// Monster EXP: the better of Song Bội Đan and today's event (they do
+  /// not stack: together they took a new hero to the fifth rebirth in one
+  /// weekend), times the day's [fatigueMul].
   double get expMul =>
-      (buffLeft('songboi') > 0 ? expPillMul : 1) * EventBoost(vnDayKey()).exp * fatigueMul(fatigueSec);
+      math.max(buffLeft('songboi') > 0 ? expPillMul : 1.0, EventBoost(vnDayKey()).exp) * fatigueMul(fatigueSec);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {

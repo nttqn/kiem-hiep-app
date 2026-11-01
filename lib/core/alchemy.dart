@@ -65,7 +65,7 @@ const pills = <PillDef>[
       herbs: [4, 0, 0, 0, 0], gold: 100),
   PillDef(
       id: 'songboi', name: 'Song Bội Đan', kind: PillKind.buff, color: 0xFF8AD8FF, minutes: 20,
-      desc: 'Kinh nghiệm từ quái x2 trong 20 phút.',
+      desc: 'Kinh nghiệm từ quái x2 trong 20 phút (không cộng dồn với sự kiện nhân kinh nghiệm).',
       herbs: [6, 2, 0, 0, 0], gold: 500),
   PillDef(
       id: 'tubao', name: 'Tụ Bảo Đan', kind: PillKind.buff, color: 0xFFFFD34A, minutes: 20,
