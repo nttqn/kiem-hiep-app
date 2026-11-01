@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../core/content.dart';
 import '../core/newbie.dart';
 import '../core/realm.dart';
+import '../core/stats.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
 import '../services/analytics.dart';
@@ -22,6 +23,7 @@ import '../services/sound.dart';
 import 'fishing_view.dart';
 import 'hud.dart';
 import 'theme.dart';
+import 'auto_dialog.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen.field(MapDef this.map, {super.key}) : dungeon = null;
@@ -100,9 +102,22 @@ class _PlayScreenState extends State<PlayScreen> {
     game.hudTick.removeListener(_pruneToasts);
     // Walking out of a duel concedes it (a khảo hạch can just be retried).
     final d = widget.dungeon;
-    if (d != null && d.isArena && !d.trial && !world.finished) hero.arenaResult(false, d.rival!);
+    if (d != null && d.isArena && !d.trial && !world.finished) {
+      d.daiHoi ? hero.daiHoiResult(false) : hero.arenaResult(false, d.rival!);
+    }
+    if (!_logged) _logRun(RunResult.left);
     SaveService.instance.save();
     super.dispose();
+  }
+
+  bool _logged = false;
+
+  /// Records this battle was the best yet at, shown on the result panel.
+  List<String> _records = const [];
+
+  void _logRun(RunResult r) {
+    _logged = true;
+    _records = hero.logRun(world.runSummary(r), world.combatTime);
   }
 
   void _pruneToasts() {
@@ -155,6 +170,7 @@ class _PlayScreenState extends State<PlayScreen> {
         _resultAt = _now;
         setState(() => _dead = true);
       case EvKind.cleared:
+        _logRun(RunResult.won);
         SaveService.instance.save();
         final d = widget.dungeon;
         if (d != null && d.isWorldBoss) {
@@ -174,6 +190,7 @@ class _PlayScreenState extends State<PlayScreen> {
           _stars = e.value.round();
         });
       case EvKind.failed:
+        _logRun(RunResult.lost);
         SaveService.instance.save();
         if (widget.dungeon?.isArena ?? false) {
           Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : 'arena_fight', {'won': 0, 'level': hero.level});
@@ -816,18 +833,32 @@ class _PlayScreenState extends State<PlayScreen> {
               Text('Giật, lag? Bật để bỏ rung màn hình và hiệu ứng mờ.',
                   style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
               const SizedBox(height: 8),
-              ValueListenableBuilder<int>(
-                valueListenable: ViewRange.instance.level,
-                builder: (_, lv, _) => LButton(
-                  label: 'Tầm nhìn: ${ViewRange.names[lv]}',
-                  width: 240,
-                  small: true,
-                  color: const Color(0xFF5A4A3A),
-                  icon: Icons.zoom_out_map,
-                  onTap: ViewRange.instance.next,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ValueListenableBuilder<int>(
+                    valueListenable: ViewRange.instance.level,
+                    builder: (_, lv, _) => LButton(
+                      label: 'Tầm: ${ViewRange.names[lv]}',
+                      width: 116,
+                      small: true,
+                      color: const Color(0xFF5A4A3A),
+                      icon: Icons.zoom_out_map,
+                      onTap: ViewRange.instance.next,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  LButton(
+                    label: 'Tự đánh',
+                    width: 116,
+                    small: true,
+                    color: const Color(0xFF2E6A5A),
+                    icon: Icons.tune,
+                    onTap: () => showAutoSettings(context, hero),
+                  ),
+                ],
               ),
-              Text('Xa: thấy rộng hơn, nhân vật nhỏ hơn.',
+              Text('Tầm xa: thấy rộng hơn, nhân vật nhỏ hơn.',
                   style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
               const SizedBox(height: 12),
               Text('Bàn phím: WASD đi · J/Space đánh · 1-4 chiêu · Q/E thuốc · T tự động',
@@ -908,7 +939,33 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
-  Widget _resultOverlay() {
+  Widget _resultOverlay() => Stack(
+        children: [
+          Positioned.fill(child: _resultPanel()),
+          Positioned(left: 0, right: 0, bottom: 6, child: Center(child: _runStrip())),
+        ],
+      );
+
+  /// This battle's damage figures under the result panel, and any record.
+  Widget _runStrip() {
+    final dps = world.combatTime > 0 ? world.dmgDealt / (world.combatTime < 5 ? 5 : world.combatTime) : 0.0;
+    return IgnorePointer(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(color: const Color(0xCC1A1410), borderRadius: BorderRadius.circular(10)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Sát thương/giây ${fmt(dps.round())} · đòn mạnh nhất ${fmt(world.bestHit.round())}',
+                style: small.copyWith(fontSize: 11.5, color: cream)),
+            for (final r in _records) Text(r, style: bold.copyWith(fontSize: 12, color: goldLight)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _resultPanel() {
     final ok = _cleared == true;
     final d = widget.dungeon!;
     if (d.isTower) return _towerResult(ok, d);
@@ -1126,7 +1183,7 @@ class _PlayScreenState extends State<PlayScreen> {
               const SizedBox(height: 8),
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
               const SizedBox(height: 14),
-              LButton(label: d.trial ? 'Về Sư môn' : 'Về Lôi đài', color: jade, onTap: _leave),
+              LButton(label: d.trial ? 'Về Sư môn' : d.daiHoi ? 'Về Đại Hội' : 'Về Lôi đài', color: jade, onTap: _leave),
             ],
           ),
         ),

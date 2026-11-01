@@ -3,9 +3,11 @@ import 'dart:math' as math;
 import 'activity.dart';
 import 'alchemy.dart';
 import 'arena.dart';
+import 'auto_config.dart';
 import 'bounty.dart';
 import 'companions.dart';
 import 'content.dart';
+import 'dai_hoi.dart';
 import 'costumes.dart';
 import 'divine.dart';
 import 'fatigue.dart';
@@ -35,6 +37,7 @@ import 'week_goals.dart';
 import 'weekly_hunt.dart';
 import 'world_boss.dart';
 import 'sects.dart';
+import 'stats.dart';
 
 /// 1234567 as "1.234.567" (Vietnamese grouping) for reward lines.
 String _thousands(int v) {
@@ -338,6 +341,13 @@ class HeroData {
   String tbdDay = '';
   int tbdDropped = 0;
   int tbdDug = 0;
+
+  /// Cài đặt tự đánh.
+  AutoConfig autoCfg = AutoConfig();
+
+  /// Thống kê: the latest battles, newest first, and personal records.
+  final List<RunLog> runLog = [];
+  HeroRecords records = HeroRecords();
 
   /// Giang Hồ Ký Sự pages found (loreKey).
   final Set<String> lorePages = {};
@@ -1871,6 +1881,113 @@ class HeroData {
 
   ArenaRival sectExaminerNow() => sectExaminerRival(hanh, sectRank + 1, level, rebirths, power);
 
+  // ------------------------------------------------------------- đại hội
+
+  /// Võ Lâm Đại Hội this week: the seven others (empty before sign-up),
+  /// the hero's power at sign-up, matches won, whether knocked out, the
+  /// ad rematch used, and the prize still to collect after a loss.
+  int dhWeek = 0;
+  final List<ArenaRival> dhFoes = [];
+  int dhPower = 0;
+  int dhWins = 0;
+  bool dhOut = false;
+  bool dhRetried = false;
+  bool dhUnpaid = false;
+
+  /// Titles won, ever.
+  int dhChamps = 0;
+
+  bool get daiHoiOpen => level >= daiHoiOpenLevel || rebirths > 0;
+  bool get dhEntered => dhFoes.length == 7;
+  bool get dhDone => dhOut || dhWins >= 3;
+
+  /// A new week: a prize left uncollected is paid, the bracket cleared.
+  List<String> daiHoiRoll(int week) {
+    if (dhWeek == week) return const [];
+    final paid = dhUnpaid ? _payDaiHoi() : const <String>[];
+    dhWeek = week;
+    dhFoes.clear();
+    dhPower = 0;
+    dhWins = 0;
+    dhOut = false;
+    dhRetried = false;
+    dhUnpaid = false;
+    return paid;
+  }
+
+  void daiHoiEnter(int week, List<ArenaRival> foes) {
+    daiHoiRoll(week);
+    if (dhEntered || foes.length != 7) return;
+    dhFoes.addAll(foes);
+    dhPower = power;
+  }
+
+  /// Lực chiến by bracket slot, the hero's as at sign-up.
+  List<int> get dhPowers => [dhPower, for (final f in dhFoes) f.power];
+
+  int get _dhSeed => seed ^ (dhWeek * 104729);
+
+  /// Slot (1..7) of the next opponent, or of the one who knocked the hero out.
+  int get dhFoeSlot => daiHoiOpponent(dhPowers, math.min(dhWins, 2), _dhSeed);
+
+  ArenaRival? get dhNextFoe => dhEntered && !dhDone ? dhFoes[dhFoeSlot - 1] : null;
+
+  /// Whether the other matches of [round] up to now went to slot [a] over [b].
+  bool dhJudge(int a, int b) => daiHoiFirstWins(dhPowers[a], dhPowers[b], _dhSeed ^ (a * 31 + b * 977));
+
+  /// A bracket match fought; on the title or a loss with the rematch spent,
+  /// the prize.
+  List<String> daiHoiResult(bool won) {
+    if (!dhEntered || dhDone) return const [];
+    addActivity(ActSource.arena);
+    if (won) {
+      dhWins++;
+      arenaCoins += 20;
+      if (dhWins < 3) return ['Vào ${daiHoiRounds[dhWins]}!', '+20 Uy danh'];
+      dhChamps++;
+      seasonTitles.add(daiHoiTitle);
+      notices.add(Notice('Vô địch Võ Lâm Đại Hội! Danh hiệu « $daiHoiTitle »', color: 0xFFFFD34A, big: true));
+      return ['Vô địch Võ Lâm Đại Hội!', ..._payDaiHoi()];
+    }
+    dhOut = true;
+    if (!dhRetried) {
+      dhUnpaid = true;
+      return ['Dừng bước ở ${daiHoiRounds[dhWins]}.', 'Có thể đấu lại một lần, hoặc nhận thưởng ở Đại Hội.'];
+    }
+    return ['Dừng bước ở ${daiHoiRounds[dhWins]}.', ..._payDaiHoi()];
+  }
+
+  /// After a loss: fight that match again (the ad was watched).
+  bool daiHoiRematch() {
+    if (!dhOut || dhRetried || dhWins >= 3) return false;
+    dhOut = false;
+    dhRetried = true;
+    dhUnpaid = false;
+    return true;
+  }
+
+  /// After a loss: take the prize and stop.
+  List<String> daiHoiCollect() => dhUnpaid ? _payDaiHoi() : const [];
+
+  List<String> _payDaiHoi() {
+    dhUnpaid = false;
+    dhRetried = true;
+    final p = daiHoiPrize(dhWins, level);
+    arenaCoins += p.coins;
+    gold += p.gold;
+    goldShards += p.shards;
+    divineIron += p.iron;
+    final lines = ['+${p.coins} Uy danh', '+${_thousands(p.gold)} lượng'];
+    if (p.gemTier > 0) {
+      final gem = Gem(Hanh.values[math.Random().nextInt(5)], p.gemTier);
+      addGem(gem);
+      lines.add(gem.name);
+    }
+    if (p.shards > 0) lines.add('+${p.shards} Mảnh Hoàng Kim');
+    if (p.iron > 0) lines.add('+${p.iron} Thần Thiết');
+    return lines;
+  }
+
   /// Pays a khảo hạch: a win raises the chức vị.
   List<String> sectTrialResult(bool won) {
     if (!won || !sectCanTrial) return won ? const [] : const ['Khảo hạch chưa đạt, hãy luyện thêm.'];
@@ -2102,6 +2219,35 @@ class HeroData {
       }
     }
     return 'Trang Ký sự: ${c.title} ($n/$lorePagesPer)';
+  }
+
+  // ------------------------------------------------------------- thống kê
+
+  /// Files a finished battle; [combat] is the seconds spent actually
+  /// fighting. Returns the records it broke, to be told.
+  List<String> logRun(RunLog r, double combat) {
+    if (r.sec < runLogMinSec && r.result == RunResult.left) return const [];
+    runLog.insert(0, r);
+    if (runLog.length > runLogSize) runLog.removeRange(runLogSize, runLog.length);
+    final rec = records;
+    rec.runs++;
+    if (r.result == RunResult.won) rec.wins++;
+    rec.totalDmg += r.dmg;
+    final broke = <String>[];
+    if (combat >= dpsRecordMinCombat && r.dps > rec.bestDps) {
+      if (rec.bestDps > 0) broke.add('Kỷ lục sát thương/giây mới: ${r.dps.round()}');
+      rec.bestDps = r.dps;
+      rec.bestDpsWhere = r.name;
+    }
+    if (r.bestHit > rec.bestHit) {
+      if (rec.bestHit > 0) broke.add('Kỷ lục đòn mạnh nhất mới: ${r.bestHit.round()}');
+      rec.bestHit = r.bestHit;
+    }
+    if (r.kills > rec.bestRunKills) {
+      if (rec.bestRunKills > 0 && r.kills >= 20) broke.add('Kỷ lục hạ quái một chuyến mới: ${r.kills}');
+      rec.bestRunKills = r.kills;
+    }
+    return broke;
   }
 
   // ------------------------------------------------------------- tàng bảo đồ
@@ -2608,6 +2754,10 @@ class HeroData {
         'realm': [realmStars, realmDay, realmRuns, realmAds],
         'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
         'lore': lorePages.toList(),
+        'auto': autoCfg.toJson(),
+        'dh': [dhWeek, [for (final f in dhFoes) rivalToJson(f)], dhPower, dhWins, dhOut, dhRetried, dhUnpaid, dhChamps],
+        'runs': [for (final r in runLog) r.toJson()],
+        'rec': records.toJson(),
         'tb': [divine, divineIron],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -2796,6 +2946,26 @@ class HeroData {
       final i = parts.length == 2 ? int.tryParse(parts[1]) : null;
       if (c != null && i != null && i >= 0 && i < lorePagesPer) h.lorePages.add(k);
     }
+    h.autoCfg = AutoConfig.fromJson(m['auto']);
+    final dh = m['dh'];
+    if (dh is List && dh.length >= 8) {
+      try {
+        h.dhWeek = dh[0] as int;
+        final foes = [for (final raw in dh[1] as List) ?rivalFromJson(raw)];
+        if (foes.length == 7) h.dhFoes.addAll(foes);
+        h.dhPower = dh[2] as int;
+        h.dhWins = (dh[3] as int).clamp(0, 3);
+        h.dhOut = dh[4] as bool;
+        h.dhRetried = dh[5] as bool;
+        h.dhUnpaid = dh[6] as bool;
+        h.dhChamps = math.max(0, dh[7] as int);
+      } catch (_) {}
+    }
+    for (final raw in m['runs'] as List? ?? const []) {
+      final r = RunLog.fromJson(raw);
+      if (r != null && h.runLog.length < runLogSize) h.runLog.add(r);
+    }
+    h.records = HeroRecords.fromJson(m['rec']);
     final tb = m['tb'];
     if (tb is List && tb.length == 2) {
       h.divine = (tb[0] as int).clamp(0, divineMax);

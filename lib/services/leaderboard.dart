@@ -24,6 +24,7 @@ class LbEntry {
     this.title = '',
     this.arenaS = 0,
     this.wk = 0,
+    this.dhC = 0,
   });
 
   /// `{uid}_{slot}`.
@@ -43,6 +44,9 @@ class LbEntry {
   /// Săn quái tuần: week and kills as one number ([huntScore]).
   final int wk;
 
+  /// Võ Lâm Đại Hội titles won.
+  final int dhC;
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -59,6 +63,7 @@ class LbEntry {
         title: m['title'] as String? ?? '',
         arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
         wk: (m['wk'] as num?)?.toInt() ?? 0,
+        dhC: (m['dhC'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return null;
@@ -73,7 +78,7 @@ class LbPage {
   final Object? next;
 }
 
-enum LbBoard { power, tower, rank, arena, hunt }
+enum LbBoard { power, tower, rank, arena, hunt, daiHoi }
 
 extension LbBoardField on LbBoard {
   String get field => switch (this) {
@@ -82,6 +87,7 @@ extension LbBoardField on LbBoard {
         LbBoard.rank => 'rank',
         LbBoard.arena => 'arenaS',
         LbBoard.hunt => 'wk',
+        LbBoard.daiHoi => 'dhC',
       };
 
   int valueOf(LbEntry e) => switch (this) {
@@ -90,6 +96,7 @@ extension LbBoardField on LbBoard {
         LbBoard.rank => e.rank,
         LbBoard.arena => e.arenaS,
         LbBoard.hunt => e.wk,
+        LbBoard.daiHoi => e.dhC,
       };
 }
 
@@ -150,6 +157,7 @@ class Leaderboard extends ChangeNotifier {
       if (h.arenaLastScore > 0) 'arenaLast': h.arenaLastScore,
       'wk': h.huntBoardValue,
       if (h.huntLastScore > 0) 'wkLast': h.huntLastScore,
+      if (h.dhChamps > 0) 'dhC': h.dhChamps,
     };
     // Play time goes along for the rules' sanity check, but on its own
     // does not call for a write; nor do lực chiến creeping up by a little
@@ -296,6 +304,7 @@ class Leaderboard extends ChangeNotifier {
   int _floor(LbBoard board) => switch (board) {
         LbBoard.arena => arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0),
         LbBoard.hunt => huntScore(huntWeekOf(vnDayKey()), 0),
+        LbBoard.daiHoi => 1,
         _ => 0,
       };
 

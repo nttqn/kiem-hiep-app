@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'alchemy.dart';
 import 'arena.dart';
+import 'auto_config.dart';
+import 'clock.dart';
 import 'companions.dart';
 import 'content.dart';
 import 'divine.dart';
@@ -20,6 +22,7 @@ import 'pets.dart';
 import 'realm.dart';
 import 'scenery.dart';
 import 'sects.dart';
+import 'stats.dart';
 import 'tang_bao.dart';
 import 'weather.dart';
 import 'world_boss.dart' show vnDayKey;
@@ -383,6 +386,12 @@ class World {
   double time = 0;
   bool auto = false;
 
+  // Thống kê of this battle: damage dealt, the biggest hit, and the
+  // seconds spent actually fighting (a hit landed in the last 1.5 s).
+  double dmgDealt = 0, bestHit = 0, combatTime = 0;
+  double _lastHitAt = -10;
+  int _kills0 = 0, _gold0 = 0, _level0 = 0;
+
   /// One tap on the attack button: keep fighting the nearest monsters, as
   /// if it were held, until the joystick moves or none is left in reach.
   bool engaged = false;
@@ -424,6 +433,9 @@ class World {
   }
 
   void _init() {
+    _kills0 = hero.kills;
+    _gold0 = hero.gold;
+    _level0 = hero.level;
     _sky();
     hero.recompute();
     player.maxHp = st.maxHp;
@@ -1035,7 +1047,12 @@ class World {
     if (finished) return;
     finished = true;
     finishTime = math.min(time, dungeon!.timeLimit);
-    rewardLines = dungeon!.trial ? hero.sectTrialResult(won) : hero.arenaResult(won, dungeon!.rival!);
+    final d = dungeon!;
+    rewardLines = d.trial
+        ? hero.sectTrialResult(won)
+        : d.daiHoi
+            ? hero.daiHoiResult(won)
+            : hero.arenaResult(won, d.rival!);
     events.add(won ? GameEvent(EvKind.cleared, value: 1) : GameEvent(EvKind.failed, text: 'Thua trận'));
   }
 
@@ -1605,6 +1622,7 @@ class World {
     time += dt;
     if (debugUltimate && sect.skills.length > 6 && ready(6) && _countNear(240) > 0) input.skills.add(6);
     hero.playSeconds += dt;
+    if (time - _lastHitAt < 1.5) combatTime += dt;
     // Mệt mỏi: the date is checked now and then, not every frame.
     if (time >= _dayCheck) {
       _dayCheck = time + 30;
@@ -2226,7 +2244,42 @@ class World {
     _sfx('potion');
   }
 
+  // ------------------------------------------------------------ thống kê
+
+  /// This battle as a line of the hero's log.
+  RunLog runSummary(RunResult result) {
+    final d = dungeon;
+    final kind = d == null
+        ? 'field'
+        : d.isRealm
+            ? 'realm'
+            : d.isTower
+                ? 'tower'
+                : d.isWorldBoss
+                    ? 'boss'
+                    : d.isArena
+                        ? (d.daiHoi ? 'daihoi' : 'arena')
+                        : d.isNightmare
+                            ? 'nightmare'
+                            : 'dungeon';
+    return RunLog(
+      name: d?.name ?? map.name,
+      kind: kind,
+      sec: time.round(),
+      kills: math.max(0, hero.kills - _kills0),
+      dmg: dmgDealt,
+      bestHit: bestHit,
+      dps: combatTime > 0 ? dmgDealt / math.max(combatTime, 5) : 0,
+      gold: math.max(0, hero.gold - _gold0),
+      levels: math.max(0, hero.level - _level0),
+      result: result,
+      at: GameClock.nowMs(),
+    );
+  }
+
   // ------------------------------------------------------------ autopilot
+
+  AutoConfig get _cfg => hero.autoCfg;
 
   double _autoMoveX = 0, _autoMoveY = 0;
 
@@ -2257,8 +2310,8 @@ class World {
   void _autopilot() {
     final p = player;
     // Potions first.
-    if (p.hp < p.maxHp * 0.42) input.hpPot = true;
-    if (p.mp < st.maxMp * 0.22) input.mpPot = true;
+    if (p.hp < p.maxHp * _cfg.hpPot) input.hpPot = true;
+    if (p.mp < st.maxMp * _cfg.mpPot) input.mpPot = true;
 
     _wanted = hero.wantedMobs();
     final near = _autoTarget();
@@ -2270,9 +2323,9 @@ class World {
 
     // Skills, biggest first; the tuyệt kỹ waits for a crowd or a boss.
     for (final i in const [6, 4, 2, 1, 0]) {
-      if (i >= skills.length || !ready(i)) continue;
+      if (i >= skills.length || !ready(i) || _cfg.skillsOff.contains(i)) continue;
       final s = skills[i];
-      if (s.ultimate && _countNear(260) < 3 && !(near?.def.boss ?? false)) continue;
+      if (s.ultimate && _cfg.saveUltimate && _countNear(260) < 3 && !(near?.def.boss ?? false)) continue;
       final use = switch (s.kind) {
         SkillKind.guard || SkillKind.shield =>
           count >= 2 || p.hp < p.maxHp * 0.75,
@@ -2342,7 +2395,7 @@ class World {
         loot = d;
       }
     }
-    if (loot != null) {
+    if (loot != null && _cfg.loot) {
       _walkTo(loot.x, loot.y);
       return;
     }
@@ -2357,7 +2410,7 @@ class World {
         herb = n;
       }
     }
-    if (herb != null) {
+    if (herb != null && _cfg.loot) {
       _walkTo(herb.x, herb.y);
       return;
     }
@@ -2380,8 +2433,7 @@ class World {
     var bd = double.infinity;
     for (final m in mobs) {
       if (!m.alive || _avoid(m)) continue;
-      var d = _d2(m.x, m.y, p.x, p.y);
-      if (_isWanted(m)) d *= 0.02;
+      var d = _d2(m.x, m.y, p.x, p.y) * _autoWeight(m, 0.02);
       if (m.level > hero.level + 4) d *= 4;
       if (d < bd) {
         bd = d;
@@ -2405,6 +2457,14 @@ class World {
 
   bool _isWanted(Mob m) => m.elite || _wanted.contains(m.def.id);
 
+  /// How much nearer than it is a monster counts, by Cài đặt tự đánh:
+  /// [wanted] for quest monsters when they come first.
+  double _autoWeight(Mob m, double wanted) => switch (_cfg.target) {
+        AutoTarget.nearest => 1,
+        AutoTarget.quest => _isWanted(m) ? wanted : 1,
+        AutoTarget.strong => m.elite || m.def.boss ? 0.05 : _wanted.contains(m.def.id) ? 0.4 : 1,
+      };
+
   /// Nearest worthwhile monster within reach of a fight; ones already
   /// hitting the hero count as closer.
   Mob? _autoTarget() {
@@ -2415,13 +2475,13 @@ class World {
     }
     // While a quest's or bounty's monsters live on this map, only they and
     // whatever is already attacking count: the autopilot does the quest.
-    final hunt = mobs.any((m) => m.alive && _isWanted(m));
+    final hunt = _cfg.target == AutoTarget.quest && mobs.any((m) => m.alive && _isWanted(m));
     Mob? best;
     var bd = 600.0 * 600;
     for (final m in mobs) {
       if (!m.alive || _avoid(m)) continue;
       if (hunt && !_isWanted(m) && m.state != MobState.chase) continue;
-      var d = _d2(m.x, m.y, p.x, p.y);
+      var d = _d2(m.x, m.y, p.x, p.y) * _autoWeight(m, 1);
       if (m.state == MobState.chase) d *= 0.5;
       if (d < bd) {
         bd = d;
@@ -2502,6 +2562,9 @@ class World {
   void _damageMob(Mob m, double dmg, int color,
       {bool big = false, bool small = false}) {
     if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
+    if (dmg > bestHit) bestHit = dmg;
+    dmgDealt += math.min(dmg, math.max(0, m.hp));
+    _lastHitAt = time;
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
     if (m == boss && m.hp > 0 && affix != null) _nightmareSummon(m);

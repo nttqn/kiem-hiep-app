@@ -67,6 +67,11 @@ service cloud.firestore {
                 && request.resource.data.wkLast >= 0 && request.resource.data.wkLast <= 1000000000
                 && request.resource.data.wkLast % 1000000 <= 300000
                 && request.resource.data.wkLast < (weekNow() + 1) * 1000000))
+        // Võ Lâm Đại Hội titles (1.4.0+): at most one a week.
+        && (!('dhC' in request.resource.data)
+            || (request.resource.data.dhC is int
+                && request.resource.data.dhC >= 0
+                && request.resource.data.dhC <= weekNow()))
         // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
         // rebirth and a minute per level. The fastest real hero seen (a
         // non-stop auto-fight farmer) took about 4.5 hours per rebirth.

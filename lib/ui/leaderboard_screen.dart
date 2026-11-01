@@ -63,6 +63,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.rank => h.rebirths * 100 + h.level,
         LbBoard.arena => arenaBoardValue(h),
         LbBoard.hunt => h.huntBoardValue,
+        LbBoard.daiHoi => h.dhChamps,
       };
 
   Future<void> _load() async {
@@ -155,6 +156,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       LbBoard.rank: 'Cấp độ',
       LbBoard.arena: 'Lôi đài',
       LbBoard.hunt: 'Săn quái tuần',
+      LbBoard.daiHoi: 'Minh Chủ',
     };
     return SubScreen(
       title: 'Xếp hạng',
@@ -333,10 +335,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.rank => e.rebirths > 0 ? 'CS${e.rebirths} · ${e.level}' : 'Cấp ${e.level}',
         LbBoard.arena => '${e.arenaS % 100000} điểm',
         LbBoard.hunt => '${fmt(e.wk % 1000000)} quái',
+        LbBoard.daiHoi => '${e.dhC} lần vô địch',
       };
 
   bool get _offBoard =>
-      (_board == LbBoard.arena && arenaBoardValue(h) == 0) || (_board == LbBoard.hunt && h.huntBoardValue == 0);
+      (_board == LbBoard.arena && arenaBoardValue(h) == 0) ||
+      (_board == LbBoard.hunt && h.huntBoardValue == 0) ||
+      (_board == LbBoard.daiHoi && h.dhChamps == 0);
 
   Widget _mePanel() {
     return Panel(
@@ -352,12 +357,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _stat('Chuyển sinh', '${h.rebirths}'),
           _stat('Lôi đài', '${h.arenaPoints} điểm'),
           _stat('Săn quái tuần', fmt(h.huntKills)),
+          _stat('Minh Chủ', '${h.dhChamps} lần'),
           const SizedBox(height: 8),
           if (lb.available && !lb.hidden)
             Text(
                 _offBoard
                     ? (_board == LbBoard.arena
                         ? 'Đấu một trận Lôi đài mùa này để lên bảng'
+                        : _board == LbBoard.daiHoi
+                        ? 'Vô địch Võ Lâm Đại Hội để lên bảng'
                         : 'Hạ một con quái tuần này để lên bảng')
                     : (_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place'),
                 style: titleStyle(_offBoard ? 14 : 17, color: goldLight)),

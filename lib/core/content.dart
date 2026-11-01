@@ -358,6 +358,7 @@ class DungeonDef {
     this.worldBoss = '',
     this.rival,
     this.trial = false,
+    this.daiHoi = false,
     this.nightmare = 0,
     this.affix = 0,
     this.realm = 0,
@@ -390,6 +391,9 @@ class DungeonDef {
 
   /// Sư môn khảo hạch: the duel is with an elder of the hero's sect.
   final bool trial;
+
+  /// Võ Lâm Đại Hội: a bracket match (a Lôi đài duel, scored apart).
+  final bool daiHoi;
 
   /// Ải Ác Mộng number (1-based, 0 for none) and its ma khí (NmAffix index).
   final int nightmare;

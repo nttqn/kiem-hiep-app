@@ -11,6 +11,7 @@ import '../services/ads.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
+import 'dai_hoi_screen.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -260,6 +261,19 @@ class _ArenaScreenState extends State<ArenaScreen> {
   Widget build(BuildContext context) {
     return SubScreen(
       title: 'Lôi đài',
+      actions: [
+        LButton(
+          label: 'Võ Lâm Đại Hội',
+          icon: Icons.emoji_events,
+          small: true,
+          color: const Color(0xFF8A2A1A),
+          enabled: h.daiHoiOpen,
+          onTap: () async {
+            await Navigator.of(context).push(fadeRoute(const DaiHoiScreen()));
+            if (mounted) setState(() {});
+          },
+        ),
+      ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

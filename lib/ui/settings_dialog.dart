@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../services/cloud.dart';
 import '../services/notify.dart';
 import '../services/perf.dart';
+import '../services/save.dart';
 import '../services/sound.dart';
+import 'auto_dialog.dart';
 import 'cloud_panel.dart';
+import 'stats_screen.dart';
 import 'theme.dart';
 import 'town_screen.dart' show showGuide;
 
@@ -53,6 +56,24 @@ Future<void> showSettings(BuildContext context) {
                   showGuide(context);
                 },
               ),
+              if (SaveService.instance.active >= 0) ...[
+                _Link(
+                  icon: Icons.tune,
+                  label: 'Cài đặt tự đánh',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    showAutoSettings(context, SaveService.instance.hero);
+                  },
+                ),
+                _Link(
+                  icon: Icons.query_stats,
+                  label: 'Thống kê và kỷ lục',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(context).push(fadeRoute(const StatsScreen()));
+                  },
+                ),
+              ],
               ListenableBuilder(
                 listenable: CloudSave.instance,
                 builder: (_, _) {
