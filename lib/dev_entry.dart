@@ -403,6 +403,8 @@ Future<void> main() async {
       }
     }
     World.debugPond = q['pond'] == '1';
+    World.debugLandmark = q['lm'] == '1';
+    World.debugNorth = q['north'] == '1';
     FishingPanel.debugBite = double.tryParse(q['bite'] ?? '');
     // divine=<lv> Thần binh level, iron=<n> Thần Thiết.
     h.divine = (int.tryParse(q['divine'] ?? '') ?? 0).clamp(0, divineMax);

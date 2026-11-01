@@ -4,12 +4,13 @@ import 'package:flutter/foundation.dart';
 
 import '../core/world.dart';
 import '../render/quality.dart';
+import '../render/vfx.dart';
 import '../render/world_renderer.dart';
 
 /// Steps the [World] in small fixed slices and paints it. The HUD, buttons
 /// and dialogs are Flutter widgets on top.
 class BattleGame extends Game {
-  BattleGame({required this.world, required this.onEvent, required this.onSound, this.onSlow});
+  BattleGame({required this.world, required this.onEvent, required this.onSound, this.onSlow, this.onIntro});
 
   final World world;
   final WorldRenderer renderer = WorldRenderer();
@@ -19,6 +20,17 @@ class BattleGame extends Game {
   /// Called once with the frame rate when the first [slowWindow] seconds of
   /// play (after [slowSkip]) ran under [slowFps]: the phone struggles.
   final void Function(double fps)? onSlow;
+
+  /// A boss came on stage: the screen shows their name while the camera
+  /// holds on them and the fight waits.
+  final void Function(Mob boss)? onIntro;
+
+  /// Real seconds left of a crit's freeze, a falling boss's slow motion,
+  /// and a boss's entrance.
+  double _freeze = 0, _slow = 0, _intro = 0;
+
+  /// Whether a boss's entrance is holding the fight.
+  bool get introducing => _intro > 0;
   static const double slowSkip = 2, slowWindow = 10, slowFps = 35;
   double _perfTime = 0;
   int _perfFrames = 0;
@@ -52,6 +64,8 @@ class BattleGame extends Game {
   double _sinceHud = 0;
   double _lastDt = 1 / 60;
   double _smoothDt = 1 / 60, _dtDebt = 0;
+  bool _paused = false;
+  double _visDt = 0;
 
   @override
   void update(double dt) {
@@ -64,14 +78,46 @@ class BattleGame extends Game {
     _lastDt = raw < _smoothDt ? raw : _smoothDt;
     _dtDebt = raw - _lastDt;
     if (_dtDebt > 0.1) _dtDebt = 0;
-    if (!halted) {
-      var left = _lastDt * speed;
-      while (left > 0) {
-        final step = left > 1 / 60 ? 1 / 60 : left;
-        world.update(step);
-        left -= step;
+    if (world.hitStop > 0) {
+      if (world.hitStop > _freeze) _freeze = world.hitStop;
+      world.hitStop = 0;
+    }
+    if (world.slowMo > 0) {
+      _slow = world.slowMo;
+      world.slowMo = 0;
+    }
+    final intro = world.introBoss;
+    if (intro != null) {
+      world.introBoss = null;
+      if (intro.alive && !halted) {
+        _intro = bossIntroTime;
+        renderer.focus = intro;
+        onIntro?.call(intro);
       }
-      _clock += _lastDt * speed;
+    }
+    _paused = halted;
+    if (!halted) {
+      if (_intro > 0) {
+        // The fight waits; idle animations go on.
+        _intro -= _lastDt;
+        if (_intro <= 0) renderer.focus = null;
+        _clock += _lastDt * speed;
+      } else if (_freeze > 0) {
+        // A blink of stillness as a heavy blow lands.
+        _freeze -= _lastDt;
+        _paused = true;
+      } else {
+        final slow = _slow > 0 ? 0.35 : 1.0;
+        if (_slow > 0) _slow -= _lastDt;
+        var left = _lastDt * speed * slow;
+        while (left > 0) {
+          final step = left > 1 / 60 ? 1 / 60 : left;
+          world.update(step);
+          left -= step;
+        }
+        _clock += _lastDt * speed * slow;
+        _visDt = _lastDt * speed * slow;
+      }
     }
     if (world.events.isNotEmpty) {
       final events = List<GameEvent>.of(world.events);
@@ -103,6 +149,6 @@ class BattleGame extends Game {
 
   @override
   void render(Canvas canvas) {
-    renderer.render(canvas, size.toSize(), world, _clock, halted ? 0 : _lastDt * speed);
+    renderer.render(canvas, size.toSize(), world, _clock, _paused ? 0 : (_intro > 0 ? _lastDt : _visDt));
   }
 }

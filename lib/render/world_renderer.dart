@@ -6,6 +6,7 @@ import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/fishing.dart';
 import '../core/hanh.dart';
+import '../core/items.dart';
 import '../core/realm.dart';
 import '../core/scenery.dart';
 import '../core/sects.dart';
@@ -17,6 +18,7 @@ import 'art_realm.dart';
 import 'art_weather.dart';
 import 'art_scenery.dart';
 import 'quality.dart';
+import 'vfx.dart';
 
 /// Rough head height of each body plan, for bars and labels.
 double mobTop(MobDef d) => switch (d.body) {
@@ -54,6 +56,12 @@ class WorldRenderer {
   double shake = 0;
   final math.Random _r = math.Random(3);
 
+  /// Sparks, motes, dust and footprints.
+  final Vfx vfx = Vfx();
+
+  /// Where the camera looks instead of the hero (a boss arriving).
+  Mob? focus;
+
   final Map<String, TextPainter> _texts = {};
 
   TextPainter _label(String s, int color, double size, {bool bold = true}) {
@@ -85,7 +93,9 @@ class WorldRenderer {
     final zoom = size.height / viewHeight;
     final halfW = size.width / 2 / zoom, halfH = size.height / 2 / zoom;
     final p = w.player;
-    final tx = p.x, ty = p.y - 30;
+    // A boss arriving holds the camera for a moment.
+    final fo = focus;
+    final tx = fo != null ? fo.x : p.x, ty = (fo != null ? fo.y : p.y) - 30;
     if (!_placed) {
       camX = tx;
       camY = ty;
@@ -118,6 +128,11 @@ class WorldRenderer {
     final view = Rect.fromLTRB(camX - halfW, camY - halfH, camX + halfW, camY + halfH);
 
     drawGround(c, w.scenery, view, w.width, w.height, t);
+    final theme = w.scenery.theme;
+    vfx.take(w.cues);
+    vfx.trail(p, theme, dustOf(theme), dt);
+    vfx.update(dt);
+    vfx.drawGround(c, shade(dustOf(theme), -0.35));
     if (w.hasPond && view.inflate(160).contains(Offset(w.pondX, w.pondY))) {
       _drawPond(c, w.pondX, w.pondY, w.map.theme, t, w.nearPond);
     }
@@ -201,6 +216,18 @@ class WorldRenderer {
     for (final f in w.fx) {
       if (!isGroundFx(f.kind)) drawFx(c, f, t);
     }
+    vfx.draw(c);
+    if (realm != null) drawFog(c, w, view.inflate(fogCell));
+    c.restore();
+
+    drawWeather(c, size, w.weather, t);
+    _drawDark(c, size, w, zoom, pad, t);
+
+    // Bars and numbers stay readable over the dark.
+    c.save();
+    c.translate(size.width / 2, size.height / 2);
+    c.scale(zoom);
+    c.translate(-camX + sx, -camY + sy);
     for (final m in w.mobs) {
       if (!m.alive || !pad.contains(Offset(m.x, m.y))) continue;
       final show = m == tg || m.hp < m.maxHp || m.big;
@@ -223,16 +250,20 @@ class WorldRenderer {
       tp.paint(c, Offset(-tp.width / 2, -tp.height / 2));
       c.restore();
     }
-    if (realm != null) drawFog(c, w, view.inflate(fogCell));
     c.restore();
+  }
 
-    drawWeather(c, size, w.weather, t);
-    // Ngày đêm: a blue cast and a darker rim at night.
-    if (w.night) c.drawRect(Offset.zero & size, Paint()..color = const Color(0x3A0A1640));
-    final night = math.max(palettes[w.scenery.theme]!.night, w.night ? 0.32 : 0.0);
-    if (night > 0) {
-      final ctr = Offset(size.width / 2 + (p.x - camX) * zoom,
-          size.height / 2 + (p.y - 30 - camY) * zoom);
+  /// Night, and the dim of caves and volcanoes: the dark is lifted around
+  /// the hero, lanterns, braziers, lava, spells and missiles. Chế độ máy
+  /// yếu keeps the old cheap rim instead of the light layer.
+  void _drawDark(Canvas c, Size size, World w, double zoom, Rect pad, double t) {
+    final p = w.player;
+    final pal = palettes[w.scenery.theme]!.night;
+    final night = math.max(pal, w.night ? 0.32 : 0.0);
+    if (night <= 0) return;
+    if (liteGraphics) {
+      if (w.night) c.drawRect(Offset.zero & size, Paint()..color = const Color(0x3A0A1640));
+      final ctr = Offset(size.width / 2 + (p.x - camX) * zoom, size.height / 2 + (p.y - 30 - camY) * zoom);
       c.drawRect(
         Offset.zero & size,
         Paint()
@@ -245,7 +276,46 @@ class WorldRenderer {
             stops: const [0.25, 0.6, 1.0],
           ).createShader(Rect.fromCircle(center: ctr, radius: size.width * 0.62)),
       );
+      return;
     }
+    final lights = <Light>[
+      // The hero's own glow, flickering a little like a torch.
+      Light(p.x, p.y - 30, 200 + math.sin(t * 7) * 4, 0xFFFFD8A0),
+    ];
+    for (final pr in w.scenery.props) {
+      if (!pad.contains(Offset(pr.x, pr.y))) continue;
+      final l = propLight(pr.kind);
+      if (l != null) {
+        final (hgt, reach, colr) = l;
+        lights.add(Light(pr.x, pr.y - hgt * pr.s, reach * pr.s * (1 + math.sin(t * 6 + pr.v) * 0.04), colr));
+      }
+    }
+    for (final pr in w.projs) {
+      lights.add(Light(pr.x, pr.y, 80, pr.fromHero ? 0xFFFFE8B0 : 0xFFFF8A6A));
+    }
+    for (final f in w.fx) {
+      if (!pad.contains(Offset(f.x, f.y))) continue;
+      lights.add(Light(f.x, f.y - 20, f.radius > 0 ? math.min(260, f.radius + 60) : 120, 0xFFFFE8C0));
+    }
+    for (final m in w.mobs) {
+      if (m.alive && m.nightborn && pad.contains(Offset(m.x, m.y))) {
+        lights.add(Light(m.x, m.y - 20, 80, 0xFFB46EFF));
+      }
+    }
+    for (final d in w.drops) {
+      final it = d.item;
+      if (it != null && it.rarity.index >= Rarity.epic.index) lights.add(Light(d.x, d.y - 20, 70, it.color));
+    }
+    lights.addAll(vfx.lights());
+    // Each light is a gradient a frame; a big fight keeps the nearest 24.
+    if (lights.length > 24) {
+      double d(Light l) => (l.x - p.x).abs() + (l.y - p.y).abs();
+      lights.sort((a, b) => d(a).compareTo(d(b)));
+      lights.removeRange(24, lights.length);
+    }
+    final darkness = w.night ? 0.62 : math.min(0.6, pal * 1.9);
+    drawNight(c, size, darkness, lights,
+        (x, y) => Offset(size.width / 2 + (x - camX) * zoom, size.height / 2 + (y - camY) * zoom), zoom);
   }
 
   void _drawProp(Canvas c, Prop pr, Player p, double t) {

@@ -243,13 +243,17 @@ class Fx {
       this.spread = 0,
       this.x2 = 0,
       this.y2 = 0,
-      this.onHero = false});
+      this.onHero = false,
+      this.color = 0});
   final String kind;
   double x, y;
   final double life;
   final double angle, radius, spread;
   final double x2, y2;
   final bool onHero;
+
+  /// The element's tint, where the drawing takes one (0 for its own).
+  final int color;
   double t = 0;
 }
 
@@ -291,6 +295,20 @@ class Drop {
 }
 
 enum EvKind { notice, heroDied, wave, cleared, failed, boss, loot, shake, merchant }
+
+/// What the renderer's particles show: a hit landing, a critical one, a
+/// monster falling, a boss falling.
+enum CueKind { hit, crit, death, bossDeath }
+
+/// A cue for the renderer's particles. The world only records it; the
+/// battle screen turns it into sparks and dust and clears the list.
+class VfxCue {
+  const VfxCue(this.kind, this.x, this.y, this.color, {this.size = 1});
+  final CueKind kind;
+  final double x, y;
+  final int color;
+  final double size;
+}
 
 class GameEvent {
   GameEvent(this.kind, {this.text = '', this.color = 0xFFFFF3C4,
@@ -346,6 +364,14 @@ class World {
         player = Player(220, map.height / 2) {
     _init();
     _buildCamps();
+    if (debugNorth) player.y = 110;
+    if (debugLandmark) {
+      final lm = scenery.props.where((p) => p.kind.startsWith('lm_')).firstOrNull;
+      if (lm != null) {
+        player.x = lm.x + 40;
+        player.y = lm.y + 110;
+      }
+    }
     _plantHerbs();
   }
 
@@ -357,7 +383,8 @@ class World {
         height = d.isRealm ? realmHeight : 1150,
         rng = math.Random(seed ?? DateTime.now().millisecondsSinceEpoch),
         scenery = d.isRealm
-            ? Scenery.generate(d.map.theme, realmWidth, realmHeight, d.id.hashCode ^ (seed ?? 0x5ea1))
+            // A bí cảnh has its own set pieces (trận nhãn, shrines, chests).
+            ? Scenery.generate(d.map.theme, realmWidth, realmHeight, d.id.hashCode ^ (seed ?? 0x5ea1), landmarks: false)
             : Scenery.generate(d.map.theme, 1700, 1150, d.id.hashCode,
                 arena: true),
         player = d.isRealm ? Player(RealmLayout.gateX, RealmLayout.gateY) : Player(300, 1150 / 2) {
@@ -385,6 +412,17 @@ class World {
 
   double time = 0;
   bool auto = false;
+
+  /// Particles to show, taken by the renderer (capped when nobody does).
+  final List<VfxCue> cues = [];
+
+  /// Real seconds the battle screen should hold the picture still (a crit
+  /// or a big kill lands) and play in slow motion (a boss falls).
+  double hitStop = 0, slowMo = 0;
+  double _lastStop = -1;
+
+  /// A boss just came on stage: the battle screen shows them off.
+  Mob? introBoss;
 
   // Thống kê of this battle: damage dealt, the biggest hit, and the
   // seconds spent actually fighting (a hit landed in the last 1.5 s).
@@ -458,6 +496,12 @@ class World {
 
   /// Screenshot aid for the dev build: start on the pond's bank.
   static bool debugPond = false;
+
+  /// Dev build only: the field starts beside its first landmark.
+  static bool debugLandmark = false;
+
+  /// Dev build only: the field starts at its north edge (Đông Hải's shore).
+  static bool debugNorth = false;
 
   /// The fishing pond by the gate of a field map.
   // Cửu U Ma Vực has no fish of its own.
@@ -946,6 +990,7 @@ class World {
       }
       mobs.add(m);
       boss = m;
+      introBoss = m;
       events.add(GameEvent(EvKind.boss, text: '${def.name} xuất hiện!',
           color: 0xFFFF6A4A, big: true));
       return;
@@ -997,6 +1042,7 @@ class World {
     m.atk = mobAtkAt(hero.level.clamp(1, 99)) * def.atk * 1.15;
     mobs.add(m);
     boss = m;
+    introBoss = m;
     events.add(GameEvent(EvKind.boss, text: '${def.name} giáng thế!', color: 0xFFFF6A4A, big: true));
   }
 
@@ -1045,6 +1091,7 @@ class World {
     m.atk = perSec / hits / (1 - mitigation(st.def, hero.level));
     mobs.add(m);
     boss = m;
+    introBoss = m;
     events.add(GameEvent(EvKind.boss, text: '${r.name} lên lôi đài!', color: 0xFFFF6A4A, big: true));
   }
 
@@ -1577,6 +1624,7 @@ class World {
     mobs.add(m);
     fx.add(Fx('buddha', l.x, l.y, life: 1, radius: 260));
     _shake(8);
+    introBoss = m;
     events.add(GameEvent(EvKind.boss,
         text: 'Phong ấn đã phá! ${def.name} hiện thân ở phía đông', color: 0xFFFF6A4A, big: true));
   }
@@ -1627,6 +1675,7 @@ class World {
     time += dt;
     if (debugUltimate && sect.skills.length > 6 && ready(6) && _countNear(240) > 0) input.skills.add(6);
     hero.playSeconds += dt;
+    if (cues.length > 160) cues.removeRange(0, cues.length - 80);
     if (time - _lastHitAt < 1.5) combatTime += dt;
     // Mệt mỏi: the date is checked now and then, not every frame.
     if (time >= _dayCheck) {
@@ -1952,7 +2001,7 @@ class World {
     if (melee) {
       final ang = math.atan2(p.aimY, p.aimX);
       fx.add(Fx(sect.basicFx, p.x, p.y, life: 0.22, angle: ang,
-          radius: sect.basicRange + 10, spread: 1.6));
+          radius: sect.basicRange + 10, spread: 1.6, color: hero.hanh.color));
       var hitAny = false;
       for (final m in mobs) {
         if (!m.alive) continue;
@@ -2568,6 +2617,15 @@ class World {
       {bool big = false, bool small = false}) {
     if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
     if (dmg > bestHit) bestHit = dmg;
+    if (!small) {
+      final hy = m.y - 30 * m.def.size;
+      cues.add(VfxCue(big ? CueKind.crit : CueKind.hit, m.x, hy, big ? hero.hanh.color : 0xFFFFF3C4));
+      // A crit freezes the picture for a blink, not more than every 0.3 s.
+      if (big && time - _lastStop > 0.3) {
+        _lastStop = time;
+        hitStop = math.max(hitStop, 0.045);
+      }
+    }
     dmgDealt += math.min(dmg, math.max(0, m.hp));
     _lastHitAt = time;
     m.hp -= dmg;
@@ -2601,6 +2659,15 @@ class World {
     m.dots.clear();
     if (target == m) target = null;
     _sfx(m.big ? 'bossDie' : 'die');
+    final bossFell = m.def.boss || m.rival != null;
+    cues.add(VfxCue(bossFell ? CueKind.bossDeath : CueKind.death, m.x, m.y - 20 * m.def.size, m.def.c1,
+        size: m.def.size * (m.elite ? 1.3 : 1)));
+    if (bossFell) {
+      slowMo = 0.7;
+      hitStop = math.max(hitStop, 0.09);
+    } else if (m.big) {
+      hitStop = math.max(hitStop, 0.07);
+    }
     // A beaten challenger pays through the duel result only.
     if (m.rival != null) {
       _shake(10);

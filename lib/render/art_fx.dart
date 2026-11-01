@@ -117,6 +117,16 @@ void drawFx(Canvas c, Fx f, double t) {
       c.drawPath(path, _glow(colr, 0.5 * fade, 6));
       c.drawArc(rect, f.angle - f.spread / 2, sweep, false,
           _stroke(0xFFFFFFFF, 0.9 * fade, big ? 4 : 2.5));
+      if (f.color != 0) {
+        // The sect's element trails the swing: a coloured edge and an
+        // after-image a step behind.
+        c.drawArc(Rect.fromCircle(center: Offset(f.x, f.y - 24), radius: r * 1.06), f.angle - f.spread / 2, sweep,
+            false, _stroke(f.color, 0.8 * fade, 3.2));
+        if (!liteGraphics) {
+          c.drawArc(Rect.fromCircle(center: Offset(f.x, f.y - 24), radius: r * 1.1), f.angle - f.spread / 2,
+              sweep * 0.7, false, _glow(f.color, 0.45 * fade, 5)..style = PaintingStyle.stroke..strokeWidth = 7);
+        }
+      }
       if (f.kind == 'arcFire') {
         for (var i = 0; i < 6; i++) {
           final a = f.angle - f.spread / 2 + sweep * i / 5;
@@ -557,7 +567,11 @@ void drawZone(Canvas c, Zone z, double t) {
 }
 
 void drawDrop(Canvas c, Drop d, double t) {
-  final bob = math.sin(t * 4 + d.x) * 2;
+  // Loot pops up out of the fallen monster and lands with a little bounce.
+  final pop = d.t < 0.42
+      ? math.sin(d.t / 0.42 * math.pi) * 28
+      : (d.t < 0.6 ? math.sin((d.t - 0.42) / 0.18 * math.pi) * 6 : 0.0);
+  final bob = math.sin(t * 4 + d.x) * 2 - pop;
   if (d.gold > 0) {
     c.drawOval(Rect.fromCenter(center: Offset(d.x, d.y + 2), width: 14, height: 5),
         _a(0xFF000000, 0.25));
@@ -594,9 +608,29 @@ void drawDrop(Canvas c, Drop d, double t) {
   }
   final it = d.item!;
   final colr = it.color;
+  final grand = it.rarity.index >= Rarity.epic.index || it.golden;
   if (it.rarity.index >= Rarity.rare.index) {
-    c.drawRect(Rect.fromCenter(center: Offset(d.x, d.y - 40), width: 6, height: 80),
-        _glow(colr, 0.35 + 0.15 * math.sin(t * 5), 6));
+    // A beam of its colour: taller and wider the rarer, so good loot is
+    // seen from across the screen.
+    final h = grand ? 150.0 : 80.0;
+    c.drawRect(Rect.fromCenter(center: Offset(d.x, d.y - h / 2), width: grand ? 12 : 6, height: h),
+        _glow(colr, 0.35 + 0.15 * math.sin(t * 5), grand ? 9 : 6));
+    if (grand) {
+      c.drawRect(Rect.fromCenter(center: Offset(d.x, d.y - h / 2), width: 3, height: h),
+          _a(0xFFFFFFFF, 0.55 + 0.25 * math.sin(t * 7)));
+      // Motes drifting up the beam and a ring turning on the ground.
+      for (var i = 0; i < 5; i++) {
+        final u = (t * 0.6 + i / 5) % 1;
+        c.drawCircle(Offset(d.x + math.sin(t * 3 + i * 2) * 7, d.y - 8 - u * h), 2.2 * (1 - u) + 0.6,
+            _a(i.isEven ? 0xFFFFFFFF : colr, 1 - u));
+      }
+      c.save();
+      c.translate(d.x, d.y + 2);
+      c.scale(1, 0.38);
+      c.rotate(t * 1.6);
+      c.drawArc(Rect.fromCircle(center: Offset.zero, radius: 20), 0, math.pi * 1.4, false, _stroke(colr, 0.8, 2.2));
+      c.restore();
+    }
   }
   c.drawCircle(Offset(d.x, d.y - 6 + bob), 12, _glow(colr, 0.6, 8));
   c.drawRRect(RRect.fromRectAndRadius(

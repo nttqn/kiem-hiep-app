@@ -7,11 +7,14 @@ import '../core/hanh.dart';
 import '../core/costumes.dart';
 import '../core/mounts.dart';
 import '../core/hero.dart';
+import '../core/weather.dart' show isNight;
+import '../core/world.dart' show World;
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 import '../render/art_fx.dart';
 
-/// Ink-wash mountains at dusk, with drifting mist. [town] adds a city gate.
+/// Ink-wash mountains at dusk (or under the moon after 18:00 Vietnam time),
+/// ranges drifting at their own pace, mist and birds. [town] adds a city gate.
 class Backdrop extends StatefulWidget {
   const Backdrop({super.key, this.town = false, this.child});
   final bool town;
@@ -24,6 +27,7 @@ class Backdrop extends StatefulWidget {
 class _BackdropState extends State<Backdrop> with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   final ValueNotifier<double> _t = ValueNotifier(0);
+  final bool _night = World.debugNight ?? isNight();
 
   @override
   void initState() {
@@ -43,7 +47,7 @@ class _BackdropState extends State<Backdrop> with SingleTickerProviderStateMixin
       fit: StackFit.expand,
       children: [
         RepaintBoundary(
-          child: CustomPaint(painter: _BackdropPainter(_t, widget.town)),
+          child: CustomPaint(painter: _BackdropPainter(_t, widget.town, _night)),
         ),
         if (widget.child != null) widget.child!,
       ],
@@ -52,9 +56,10 @@ class _BackdropState extends State<Backdrop> with SingleTickerProviderStateMixin
 }
 
 class _BackdropPainter extends CustomPainter {
-  _BackdropPainter(this.t, this.town) : super(repaint: t);
+  _BackdropPainter(this.t, this.town, this.night) : super(repaint: t);
   final ValueNotifier<double> t;
   final bool town;
+  final bool night;
 
   @override
   void paint(Canvas c, Size s) {
@@ -63,35 +68,55 @@ class _BackdropPainter extends CustomPainter {
     c.drawRect(
       Offset.zero & s,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF2A1A2E), Color(0xFF7A3A3A), Color(0xFFD8945A)],
-          stops: [0, 0.55, 1],
+          colors: night
+              ? const [Color(0xFF080C20), Color(0xFF1E2446), Color(0xFF4A4060)]
+              : const [Color(0xFF2A1A2E), Color(0xFF7A3A3A), Color(0xFFD8945A)],
+          stops: const [0, 0.55, 1],
         ).createShader(Offset.zero & s),
     );
-    // Sun.
-    c.drawCircle(Offset(w * 0.72, h * 0.42), h * 0.13,
-        Paint()..color = const Color(0xFFF8D8A0));
-    c.drawCircle(
-        Offset(w * 0.72, h * 0.42),
-        h * 0.24,
-        Paint()
-          ..color = const Color(0x44F8D8A0)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30));
-    // Mountain ranges, far to near.
-    const layers = [
-      (0.50, 0xFF6A3A48, 0.18, 3.0),
-      (0.60, 0xFF4A2A3A, 0.22, 5.0),
-      (0.72, 0xFF2E1C28, 0.20, 8.0),
-    ];
+    if (night) {
+      // Stars, twinkling, and a full moon.
+      final rs = math.Random(11);
+      for (var i = 0; i < 60; i++) {
+        final x = rs.nextDouble() * w, y = rs.nextDouble() * h * 0.5;
+        final tw = 0.4 + 0.6 * (0.5 + 0.5 * math.sin(time * (1 + rs.nextDouble() * 2) + i));
+        c.drawCircle(Offset(x, y), 0.6 + rs.nextDouble() * 1.2, Paint()..color = Color.fromRGBO(240, 240, 255, tw));
+      }
+      c.drawCircle(
+          Offset(w * 0.72, h * 0.3),
+          h * 0.2,
+          Paint()
+            ..color = const Color(0x33DCE6FF)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30));
+      c.drawCircle(Offset(w * 0.72, h * 0.3), h * 0.09, Paint()..color = const Color(0xFFF0F0E6));
+      c.drawCircle(Offset(w * 0.72 - h * 0.025, h * 0.3 - h * 0.02), h * 0.018, Paint()..color = const Color(0x22000020));
+      c.drawCircle(Offset(w * 0.72 + h * 0.03, h * 0.3 + h * 0.025), h * 0.012, Paint()..color = const Color(0x22000020));
+    } else {
+      // Sun.
+      c.drawCircle(Offset(w * 0.72, h * 0.42), h * 0.13, Paint()..color = const Color(0xFFF8D8A0));
+      c.drawCircle(
+          Offset(w * 0.72, h * 0.42),
+          h * 0.24,
+          Paint()
+            ..color = const Color(0x44F8D8A0)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30));
+    }
+    // Mountain ranges, far to near, each drifting at its own pace.
+    final layers = night
+        ? const [(0.50, 0xFF2A2A48, 0.18, 3.0), (0.60, 0xFF1E1E38, 0.22, 5.0), (0.72, 0xFF12121E, 0.20, 8.0)]
+        : const [(0.50, 0xFF6A3A48, 0.18, 3.0), (0.60, 0xFF4A2A3A, 0.22, 5.0), (0.72, 0xFF2E1C28, 0.20, 8.0)];
     for (var i = 0; i < layers.length; i++) {
       final (base, colr, amp, seed) = layers[i];
+      final shift = time * (3.0 + i * 5);
       final p = Path()..moveTo(0, h);
       for (var x = 0.0; x <= w + 20; x += 20) {
-        final n = math.sin(x / w * 5 + seed) * 0.5 +
-            math.sin(x / w * 11 + seed * 2) * 0.3 +
-            math.sin(x / w * 23 + seed * 3) * 0.12;
+        final xx = x + shift;
+        final n = math.sin(xx / w * 5 + seed) * 0.5 +
+            math.sin(xx / w * 11 + seed * 2) * 0.3 +
+            math.sin(xx / w * 23 + seed * 3) * 0.12;
         p.lineTo(x, h * (base - amp * (0.5 + n * 0.6)));
       }
       p
@@ -112,8 +137,37 @@ class _BackdropPainter extends CustomPainter {
         );
       }
     }
-    // Pagoda on a crag.
-    _pagoda(c, Offset(w * 0.2, h * 0.5), h * 0.16, const Color(0xFF3A2230));
+    // Birds crossing the sky in a loose V.
+    for (var flock = 0; flock < 2; flock++) {
+      final period = 26.0 + flock * 9;
+      final u = ((time + flock * 11) % period) / period;
+      final fx = -60 + u * (w + 120), fy = h * (0.18 + flock * 0.1) + math.sin(time * 0.7 + flock) * 8;
+      for (var b = 0; b < 5; b++) {
+        final bx = fx - (b ~/ 2) * 16, by = fy + (b.isEven ? 1 : -1) * (b ~/ 2) * 9.0 + (b == 0 ? 0 : 4);
+        final flap = math.sin(time * 9 + b) * 3;
+        final bird = Path()
+          ..moveTo(bx - 6, by - flap)
+          ..quadraticBezierTo(bx - 3, by - 2, bx, by)
+          ..quadraticBezierTo(bx + 3, by - 2, bx + 6, by - flap);
+        c.drawPath(
+            bird,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.5
+              ..color = night ? const Color(0x88C8D0E8) : const Color(0xAA2A1A20));
+      }
+    }
+    // Pagoda on a crag, a lamp lit in it at night.
+    _pagoda(c, Offset(w * 0.2, h * 0.5), h * 0.16, night ? const Color(0xFF14141E) : const Color(0xFF3A2230));
+    if (night) {
+      c.drawCircle(Offset(w * 0.2, h * 0.5 - h * 0.1), 4, Paint()..color = const Color(0xFFFFC060));
+      c.drawCircle(
+          Offset(w * 0.2, h * 0.5 - h * 0.1),
+          14,
+          Paint()
+            ..color = const Color(0x55FFB040)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+    }
     if (town) _gate(c, s);
     // Ground.
     c.drawRect(Rect.fromLTWH(0, h * 0.86, w, h * 0.14), Paint()..color = const Color(0xFF1A1016));
@@ -181,7 +235,7 @@ class _BackdropPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BackdropPainter old) => false;
+  bool shouldRepaint(_BackdropPainter old) => old.night != night || old.town != town;
 }
 
 /// An animated standing hero: idles, and strikes every few seconds.

@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../core/content.dart';
 import '../core/scenery.dart';
 import 'art_figures.dart';
+import 'art_landmarks.dart';
 import 'quality.dart';
 
 class Palette {
@@ -46,6 +47,8 @@ void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
         Paint()..color = Color(colr).withValues(alpha: 0.35 + p.shade.abs() * 0.3));
   }
   if (s.theme == MapTheme.fortress) _tiles(c, view, w, h, pal);
+  _paths(c, s, view, pal);
+  if (s.theme == MapTheme.sea) _shore(c, view, w, t);
   for (final d in s.decals) {
     if (d.x < view.left - 30 || d.x > view.right + 30 ||
         d.y < view.top - 30 || d.y > view.bottom + 30) {
@@ -60,6 +63,74 @@ void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
     ..strokeWidth = 40
     ..maskFilter = softBlur(14);
   c.drawRect(Rect.fromLTWH(0, 0, w, h), edge);
+}
+
+/// Worn trails: a soft dark band with a lighter tread down the middle.
+void _paths(Canvas c, Scenery s, Rect view, Palette pal) {
+  final snow = s.theme == MapTheme.snow;
+  final outer = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round
+    ..strokeWidth = 74
+    ..color = Color(snow ? 0xFFB8C8D8 : pal.dark).withValues(alpha: 0.32)
+    ..maskFilter = softBlur(10);
+  final inner = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round
+    ..strokeWidth = 40
+    ..color = Color(snow ? 0xFFF8FCFF : shade(pal.light, 0.15)).withValues(alpha: 0.28);
+  final area = view.inflate(200);
+  for (final pts in s.paths) {
+    final path = Path();
+    var open = false;
+    for (var i = 0; i < pts.length; i++) {
+      final (x, y) = pts[i];
+      final inView = area.contains(Offset(x, y)) ||
+          (i + 1 < pts.length && area.contains(Offset(pts[i + 1].$1, pts[i + 1].$2)));
+      if (!inView) {
+        open = false;
+        continue;
+      }
+      if (!open) {
+        path.moveTo(x, y);
+        open = true;
+      } else {
+        final (px, py) = pts[i - 1];
+        path.quadraticBezierTo(px, py, (px + x) / 2, (py + y) / 2);
+        path.lineTo(x, y);
+      }
+    }
+    c.drawPath(path, outer);
+    c.drawPath(path, inner);
+  }
+}
+
+/// Đông Hải: the sea along the north edge, waves running up the sand.
+void _shore(Canvas c, Rect view, double w, double t) {
+  if (view.top > 140) return;
+  final left = math.max(0.0, view.left - 20), right = math.min(w, view.right + 20);
+  c.drawRect(Rect.fromLTRB(left, view.top - 20, right, 40), fillOf(0xFF3A8AA8));
+  c.drawRect(Rect.fromLTRB(left, view.top - 20, right, -40), fillOf(0xFF2A6A8A));
+  for (var k = 0; k < 3; k++) {
+    final phase = t * 0.6 + k * 2.1;
+    final reach = 40 + 22 * math.sin(phase) + k * 8;
+    final path = Path()..moveTo(left, reach);
+    for (var x = left; x <= right + 30; x += 30) {
+      path.lineTo(x, reach + math.sin(x / 70 + phase * 2) * 6);
+    }
+    path
+      ..lineTo(right, -60)
+      ..lineTo(left, -60)
+      ..close();
+    c.drawPath(path, fillOf(k == 0 ? 0x553A8AA8 : (k == 1 ? 0x445AB8D0 : 0x33A8E0F0)));
+    final foam = Path()..moveTo(left, reach);
+    for (var x = left; x <= right + 30; x += 30) {
+      foam.lineTo(x, reach + math.sin(x / 70 + phase * 2) * 6);
+    }
+    c.drawPath(foam, lineOf(0xCCF4FCFF, 2.4 - k * 0.6));
+  }
 }
 
 void _tiles(Canvas c, Rect view, double w, double h, Palette pal) {
@@ -205,6 +276,10 @@ void _decal(Canvas c, Decal d, Palette pal, double t) {
 
 /// Tall scenery, drawn at its foot point sorted with the actors.
 void drawProp(Canvas c, Prop p, double t) {
+  if (p.kind.startsWith('lm_')) {
+    drawLandmark(c, p, t);
+    return;
+  }
   c.save();
   c.translate(p.x, p.y);
   c.scale(p.s);
@@ -608,12 +683,17 @@ void drawProp(Canvas c, Prop p, double t) {
 
 /// Rough visual height of a prop, used to fade ones in front of the hero.
 double propHeight(Prop p) => switch (p.kind) {
+      'lm_pagoda' || 'lm_buddha' || 'lm_gate' => 170 * p.s,
+      'lm_shrine' || 'lm_pavilion' || 'lm_wreck' || 'lm_ruin' || 'lm_stele' => 120 * p.s,
       'tree' || 'tree2' || 'bamboo' || 'banner' || 'pillar' || 'pine' || 'mistPine' || 'plum' || 'palm' => 90 * p.s,
       'rockSpire' || 'stalagmite' || 'deadTree' || 'burntTree' || 'swordStone' => 60 * p.s,
       _ => 30 * p.s,
     };
 
 double propHalfWidth(Prop p) => switch (p.kind) {
+      'lm_wreck' || 'lm_ruin' || 'lm_gate' => 100 * p.s,
+      'lm_shrine' || 'lm_pavilion' || 'lm_pagoda' || 'lm_buddha' => 70 * p.s,
+      'lm_stele' => 40 * p.s,
       'tree' || 'tree2' || 'pine' || 'mistPine' || 'plum' || 'palm' => 34 * p.s,
       _ => 20 * p.s,
     };

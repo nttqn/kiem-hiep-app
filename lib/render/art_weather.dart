@@ -30,6 +30,41 @@ void drawWeather(Canvas c, Size size, Weather w, double t) {
         final x = (_h(i + 0.7) * (wd + 100) - y * 0.22) % (wd + 100) - 50;
         c.drawLine(Offset(x, y), Offset(x + 4, y + 16), p);
       }
+      // Drops splashing on the ground: each a ring that opens and fades,
+      // somewhere new every quarter second.
+      final splash = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1;
+      for (var i = 0; i < (many ? 36 : 14); i++) {
+        final cyc = t * 4 + _h(i + 0.55);
+        final u = cyc - cyc.floorToDouble();
+        final k = cyc.floorToDouble() + i * 7.3;
+        final x = _h(k + 0.11) * wd, y = ht * (0.15 + _h(k + 0.37) * 0.85);
+        splash.color = Color.fromRGBO(200, 220, 240, 0.55 * (1 - u));
+        c.drawOval(Rect.fromCenter(center: Offset(x, y), width: 4 + u * 12, height: 2 + u * 4), splash);
+      }
+      // Now and then, lightning: a double flash and a bolt in the sky.
+      if (many) {
+        final cycle = t % 11.0;
+        final flash = cycle < 0.08 ? 0.32 : (cycle > 0.16 && cycle < 0.26 ? 0.22 : 0.0);
+        if (flash > 0) {
+          c.drawRect(Offset.zero & size, Paint()..color = Color.fromRGBO(230, 236, 255, flash));
+          final n = (t / 11).floorToDouble();
+          var bx = wd * (0.2 + _h(n + 0.3) * 0.6), by = 0.0;
+          final bolt = Path()..moveTo(bx, by);
+          for (var k = 0; k < 7; k++) {
+            bx += (_h(n + k * 1.7) - 0.5) * 50;
+            by += ht * 0.06;
+            bolt.lineTo(bx, by);
+          }
+          c.drawPath(
+              bolt,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2.4
+                ..color = const Color(0xEEF4F8FF));
+        }
+      }
     case Weather.snow:
       final p = Paint()..color = const Color(0xDDFFFFFF);
       for (var i = 0; i < (many ? 80 : 35); i++) {

@@ -32,15 +32,18 @@ class Patch {
 }
 
 class Scenery {
-  Scenery(this.theme, this.props, this.decals, this.patches);
+  Scenery(this.theme, this.props, this.decals, this.patches, [this.paths = const []]);
 
   final MapTheme theme;
   final List<Prop> props;
   final List<Decal> decals;
   final List<Patch> patches;
 
+  /// Worn trails across the land, as points to join with a soft stroke.
+  final List<List<(double, double)>> paths;
+
   static Scenery generate(MapTheme theme, double w, double h, int seed,
-      {bool arena = false}) {
+      {bool arena = false, bool landmarks = true}) {
     final r = math.Random(seed);
     final props = <Prop>[];
     final decals = <Decal>[];
@@ -102,10 +105,62 @@ class Scenery {
         r.nextInt(1000),
       ));
     }
+    // Trails and a few landmarks, from their own dice so the rest of the
+    // land stays as it was before they came (1.4.0).
+    final paths = <List<(double, double)>>[];
+    if (!arena) {
+      final q = math.Random(seed ^ 0x51ed27);
+      List<(double, double)> trail(double x0, double y0, double x1, double y1) {
+        final pts = <(double, double)>[];
+        final n = (math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / 160).ceil();
+        var wob = 0.0;
+        for (var i = 0; i <= n; i++) {
+          final u = i / n;
+          wob = (wob + (q.nextDouble() - 0.5) * 70).clamp(-160, 160);
+          final nx = -(y1 - y0), ny = x1 - x0;
+          final len = math.max(1, math.sqrt(nx * nx + ny * ny));
+          pts.add((x0 + (x1 - x0) * u + nx / len * wob, y0 + (y1 - y0) * u + ny / len * wob));
+        }
+        return pts;
+      }
+
+      paths.add(trail(120, h / 2, w - 120, 200 + q.nextDouble() * (h - 400)));
+      paths.add(trail(w * (0.3 + q.nextDouble() * 0.4), 120, w * (0.3 + q.nextDouble() * 0.4), h - 120));
+      final kinds = _landmarks[theme] ?? const [];
+      final spots = <(double, double)>[];
+      var tries = 0;
+      while (landmarks && spots.length < 3 && kinds.isNotEmpty && tries++ < 60) {
+        final x = 500 + q.nextDouble() * (w - 800), y = 260 + q.nextDouble() * (h - 520);
+        if ((x - 220).abs() < 420 && (y - h / 2).abs() < 320) continue;
+        if (spots.any((s) => (s.$1 - x).abs() < 700 && (s.$2 - y).abs() < 500)) continue;
+        spots.add((x, y));
+        props.removeWhere((p) => (p.x - x).abs() < 150 && (p.y - y).abs() < 110);
+        props.add(Prop(kinds[spots.length % kinds.length], x, y, 1, q.nextInt(1000)));
+      }
+    }
+    // Đông Hải: nothing stands in the sea along the north edge.
+    if (theme == MapTheme.sea && !arena) props.removeWhere((p) => p.y < 120);
     props.sort((a, b) => a.y.compareTo(b.y));
-    return Scenery(theme, props, decals, patches);
+    return Scenery(theme, props, decals, patches, paths);
   }
 }
+
+/// Big one-off set pieces, three a land, so the map is not the same trees
+/// over and over: a shrine, a gate, a pavilion, a stele on a turtle, a
+/// seated stone Buddha, a pagoda, ruins, a shipwreck.
+const _landmarks = <MapTheme, List<String>>{
+  MapTheme.grass: ['lm_shrine', 'lm_gate'],
+  MapTheme.bamboo: ['lm_pavilion', 'lm_stele'],
+  MapTheme.cave: ['lm_buddha', 'lm_stele'],
+  MapTheme.desert: ['lm_ruin', 'lm_buddha'],
+  MapTheme.snow: ['lm_stele', 'lm_pagoda'],
+  MapTheme.volcano: ['lm_ruin', 'lm_buddha'],
+  MapTheme.fortress: ['lm_pagoda', 'lm_gate'],
+  MapTheme.cloud: ['lm_pavilion', 'lm_pagoda'],
+  MapTheme.summit: ['lm_stele', 'lm_gate'],
+  MapTheme.abyss: ['lm_buddha', 'lm_ruin'],
+  MapTheme.sea: ['lm_wreck', 'lm_shrine'],
+};
 
 const _propKinds = <MapTheme, List<String>>{
   MapTheme.grass: ['tree', 'tree', 'bush', 'rock', 'tree2'],

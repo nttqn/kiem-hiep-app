@@ -20,7 +20,11 @@ import '../services/ads.dart';
 import '../services/perf.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import '../core/sects.dart';
+import '../render/art_figures.dart' show rivalGear;
+import 'backdrop.dart' show FigurePreview;
 import 'fishing_view.dart';
+import 'world_boss_screen.dart' show BossPreview;
 import 'hud.dart';
 import 'theme.dart';
 import 'auto_dialog.dart';
@@ -78,7 +82,8 @@ class _PlayScreenState extends State<PlayScreen> {
         ? World.dungeon(hero, widget.dungeon!)
         : World.field(hero, widget.map!);
     world.auto = SaveService.instance.autoFight;
-    game = BattleGame(world: world, onEvent: _onEvent, onSound: SoundService.instance.cue, onSlow: _onSlow);
+    game = BattleGame(
+        world: world, onEvent: _onEvent, onSound: SoundService.instance.cue, onSlow: _onSlow, onIntro: _onIntro);
     SoundService.instance.setBattle(true);
     // Each map has its own tune; every dungeon shares the battle theme. A
     // bí cảnh plays its land's tune.
@@ -105,6 +110,7 @@ class _PlayScreenState extends State<PlayScreen> {
     HardwareKeyboard.instance.removeHandler(_onKey);
     _autosave?.cancel();
     _bannerTimer?.cancel();
+    _introTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
     // Walking out of a duel concedes it (a khảo hạch can just be retried).
     final d = widget.dungeon;
@@ -114,6 +120,72 @@ class _PlayScreenState extends State<PlayScreen> {
     if (!_logged) _logRun(RunResult.left);
     SaveService.instance.save();
     super.dispose();
+  }
+
+  /// The boss being shown off on arrival.
+  Mob? _intro;
+  Timer? _introTimer;
+
+  void _onIntro(Mob m) {
+    SoundService.instance.cue('gong');
+    setState(() => _intro = m);
+    _introTimer?.cancel();
+    _introTimer = Timer(const Duration(milliseconds: 1700), () {
+      if (mounted) setState(() => _intro = null);
+    });
+  }
+
+  /// A dark band across the lower screen: the boss's likeness, their name
+  /// in large letters and where they hold court, sliding in.
+  Widget _introView(Mob m) {
+    final r = m.rival;
+    final portrait = r != null
+        ? FigurePreview(hanh: r.hanh, female: r.female, scale: 0.9, gear: rivalGear(r), rebirths: r.rebirths, mount: r.mountDef)
+        : BossPreview(def: m.def, size: 92);
+    final sub = r != null
+        ? '${sectOf(r.hanh).name} · Cấp ${r.level}${r.rebirths > 0 ? ' · Chuyển sinh ${r.rebirths}' : ''}'
+        : (m.def.boss ? 'Đầu lĩnh · ${widget.dungeon?.name ?? world.map.name}' : widget.dungeon?.name ?? world.map.name);
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 64,
+      child: IgnorePointer(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeOutCubic,
+          builder: (_, v, child) => Opacity(
+            opacity: v,
+            child: Transform.translate(offset: Offset((1 - v) * 120, 0), child: child),
+          ),
+          child: Container(
+            height: 104,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [Color(0x00120A0A), Color(0xE6120A0A), Color(0xE6120A0A), Color(0x00120A0A)],
+                  stops: [0, 0.2, 0.8, 1]),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(width: 110, height: 104, child: FittedBox(child: portrait)),
+                const SizedBox(width: 10),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(r != null ? m.def.name : m.def.name.toUpperCase(),
+                        style: titleStyle(32, color: const Color(0xFFFF8A6A)).copyWith(letterSpacing: 2)),
+                    Container(width: 220, height: 2, color: const Color(0xFFFFD34A)),
+                    const SizedBox(height: 4),
+                    Text(sub, style: bold.copyWith(color: cream, fontSize: 13)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   bool _logged = false;
@@ -497,6 +569,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ),
                 if (_banner != null && _now - _bannerAt < 2.6) _bannerView(),
+                if (_intro != null) _introView(_intro!),
                 if (_fishing && !_paused)
                   _dim(FishingPanel(mapId: world.map.id, onClose: () => _setFishing(false))),
                 if (_paused) _pauseOverlay(),

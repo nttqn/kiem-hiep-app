@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/hanh.dart';
 import '../core/items.dart';
 import '../core/sects.dart';
+import '../render/quality.dart' show liteGraphics;
 import '../services/sound.dart';
 
 /// Lacquered wood and gold leaf.
@@ -287,6 +289,15 @@ class ItemTile extends StatelessWidget {
                     it == null ? Colors.white24 : c),
               ),
             ),
+            if (it != null && (it.rarity.index >= Rarity.epic.index || it.golden))
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _ShinePainter(it.golden ? const Color(goldItemColor) : c,
+                        grand: it.golden || it.rarity == Rarity.legend),
+                  ),
+                ),
+              ),
             if (it != null && it.plus > 0)
               Positioned(
                 right: 3,
@@ -312,6 +323,80 @@ class ItemTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// One clock for every shining item tile: ticks about 30 times a second
+/// while any is on screen, and stops when none is.
+class ShineClock extends ChangeNotifier {
+  ShineClock._();
+  static final ShineClock instance = ShineClock._();
+  Timer? _timer;
+  final Stopwatch _watch = Stopwatch();
+  double get t => _watch.elapsedMilliseconds / 1000;
+
+  @override
+  void addListener(VoidCallback listener) {
+    super.addListener(listener);
+    if (_timer == null && !liteGraphics) {
+      _watch.start();
+      _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => notifyListeners());
+    }
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (!hasListeners) {
+      _timer?.cancel();
+      _timer = null;
+    }
+  }
+}
+
+/// A light running round the frame of an Epic, Legend or Hoàng Kim piece;
+/// the grandest also catch a glint across the face now and then.
+class _ShinePainter extends CustomPainter {
+  _ShinePainter(this.color, {required this.grand}) : super(repaint: ShineClock.instance);
+  final Color color;
+  final bool grand;
+
+  @override
+  void paint(Canvas c, Size s) {
+    final t = ShineClock.instance.t;
+    final rect = (Offset.zero & s).deflate(1);
+    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(8));
+    final turn = (t * (grand ? 0.9 : 0.6)) % 1;
+    c.drawRRect(
+        rr,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = grand ? 2.6 : 2
+          ..shader = SweepGradient(
+            colors: [color.withValues(alpha: 0), Colors.white, color, color.withValues(alpha: 0)],
+            stops: const [0.0, 0.08, 0.16, 0.3],
+            transform: GradientRotation(turn * math.pi * 2),
+          ).createShader(rect));
+    if (grand) {
+      final u = (t * 0.45) % 1.6;
+      if (u < 1) {
+        c.save();
+        c.clipRRect(rr);
+        final x = -s.width + u * s.width * 3;
+        c.drawPath(
+            Path()
+              ..moveTo(x, 0)
+              ..lineTo(x + 10, 0)
+              ..lineTo(x + 10 - s.height, s.height)
+              ..lineTo(x - s.height, s.height)
+              ..close(),
+            Paint()..color = Colors.white.withValues(alpha: 0.28));
+        c.restore();
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ShinePainter old) => old.color != color || old.grand != grand;
 }
 
 class SlotGlyph extends CustomPainter {
