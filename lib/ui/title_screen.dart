@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/clock.dart';
 import '../core/hero.dart';
 import '../services/cloud.dart';
 import '../services/save.dart';
@@ -230,15 +231,19 @@ class _SlotCard extends StatelessWidget {
     );
   }
 
-  void _open(BuildContext context, HeroData? h) {
+  Future<void> _open(BuildContext context, HeroData? h) async {
     if (h == null) {
       Navigator.of(context).push(fadeRoute(CreateScreen(slot: index)));
       return;
     }
+    // The server's time first (a moment at most), for the day's resets and
+    // the closed-door training payout.
+    await CloudSave.instance.clockReady.timeout(const Duration(seconds: 3), onTimeout: () {});
+    if (!context.mounted) return;
     SaveService.instance.active = index;
     if (h.savedAt > 0) {
       SaveService.instance.pendingAway =
-          DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(h.savedAt));
+          GameClock.now().difference(DateTime.fromMillisecondsSinceEpoch(h.savedAt));
     }
     Navigator.of(context).pushReplacement(fadeRoute(const TownScreen()));
   }

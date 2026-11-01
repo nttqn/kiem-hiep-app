@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/hero.dart';
+import '../core/clock.dart';
 import '../core/world_boss.dart' show vnDayKey;
 import 'analytics.dart';
 import 'cloud.dart';
@@ -40,6 +41,8 @@ class SaveService extends ChangeNotifier {
       autoFight = prefs.getBool('auto_fight') ?? true;
       owner = prefs.getString('save_owner');
       ownerWho = prefs.getString('save_owner_who') ?? '';
+      // Offline, the clock never goes back before the last trusted time.
+      GameClock.floor = prefs.getInt('clock_floor') ?? 0;
       for (var i = 0; i < slotCount; i++) {
         final raw = prefs.getString(_key(i));
         if (raw == null) continue;
@@ -63,10 +66,14 @@ class SaveService extends ChangeNotifier {
   /// Saves the active slot, stamps it and queues the cloud upload.
   Future<void> save() async {
     if (active < 0 || slots[active] == null) return;
-    slots[active]!.savedAt = DateTime.now().millisecondsSinceEpoch;
+    slots[active]!.savedAt = GameClock.nowMs();
     Analytics.instance.track(active, slots[active]!);
     await writeSlot(active);
     CloudSave.instance.queueUpload(active);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('clock_floor', GameClock.floor);
+    } catch (_) {}
   }
 
   /// Writes [slot] to the device as it is, without touching its stamp.
@@ -113,7 +120,7 @@ class SaveService extends ChangeNotifier {
       } catch (_) {}
     }
     slots[slot] = from;
-    from.savedAt = DateTime.now().millisecondsSinceEpoch;
+    from.savedAt = GameClock.nowMs();
     await writeSlot(slot);
     await CloudSave.instance.pushRestored(slot);
   }
@@ -230,6 +237,6 @@ class SaveService extends ChangeNotifier {
 }
 
 String todayKey() {
-  final d = DateTime.now();
+  final d = GameClock.now();
   return '${d.year}-${d.month}-${d.day}';
 }

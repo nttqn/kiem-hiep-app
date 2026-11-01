@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/hero.dart';
 import '../core/monthly.dart';
 import '../core/rewards.dart';
+import '../core/world_boss.dart' show vnNow;
 import '../services/ads.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
@@ -233,7 +234,7 @@ class _MonthlyTrack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final month = DateTime.now().month;
+    final month = vnNow().month;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

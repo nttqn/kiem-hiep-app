@@ -25,6 +25,12 @@ class ChatService extends ChangeNotifier {
 
   static const _url = 'https://kiem-hiep-4da54-default-rtdb.asia-southeast1.firebasedatabase.app';
 
+  /// The game's Realtime Database (also asked for the server's time).
+  static const dbUrl = _url;
+
+  /// Whether the chat screen holds the connection open.
+  bool get isOpen => _opens > 0;
+
   /// Shown oldest first.
   final List<ChatMsg> messages = [];
   bool loading = false;

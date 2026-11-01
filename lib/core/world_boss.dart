@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'clock.dart';
 import 'content.dart';
 
 /// Boss Thế Giới: one huge boss a day for everyone. A run lasts
@@ -26,7 +27,7 @@ const worldBossRotation = [
 
 /// The game's calendar is Vietnam time (UTC+7), so the boss and the board
 /// change at local midnight for every player.
-DateTime vnNow([DateTime? now]) => (now ?? DateTime.now()).toUtc().add(const Duration(hours: 7));
+DateTime vnNow([DateTime? now]) => (now ?? GameClock.now()).toUtc().add(const Duration(hours: 7));
 
 /// `20261024` style key of the Vietnam date.
 String vnDayKey([DateTime? now]) {
@@ -41,7 +42,7 @@ int _dayIndex(DateTime now) {
 }
 
 MobDef worldBossOf([DateTime? now]) =>
-    mobById[worldBossRotation[_dayIndex(now ?? DateTime.now()) % worldBossRotation.length]]!;
+    mobById[worldBossRotation[_dayIndex(now ?? GameClock.now()) % worldBossRotation.length]]!;
 
 DungeonDef worldBossDef([DateTime? now]) {
   final boss = worldBossOf(now);

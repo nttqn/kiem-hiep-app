@@ -4,12 +4,15 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../core/clock.dart';
 import '../core/hero.dart';
 import 'analytics.dart';
+import 'chat.dart';
 import 'leaderboard.dart';
 import 'save.dart';
 import 'sync_plan.dart';
@@ -66,7 +69,10 @@ class CloudSave extends ChangeNotifier {
   bool get isApplePlatform => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   Future<void> init() async {
-    if (kIsWeb) return;
+    if (kIsWeb) {
+      _clockDone();
+      return;
+    }
     try {
       // Reads google-services.json / GoogleService-Info.plist; throws when
       // the game was built without them.
@@ -77,16 +83,60 @@ class CloudSave extends ChangeNotifier {
       available = true;
     } catch (e) {
       debugPrint('cloud save off: $e');
+      _clockDone();
       return;
     }
+    unawaited(syncClock());
     user = FirebaseAuth.instance.currentUser;
     FirebaseAuth.instance.authStateChanges().listen((u) {
       user = u;
       notifyListeners();
     });
-    _lifecycle ??= AppLifecycleListener(onPause: flush, onDetach: flush);
+    _lifecycle ??= AppLifecycleListener(onPause: flush, onDetach: flush, onResume: syncClock);
     notifyListeners();
     if (user != null) unawaited(sync());
+  }
+
+  // ------------------------------------------------------------ clock
+
+  final Completer<void> _clockReady = Completer<void>();
+
+  /// Done once the first ask for the server's time has an answer (or has
+  /// failed): opening a hero waits for it a moment, so a phone set ahead
+  /// gets no early day.
+  Future<void> get clockReady => _clockReady.future;
+
+  void _clockDone() {
+    if (!_clockReady.isCompleted) _clockReady.complete();
+  }
+
+  bool _clockBusy = false;
+
+  /// Asks Firebase for the server's time ([GameClock]); also each time the
+  /// app comes back.
+  Future<void> syncClock() async {
+    if (!available || _clockBusy) {
+      _clockDone();
+      return;
+    }
+    _clockBusy = true;
+    final db = FirebaseDatabase.instanceFor(app: Firebase.app(), databaseURL: ChatService.dbUrl);
+    try {
+      db.goOnline();
+      await db.ref('.info/connected').onValue.firstWhere((e) => e.snapshot.value == true).timeout(
+            const Duration(seconds: 8),
+          );
+      final off = await db.ref('.info/serverTimeOffset').once().timeout(const Duration(seconds: 5));
+      final ms = (off.snapshot.value as num?)?.toInt() ?? 0;
+      GameClock.synced(DateTime.now().millisecondsSinceEpoch + ms);
+    } catch (e) {
+      debugPrint('server time unknown: $e');
+    } finally {
+      // The chat keeps its own connection while open.
+      if (!ChatService.instance.isOpen) db.goOffline();
+      _clockBusy = false;
+      _clockDone();
+    }
   }
 
   // ------------------------------------------------------------ sign-in
@@ -343,7 +393,7 @@ class CloudSave extends ChangeNotifier {
     final h = SaveService.instance.slots[slot];
     if (h != null) {
       // Make it the newest so other devices see it as such.
-      h.savedAt = DateTime.now().millisecondsSinceEpoch;
+      h.savedAt = GameClock.nowMs();
       await SaveService.instance.writeSlot(slot);
       await _upload(slot, h);
     }
