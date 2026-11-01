@@ -434,7 +434,7 @@ class World {
   void _init() {
     _sky();
     hero.recompute();
-    player.maxHp = st.maxHp;
+    player.maxHp = st.maxHp * duelHpMul;
     player.hp = st.maxHp;
     player.mp = st.maxMp;
     skills = [for (var i = 0; i < sect.skills.length; i++) hero.castSkill(i)];
@@ -1102,9 +1102,41 @@ class World {
 
   void _spawnDuelist(DuelInfo g) {
     final m = _duelist(g, width * 0.68);
+    // Both sides' HP raised by the same factor (see [duelHpMul]).
+    duelHpMul = duelHpMulFor(g);
+    m.maxHp *= duelHpMul;
+    m.hp = m.maxHp;
+    player.maxHp = st.maxHp * duelHpMul;
+    player.hp = player.maxHp;
     mobs.add(m);
     boss = m;
     events.add(GameEvent(EvKind.boss, text: 'Tỷ võ với ${g.name}!', color: 0xFFFF6A4A, big: true));
+  }
+
+  /// The HP factor for this hero against [g].
+  double duelHpMulFor(DuelInfo g) => duelHpFactor(
+        hpA: st.maxHp,
+        hpB: g.hp,
+        dpsA: duelDps(
+            atk: st.atk, crit: st.crit, critDmg: st.critDmg, aspd: st.aspd, skillDmg: st.skillDmg,
+            targetMitigation: mitigation(g.def, hero.level)),
+        dpsB: duelDps(
+            atk: g.atk, crit: g.crit, critDmg: g.critDmg, aspd: g.aspd, skillDmg: g.skillDmg,
+            targetMitigation: mitigation(st.def, hero.level)),
+      );
+
+  /// Shared HP factor of this fight, and each side's burst limit.
+  double duelHpMul = 1;
+  final DuelBurst _heroBurst = DuelBurst(), _foeBurst = DuelBurst();
+  int _countdownShown = -1;
+
+  /// "3, 2, 1, Bắt đầu!" on both phones, by the fight's clock.
+  void _duelCountdown() {
+    final step = time.floor();
+    if (step > duelCountdown || step == _countdownShown) return;
+    _countdownShown = step;
+    final left = duelCountdown.round() - step;
+    events.add(GameEvent(EvKind.wave, text: left > 0 ? '$left' : 'Bắt đầu!', color: 0xFFFFD34A, big: true));
   }
 
   /// Host: the guest's hero moves, hits and casts as they press.
@@ -1892,6 +1924,7 @@ class World {
     if (finished) return;
     time += dt;
     if (isDuelGuest) {
+      _duelCountdown();
       _updatePuppet(dt);
       for (final f in fx) {
         f.t += dt;
@@ -1918,7 +1951,7 @@ class World {
       }
     }
     hero.tickFatigue(dt);
-    if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
+    if (hero.tickBuffs(dt)) player.maxHp = st.maxHp * duelHpMul;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
     if (mode == WorldMode.field) {
       _updateField();
@@ -2034,6 +2067,7 @@ class World {
       _endArena(false);
       return;
     }
+    if (d.isDuel) _duelCountdown();
     if (d.isDuel && time > d.timeLimit) {
       final b = boss;
       _endDuel(b == null ? 'a' : duelByHp(player.hp / player.maxHp, b.hp / b.maxHp));
@@ -2088,7 +2122,7 @@ class World {
 
   void _updatePlayer(double dt) {
     final p = player;
-    p.maxHp = st.maxHp;
+    p.maxHp = st.maxHp * duelHpMul;
     for (var i = 0; i < p.cd.length; i++) {
       if (p.cd[i] > 0) p.cd[i] -= dt;
     }
@@ -2782,7 +2816,11 @@ class World {
   void _damageMob(Mob m, double dmg, int color,
       {bool big = false, bool small = false}) {
     if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
-    if (m.remote) dmg *= duelDamage;
+    if (m.remote) {
+      if (time < duelCountdown) return;
+      dmg = _foeBurst.cap(dmg, m.maxHp, time);
+      if (dmg <= 0) return;
+    }
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
     if (m == boss && m.hp > 0 && affix != null) _nightmareSummon(m);
@@ -2947,7 +2985,8 @@ class World {
   void _hurtHero(double raw, Hanh from) {
     final p = player;
     if (!p.alive || p.dashT > 0) return;
-    if (dungeon?.isDuel ?? false) raw *= duelDamage;
+    final duel = dungeon?.isDuel ?? false;
+    if (duel && time < duelCountdown) return;
     if (rng.nextDouble() < st.dodge) {
       _text(p.x, p.y - 60, 'Né', 0xFFB8E0FF);
       return;
@@ -2961,6 +3000,7 @@ class World {
       p.shield -= take;
       dmg -= take;
     }
+    if (duel) dmg = _heroBurst.cap(dmg, p.maxHp, time);
     p.lastHurt = time;
     if (dmg <= 0) return;
     p.hp -= dmg;

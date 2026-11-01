@@ -13,8 +13,52 @@ import 'hero.dart';
 /// Seconds a fight lasts; at the end the larger share of HP left wins.
 const double duelTime = 120;
 
-/// Both sides' damage is multiplied by this.
-const double duelDamage = 0.5;
+/// Skills are tuned to clear packs of monsters: one tuyệt kỹ can deal many
+/// times a hero's whole HP. So in a duel both heroes' HP is raised by the
+/// same factor, picked so an even fight lasts about [duelTargetTtk] seconds
+/// of steady hitting (the stronger side keeps its edge)...
+const double duelTargetTtk = 45;
+
+/// ...no one loses more than this share of their HP in any one second...
+const double duelBurstCap = 0.12;
+
+/// ...and nothing lands before the countdown ends.
+const double duelCountdown = 3;
+
+/// Damage a second of one side on the other, roughly: basic hits with
+/// crits, attack speed and some skill on top, after the target's defence
+/// (as mitigation(def, attacker level) gives it).
+double duelDps({
+  required double atk,
+  required double crit,
+  required double critDmg,
+  required double aspd,
+  required double skillDmg,
+  required double targetMitigation,
+}) =>
+    atk * (1 + crit * (critDmg - 1)) * aspd / 0.75 * (1 + skillDmg) * 2 * (1 - targetMitigation);
+
+/// Keeps one side's damage taken under [duelBurstCap] of their HP a second.
+class DuelBurst {
+  double _from = -99, _sum = 0;
+
+  double cap(double dmg, double maxHp, double now) {
+    if (now - _from >= 1) {
+      _from = now;
+      _sum = 0;
+    }
+    final d = math.min(dmg, math.max(0.0, duelBurstCap * maxHp - _sum));
+    _sum += d;
+    return d;
+  }
+}
+
+/// The shared HP factor for a pair: never below 1.
+double duelHpFactor({required double hpA, required double hpB, required double dpsA, required double dpsB}) {
+  // dpsA is A hitting B.
+  final ttk = (hpB / math.max(1, dpsA) + hpA / math.max(1, dpsB)) / 2;
+  return math.max(1, duelTargetTtk / math.max(0.1, ttk));
+}
 
 /// Messages a second each way.
 const int duelSendHz = 12;
