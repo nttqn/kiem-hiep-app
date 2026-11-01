@@ -7,16 +7,17 @@ import 'hero.dart';
 
 /// Tỷ võ: two players' heroes fighting live (trial build). The room's host
 /// runs the fight; the guest sends what they press and draws what the host
-/// sends back. Real stats, no potions, no pets or companions, HP raised so
+/// sends back. Real stats, no potions, no pets or companions, damage cut so
 /// a fight lasts, no rewards yet.
 
 /// Seconds a fight lasts; at the end the larger share of HP left wins.
 const double duelTime = 120;
 
 /// Skills are tuned to clear packs of monsters: one tuyệt kỹ can deal many
-/// times a hero's whole HP. So in a duel both heroes' HP is raised by the
-/// same factor, picked so an even fight lasts about [duelTargetTtk] seconds
-/// of steady hitting (the stronger side keeps its edge)...
+/// times a hero's whole HP. So in a duel all damage between the two is
+/// divided by one shared factor, picked so an even fight lasts about
+/// [duelTargetTtk] seconds of steady hitting; HP stays as the player built
+/// it and the stronger side keeps its edge...
 const double duelTargetTtk = 45;
 
 /// ...no one loses more than this share of their HP in any one second...
@@ -53,8 +54,8 @@ class DuelBurst {
   }
 }
 
-/// The shared HP factor for a pair: never below 1.
-double duelHpFactor({required double hpA, required double hpB, required double dpsA, required double dpsB}) {
+/// The shared damage divisor for a pair: never below 1.
+double duelDamageFactor({required double hpA, required double hpB, required double dpsA, required double dpsB}) {
   // dpsA is A hitting B.
   final ttk = (hpB / math.max(1, dpsA) + hpA / math.max(1, dpsB)) / 2;
   return math.max(1, duelTargetTtk / math.max(0.1, ttk));

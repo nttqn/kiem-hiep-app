@@ -145,8 +145,8 @@ class _DuelScreenState extends State<DuelScreen> {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           child: Text(
             'Đấu trực tiếp 1-1 với người chơi khác trong 2 phút. Dùng chỉ số thật, không bình máu, '
-            'không linh thú, hiệp khách hay tự động. Sinh lực hai bên được nhân lên như nhau để trận đủ dài, '
-            'mỗi giây mất tối đa 12% sinh lực. Hết giờ, ai còn nhiều % sinh lực hơn thắng. '
+            'không linh thú, hiệp khách hay tự động. Sát thương giữa hai người được giảm như nhau để trận đủ dài '
+            '(sinh lực giữ nguyên), mỗi giây mất tối đa 12% sinh lực. Hết giờ, ai còn nhiều % sinh lực hơn thắng. '
             'Bản thử nghiệm: chưa có thưởng, mạng chậm có thể giật.',
             style: small.copyWith(fontSize: 11.5, color: cream),
           ),

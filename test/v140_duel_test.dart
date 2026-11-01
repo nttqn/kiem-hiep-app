@@ -175,6 +175,16 @@ void main() {
     });
   });
 
+  test('HP stays as built; damage between the two is cut instead', () {
+    final host = geared(60, Hanh.kim), guest = geared(60, Hanh.hoa);
+    final p = Pair(host, guest);
+    p.step(10);
+    expect(p.host.player.maxHp, host.stats.maxHp);
+    expect(p.guestOnHost.maxHp, closeTo(guest.stats.maxHp, 0.01));
+    expect(p.guest.player.maxHp, closeTo(guest.stats.maxHp, 1));
+    expect(p.host.duelDmgDiv, greaterThan(1));
+  });
+
   test('room codes are six digits', () {
     final r = math.Random(1);
     for (var i = 0; i < 50; i++) {

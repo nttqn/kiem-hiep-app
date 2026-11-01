@@ -434,7 +434,7 @@ class World {
   void _init() {
     _sky();
     hero.recompute();
-    player.maxHp = st.maxHp * duelHpMul;
+    player.maxHp = st.maxHp;
     player.hp = st.maxHp;
     player.mp = st.maxMp;
     skills = [for (var i = 0; i < sect.skills.length; i++) hero.castSkill(i)];
@@ -1102,19 +1102,15 @@ class World {
 
   void _spawnDuelist(DuelInfo g) {
     final m = _duelist(g, width * 0.68);
-    // Both sides' HP raised by the same factor (see [duelHpMul]).
-    duelHpMul = duelHpMulFor(g);
-    m.maxHp *= duelHpMul;
-    m.hp = m.maxHp;
-    player.maxHp = st.maxHp * duelHpMul;
-    player.hp = player.maxHp;
+    // Both sides' damage cut by the same factor; HP stays as built.
+    duelDmgDiv = duelDmgDivFor(g);
     mobs.add(m);
     boss = m;
     events.add(GameEvent(EvKind.boss, text: 'Tỷ võ với ${g.name}!', color: 0xFFFF6A4A, big: true));
   }
 
-  /// The HP factor for this hero against [g].
-  double duelHpMulFor(DuelInfo g) => duelHpFactor(
+  /// What damage between this hero and [g] is divided by.
+  double duelDmgDivFor(DuelInfo g) => duelDamageFactor(
         hpA: st.maxHp,
         hpB: g.hp,
         dpsA: duelDps(
@@ -1125,8 +1121,8 @@ class World {
             targetMitigation: mitigation(st.def, hero.level)),
       );
 
-  /// Shared HP factor of this fight, and each side's burst limit.
-  double duelHpMul = 1;
+  /// Shared damage divisor of this fight, and each side's burst limit.
+  double duelDmgDiv = 1;
   final DuelBurst _heroBurst = DuelBurst(), _foeBurst = DuelBurst();
   int _countdownShown = -1;
 
@@ -1951,7 +1947,7 @@ class World {
       }
     }
     hero.tickFatigue(dt);
-    if (hero.tickBuffs(dt)) player.maxHp = st.maxHp * duelHpMul;
+    if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
     if (mode == WorldMode.field) {
       _updateField();
@@ -2122,7 +2118,7 @@ class World {
 
   void _updatePlayer(double dt) {
     final p = player;
-    p.maxHp = st.maxHp * duelHpMul;
+    p.maxHp = st.maxHp;
     for (var i = 0; i < p.cd.length; i++) {
       if (p.cd[i] > 0) p.cd[i] -= dt;
     }
@@ -2132,8 +2128,11 @@ class World {
     if (p.hurt > 0) p.hurt -= dt;
     // Regen, faster out of combat.
     final calm = time - p.lastHurt > 5;
+    // No natural regen in a duel: the other side has none, and with damage
+    // cut it would count for far more than it does elsewhere.
+    final regen = (dungeon?.isDuel ?? false) ? 0.0 : st.hpRegen * (calm ? 4 : 1) * dt;
     p.hp = math.min(p.maxHp,
-        p.hp + st.hpRegen * (calm ? 4 : 1) * dt + _hot(dt) +
+        p.hp + regen + _hot(dt) +
             (realmBuffs.contains(RealmBuff.vigor) ? p.maxHp * 0.02 * dt : 0));
     p.mp = math.min(st.maxMp, p.mp + st.mpRegen * (calm ? 2 : 1) * dt);
     if (time > p.shieldUntil) p.shield = 0;
@@ -2818,7 +2817,7 @@ class World {
     if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
     if (m.remote) {
       if (time < duelCountdown) return;
-      dmg = _foeBurst.cap(dmg, m.maxHp, time);
+      dmg = _foeBurst.cap(dmg / duelDmgDiv, m.maxHp, time);
       if (dmg <= 0) return;
     }
     m.hp -= dmg;
@@ -3000,7 +2999,7 @@ class World {
       p.shield -= take;
       dmg -= take;
     }
-    if (duel) dmg = _heroBurst.cap(dmg, p.maxHp, time);
+    if (duel) dmg = _heroBurst.cap(dmg / duelDmgDiv, p.maxHp, time);
     p.lastHurt = time;
     if (dmg <= 0) return;
     p.hp -= dmg;
