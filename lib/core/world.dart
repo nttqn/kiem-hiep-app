@@ -12,6 +12,7 @@ import 'hanh.dart';
 import 'hero.dart';
 import 'items.dart';
 import 'live_event.dart';
+import 'lore.dart';
 import 'manuals.dart';
 import 'newbie.dart';
 import 'nightmare.dart';
@@ -1147,6 +1148,9 @@ class World {
       drops.add(Drop(x + j(), y + 30, gem: Gem(Hanh.values[rng.nextInt(5)], dropTier(lv, boss: true))));
     }
     hero.addHerb(_herbTier, 2);
+    // A page of this land's Ký sự, now and then.
+    final land = realms.where((r) => r.mapId == map.id).firstOrNull;
+    if (land != null && rng.nextDouble() < loreTreasureChance) _lore(land.id);
     fx.add(Fx('buddha', x, y, life: 0.6, radius: 90));
     _sfx('loot');
     events.add(GameEvent(EvKind.loot, text: 'Đào được rương báu: +$g lượng', color: 0xFFFFD34A));
@@ -1373,6 +1377,7 @@ class World {
     }
     drops.add(Drop(v.x + j(), v.y + 50, gem: Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, dropTier(lv, boss: true) + 1))));
     fx.add(Fx('buddha', v.x, v.y, life: 1, radius: 200));
+    _lore();
     _shake(6);
     events.add(GameEvent(EvKind.wave, text: 'Mật thất đã mở! +$g lượng', color: 0xFFFFD34A, big: true));
   }
@@ -1397,6 +1402,8 @@ class World {
     finishTime = time;
     final stars = realmStarsFor(boss: true, chests: chestsOpened, explored: explored);
     rewardLines = hero.realmReward(dungeon!, stars, rng);
+    final page = hero.gainLorePage(realms[dungeon!.realm - 1].id, rng);
+    if (page != null) rewardLines = [...rewardLines, page];
     events.add(GameEvent(EvKind.cleared, value: stars.toDouble()));
   }
 
@@ -1473,6 +1480,7 @@ class World {
           realmBuffs.add(b);
           fx.add(Fx('buddha', o.x, o.y, life: 0.8, radius: 120));
           _sfx('loot');
+          if (rng.nextDouble() < loreShrineChance) _lore();
           events.add(GameEvent(EvKind.notice, text: 'Bia cổ ban phúc: ${b.label}', color: 0xFF8CE07A, big: true));
         case PoiKind.captive:
           if (mobs.any((m) => m.alive && _d2(m.x, m.y, o.x, o.y) < 240 * 240)) {
@@ -1484,6 +1492,7 @@ class World {
           final (who, line) = realmCaptiveLines[o.index];
           _sfx('loot');
           events.add(GameEvent(EvKind.notice, text: '$who: “$line”', color: 0xFFF3E6C8, big: true));
+          if (rng.nextDouble() < loreCaptiveChance) _lore();
           for (final l in hero.realmCaptiveFreed(dungeon!.level)) {
             events.add(GameEvent(EvKind.loot, text: l, color: 0xFFFFD34A));
           }
@@ -1517,6 +1526,13 @@ class World {
     events.add(GameEvent(EvKind.loot,
         text: 'Rương báu $chestsOpened/$realmChests: +${g.toString()} lượng, +2 ${herbNames[_herbTier]}',
         color: 0xFFFFD34A));
+  }
+
+  /// A Giang Hồ Ký Sự page of [realmId] (this bí cảnh by default).
+  void _lore([String? realmId]) {
+    final id = realmId ?? realms[dungeon!.realm - 1].id;
+    final line = hero.gainLorePage(id, rng);
+    if (line != null) events.add(GameEvent(EvKind.loot, text: line, color: 0xFFB8F0E0));
   }
 
   /// All three trận nhãn lit: the seal breaks and the master comes out.

@@ -21,11 +21,13 @@ import 'core/gold_sets.dart';
 import 'core/manuals.dart';
 import 'core/mounts.dart';
 import 'core/nightmare.dart';
+import 'core/lore.dart';
 import 'core/realm.dart';
 import 'core/tang_bao.dart';
 import 'core/weather.dart';
 import 'core/sect_duty.dart';
 import 'ui/fishing_view.dart';
+import 'ui/lore_screen.dart';
 import 'ui/sect_screen.dart';
 import 'ui/activity_screen.dart';
 import 'ui/alchemy_screen.dart';
@@ -252,6 +254,11 @@ Future<void> main() async {
       }
       h.gold = 1200 * level;
       h.tbdMaps = int.tryParse(q['tbdmaps'] ?? '') ?? 0;
+      // lore=<n>: the first n Ký sự pages, chapter by chapter.
+      final lore = int.tryParse(q['lore'] ?? '') ?? 0;
+      for (var i = 0; i < lore && i < lorePageCount; i++) {
+        h.lorePages.add(loreKey(loreChapters[i ~/ lorePagesPer].realm, i % lorePagesPer));
+      }
       // Some gems and pets to show off the gem and pet screens.
       for (final hn in Hanh.values) {
         h.addGem(Gem(hn, 1 + rng.nextInt(3)), 1 + rng.nextInt(4));
@@ -455,6 +462,7 @@ Future<void> main() async {
     'sect' => const SectScreen(),
     'nightmare' => const DungeonListScreen(nightmare: true),
     'realm' => const DungeonListScreen(realm: true),
+    'lore' => const LoreScreen(),
     'rplay' => PlayScreen.dungeon(realmDungeon(int.tryParse(q['ri'] ?? '') ?? 0, SaveService.instance.hero.level)),
     'nmplay' => PlayScreen.dungeon(nightmareDef(int.tryParse(q['nmi'] ?? '') ?? 0,
         NmAffix.values[int.tryParse(q['affix'] ?? '') ?? 0])),

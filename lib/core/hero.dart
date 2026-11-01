@@ -19,6 +19,7 @@ import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
 import 'live_event.dart';
+import 'lore.dart';
 import 'manuals.dart';
 import 'meridians.dart';
 import 'monthly.dart';
@@ -338,6 +339,9 @@ class HeroData {
   int tbdDropped = 0;
   int tbdDug = 0;
 
+  /// Giang Hồ Ký Sự pages found (loreKey).
+  final Set<String> lorePages = {};
+
   // Bí cảnh: best stars by id, and per day the runs taken and ad runs added.
   final Map<String, int> realmStars = {};
   String realmDay = '';
@@ -476,6 +480,7 @@ class HeroData {
     if (comp != null) add({comp.bonus: comp.bonusAt(companionBonds[comp.id] ?? 1)});
     add(sectRankBonus(hanh, sectRank));
     add(divineBonuses(divine));
+    add(loreBonuses());
     return out;
   }
 
@@ -2058,6 +2063,47 @@ class HeroData {
     return lines;
   }
 
+  // ------------------------------------------------------------- ký sự
+
+  int lorePagesOf(String realm) =>
+      [for (var i = 0; i < lorePagesPer; i++) if (lorePages.contains(loreKey(realm, i))) i].length;
+
+  bool loreDone(String realm) => lorePagesOf(realm) >= lorePagesPer;
+
+  bool get loreAllDone => loreChapters.every((c) => loreDone(c.realm));
+
+  Map<Bonus, double> loreBonuses() {
+    final out = <Bonus, double>{};
+    for (final c in loreChapters) {
+      if (loreDone(c.realm)) out[c.bonus] = (out[c.bonus] ?? 0) + c.value;
+    }
+    if (loreAllDone) {
+      loreAllBonus.forEach((k, v) => out[k] = (out[k] ?? 0) + v);
+    }
+    return out;
+  }
+
+  /// A page of [realm]'s chapter not found yet, at random; null when the
+  /// chapter is whole. Finishing it (or all nine) is told as notices.
+  String? gainLorePage(String realm, math.Random rng) {
+    final c = loreByRealm[realm];
+    if (c == null) return null;
+    final missing = [for (var i = 0; i < lorePagesPer; i++) if (!lorePages.contains(loreKey(realm, i))) i];
+    if (missing.isEmpty) return null;
+    final i = missing[rng.nextInt(missing.length)];
+    lorePages.add(loreKey(realm, i));
+    final n = lorePagesOf(realm);
+    if (n >= lorePagesPer) {
+      recompute();
+      notices.add(Notice('Ký sự trọn chương "${c.title}": ${loreBonusLabel(c.bonus, c.value)}',
+          color: 0xFFB8F0E0, big: true));
+      if (loreAllDone && seasonTitles.add(loreTitle)) {
+        notices.add(Notice('Giang Hồ Ký Sự trọn bộ! Danh hiệu « $loreTitle »', color: 0xFFFFD34A, big: true));
+      }
+    }
+    return 'Trang Ký sự: ${c.title} ($n/$lorePagesPer)';
+  }
+
   // ------------------------------------------------------------- tàng bảo đồ
 
   /// Rolls a treasure map off a field kill; true if one dropped.
@@ -2561,6 +2607,7 @@ class HeroData {
         'nm': [nmStars, nmDay, nmRuns],
         'realm': [realmStars, realmDay, realmRuns, realmAds],
         'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
+        'lore': lorePages.toList(),
         'tb': [divine, divineIron],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -2741,6 +2788,13 @@ class HeroData {
       h.tbdDay = tbd[4] as String;
       h.tbdDropped = math.max(0, tbd[5] as int);
       h.tbdDug = math.max(0, tbd[6] as int);
+    }
+    for (final v in m['lore'] as List? ?? const []) {
+      final k = '$v';
+      final parts = k.split(':');
+      final c = loreByRealm[parts.first];
+      final i = parts.length == 2 ? int.tryParse(parts[1]) : null;
+      if (c != null && i != null && i >= 0 && i < lorePagesPer) h.lorePages.add(k);
     }
     final tb = m['tb'];
     if (tb is List && tb.length == 2) {

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../core/content.dart';
 import '../core/hero.dart';
+import '../core/lore.dart';
 import '../core/realm.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
 import '../services/save.dart';
+import 'lore_screen.dart';
 import 'play_screen.dart';
 import 'theme.dart';
 
@@ -65,6 +67,17 @@ class _RealmViewState extends State<RealmView> {
                   'hạ đầu lĩnh. Trên đường có rương báu, bia cổ ban phúc và người gặp nạn cần cứu. 10 phút mỗi lượt.',
                   style: small.copyWith(fontSize: 11.5, color: cream),
                 ),
+              ),
+              const SizedBox(width: 10),
+              LButton(
+                label: 'Ký sự ${h.lorePages.length}/$lorePageCount',
+                icon: Icons.menu_book,
+                small: true,
+                color: const Color(0xFF2E6A5A),
+                onTap: () async {
+                  await Navigator.of(context).push(fadeRoute(const LoreScreen()));
+                  if (mounted) setState(() {});
+                },
               ),
               const SizedBox(width: 10),
               Column(
