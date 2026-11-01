@@ -7,7 +7,7 @@ import 'hero.dart';
 
 /// Tỷ võ: two players' heroes fighting live (trial build). The room's host
 /// runs the fight; the guest sends what they press and draws what the host
-/// sends back. Real stats, no potions, no pets or companions, damage cut so
+/// sends back. Real stats, no potions, no pets or companions, HP raised so
 /// a fight lasts, no rewards yet.
 
 /// Seconds a fight lasts; at the end the larger share of HP left wins.
