@@ -1,4 +1,5 @@
 import 'arena.dart';
+import 'duel.dart';
 import 'hanh.dart';
 import 'luan_hoi.dart';
 
@@ -361,6 +362,8 @@ class DungeonDef {
     this.nightmare = 0,
     this.affix = 0,
     this.realm = 0,
+    this.duel,
+    this.duelGuest = false,
   });
 
   final String id;
@@ -399,6 +402,12 @@ class DungeonDef {
   /// Bí cảnh number (1-based, 0 for none): a wide land explored, not waves.
   final int realm;
   bool get isRealm => realm > 0;
+
+  /// Tỷ võ against another player's hero ([duel] is them); the guest's
+  /// world only draws what the host sends.
+  final DuelInfo? duel;
+  final bool duelGuest;
+  bool get isDuel => duel != null;
 
   MapDef get map => mapById[mapId]!;
 

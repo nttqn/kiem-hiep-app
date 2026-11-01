@@ -36,6 +36,16 @@
           }
         }
       }
+    },
+    "duels": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((!data.exists() && newData.child('h').val() === auth.uid) || data.child('h').val() === auth.uid)",
+        "g": { ".write": "auth != null && data.parent().exists() && !data.exists() && newData.val() === auth.uid" },
+        "gi": { ".write": "auth != null && newData.parent().child('g').val() === auth.uid" },
+        "i": { ".write": "auth != null && data.parent().child('g').val() === auth.uid" },
+        "q": { ".write": "auth != null && data.parent().child('g').val() === auth.uid" }
+      }
     }
   }
 }

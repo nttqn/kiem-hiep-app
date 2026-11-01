@@ -222,6 +222,8 @@ class TopInfo extends StatelessWidget {
                       Text(
                         d.isWorldBoss
                             ? 'Sát thương ${fmt(world.bossDamage.round())}'
+                            : d.isDuel
+                            ? 'Không bình máu · ai còn nhiều % sinh lực thắng'
                             : d.isRealm
                             ? '${world.lairOpen ? 'Đầu lĩnh' : 'Trận nhãn ${world.pillarsLit}/$realmPillars'}'
                                 ' · Rương ${world.chestsOpened}/$realmChests · ${(world.explored * 100).floor()}%'
@@ -242,7 +244,7 @@ class TopInfo extends StatelessWidget {
                               : ' ${world.timeLeft.ceil()}s',
                           style: bold.copyWith(fontSize: 13, color: world.timeLeft < 30 ? hpRed : cream)),
                       const SizedBox(width: 6),
-                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena || d.isRealm ? 0 : 3); i++)
+                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena || d.isRealm || d.isDuel ? 0 : 3); i++)
                         Icon(
                           world.time <= (i == 0 ? d.timeLimit : (i == 1 ? d.twoStar : d.threeStar))
                               ? Icons.star

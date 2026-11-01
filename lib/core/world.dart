@@ -5,6 +5,7 @@ import 'arena.dart';
 import 'companions.dart';
 import 'content.dart';
 import 'divine.dart';
+import 'duel.dart';
 import 'fishing.dart';
 import 'gems.dart';
 import 'gold_sets.dart';
@@ -121,6 +122,9 @@ class Mob extends Actor {
 
   /// A Dạ Yêu: a night-born monster of the field.
   bool nightborn = false;
+
+  /// A Tỷ võ opponent moved by a player's input, not by the AI.
+  bool remote = false;
 
   /// Set on a Lôi đài challenger, drawn as a hero of their sect.
   ArenaRival? rival;
@@ -351,6 +355,19 @@ class World {
         player = d.isRealm ? Player(RealmLayout.gateX, RealmLayout.gateY) : Player(300, 1150 / 2) {
     _init();
     if (d.isRealm) _buildRealm(seed ?? rng.nextInt(1 << 30));
+    // Both heroes are on the ring from the start.
+    if (d.isDuel && !d.duelGuest) {
+      bossWave = true;
+      wave = 0;
+      _spawnDuelist(d.duel!);
+    }
+    // The guest draws the host's hero where the host stands.
+    if (d.isDuel && d.duelGuest) {
+      final h = _duelist(d.duel!, 300);
+      boss = h;
+      mobs.add(h);
+      player.x = width * 0.68;
+    }
   }
 
   final HeroData hero;
@@ -509,7 +526,7 @@ class World {
   PetActor? pet;
 
   void _spawnPet() {
-    final def = petById[hero.activePet];
+    final def = (dungeon?.isDuel ?? false) ? null : petById[hero.activePet];
     pet = def == null ? null : PetActor(def, player.x - 40, player.y + 10);
   }
 
@@ -572,7 +589,7 @@ class World {
 
   bool get _companionAllowed {
     final d = dungeon;
-    return d == null || !(d.isTower || d.isWorldBoss || d.isArena);
+    return d == null || !(d.isTower || d.isWorldBoss || d.isArena || d.isDuel);
   }
 
   void _spawnCompanion() {
@@ -903,6 +920,10 @@ class World {
         _spawnWorldBoss(d);
         return;
       }
+      if (d.isDuel) {
+        _spawnDuelist(d.duel!);
+        return;
+      }
       if (d.isArena) {
         _spawnRival(d.rival!);
         return;
@@ -1036,6 +1057,297 @@ class World {
     m.maxHp *= mul;
     m.hp = m.maxHp;
     m.atk *= mul;
+  }
+
+  // ------------------------------------------------------------ tỷ võ
+
+  /// Host: the guest's latest input. Guest: what they press, to send.
+  DuelInput remoteIn = DuelInput();
+  int _remoteSeq = 0;
+
+  /// 'a' the host won, 'b' the guest, 'draw', or '' while it goes on.
+  String duelWinner = '';
+
+  bool get isDuelGuest => dungeon?.duelGuest ?? false;
+
+  /// The other side: on the host the guest's hero, on the guest the host's.
+  Mob _duelist(DuelInfo g, double x) {
+    final sect = sectOf(g.hanh);
+    final melee = sect.basic == BasicKind.melee;
+    final def = MobDef(
+      id: 'rival',
+      name: g.name,
+      hanh: g.hanh,
+      body: Body.human,
+      c1: g.hanh.color,
+      c2: 0xFF2A2A2A,
+      ranged: !melee,
+      range: sect.basicRange + 30,
+      speed: g.move,
+      attackCd: (melee ? 0.72 : 0.82) / g.aspd,
+      boss: true,
+    );
+    final m = Mob(_uid++, def, g.level, x, height / 2)
+      ..state = MobState.chase
+      ..rival = g.rival
+      ..remote = true;
+    m.maxHp = g.hp;
+    m.hp = g.hp;
+    m.defense = g.def;
+    // A basic hit's average, crits folded in.
+    m.atk = g.atk * (1 + g.crit * (g.critDmg - 1));
+    m.face = -1;
+    return m;
+  }
+
+  void _spawnDuelist(DuelInfo g) {
+    final m = _duelist(g, width * 0.68);
+    mobs.add(m);
+    boss = m;
+    events.add(GameEvent(EvKind.boss, text: 'Tỷ võ với ${g.name}!', color: 0xFFFF6A4A, big: true));
+  }
+
+  /// Host: the guest's hero moves, hits and casts as they press.
+  void _remoteMob(Mob m, double dt) {
+    final g = dungeon!.duel!;
+    final c = remoteIn;
+    final p = player;
+    final len = math.sqrt(c.mx * c.mx + c.my * c.my);
+    if (len > 0.05) {
+      final sp = m.def.speed * math.min(1, len) * _slowMul(m);
+      m.x += c.mx / len * sp * dt;
+      m.y += c.my / len * sp * dt;
+      if (c.mx.abs() > 0.1) m.face = c.mx.sign;
+      m.walk += dt * sp / 28;
+      m.moving = true;
+      _clamp(m);
+    } else {
+      m.moving = false;
+    }
+    for (final (n, i) in c.presses) {
+      if (n <= _remoteSeq) continue;
+      _remoteSeq = n;
+      final skills = sectOf(g.hanh).skills;
+      if (i < 0 || i >= skills.length || i >= g.skillLv.length || g.skillLv[i] <= 0) continue;
+      if (skills[i].kind == SkillKind.passive) continue;
+      if (m.rivalCd.length > i && time < m.rivalCd[i]) continue;
+      _rivalCast(m, i, g.skillLv[i], 1 + g.skillDmg, 1);
+    }
+    if (!c.attack || m.attackCd > 0 || !p.alive) return;
+    final dp = _dist(m.x, m.y, p.x, p.y);
+    final reach = m.def.ranged ? m.def.range : math.max(sectOf(g.hanh).basicRange, m.radius + heroRadius + 14);
+    if (dp > reach) return;
+    m.attackCd = m.def.attackCd;
+    m.attackAnim = 1;
+    if (p.x != m.x) m.face = (p.x - m.x).sign;
+    if (m.def.ranged) {
+      final a = math.atan2(p.y - m.y, p.x - m.x);
+      projs.add(Proj(
+        fromHero: false,
+        x: m.x,
+        y: m.y - 30,
+        vx: math.cos(a) * 560,
+        vy: math.sin(a) * 560,
+        maxDist: m.def.range + 80,
+        radius: 14,
+        fx: sectOf(g.hanh).basicFx,
+        power: m.atk,
+        hanh: g.hanh,
+      ));
+    } else {
+      fx.add(Fx(sectOf(g.hanh).basicFx, m.x, m.y, life: 0.22, angle: math.atan2(p.y - m.y, p.x - m.x),
+          radius: reach + 10, spread: 1.6));
+      _hurtHero(m.atk, g.hanh);
+    }
+  }
+
+  void _endDuel(String winner) {
+    if (finished) return;
+    finished = true;
+    finishTime = math.min(time, dungeon!.timeLimit);
+    duelWinner = winner;
+    final mine = isDuelGuest ? 'b' : 'a';
+    events.add(winner == mine
+        ? GameEvent(EvKind.cleared, value: 1)
+        : GameEvent(EvKind.failed, text: winner == 'draw' ? 'Hòa' : 'Thua trận'));
+  }
+
+  /// The fight cut short (a lost connection, a side walking out).
+  void endDuelEarly(String winner) => _endDuel(winner);
+
+  /// Host: the state the guest draws, with the effects and numbers born in
+  /// the last [since] seconds.
+  Map<String, Object> duelSnapshot(double since) {
+    double r1(double v) => (v * 10).round() / 10;
+    List<Object> actor(Actor a, double maxHp, double attack) =>
+        [r1(a.x), r1(a.y), r1(a.hp), r1(maxHp), a.face.sign.toInt(), a.moving ? 1 : 0, r1(attack)];
+    final b = boss;
+    return {
+      't': r1(time),
+      'a': actor(player, player.maxHp, player.attackAnim),
+      'b': b == null ? const [] : actor(b, b.maxHp, b.attackAnim),
+      'z': [
+        for (final z in zones)
+          [r1(z.x), r1(z.y), r1(z.r), r1(z.delay), r1(z.t), z.fx, z.fromHero ? 1 : 0, z.ticks, r1(z.interval)]
+      ],
+      'p': [for (final q in projs) if (!q.dead) [r1(q.x), r1(q.y), r1(q.vx), r1(q.vy), r1(q.radius), q.fx, q.fromHero ? 1 : 0]],
+      'f': [
+        for (final f in fx)
+          if (f.t <= since) [f.kind, r1(f.x), r1(f.y), r1(f.life), r1(f.angle), r1(f.radius), r1(f.spread), r1(f.x2), r1(f.y2)]
+      ],
+      'x': [for (final t in texts) if (t.t <= since) [r1(t.x), r1(t.y), t.text, t.color, t.big ? 1 : 0]],
+      'e': duelWinner,
+    };
+  }
+
+  // Guest side: where the host says each side is.
+  double _hostX = 0, _hostY = 0, _selfX = 0, _selfY = 0;
+  bool _snapped = false;
+  int _pressSeq = 0;
+  final List<(int, int)> _presses = [];
+
+  /// Guest: takes in the host's state.
+  void applyDuelSnap(Map s) {
+    double d(Object? v) => (v as num).toDouble();
+    final a = s['a'] as List, b = s['b'] as List;
+    final p = player;
+    final host = boss!;
+    // The guest is 'b' in the host's world.
+    if (b.isNotEmpty) {
+      _selfX = d(b[0]);
+      _selfY = d(b[1]);
+      p.hp = d(b[2]);
+      p.maxHp = d(b[3]);
+      p.attackAnim = math.max(p.attackAnim, d(b[6]));
+    }
+    _hostX = d(a[0]);
+    _hostY = d(a[1]);
+    host.hp = d(a[2]);
+    host.maxHp = d(a[3]);
+    host.face = d(a[4]) == 0 ? host.face : d(a[4]);
+    host.moving = a[5] == 1;
+    host.attackAnim = math.max(host.attackAnim, d(a[6]));
+    if (!_snapped) {
+      _snapped = true;
+      p.x = _selfX;
+      p.y = _selfY;
+      host.x = _hostX;
+      host.y = _hostY;
+    }
+    time = math.max(time, d(s['t']));
+    zones
+      ..clear()
+      ..addAll([
+        for (final z in s['z'] as List? ?? const [])
+          Zone(
+            fromHero: (z as List)[6] == 0,
+            x: d(z[0]),
+            y: d(z[1]),
+            r: d(z[2]),
+            delay: d(z[3]),
+            ticks: (z[7] as num).toInt(),
+            interval: d(z[8]),
+            power: 0,
+            fx: '${z[5]}',
+            visualOnly: true,
+          )..t = d(z[4])
+      ]);
+    projs
+      ..clear()
+      ..addAll([
+        for (final q in s['p'] as List? ?? const [])
+          Proj(
+            fromHero: (q as List)[6] == 0,
+            x: d(q[0]),
+            y: d(q[1]),
+            vx: d(q[2]),
+            vy: d(q[3]),
+            maxDist: 99999,
+            radius: d(q[4]),
+            fx: '${q[5]}',
+            power: 0,
+          )
+      ]);
+    for (final f in s['f'] as List? ?? const []) {
+      final l = f as List;
+      fx.add(Fx('${l[0]}', d(l[1]), d(l[2]),
+          life: d(l[3]), angle: d(l[4]), radius: d(l[5]), spread: d(l[6]), x2: d(l[7]), y2: d(l[8])));
+    }
+    for (final t in s['x'] as List? ?? const []) {
+      final l = t as List;
+      texts.add(FloatText(d(l[0]), d(l[1]), '${l[2]}', (l[3] as num).toInt(), big: l[4] == 1));
+    }
+    if (texts.length > 60) texts.removeRange(0, texts.length - 60);
+    final e = '${s['e'] ?? ''}';
+    if (e.isNotEmpty) _endDuel(e);
+  }
+
+  /// Guest: what was pressed since the last send.
+  DuelInput takeInput() => DuelInput(
+        mx: input.moveX,
+        my: input.moveY,
+        attack: input.attack || engaged,
+        presses: List.of(_presses.length > 6 ? _presses.sublist(_presses.length - 6) : _presses),
+      );
+
+  /// Guest: no fight is run here; the hero walks ahead of the host's word
+  /// and is eased back toward it, the host's hero glides to where it is.
+  void _updatePuppet(double dt) {
+    final p = player;
+    final c = input;
+    p.mp = st.maxMp;
+    for (var i = 0; i < p.cd.length; i++) {
+      if (p.cd[i] > 0) p.cd[i] -= dt;
+    }
+    for (final i in c.skills) {
+      if (!ready(i)) continue;
+      p.cd[i] = skills[i].cooldown;
+      p.attackAnim = 1;
+      _presses.add((++_pressSeq, i));
+      if (_presses.length > 12) _presses.removeAt(0);
+    }
+    c.skills.clear();
+    if (c.attack || engaged) p.attackAnim = math.max(p.attackAnim, 0.6);
+    final len = math.sqrt(c.moveX * c.moveX + c.moveY * c.moveY);
+    if (len > 0.05 && p.alive) {
+      final sp = st.move * math.min(1, len);
+      p.x += c.moveX / len * sp * dt;
+      p.y += c.moveY / len * sp * dt;
+      if (c.moveX.abs() > 0.1) p.face = c.moveX.sign;
+      p.walk += dt * sp / 28;
+      p.moving = true;
+    } else {
+      p.moving = false;
+    }
+    if (_snapped) {
+      final k = math.min(1.0, dt * 6);
+      final ex = _selfX - p.x, ey = _selfY - p.y;
+      if (ex * ex + ey * ey > 160 * 160) {
+        p.x = _selfX;
+        p.y = _selfY;
+      } else {
+        p.x += ex * k;
+        p.y += ey * k;
+      }
+      final h = boss!;
+      final hx = _hostX - h.x, hy = _hostY - h.y;
+      final hk = math.min(1.0, dt * 12);
+      h.x += hx * hk;
+      h.y += hy * hk;
+      h.walk += dt * math.sqrt(hx * hx + hy * hy) * 0.3;
+    }
+    _clamp(p);
+    if (p.attackAnim > 0) p.attackAnim = math.max(0, p.attackAnim - dt * 3);
+    final h = boss;
+    if (h != null && h.attackAnim > 0) h.attackAnim = math.max(0, h.attackAnim - dt * 3);
+    for (final q in projs) {
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+    }
+    for (final z in zones) {
+      z.t += dt;
+    }
+    zones.removeWhere((z) => z.t > z.life);
   }
 
   // ------------------------------------------------------------ tàng bảo đồ
@@ -1579,6 +1891,18 @@ class World {
   void update(double dt) {
     if (finished) return;
     time += dt;
+    if (isDuelGuest) {
+      _updatePuppet(dt);
+      for (final f in fx) {
+        f.t += dt;
+      }
+      fx.removeWhere((f) => f.t >= f.life);
+      for (final t in texts) {
+        t.t += dt;
+      }
+      texts.removeWhere((t) => t.t > 1.0);
+      return;
+    }
     if (debugUltimate && sect.skills.length > 6 && ready(6) && _countNear(240) > 0) input.skills.add(6);
     hero.playSeconds += dt;
     // Mệt mỏi: the date is checked now and then, not every frame.
@@ -1710,6 +2034,11 @@ class World {
       _endArena(false);
       return;
     }
+    if (d.isDuel && time > d.timeLimit) {
+      final b = boss;
+      _endDuel(b == null ? 'a' : duelByHp(player.hp / player.maxHp, b.hp / b.maxHp));
+      return;
+    }
     if (time > d.timeLimit && !finished) {
       finished = true;
       events.add(GameEvent(EvKind.failed, text: 'Hết giờ!'));
@@ -1719,6 +2048,10 @@ class World {
     final aliveCount = mobs.where((m) => m.alive).length + _pending;
     if (aliveCount == 0) {
       if (bossWave) {
+        if (d.isDuel) {
+          _endDuel('a');
+          return;
+        }
         if (d.isArena) {
           _endArena(true);
           return;
@@ -2173,7 +2506,7 @@ class World {
 
   void _usePotion(bool hp) {
     final p = player;
-    if (p.potCd > 0) return;
+    if (p.potCd > 0 || (dungeon?.isDuel ?? false)) return;
     if (hp) {
       if (hero.hpPots <= 0 || p.hp >= p.maxHp) return;
       if (dungeon?.isArena ?? false) {
@@ -2449,6 +2782,7 @@ class World {
   void _damageMob(Mob m, double dmg, int color,
       {bool big = false, bool small = false}) {
     if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
+    if (m.remote) dmg *= duelDamage;
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
     if (m == boss && m.hp > 0 && affix != null) _nightmareSummon(m);
@@ -2613,6 +2947,7 @@ class World {
   void _hurtHero(double raw, Hanh from) {
     final p = player;
     if (!p.alive || p.dashT > 0) return;
+    if (dungeon?.isDuel ?? false) raw *= duelDamage;
     if (rng.nextDouble() < st.dodge) {
       _text(p.x, p.y - 60, 'Né', 0xFFB8E0FF);
       return;
@@ -2638,6 +2973,8 @@ class World {
       if (dungeon?.isWorldBoss ?? false) {
         // A knock-out just ends the run early; the damage still counts.
         _endWorldBoss();
+      } else if (dungeon?.isDuel ?? false) {
+        _endDuel('b');
       } else if (dungeon?.isArena ?? false) {
         _endArena(false);
       } else if (mode == WorldMode.dungeon && dungeonRevived) {
@@ -2742,6 +3079,10 @@ class World {
       return;
     }
     if (m.attackCd > 0) m.attackCd -= dt;
+    if (m.remote) {
+      _remoteMob(m, dt);
+      return;
+    }
     final p = player;
     final dp = _dist(m.x, m.y, p.x, p.y);
     final home = _dist(m.x, m.y, m.homeX, m.homeY);
@@ -2866,12 +3207,22 @@ class World {
     if (ready.isEmpty) return;
     // The tuyệt kỹ first, then whatever else is up.
     final i = ready.firstWhere((k) => skills[k].ultimate, orElse: () => ready[rng.nextInt(ready.length)]);
-    final s = skills[i];
-    final lv = ((r.level - s.unlock) ~/ 6 + 1).clamp(1, maxSkillLevel);
-    final pw = s.powerAt(lv);
-    final dmg = m.atk * pw * arenaRivalSkillMul;
-    m.rivalCd[i] = time + s.cooldown * arenaRivalSkillCd;
+    final lv = ((r.level - skills[i].unlock) ~/ 6 + 1).clamp(1, maxSkillLevel);
     m.rivalNext = time + 1.2 + rng.nextDouble() * 0.8;
+    _rivalCast(m, i, lv, arenaRivalSkillMul, arenaRivalSkillCd);
+  }
+
+  /// A challenger (or a Tỷ võ opponent) casts skill [i] at level [lv] on
+  /// the hero.
+  void _rivalCast(Mob m, int i, int lv, double dmgMul, double cdMul) {
+    final r = m.rival!;
+    final s = sectOf(r.hanh).skills[i];
+    if (m.rivalCd.isEmpty) m.rivalCd = List.filled(sectOf(r.hanh).skills.length, 0);
+    final p = player;
+    final d = _dist(m.x, m.y, p.x, p.y);
+    final pw = s.powerAt(lv);
+    final dmg = m.atk * pw * dmgMul;
+    m.rivalCd[i] = time + s.cooldown * cdMul;
     m.attackAnim = 1;
     if (p.x != m.x) m.face = (p.x - m.x).sign;
     final ang = math.atan2(p.y - m.y, p.x - m.x);

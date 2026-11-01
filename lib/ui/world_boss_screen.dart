@@ -18,6 +18,7 @@ import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'arena_screen.dart';
 import 'cloud_panel.dart';
+import 'duel_screen.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -49,6 +50,15 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     h.wbRollDay(vnDayKey());
     return SubScreen(
       title: 'Thử thách',
+      actions: [
+        LButton(
+          label: 'Tỷ võ',
+          icon: Icons.people,
+          small: true,
+          color: const Color(0xFF8A3A2A),
+          onTap: () => _go(const DuelScreen()),
+        ),
+      ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

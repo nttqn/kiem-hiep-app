@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/content.dart';
+import '../core/duel.dart';
+import '../core/hanh.dart';
 import '../core/newbie.dart';
 import '../core/realm.dart';
 import '../core/tower.dart';
@@ -16,6 +18,7 @@ import '../core/hero.dart';
 import '../core/world.dart';
 import '../game/battle_game.dart';
 import '../services/ads.dart';
+import '../services/duel.dart';
 import '../services/perf.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
@@ -24,11 +27,17 @@ import 'hud.dart';
 import 'theme.dart';
 
 class PlayScreen extends StatefulWidget {
-  const PlayScreen.field(MapDef this.map, {super.key}) : dungeon = null;
-  const PlayScreen.dungeon(DungeonDef this.dungeon, {super.key}) : map = null;
+  const PlayScreen.field(MapDef this.map, {super.key}) : dungeon = null, room = null;
+  const PlayScreen.dungeon(DungeonDef this.dungeon, {super.key}) : map = null, room = null;
+  PlayScreen.duel(DuelRoom this.room, {super.key})
+      : dungeon = duelDef(room.foe, guest: !room.host),
+        map = null;
 
   final MapDef? map;
   final DungeonDef? dungeon;
+
+  /// Tỷ võ: the room this fight runs over.
+  final DuelRoom? room;
 
   /// Dev build only: battle without the HUD, for thumbnails.
   static bool debugHideHud = false;
@@ -75,7 +84,8 @@ class _PlayScreenState extends State<PlayScreen> {
     world = widget.dungeon != null
         ? World.dungeon(hero, widget.dungeon!)
         : World.field(hero, widget.map!);
-    world.auto = SaveService.instance.autoFight;
+    // No autopilot in a duel.
+    world.auto = widget.room == null && SaveService.instance.autoFight;
     game = BattleGame(world: world, onEvent: _onEvent, onSound: SoundService.instance.cue, onSlow: _onSlow);
     SoundService.instance.setBattle(true);
     // Each map has its own tune; every dungeon shares the battle theme. A
@@ -90,6 +100,63 @@ class _PlayScreenState extends State<PlayScreen> {
     game.hudTick.addListener(_pruneToasts);
     final name = widget.dungeon?.name ?? widget.map!.name;
     _showBanner(name, goldLight);
+    if (widget.room != null) _startDuel();
+  }
+
+  // ------------------------------------------------------------ tỷ võ
+
+  Timer? _net;
+  final List<StreamSubscription<Object>> _netSubs = [];
+  double _heardAt = 0;
+
+  /// Why a duel ended without a winner, or the other side walked out.
+  String? _duelNote;
+
+  void _startDuel() {
+    final r = widget.room!;
+    final svc = DuelService.instance;
+    _heardAt = _now;
+    if (r.host) {
+      _netSubs.add(svc.inputs(r.code).listen((i) {
+        world.remoteIn = i;
+        _heardAt = _now;
+      }));
+    } else {
+      _netSubs.add(svc.states(r.code).listen((s) {
+        if (_cleared == null) world.applyDuelSnap(s);
+        _heardAt = _now;
+      }));
+    }
+    _netSubs.add(svc.quits(r.code).listen((q) {
+      if (world.finished || q == (r.host ? 'h' : 'g')) return;
+      _duelNote = 'Đối thủ đã rời trận';
+      world.endDuelEarly(r.host ? 'a' : 'b');
+    }));
+    _net = Timer.periodic(const Duration(milliseconds: 1000 ~/ duelSendHz), (_) {
+      if (r.host) {
+        // Still sent after the end, so the guest sees it.
+        svc.sendState(r.code, world.duelSnapshot(1 / duelSendHz + 0.02));
+      } else if (!world.finished) {
+        svc.sendInput(r.code, world.takeInput());
+      }
+      if (!world.finished && _now - _heardAt > duelTimeout) {
+        _duelNote = 'Mất kết nối với đối thủ';
+        world.finished = true;
+        Analytics.instance.log('duel_end', {'result': 'lost_link'});
+        if (mounted) setState(() => _cleared = false);
+      }
+    });
+  }
+
+  void _stopDuel() {
+    final r = widget.room;
+    if (r == null) return;
+    _net?.cancel();
+    for (final s in _netSubs) {
+      s.cancel();
+    }
+    if (!world.finished) DuelService.instance.leave(r.code, host: r.host);
+    if (r.host) DuelService.instance.close(r.code);
   }
 
   @override
@@ -98,6 +165,7 @@ class _PlayScreenState extends State<PlayScreen> {
     _autosave?.cancel();
     _bannerTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
+    _stopDuel();
     // Walking out of a duel concedes it (a khảo hạch can just be retried).
     final d = widget.dungeon;
     if (d != null && d.isArena && !d.trial && !world.finished) hero.arenaResult(false, d.rival!);
@@ -157,6 +225,7 @@ class _PlayScreenState extends State<PlayScreen> {
       case EvKind.cleared:
         SaveService.instance.save();
         final d = widget.dungeon;
+        if (d != null && d.isDuel) Analytics.instance.log('duel_end', {'result': 'win'});
         if (d != null && d.isWorldBoss) {
           Leaderboard.instance.submitBoss(SaveService.instance.active, hero);
           Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
@@ -281,7 +350,8 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _setPaused(bool v) {
     setState(() => _paused = v);
-    game.halted = v || _fishing || _dead || _cleared != null;
+    // A duel goes on for the other side: the menu does not stop it.
+    game.halted = (v && widget.room == null) || _fishing || _dead || _cleared != null;
     if (v) SaveService.instance.save();
   }
 
@@ -404,6 +474,10 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   void _toggleAuto() {
+    if (widget.room != null) {
+      _toast('Tỷ võ không dùng tự động', goldLight);
+      return;
+    }
     world.auto = !world.auto;
     SaveService.instance.setAuto(world.auto);
     _toast(world.auto ? 'Bật tự động đánh' : 'Tắt tự động đánh', goldLight);
@@ -915,6 +989,7 @@ class _PlayScreenState extends State<PlayScreen> {
     if (d.isWorldBoss) return _bossResult();
     if (d.isArena) return _arenaResult(ok, d);
     if (d.isRealm) return _realmResult(ok, d);
+    if (d.isDuel) return _duelResult();
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -969,6 +1044,41 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tỷ võ over: who won, or why it stopped.
+  Widget _duelResult() {
+    final room = widget.room!;
+    final mine = room.host ? 'a' : 'b';
+    final w = world.duelWinner;
+    final (title, color) = w.isEmpty
+        ? ('Trận đấu dừng lại', creamDim)
+        : w == 'draw'
+            ? ('Hòa!', cream)
+            : w == mine
+                ? ('Chiến thắng!', goldLight)
+                : ('Thất bại', const Color(0xFFFF7A6A));
+    final foe = room.foe;
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(title, style: titleStyle(28, color: color)),
+              const SizedBox(height: 6),
+              Text('Tỷ võ với ${foe.name} (${foe.hanh.label}, cấp ${foe.level})', style: body),
+              if (_duelNote != null) Text(_duelNote!, style: small.copyWith(color: cream)),
+              Text('Thời gian: ${world.finishTime.toStringAsFixed(1)} giây', style: small),
+              const SizedBox(height: 14),
+              LButton(label: 'Về', color: jade, onTap: _leave),
             ],
           ),
         ),
