@@ -23,7 +23,7 @@ class SettingsButton extends StatelessWidget {
         onPressed: () => showSettings(context),
         icon: Badge(
           // A cloud copy waiting for a choice.
-          isLabelVisible: cloud.conflicts.isNotEmpty,
+          isLabelVisible: cloud.needsChoice,
           smallSize: 9,
           backgroundColor: seal,
           child: const Icon(Icons.settings, color: goldLight),
@@ -62,7 +62,7 @@ Future<void> showSettings(BuildContext context) {
                   return _Link(
                     icon: on ? Icons.cloud_done : Icons.cloud_off,
                     label: 'Lưu trữ đám mây',
-                    value: cloud.conflicts.isNotEmpty ? 'Cần chọn bản lưu' : (on ? 'Đã đăng nhập' : 'Chưa đăng nhập'),
+                    value: cloud.switchPending ? 'Cần chọn tài khoản' : cloud.conflicts.isNotEmpty ? 'Cần chọn bản lưu' : (on ? 'Đã đăng nhập' : 'Chưa đăng nhập'),
                     onTap: () {
                       Navigator.pop(ctx);
                       showCloudPanel(context);

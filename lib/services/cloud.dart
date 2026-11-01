@@ -34,6 +34,14 @@ class CloudSave extends ChangeNotifier {
 
   /// Slots whose newer cloud copy waits for the player to choose.
   final List<int> conflicts = [];
+
+  /// Signed in to an account other than the one this device's heroes
+  /// belong to: nothing syncs until the player picks [useThisAccount] or
+  /// [bringHeroesHere].
+  bool switchPending = false;
+
+  /// Something waits for the player's choice (a badge on the cloud button).
+  bool get needsChoice => switchPending || conflicts.isNotEmpty;
   final Map<int, SlotInfo> cloudSlots = {};
   final Map<int, SlotInfo> cloudBackups = {};
 
@@ -153,6 +161,7 @@ class CloudSave extends ChangeNotifier {
     } catch (_) {}
     user = null;
     conflicts.clear();
+    switchPending = false;
     cloudSlots.clear();
     cloudBackups.clear();
     lastSync = null;
@@ -217,6 +226,22 @@ class CloudSave extends ChangeNotifier {
   /// that are empty here, and lists the rest in [conflicts].
   Future<void> sync() async {
     if (!available || user == null || busy) return;
+    final save = SaveService.instance;
+    final uid = user!.uid;
+    if (save.owner != uid) {
+      // Another account's heroes are here: ask before anything moves.
+      if (save.owner != null && save.hasHeroes) {
+        switchPending = true;
+        notifyListeners();
+        return;
+      }
+      // Nobody else's heroes (or none known, from before owners were kept):
+      // this account takes the device, with what it left here before.
+      if (save.owner != null) await save.archiveAndClear(save.owner);
+      await save.restoreArchive(uid);
+      await save.setOwner(uid, who);
+    }
+    switchPending = false;
     busy = true;
     message = null;
     notifyListeners();
@@ -237,7 +262,6 @@ class CloudSave extends ChangeNotifier {
       } catch (e) {
         debugPrint('backups unreadable: $e');
       }
-      final save = SaveService.instance;
       final local = [for (final h in save.slots) h == null ? null : _info(h)];
       final plan = planSync(local, [for (var i = 0; i < slotCount; i++) cloudSlots[i]]);
       conflicts.clear();
@@ -260,6 +284,33 @@ class CloudSave extends ChangeNotifier {
     }
     busy = false;
     notifyListeners();
+  }
+
+  /// The player chose to play this account here: the other account's
+  /// heroes are put aside on the device (they are also in that account's
+  /// cloud) and come back when it signs in again; this account's own
+  /// heroes come down from its cloud.
+  Future<void> useThisAccount() async {
+    final u = user;
+    if (u == null) return;
+    final save = SaveService.instance;
+    await save.archiveAndClear(save.owner);
+    await save.restoreArchive(u.uid);
+    await save.setOwner(u.uid, who);
+    switchPending = false;
+    _dirty.clear();
+    notifyListeners();
+    await sync();
+  }
+
+  /// The player chose to move the heroes on this device into this account.
+  Future<void> bringHeroesHere() async {
+    final u = user;
+    if (u == null) return;
+    await SaveService.instance.setOwner(u.uid, who);
+    switchPending = false;
+    notifyListeners();
+    await sync();
   }
 
   /// The player picked the cloud copy of [slot].
@@ -309,6 +360,8 @@ class CloudSave extends ChangeNotifier {
   }
 
   Future<void> _upload(int slot, HeroData h) async {
+    // Never into an account these heroes do not belong to.
+    if (SaveService.instance.owner != user?.uid) return;
     final info = _info(h);
     final old = cloudSlots[slot];
     if (old == null || old.data != info.data) {
@@ -419,7 +472,10 @@ class CloudSave extends ChangeNotifier {
       cloudSlots.clear();
       cloudBackups.clear();
       conflicts.clear();
+      switchPending = false;
       lastSync = null;
+      // The heroes left here belong to no account now.
+      await SaveService.instance.setOwner(null, '');
       message = 'Đã xóa tài khoản và dữ liệu trên mây.';
       busy = false;
       notifyListeners();
@@ -436,7 +492,7 @@ class CloudSave extends ChangeNotifier {
   Future<void> deleteSlot(int slot) async {
     _dirty.remove(slot);
     final old = cloudSlots.remove(slot);
-    if (!available || user == null) return;
+    if (!available || user == null || SaveService.instance.owner != user!.uid) return;
     try {
       if (old != null) await _stash(slot, old);
       await _slots.doc('$slot').delete();
