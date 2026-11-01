@@ -26,6 +26,14 @@ import 'world_boss.dart' show vnDayKey;
 
 const double heroRadius = 18;
 
+/// Autopilot, ranged heroes: a melee monster this close makes them back off
+/// for [autoBackTime] seconds (or until it is [autoBackClear] away), then
+/// they hold their ground at least [autoBackRest] seconds.
+const double autoBackNear = 80;
+const double autoBackClear = 170;
+const double autoBackTime = 0.7;
+const double autoBackRest = 1.0;
+
 class Dot {
   Dot(this.kind, this.perTick, this.until, this.next);
   final Status kind;
@@ -1841,7 +1849,7 @@ class World {
         _basicAttack(null);
       }
     }
-    if (autoOn && (kiting || (mx == 0 && my == 0)) && _autoMoveX != 0) {
+    if (autoOn && (kiting || (mx == 0 && my == 0)) && (_autoMoveX != 0 || _autoMoveY != 0)) {
       mx = _autoMoveX;
       my = _autoMoveY;
     }
@@ -1853,9 +1861,15 @@ class World {
       final sp = st.move * math.min(1, len) * _slowMul(p) * (realmBuffs.contains(RealmBuff.swift) ? 1.3 : 1);
       p.x += mx / len * sp * dt;
       p.y += my / len * sp * dt;
-      p.aimX = mx / len;
-      p.aimY = my / len;
-      if (mx.abs() > 0.1) p.face = mx.sign;
+      final back = kiting ? _backFrom : null;
+      if (back != null) {
+        // Walking backwards: eyes stay on the monster.
+        _aimAt(back.x, back.y);
+      } else {
+        p.aimX = mx / len;
+        p.aimY = my / len;
+        if (mx.abs() > 0.1) p.face = mx.sign;
+      }
       p.walk += dt * sp / 28;
       p.moving = true;
     } else {
@@ -1883,7 +1897,8 @@ class World {
     if (d < 1) return;
     p.aimX = (x - p.x) / d;
     p.aimY = (y - p.y) / d;
-    if (p.aimX.abs() > 0.15) p.face = p.aimX.sign;
+    // A monster almost straight above or below doesn't flip the hero round.
+    if (p.aimX.abs() > 0.35) p.face = p.aimX.sign;
   }
 
   Mob? _pickTarget(double range) {
@@ -2214,7 +2229,30 @@ class World {
   // ------------------------------------------------------------ autopilot
 
   double _autoMoveX = 0, _autoMoveY = 0;
+
+  /// Backing off this frame: the hero walks backwards, still facing [_backFrom].
   bool _kite = false;
+  Mob? _backFrom;
+  double _backUntil = 0, _backRestUntil = 0;
+
+  void _backAway(Mob m) {
+    final p = player;
+    var dx = p.x - m.x, dy = p.y - m.y;
+    final d = math.max(1.0, math.sqrt(dx * dx + dy * dy));
+    dx /= d;
+    dy /= d;
+    // Slide along walls instead of pinning against them.
+    if ((p.x < 120 && dx < 0) || (p.x > width - 120 && dx > 0)) dx = 0;
+    if ((p.y < 140 && dy < 0) || (p.y > height - 120 && dy > 0)) dy = 0;
+    if (dx.abs() + dy.abs() < 0.3) {
+      // Cornered: run toward the middle of the map.
+      dx = (width / 2 - p.x).sign * 0.5;
+      dy = (height / 2 - p.y).sign;
+    }
+    _kite = true;
+    _autoMoveX = dx;
+    _autoMoveY = dy;
+  }
 
   void _autopilot() {
     final p = player;
@@ -2254,21 +2292,34 @@ class World {
     }
 
     if (near != null) {
-      // Ranged heroes step back from melee monsters between shots.
+      // Ranged heroes back off from a melee monster on their heels, in one
+      // committed step while still facing it, then stand and shoot for a
+      // while. (Stepping back after every shot made them spin round.)
       if (sect.basic == BasicKind.ranged) {
-        Mob? close;
-        var cd = 80.0 * 80;
-        for (final m in mobs) {
-          if (!m.alive || m.def.ranged || m.state != MobState.chase) continue;
-          final d = _d2(m.x, m.y, p.x, p.y);
-          if (d < cd) {
-            cd = d;
-            close = m;
-          }
-        }
-        if (close != null && (p.basicCd > 0.1 || count >= 2)) {
-          _flee(close);
+        final from = _backFrom;
+        if (time < _backUntil && from != null && from.alive &&
+            _d2(from.x, from.y, p.x, p.y) < autoBackClear * autoBackClear) {
+          _backAway(from);
           return;
+        }
+        if (time >= _backRestUntil) {
+          Mob? close;
+          var cd = autoBackNear * autoBackNear;
+          for (final m in mobs) {
+            if (!m.alive || m.def.ranged || m.state != MobState.chase) continue;
+            final d = _d2(m.x, m.y, p.x, p.y);
+            if (d < cd) {
+              cd = d;
+              close = m;
+            }
+          }
+          if (close != null && (p.basicCd > 0.1 || count >= 2)) {
+            _backFrom = close;
+            _backUntil = time + autoBackTime;
+            _backRestUntil = _backUntil + autoBackRest;
+            _backAway(close);
+            return;
+          }
         }
       }
       // Close in; the basic attack takes over once in reach.
@@ -2375,25 +2426,6 @@ class World {
     return best;
   }
 
-
-  void _flee(Mob m) {
-    final p = player;
-    var dx = p.x - m.x, dy = p.y - m.y;
-    final d = math.max(1.0, math.sqrt(dx * dx + dy * dy));
-    dx /= d;
-    dy /= d;
-    // Slide along walls instead of pinning against them.
-    if ((p.x < 120 && dx < 0) || (p.x > width - 120 && dx > 0)) dx = 0;
-    if ((p.y < 140 && dy < 0) || (p.y > height - 120 && dy > 0)) dy = 0;
-    if (dx.abs() + dy.abs() < 0.3) {
-      // Cornered: run toward the middle of the map.
-      dx = (width / 2 - p.x).sign * 0.5;
-      dy = (height / 2 - p.y).sign;
-    }
-    _kite = true;
-    _autoMoveX = dx;
-    _autoMoveY = dy;
-  }
 
   int _countNear(double r) => _countNearAt(player.x, player.y, r);
 
