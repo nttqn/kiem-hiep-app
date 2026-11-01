@@ -9,6 +9,20 @@ service cloud.firestore {
     // Public leaderboard: anyone reads; a signed-in player writes only the
     // rows of their own three slots, with sane values.
     match /leaderboard/{id} {
+      // Săn quái week and Lôi đài season now, by server time in Vietnam
+      // (UTC+7), counted from 2026-10-26 as the app does, an hour of slack
+      // for clocks a little fast. A phone set days ahead must not file its
+      // score under a week or season still to come.
+      function vnMs() {
+        return request.time.toMillis() + 25200000 + 3600000 - 1792972800000;
+      }
+      function weekNow() {
+        return math.floor(vnMs() / 604800000) + 1;
+      }
+      function seasonNow() {
+        return math.floor(vnMs() / 1209600000) + 1;
+      }
+
       allow read: if true;
       allow create, update: if request.auth != null
         && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2']
@@ -34,21 +48,25 @@ service cloud.firestore {
         // Lôi đài season * 100000 + points (1.0.10+; older apps omit it).
         && (!('arenaS' in request.resource.data)
             || (request.resource.data.arenaS is int
-                && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000))
+                && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000
+                && request.resource.data.arenaS < (seasonNow() + 1) * 100000))
         // The last finished season's score, for its rank reward (1.2.5+).
         && (!('arenaLast' in request.resource.data)
             || (request.resource.data.arenaLast is int
-                && request.resource.data.arenaLast >= 0 && request.resource.data.arenaLast <= 100000000))
+                && request.resource.data.arenaLast >= 0 && request.resource.data.arenaLast <= 100000000
+                && request.resource.data.arenaLast < (seasonNow() + 1) * 100000))
         // Săn quái tuần (1.2.6+): week * 1000000 + kills, at most 300000 a
         // week; and the last finished week's, for its rank reward.
         && (!('wk' in request.resource.data)
             || (request.resource.data.wk is int
                 && request.resource.data.wk >= 0 && request.resource.data.wk <= 1000000000
-                && request.resource.data.wk % 1000000 <= 300000))
+                && request.resource.data.wk % 1000000 <= 300000
+                && request.resource.data.wk < (weekNow() + 1) * 1000000))
         && (!('wkLast' in request.resource.data)
             || (request.resource.data.wkLast is int
                 && request.resource.data.wkLast >= 0 && request.resource.data.wkLast <= 1000000000
-                && request.resource.data.wkLast % 1000000 <= 300000))
+                && request.resource.data.wkLast % 1000000 <= 300000
+                && request.resource.data.wkLast < (weekNow() + 1) * 1000000))
         // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
         // rebirth and a minute per level. The fastest real hero seen (a
         // non-stop auto-fight farmer) took about 4.5 hours per rebirth.
