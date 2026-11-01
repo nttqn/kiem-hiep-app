@@ -478,6 +478,45 @@ class CloudSave extends ChangeNotifier {
     }
   }
 
+  /// Deletes this account's cloud saves, backups and leaderboard rows, but
+  /// not the account (for one that got another account's heroes), then
+  /// signs out.
+  Future<bool> wipeCloudSaves() async {
+    if (!available || user == null || busy) return false;
+    busy = true;
+    message = null;
+    _debounce?.cancel();
+    _debounce = null;
+    _dirty.clear();
+    notifyListeners();
+    try {
+      await Leaderboard.instance.withdraw();
+      for (final col in [_slots, _backups]) {
+        final snap = await col.get().timeout(const Duration(seconds: 15));
+        for (final d in snap.docs) {
+          await d.reference.delete();
+        }
+      }
+      cloudSlots.clear();
+      cloudBackups.clear();
+      conflicts.clear();
+      busy = false;
+      // The heroes on this device belong to no account now; signing out
+      // keeps them from going straight back up.
+      await SaveService.instance.setOwner(null, '');
+      await signOut();
+      message = 'Đã xóa bản lưu trên mây và đăng xuất. Nhân vật trên máy vẫn còn.';
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('wipe failed: $e');
+      busy = false;
+      message = 'Chưa xóa được bản lưu trên mây, thử lại sau.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Deletes every cloud save and the account itself (Play Store policy:
   /// players must be able to do this in the app). Saves on this device
   /// stay. Firebase may ask the player to confirm their sign-in first.

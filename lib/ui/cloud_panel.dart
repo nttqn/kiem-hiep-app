@@ -245,6 +245,12 @@ class _CloudPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   TextButton.icon(
+                    onPressed: cloud.busy ? null : () => _confirmWipe(context),
+                    icon: const Icon(Icons.cloud_off, color: Color(0xFFF0C060), size: 18),
+                    label: const Text('Xóa bản lưu trên mây (giữ tài khoản)',
+                        style: TextStyle(color: Color(0xFFF0C060), fontSize: 13)),
+                  ),
+                  TextButton.icon(
                     onPressed: cloud.busy ? null : () => _confirmDelete(context),
                     icon: const Icon(Icons.delete_forever, color: Color(0xFFFF7A6A), size: 18),
                     label: const Text('Xóa tài khoản và dữ liệu trên mây',
@@ -268,6 +274,30 @@ class _CloudPanel extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _confirmWipe(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Xóa bản lưu trên mây?', style: titleStyle(20)),
+        content: Text(
+          'Mọi nhân vật và bản dự phòng trên mây của ${CloudSave.instance.who}, cùng các dòng trên bảng xếp hạng, '
+          'sẽ bị xóa; tài khoản vẫn còn và bạn được đăng xuất. Nhân vật đang có trong máy này vẫn còn. '
+          'Nhân vật chỉ có trên mây (không có trong máy này) sẽ mất hẳn.',
+          style: body,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Xóa bản lưu', style: TextStyle(color: Color(0xFFFF7A6A))),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await CloudSave.instance.wipeCloudSaves();
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
