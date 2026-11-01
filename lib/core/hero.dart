@@ -1326,6 +1326,9 @@ class HeroData {
   /// Cửu U Ma Tôn beaten, for its outfit and mount.
   int get abyssBossKills => bossKillsById[abyssMap.boss] ?? 0;
 
+  /// Đông Hải Long Vương beaten, for Long Mã.
+  int get seaBossKills => bossKillsById[dongHaiMap.boss] ?? 0;
+
   /// The mount under the hero, if any.
   MountDef? get ridingMount => riding ? mountById[activeMount] : null;
 
@@ -1333,6 +1336,7 @@ class HeroData {
         MountSource.tower => towerBest >= m.need,
         MountSource.rebirth => rebirths >= m.need,
         MountSource.abyss => abyssBossKills >= m.need,
+        MountSource.sea => seaBossKills >= m.need,
         MountSource.gold || MountSource.arena => false,
       };
 
@@ -2194,7 +2198,9 @@ class HeroData {
     for (final c in loreChapters) {
       if (loreDone(c.realm)) out[c.bonus] = (out[c.bonus] ?? 0) + c.value;
     }
-    if (loreAllDone) {
+    // A hero who had the whole set before Đông Hải added a chapter keeps
+    // its bonus along with the title.
+    if (loreAllDone || seasonTitles.contains(loreTitle)) {
       loreAllBonus.forEach((k, v) => out[k] = (out[k] ?? 0) + v);
     }
     return out;

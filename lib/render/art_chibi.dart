@@ -1313,6 +1313,56 @@ void drawScorpionChibi(Canvas c, MobDef d,
   _beastEye(c, const Offset(13, -12.5), 0.8, d.boss ? d.c3 : 0xFFFFE04A);
 }
 
+/// Đông Hải crab: a wide shell on six legs, two big claws snapping.
+void drawCrabChibi(Canvas c, MobDef d,
+    {double walk = 0, bool moving = false, double attack = 0, double t = 0}) {
+  final step = moving ? walk * 3 : 0.0;
+  for (final s in const [-1.0, 1.0]) {
+    for (var i = 0; i < 3; i++) {
+      final ph = math.sin(step + i * 1.9 + (s > 0 ? 1 : 0)) * 2.5;
+      _limb(c, Offset(-6.0 + i * 6, -8 + s * 2), Offset(-9.0 + i * 8 + ph, -1 + s * 1.5), shade(d.c1, -0.25), 2.4);
+    }
+  }
+  const shell = Rect.fromLTRB(-14, -20, 14, -5);
+  _shape(c, Path()..addOval(shell), _lit(d.c1, shell, light: 0.3));
+  // Spots on the shell.
+  for (final p in const [Offset(-6, -15), Offset(0, -17), Offset(6, -14)]) {
+    c.drawCircle(p, 1.6, _flat(shade(d.c2, 0.1)));
+  }
+  final strike = attack > 0 ? math.sin(attack * math.pi) : 0.0;
+  final open = math.sin(t * 5) * 0.25 + 0.35 + strike * 0.4;
+  for (final s in const [-1.0, 1.0]) {
+    final base = Offset(s * 11, -12);
+    final tip = Offset(s * (17 + strike * 3), -20);
+    _limb(c, base, tip, s < 0 ? shade(d.c1, -0.2) : d.c1, 3);
+    c.save();
+    c.translate(tip.dx, tip.dy);
+    c.scale(s, 1);
+    final upper = Path()
+      ..moveTo(-2, 0)
+      ..quadraticBezierTo(2, -9 - open * 6, 9, -4)
+      ..lineTo(3, -1)
+      ..close();
+    final lower = Path()
+      ..moveTo(-2, 1)
+      ..quadraticBezierTo(4, 6 + open * 4, 8, 0)
+      ..lineTo(2, 1)
+      ..close();
+    _shape(c, upper, _lit(d.c1, const Rect.fromLTRB(-2, -12, 9, 0)), ow: 1.6);
+    _shape(c, lower, _flat(shade(d.c1, -0.12)), ow: 1.6);
+    c.restore();
+  }
+  // Eyes on stalks.
+  for (final s in const [-1.0, 1.0]) {
+    c.drawLine(Offset(s * 3, -19), Offset(s * 4, -24),
+        _o
+          ..color = col(shade(d.c1, -0.3))
+          ..strokeWidth = 1.6);
+    c.drawCircle(Offset(s * 4, -25), 2, _flat(_ink));
+    c.drawCircle(Offset(s * 4 - 0.4, -25.5), 0.6, _flat(d.boss ? d.c3 : 0xFFFFFFFF));
+  }
+}
+
 // ------------------------------------------------------------------ flyers
 
 void drawFlyerChibi(Canvas c, MobDef d,
@@ -1361,6 +1411,47 @@ void drawFlyerChibi(Canvas c, MobDef d,
           ..lineTo(s * 2.6, 3)
           ..close();
         c.drawPath(fang, _flat(0xFFFFFFFF));
+      }
+    case 'jelly':
+      // Thủy mẫu: a glowing bell trailing tentacles.
+      c.drawCircle(
+          const Offset(0, -6),
+          17,
+          Paint()
+            ..color = col(d.c2).withValues(alpha: 0.3)
+            ..maskFilter = softBlur(9));
+      for (var i = 0; i < 5; i++) {
+        final x = -8.0 + i * 4;
+        final sway = math.sin(t * 4 + i) * 3;
+        c.drawPath(
+            Path()
+              ..moveTo(x, 0)
+              ..quadraticBezierTo(x + sway, 8, x - sway * 0.6, 17 + (i % 2) * 3),
+            _o
+              ..color = col(shade(d.c1, 0.15)).withValues(alpha: 0.85)
+              ..strokeWidth = 1.8);
+      }
+      final pulse = math.sin(t * 5) * 1.2;
+      final bell = Path()
+        ..moveTo(-12 - pulse, 1)
+        ..quadraticBezierTo(-13 - pulse, -19, 0, -19)
+        ..quadraticBezierTo(13 + pulse, -19, 12 + pulse, 1)
+        ..quadraticBezierTo(6, -2, 0, 1)
+        ..quadraticBezierTo(-6, -2, -12 - pulse, 1)
+        ..close();
+      c.drawPath(
+          bell,
+          _o
+            ..color = col(shade(d.c1, -0.45))
+            ..strokeWidth = 2);
+      c.drawPath(
+          bell,
+          _g
+            ..shader = Gradient.linear(const Offset(0, -19), const Offset(0, 2),
+                [col(shade(d.c2, 0.3)), col(d.c1).withValues(alpha: 0.8)]));
+      for (final s in const [-1.0, 1.0]) {
+        c.drawCircle(Offset(s * 3.4, -9), 1.9, _flat(_ink));
+        c.drawCircle(Offset(s * 3.4 - 0.5, -9.6), 0.6, _flat(0xFFFFFFFF));
       }
     case 'ghost':
       final sway = math.sin(t * 4) * 3;

@@ -4,7 +4,7 @@ import 'sects.dart';
 
 /// Thú cưỡi: the hero rides one on every map. Each mount adds running speed
 /// and one stat; feeding (gold) raises its level and both bonuses.
-enum MountSource { gold, tower, arena, rebirth, abyss }
+enum MountSource { gold, tower, arena, rebirth, abyss, sea }
 
 class MountDef {
   const MountDef({
@@ -61,6 +61,7 @@ class MountDef {
         MountSource.arena => 'Đổi ${_thousands(need)} Uy danh ở Lôi đài',
         MountSource.rebirth => 'Chuyển sinh lần $need',
         MountSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
+        MountSource.sea => 'Hạ Đông Hải Long Vương $need lần (Đông Hải Quần Đảo)',
       };
 }
 
@@ -109,6 +110,11 @@ const mounts = <MountDef>[
       desc: 'Kỳ lân đen của vực Cửu U, chỉ cúi đầu trước kẻ hạ được Ma Tôn.',
       c1: 0xFF2A1A3A, c2: 0xFFB04AFF, c3: 0xFFFF3A5A,
       move: 0.32, bonus: Bonus.atkPct, base: 0.1, perLv: 0.006, source: MountSource.abyss, need: 30),
+  MountDef(
+      id: 'longma', name: 'Long Mã', look: 'horse',
+      desc: 'Ngựa thần mình phủ vảy rồng, rẽ sóng Đông Hải mà đi.',
+      c1: 0xFF2E8AA0, c2: 0xFF8AE8D8, c3: 0xFFFFC34A,
+      move: 0.27, bonus: Bonus.hpPct, base: 0.06, perLv: 0.004, source: MountSource.sea, need: 20),
 ];
 
 final Map<String, MountDef> mountById = {for (final m in mounts) m.id: m};

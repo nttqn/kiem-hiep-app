@@ -84,15 +84,21 @@ class _PlayScreenState extends State<PlayScreen> {
     // bí cảnh plays its land's tune.
     final d = widget.dungeon;
     SoundService.instance.playMusic(d != null
-        ? (d.isRealm ? d.map.theme.name : 'battle')
-        // Cửu U Ma Vực borrows Ma Giáo's dark theme.
-        : (widget.map!.theme == MapTheme.abyss ? 'fortress' : widget.map!.theme.name));
+        ? (d.isRealm ? _tune(d.map.theme) : 'battle')
+        : _tune(widget.map!.theme));
     HardwareKeyboard.instance.addHandler(_onKey);
     _autosave = Timer.periodic(const Duration(seconds: 20), (_) => SaveService.instance.save());
     game.hudTick.addListener(_pruneToasts);
     final name = widget.dungeon?.name ?? widget.map!.name;
     _showBanner(name, goldLight);
   }
+
+  /// A land's tune: Cửu U Ma Vực borrows Ma Giáo's, Đông Hải Vân Vụ's.
+  static String _tune(MapTheme t) => switch (t) {
+        MapTheme.abyss => 'fortress',
+        MapTheme.sea => 'cloud',
+        _ => t.name,
+      };
 
   @override
   void dispose() {

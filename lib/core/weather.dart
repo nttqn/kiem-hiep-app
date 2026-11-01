@@ -31,6 +31,7 @@ const _weathers = <MapTheme, List<Weather>>{
   MapTheme.cloud: [Weather.fog, Weather.rain],
   MapTheme.summit: [Weather.petals, Weather.fog],
   MapTheme.abyss: [Weather.ash, Weather.fog],
+  MapTheme.sea: [Weather.rain, Weather.fog],
 };
 
 /// Share of two-hour spells with some weather.

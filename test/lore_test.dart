@@ -4,13 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/lore.dart';
+import 'package:kiem_hiep/core/realm.dart';
 import 'package:kiem_hiep/core/sects.dart';
 
 import 'v130_realm_test.dart' show geared, runRealm;
 
 void main() {
   test('every chapter has five pages and a bonus', () {
-    expect(loreChapters.length, 9);
+    expect(loreChapters.length, realms.length);
     for (final c in loreChapters) {
       expect(c.pages.length, lorePagesPer);
       expect(c.value, greaterThan(0));

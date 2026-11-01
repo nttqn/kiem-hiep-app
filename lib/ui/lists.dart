@@ -23,7 +23,7 @@ class MapListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final h = SaveService.instance.hero;
     // Cửu U Ma Vực last, shown to everyone as something to aim for.
-    const all = [...maps, abyssMap];
+    final all = fieldMaps;
     bool isOpen(MapDef m) => h.level >= m.entryLv && h.rebirths >= m.rebirths;
     final last = all.lastIndexWhere(isOpen);
     return SubScreen(
@@ -227,6 +227,7 @@ class _ThemeSwatch extends StatelessWidget {
       MapTheme.cloud: [Color(0xFFC8DCDC), Color(0xFF3E5A54)],
       MapTheme.summit: [Color(0xFFF4A8BC), Color(0xFF4A4240)],
       MapTheme.abyss: [Color(0xFFB04AFF), Color(0xFF0E0A14)],
+      MapTheme.sea: [Color(0xFF5AC8E0), Color(0xFF1E4A5A)],
     };
     final c = colors[theme]!;
     return Container(
@@ -314,7 +315,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
   }
 
   Widget _normal(HeroData h) {
-    final last = dungeons.lastIndexWhere((d) => h.level >= d.level - 2);
+    final last = dungeonList.lastIndexWhere((d) => h.level >= d.level - 2);
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -322,7 +323,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
           const SizedBox(height: 8),
           Expanded(
             child: _OpenAt(
-              fraction: math.max(0, last) / (dungeons.length - 1),
+              fraction: math.max(0, last) / (dungeonList.length - 1),
               builder: (ctl) => GridView.builder(
                 controller: ctl,
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -331,9 +332,10 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                 ),
-                itemCount: dungeons.length,
+                itemCount: dungeonList.length,
                 itemBuilder: (context, i) {
-                  final d = dungeons[i];
+                  final d = dungeonList[i];
+                  final n = dungeons.indexOf(d);
                   final stars = h.dungeonStars[d.id] ?? 0;
                   final open = h.level >= d.level - 2;
                   final quest = h.currentMain?.type == QuestType.dungeon && h.currentMain?.target == d.id;
@@ -353,7 +355,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Ải ${i + 1}: ${d.name}',
+                                    n >= 0 ? 'Ải ${n + 1}: ${d.name}' : 'Đông Hải: ${d.name}',
                                     style: bold.copyWith(color: goldLight),
                                     overflow: TextOverflow.ellipsis,
                                   ),

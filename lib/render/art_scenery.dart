@@ -28,6 +28,7 @@ const palettes = <MapTheme, Palette>{
   MapTheme.cloud: Palette(0xFF7E9A8C, 0xFF98B2A4, 0xFF66806F, 0xFF2E3E3A),
   MapTheme.summit: Palette(0xFF9A928A, 0xFFB0A89E, 0xFF807870, 0xFF3A3430),
   MapTheme.abyss: Palette(0xFF3A2E44, 0xFF4A3A56, 0xFF2A2032, 0xFF0E0A14, night: 0.3),
+  MapTheme.sea: Palette(0xFFD8C690, 0xFFE8D8A6, 0xFFB8AC80, 0xFF3A6A78),
 };
 
 void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
@@ -151,6 +152,45 @@ void _decal(Canvas c, Decal d, Palette pal, double t) {
           Paint()
             ..color = Color.fromRGBO(240, 246, 248, 0.3 + 0.08 * math.sin(t * 0.5 + d.v))
             ..maskFilter = softBlur(16));
+    case 'shell':
+      c.save();
+      c.translate(x, y);
+      c.rotate(d.v * 0.6);
+      final shellPath = Path()
+        ..moveTo(0, 3 * s)
+        ..lineTo(-5 * s, -2 * s)
+        ..quadraticBezierTo(0, -7 * s, 5 * s, -2 * s)
+        ..close();
+      c.drawPath(shellPath, fillOf(d.v.isEven ? 0xFFF4E2D0 : 0xFFF0B8A8));
+      final rib = lineOf(0x66A07860, 0.8);
+      for (final k in const [-3.0, 0.0, 3.0]) {
+        c.drawLine(Offset(0, 3 * s), Offset(k * s, -4 * s), rib);
+      }
+      c.restore();
+    case 'starfish':
+      final arm = Path();
+      for (var i = 0; i < 10; i++) {
+        final a = -math.pi / 2 + i * math.pi / 5 + d.v * 0.3;
+        final r = (i.isEven ? 6.5 : 2.6) * s;
+        final o = Offset(x + math.cos(a) * r, y + math.sin(a) * r * 0.7);
+        if (i == 0) {
+          arm.moveTo(o.dx, o.dy);
+        } else {
+          arm.lineTo(o.dx, o.dy);
+        }
+      }
+      arm.close();
+      c.drawPath(arm, fillOf(d.v % 3 == 0 ? 0xFFE8704A : 0xFFF0A040));
+    case 'tidePool':
+      // Shallow water left by the tide, its edge glinting.
+      c.drawOval(Rect.fromCenter(center: Offset(x, y), width: 70 * s, height: 26 * s), fillOf(0x885AA8C0));
+      c.drawOval(Rect.fromCenter(center: Offset(x - 4, y - 2), width: 50 * s, height: 16 * s), fillOf(0x6680D0E0));
+      final glint = 0.3 + 0.3 * math.sin(t * 2 + d.v);
+      c.drawArc(Rect.fromCenter(center: Offset(x, y), width: 70 * s, height: 26 * s), math.pi * 1.1, 0.9, false,
+          Paint()
+            ..color = Color.fromRGBO(255, 255, 255, glint)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.4);
     case 'petal':
       for (var i = 0; i < 3; i++) {
         c.save();
@@ -506,18 +546,74 @@ void drawProp(Canvas c, Prop p, double t) {
         ..color = const Color(0x55FF8A3D)
         ..maskFilter = softBlur(16);
       c.drawCircle(const Offset(0, -30), 22, glow);
+    case 'palm':
+      drawShadow(c, 26);
+      // A leaning trunk in rings, fronds swaying, coconuts under them.
+      final lean = v.isEven ? 1.0 : -1.0;
+      final sway = math.sin(t * 0.9 + v) * 2;
+      final top = Offset(lean * 14 + sway, -78);
+      final trunk = Path()
+        ..moveTo(-5, 0)
+        ..quadraticBezierTo(lean * 2, -40, top.dx - 3, top.dy)
+        ..lineTo(top.dx + 3, top.dy)
+        ..quadraticBezierTo(lean * 8, -40, 5, 0)
+        ..close();
+      c.drawPath(trunk, fillOf(0xFF8A6A42));
+      for (var i = 1; i < 7; i++) {
+        final k = i / 7;
+        final px = lean * 14 * k * k + sway * k;
+        c.drawLine(Offset(px - 4.5, -78 * k), Offset(px + 4.5, -78 * k - 2), lineOf(0xFF6A4E30, 1.4));
+      }
+      for (var i = 0; i < 6; i++) {
+        final a = -math.pi / 2 + (i - 2.5) * 0.62 + math.sin(t * 1.1 + i + v) * 0.05;
+        final end = top + Offset(math.cos(a) * 36, math.sin(a) * 18 + 14);
+        final mid = top + Offset(math.cos(a) * 20, math.sin(a) * 16 - 2);
+        final frond = Path()
+          ..moveTo(top.dx, top.dy)
+          ..quadraticBezierTo(mid.dx, mid.dy - 6, end.dx, end.dy)
+          ..quadraticBezierTo(mid.dx, mid.dy + 4, top.dx, top.dy)
+          ..close();
+        c.drawPath(frond, fillOf(i.isEven ? 0xFF3E8A3A : 0xFF4E9E44));
+      }
+      for (final o in const [Offset(-3, 4), Offset(3, 5), Offset(0, 8)]) {
+        c.drawCircle(top + o, 3.4, fillOf(0xFF6A4A22));
+      }
+    case 'coral':
+      drawShadow(c, 18);
+      final colr = const [0xFFF07A6A, 0xFFF0A0C0, 0xFFE8C060][v % 3];
+      final cp = lineOf(colr, 4.5)..strokeCap = StrokeCap.round;
+      c.drawLine(Offset.zero, const Offset(-2, -20), cp);
+      c.drawLine(const Offset(-2, -12), const Offset(-12, -24), cp);
+      c.drawLine(const Offset(-1, -16), const Offset(9, -30), cp);
+      cp.strokeWidth = 3;
+      c.drawLine(const Offset(-12, -24), const Offset(-14, -32), cp);
+      c.drawLine(const Offset(9, -30), const Offset(14, -36), cp);
+      c.drawLine(const Offset(-2, -20), const Offset(-1, -34), cp);
+      for (final o in const [Offset(-14, -33), Offset(14, -37), Offset(-1, -35)]) {
+        c.drawCircle(o, 2.4, fillOf(shade(colr, 0.25)));
+      }
+    case 'anchor':
+      drawShadow(c, 18);
+      final iron = lineOf(0xFF4A5058, 4)..strokeCap = StrokeCap.round;
+      c.save();
+      c.rotate(0.35 * (v.isEven ? 1 : -1));
+      c.drawLine(const Offset(0, -2), const Offset(0, -36), iron);
+      c.drawLine(const Offset(-9, -30), const Offset(9, -30), iron);
+      c.drawCircle(const Offset(0, -40), 4, lineOf(0xFF4A5058, 2.6));
+      c.drawArc(const Rect.fromLTRB(-14, -16, 14, 4), 0.2, math.pi - 0.4, false, iron);
+      c.restore();
   }
   c.restore();
 }
 
 /// Rough visual height of a prop, used to fade ones in front of the hero.
 double propHeight(Prop p) => switch (p.kind) {
-      'tree' || 'tree2' || 'bamboo' || 'banner' || 'pillar' || 'pine' || 'mistPine' || 'plum' => 90 * p.s,
+      'tree' || 'tree2' || 'bamboo' || 'banner' || 'pillar' || 'pine' || 'mistPine' || 'plum' || 'palm' => 90 * p.s,
       'rockSpire' || 'stalagmite' || 'deadTree' || 'burntTree' || 'swordStone' => 60 * p.s,
       _ => 30 * p.s,
     };
 
 double propHalfWidth(Prop p) => switch (p.kind) {
-      'tree' || 'tree2' || 'pine' || 'mistPine' || 'plum' => 34 * p.s,
+      'tree' || 'tree2' || 'pine' || 'mistPine' || 'plum' || 'palm' => 34 * p.s,
       _ => 20 * p.s,
     };

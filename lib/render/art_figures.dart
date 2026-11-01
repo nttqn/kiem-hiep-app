@@ -522,7 +522,9 @@ void drawMob(Canvas c, MobDef d,
           ? drawSerpentChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
           : _serpent(c, d, walk, moving, attack, t);
     case Body.bug:
-      if (d.variant == 'scorpion') {
+      if (d.variant == 'crab') {
+        drawCrabChibi(c, d, walk: walk, moving: moving, attack: attack, t: t);
+      } else if (d.variant == 'scorpion') {
         chibi
             ? drawScorpionChibi(c, d, walk: walk, moving: moving, attack: attack, t: t)
             : _scorpion(c, d, walk, moving, attack, t);
@@ -546,6 +548,11 @@ final Map<String, HumanLook> _humanCache = {};
 
 HumanLook _humanFor(MobDef d) => _humanCache.putIfAbsent(d.id, () {
       switch (d.variant) {
+        case 'pirate':
+          return HumanLook(
+              skin: 0xFFC08A5A, robe: d.c1, trim: d.c2, pants: 0xFF3A2A1A,
+              hair: Hair.turban, band: d.c2, weapon: Weapon.saber,
+              blade: d.c3, longRobe: false);
         case 'zombie':
           return HumanLook(
               skin: 0xFF9FB89A, robe: d.c1, trim: 0xFFB3261E, pants: 0xFF1A1A22,

@@ -231,11 +231,29 @@ const mobs = <MobDef>[
       body: Body.human, c1: 0xFF140A1A, c2: 0xFF2A0A12, c3: 0xFFFF3A5A,
       variant: 'ancient', size: 1.9, hp: 28, atk: 2.0, def: 1.9,
       speed: 110, exp: 20, boss: true),
+  // Đông Hải Quần Đảo
+  MobDef(
+      id: 'pirate', name: 'Hải Tặc Đao Thủ', hanh: Hanh.kim, body: Body.human,
+      c1: 0xFF2A3A5A, c2: 0xFFC8342A, c3: 0xFFD8DCE0, variant: 'pirate',
+      hp: 1.15, atk: 1.2, speed: 105),
+  MobDef(
+      id: 'crab', name: 'Thiết Giáp Cua', hanh: Hanh.tho, body: Body.bug,
+      c1: 0xFFD8542E, c2: 0xFFF0B080, variant: 'crab', size: 1.2,
+      hp: 1.6, atk: 1.05, def: 1.4, speed: 80),
+  MobDef(
+      id: 'jelly', name: 'Thủy Mẫu Tinh', hanh: Hanh.thuy, body: Body.flyer,
+      c1: 0xFF8AC8F0, c2: 0xFFE8A8FF, variant: 'jelly', ranged: true,
+      range: 250, hp: 0.8, atk: 1.15, attackCd: 1.8),
+  MobDef(
+      id: 'seaDragon', name: 'Đông Hải Long Vương', hanh: Hanh.thuy,
+      body: Body.serpent, c1: 0xFF1E6A8A, c2: 0xFF8AE0D8, c3: 0xFFFFD34A,
+      variant: 'dragon', size: 2.2, hp: 21, atk: 1.8, def: 1.7, speed: 90,
+      exp: 15, boss: true),
 ];
 
 final Map<String, MobDef> mobById = {for (final m in mobs) m.id: m};
 
-enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss }
+enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea }
 
 class MapDef {
   const MapDef({
@@ -342,7 +360,30 @@ const maps = <MapDef>[
       mobs: ['goldTiger', 'swordGolem', 'swordSoul'], boss: 'heavenDemon'),
 ];
 
-final Map<String, MapDef> mapById = {for (final m in maps) m.id: m, abyssMap.id: abyssMap};
+/// Đông Hải Quần Đảo (1.4.0): islands off the east coast, a side land for
+/// heroes between Ma Giáo Tổng Đàn and Vân Vụ Sơn. Kept out of [maps] like
+/// Cửu U Ma Vực, so the story, bounties, fishing and the tower stay as they
+/// were.
+const MapDef dongHaiMap = MapDef(
+    id: 'donghai', name: 'Đông Hải Quần Đảo',
+    desc: 'Quần đảo ngoài khơi phía đông, hải tặc chiếm đảo, Long Vương nổi giận dưới đáy biển.',
+    minLv: 62, maxLv: 80, theme: MapTheme.sea,
+    mobs: ['pirate', 'crab', 'jelly'], boss: 'seaDragon');
+
+/// Field maps as listed to the player, by level: Đông Hải after Ma Giáo,
+/// Cửu U Ma Vực last.
+final fieldMaps = <MapDef>[
+  ...maps.sublist(0, 7), dongHaiMap, ...maps.sublist(7), abyssMap,
+];
+
+/// Field maps that are not on the story's road ([maps]).
+bool isSideMap(MapDef m) => m.id == dongHaiMap.id || m.id == abyssMap.id;
+
+final Map<String, MapDef> mapById = {
+  for (final m in maps) m.id: m,
+  abyssMap.id: abyssMap,
+  dongHaiMap.id: dongHaiMap,
+};
 
 class DungeonDef {
   const DungeonDef({
@@ -453,8 +494,19 @@ const dungeons = <DungeonDef>[
       level: 97, waves: [12, 14, 16]),
 ];
 
+/// Dungeons off the main ladder (not Ác Mộng's eighteen): Đông Hải's.
+const extraDungeons = <DungeonDef>[
+  DungeonDef(id: 'dh1', name: 'Long Cung Thủy Phủ', mapId: 'donghai',
+      level: 74, waves: [10, 12, 14]),
+];
+
+/// Every dungeon as listed, by level.
+final List<DungeonDef> dungeonList = [...dungeons, ...extraDungeons]
+  ..sort((a, b) => a.level.compareTo(b.level));
+
 final Map<String, DungeonDef> dungeonById = {
   for (final d in dungeons) d.id: d,
+  for (final d in extraDungeons) d.id: d,
 };
 
 enum QuestType { kill, boss, dungeon, level, elite }

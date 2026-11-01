@@ -209,23 +209,26 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
       opacity: lost ? 0.4 : 1,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
           color: me ? Color.lerp(lacquer, seal, 0.4) : lacquerDeep,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(color: hanh == null ? const Color(0xFF5A4A3A) : hanhColor(hanh).withValues(alpha: 0.7)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        // One line each, so eight fit on a small phone.
+        child: Row(
           children: [
-            Text(name,
-                style: bold.copyWith(fontSize: 11.5, color: me ? goldLight : cream,
-                    decoration: lost ? TextDecoration.lineThrough : null),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            if (power != null)
-              Text(fmt(power), style: small.copyWith(fontSize: 9.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Expanded(
+              child: Text(name,
+                  style: bold.copyWith(fontSize: 11, color: me ? goldLight : cream,
+                      decoration: lost ? TextDecoration.lineThrough : null),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
+            if (power != null) ...[
+              const SizedBox(width: 3),
+              Text(_short(power), style: small.copyWith(fontSize: 9.5)),
+            ],
           ],
         ),
       ),
@@ -302,4 +305,12 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
       textAlign: TextAlign.center,
     );
   }
+}
+
+/// Lực chiến in a few characters: 17,8k, 1,2tr.
+String _short(int n) {
+  String one(double v) => v.toStringAsFixed(v >= 100 ? 0 : 1).replaceAll('.', ',');
+  if (n >= 1000000) return '${one(n / 1000000)}tr';
+  if (n >= 1000) return '${one(n / 1000)}k';
+  return '$n';
 }

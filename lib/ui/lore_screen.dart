@@ -45,7 +45,7 @@ class _LoreScreenState extends State<LoreScreen> {
                   Padding(
                     padding: const EdgeInsets.all(6),
                     child: Text(
-                      'Trọn 9 chương: danh hiệu « $loreTitle », '
+                      'Trọn ${loreChapters.length} chương: danh hiệu « $loreTitle », '
                       '${loreAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}',
                       style: small.copyWith(fontSize: 11, color: h.loreAllDone ? const Color(0xFF8CE07A) : creamDim),
                     ),

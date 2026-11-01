@@ -118,6 +118,7 @@ const _propKinds = <MapTheme, List<String>>{
   MapTheme.cloud: ['mistPine', 'mistPine', 'rock', 'lantern', 'mistPine'],
   MapTheme.summit: ['plum', 'plum', 'swordStone', 'pillar', 'rock'],
   MapTheme.abyss: ['rockSpire', 'deadTree', 'swordStone', 'crystal', 'brazier'],
+  MapTheme.sea: ['palm', 'palm', 'coral', 'rock', 'anchor', 'palm', 'coral'],
 };
 
 const _decalKinds = <MapTheme, List<String>>{
@@ -131,4 +132,5 @@ const _decalKinds = <MapTheme, List<String>>{
   MapTheme.cloud: ['tuft', 'pebble', 'mist', 'mist', 'tuft'],
   MapTheme.summit: ['petal', 'petal', 'tile', 'crack', 'pebble'],
   MapTheme.abyss: ['crack', 'bones', 'ember', 'skull', 'crack'],
+  MapTheme.sea: ['shell', 'starfish', 'ripple', 'tidePool', 'shell', 'pebble'],
 };

@@ -77,6 +77,13 @@ const loreChapters = <LoreChapter>[
     'Trong sổ đen có tên cả những chưởng môn âm thầm cấu kết với ma giáo.',
     'Trang cuối sổ bị xé, chỉ còn dấu ấn hình con rồng trắng.',
   ], Bonus.aspd, 0.02),
+  LoreChapter('r10', 'Hải tặc Đông Hải', [
+    'Quần đảo phía đông vốn là làng chài yên bình, ngư dân thờ Long Vương giữ biển.',
+    'Một năm nọ, đoàn thuyền buồm đen kéo tới, cờ thêu đầu lâu và một chữ "Huyết".',
+    'Hải tặc ép dân đảo lặn tìm ngọc trai dâng cho Huyết Ma Giáo đổi lấy binh khí.',
+    'Long Vương nổi giận vì biển bị vấy máu, sóng dữ đánh chìm thuyền cả hai phe.',
+    'Lão ngư cuối cùng trên đảo nói: "Biển không có chủ, chỉ có người biết ơn biển."',
+  ], Bonus.hpPct, 0.03),
   LoreChapter('r8', 'Rồng trắng trên mây', [
     'Tiên cảnh chỉ hiện ra khi sương tan, mỗi năm vài ngày.',
     'Bạch Long Vương từng là thần hộ sơn, được các phái thờ phụng.',

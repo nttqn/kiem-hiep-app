@@ -47,6 +47,8 @@ const realms = <RealmDef>[
       desc: 'Miệng núi lửa bị phong ấn, linh khí hỏa hệ dồi dào nhất thiên hạ.'),
   RealmDef(id: 'r7', name: 'Huyết Ma Mật Cảnh', mapId: 'magiao', level: 64,
       desc: 'Mật địa của Huyết Ma Giáo, nơi giam giữ người các phái bị bắt.'),
+  RealmDef(id: 'r10', name: 'Long Cung Hải Vực', mapId: 'donghai', level: 70,
+      desc: 'Vùng biển cạn quanh đảo hoang, cửa vào Long Cung chỉ lộ ra khi thủy triều rút.'),
   RealmDef(id: 'r8', name: 'Vân Tiêu Tiên Cảnh', mapId: 'vanvu', level: 78,
       desc: 'Tiên cảnh trên tầng mây, chỉ hiện ra khi sương tan.'),
   RealmDef(id: 'r9', name: 'Kiếm Mộ Hoa Sơn', mapId: 'hoason', level: 92,

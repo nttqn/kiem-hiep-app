@@ -44,6 +44,9 @@ import 'services/perf.dart';
 import 'ui/backdrop.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/world_boss_screen.dart';
+import 'core/dai_hoi.dart';
+import 'core/stats.dart';
+import 'core/weekly_hunt.dart';
 import 'core/world_boss.dart';
 import 'services/leaderboard.dart';
 import 'core/tower.dart';
@@ -58,6 +61,8 @@ import 'ui/rebirth_screen.dart';
 import 'ui/play_screen.dart';
 import 'ui/rewards_ui.dart';
 import 'ui/shop_screen.dart';
+import 'ui/stats_screen.dart';
+import 'ui/dai_hoi_screen.dart';
 import 'ui/theme.dart';
 import 'ui/title_screen.dart';
 import 'ui/town_screen.dart';
@@ -258,6 +263,28 @@ Future<void> main() async {
       final lore = int.tryParse(q['lore'] ?? '') ?? 0;
       for (var i = 0; i < lore && i < lorePageCount; i++) {
         h.lorePages.add(loreKey(loreChapters[i ~/ lorePagesPer].realm, i % lorePagesPer));
+      }
+      // runs=<n>: that many battles in Thống kê.
+      final runs = int.tryParse(q['runs'] ?? '') ?? 0;
+      const places = ['Hắc Phong Động', 'Long Cung Thủy Phủ', 'Đại Hội · Bán kết · Lý Phong', 'Long Cung Hải Vực'];
+      const kinds = ['field', 'dungeon', 'daihoi', 'realm'];
+      for (var i = 0; i < runs; i++) {
+        final r = RunLog(
+          name: places[i % 4], kind: kinds[i % 4], sec: 60 + i * 37, kills: 10 + i * 7,
+          dmg: 50000.0 * (i + 1), bestHit: 2000.0 + i * 300, dps: 800.0 + i * 55,
+          gold: 1500 * i, levels: i % 3 == 0 ? 1 : 0,
+          result: RunResult.values[i % 3], at: 0);
+        h.logRun(r, 60);
+      }
+      // dh=<wins>: signed up to this week's Võ Lâm Đại Hội with that many
+      // wins; dhout=1 knocked out at the next match.
+      final dh = int.tryParse(q['dh'] ?? '');
+      if (dh != null) {
+        h.daiHoiEnter(huntWeekOf(vnDayKey()), daiHoiEntrants(const [], h.power, h.level, h.rebirths, 11));
+        for (var i = 0; i < dh && i < 3; i++) {
+          h.daiHoiResult(true);
+        }
+        if (q['dhout'] == '1') h.daiHoiResult(false);
       }
       // Some gems and pets to show off the gem and pet screens.
       for (final hn in Hanh.values) {
@@ -463,6 +490,8 @@ Future<void> main() async {
     'nightmare' => const DungeonListScreen(nightmare: true),
     'realm' => const DungeonListScreen(realm: true),
     'lore' => const LoreScreen(),
+    'stats' => const StatsScreen(),
+    'daihoi' => const DaiHoiScreen(),
     'rplay' => PlayScreen.dungeon(realmDungeon(int.tryParse(q['ri'] ?? '') ?? 0, SaveService.instance.hero.level)),
     'nmplay' => PlayScreen.dungeon(nightmareDef(int.tryParse(q['nmi'] ?? '') ?? 0,
         NmAffix.values[int.tryParse(q['affix'] ?? '') ?? 0])),

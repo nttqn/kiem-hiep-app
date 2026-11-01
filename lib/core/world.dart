@@ -461,7 +461,7 @@ class World {
 
   /// The fishing pond by the gate of a field map.
   // Cửu U Ma Vực has no fish of its own.
-  bool get hasPond => mode == WorldMode.field && map.rebirths == 0;
+  bool get hasPond => mode == WorldMode.field && !isSideMap(map);
   double get pondX => pondDx;
   double get pondY => height / 2 + pondDy;
 
@@ -861,7 +861,12 @@ class World {
   final List<HerbNode> herbs = [];
 
   // Cửu U Ma Vực grows the top tier, as the last map does.
-  int get _herbTier => herbTierOfMap(map.rebirths > 0 ? maps.length - 1 : math.max(0, maps.indexOf(map)));
+  int get _herbTier => herbTierOfMap(map.rebirths > 0
+      ? maps.length - 1
+      // Đông Hải grows Ma Giáo's herbs.
+      : map.id == dongHaiMap.id
+          ? maps.indexWhere((m) => m.id == 'magiao')
+          : math.max(0, maps.indexOf(map)));
 
   void _plantHerbs() {
     final r = math.Random(map.id.hashCode ^ 0x5eed);
@@ -2650,6 +2655,8 @@ class World {
       }
       if (m.def.boss) hero.unlockCostumes();
     }
+    // Đông Hải Long Vương counts toward Long Mã.
+    if (m.def.id == dongHaiMap.boss) hero.unlockMounts();
     if (m.big && hero.manualOpen && dungeon?.isTower != true &&
         rng.nextDouble() < (m.def.boss ? bossPageChance : elitePageChance)) {
       events.add(GameEvent(EvKind.loot, text: 'Nhặt được ${hero.gainManualPage(rng)}', color: 0xFFC88CFF));
