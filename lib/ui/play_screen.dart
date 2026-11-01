@@ -271,35 +271,18 @@ class _PlayScreenState extends State<PlayScreen> {
     if (mounted) game.halted = _paused || _fishing || _dead || _cleared != null;
   }
 
-  /// The battle ran slowly on this phone: offer Chế độ máy yếu, once.
+  /// The battle ran slowly on this phone: Chế độ máy yếu goes on by itself,
+  /// once per install (one in seven players stuttered and few took the old
+  /// offer), with a note on how to turn it off.
   void _onSlow(double fps) {
     if (!LiteMode.instance.shouldOffer) return;
     LiteMode.instance.markOffered();
-    Analytics.instance.log('slow_fps', {'fps': fps.round()});
-    Future.microtask(() async {
-      if (!mounted) return;
-      final was = game.halted;
-      game.halted = true;
-      final yes = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: lacquer,
-          title: Text('Máy đang hơi giật', style: titleStyle(20)),
-          content: Text(
-            'Trận đấu chỉ chạy khoảng ${fps.round()} khung hình/giây trên máy này. '
-            'Bật Chế độ máy yếu để bỏ rung màn hình và hiệu ứng mờ cho mượt hơn? '
-            'Có thể đổi lại bất cứ lúc nào bằng nút đồng hồ ở Thành hoặc trong menu Tạm dừng.',
-            style: body,
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để sau')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Bật')),
-          ],
-        ),
-      );
-      if (yes == true && !LiteMode.instance.on.value) await LiteMode.instance.toggle();
-      if (mounted) game.halted = was || _paused || _fishing || _dead || _cleared != null;
-    });
+    Analytics.instance.log('slow_fps', {'fps': fps.round(), 'auto': 1});
+    LiteMode.instance.toggle();
+    if (mounted) {
+      _toast('Máy hơi giật (${fps.round()} khung hình/giây): đã bật Chế độ máy yếu. '
+          'Tắt trong Cài đặt hoặc menu Tạm dừng.', goldLight);
+    }
   }
 
   void _setPaused(bool v) {

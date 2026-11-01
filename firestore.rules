@@ -106,6 +106,12 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // Cập nhật (1.4.0+): config/app.min, the oldest version still allowed
+    // to play, written by hand in the console.
+    match /config/{id} {
+      allow read: if true;
+    }
+
     // Sự kiện: boosts switched on by hand in the console (1.2.3+).
     match /events/{id} {
       allow read: if true;

@@ -5,6 +5,7 @@ import '../core/hero.dart';
 import '../services/cloud.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import '../services/update.dart';
 import '../services/sync_plan.dart';
 import 'cloud_panel.dart';
 import 'backdrop.dart';
@@ -28,7 +29,11 @@ class _TitleScreenState extends State<TitleScreen> {
     SoundService.instance.playMusic('menu');
     // A newer save played on another phone shows up here after sync.
     CloudSave.instance.addListener(_checkConflicts);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkConflicts());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkConflicts();
+      // A newer build on Play, unless a sync choice is waiting first.
+      if (!CloudSave.instance.needsChoice) UpdateService.instance.check(context);
+    });
   }
 
   @override
