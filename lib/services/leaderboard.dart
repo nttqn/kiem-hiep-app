@@ -25,7 +25,7 @@ class LbEntry {
     this.arenaS = 0,
     this.wk = 0,
     this.dhC = 0,
-    this.mount = '',
+    this.mount,
     this.mountLv = 1,
   });
 
@@ -49,8 +49,9 @@ class LbEntry {
   /// Võ Lâm Đại Hội titles won.
   final int dhC;
 
-  /// The mount ridden (1.4.0+), for Lôi đài copies.
-  final String mount;
+  /// The mount ridden, for Lôi đài copies; '' on foot, null when the row
+  /// was written by an app older than 1.4.0, which did not send it.
+  final String? mount;
   final int mountLv;
 
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
@@ -70,7 +71,7 @@ class LbEntry {
         arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
         wk: (m['wk'] as num?)?.toInt() ?? 0,
         dhC: (m['dhC'] as num?)?.toInt() ?? 0,
-        mount: m['mount'] as String? ?? '',
+        mount: m['mount'] as String?,
         mountLv: (m['mountLv'] as num?)?.toInt() ?? 1,
       );
     } catch (_) {
@@ -419,8 +420,10 @@ class Leaderboard extends ChangeNotifier {
             power: e.power,
             title: e.title,
             female: e.id.hashCode.isOdd,
-            mount: e.mount,
-            mountLv: e.mountLv,
+            // Until they update, a mount that fits their level (looks and
+            // speed only: its stat is already in their lực chiến).
+            mount: e.mount ?? botMount(e.level, e.rebirths, math.Random(e.id.hashCode)).$1,
+            mountLv: e.mount != null ? e.mountLv : 1 + e.level ~/ 6,
           ),
     ];
   }
