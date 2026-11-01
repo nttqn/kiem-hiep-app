@@ -299,9 +299,20 @@ class Leaderboard extends ChangeNotifier {
         _ => 0,
       };
 
+  /// ...and nothing from a later one: a phone whose clock runs ahead files
+  /// its score under next week (or season), which would top this one.
+  int _ceiling(LbBoard board) => switch (board) {
+        LbBoard.arena => arenaSeasonScore(arenaSeasonOf(vnDayKey()) + 1, 0),
+        LbBoard.hunt => huntScore(huntWeekOf(vnDayKey()) + 1, 0),
+        _ => 0,
+      };
+
   List<LbEntry> _debugSorted(LbBoard board) {
     final floor = _floor(board);
-    return debugEntries!.where((e) => board.valueOf(e) >= floor).toList()
+    final ceiling = _ceiling(board);
+    return debugEntries!
+        .where((e) => board.valueOf(e) >= floor && (ceiling == 0 || board.valueOf(e) < ceiling))
+        .toList()
       ..sort((a, b) => board.valueOf(b).compareTo(board.valueOf(a)));
   }
 
@@ -316,8 +327,10 @@ class Leaderboard extends ChangeNotifier {
       final rows = all.skip(from).take(limit).toList();
       return LbPage(rows, from + rows.length < all.length ? from + rows.length : null);
     }
+    final ceiling = _ceiling(board);
     Query<Map<String, dynamic>> q = _col;
     if (floor > 0) q = q.where(board.field, isGreaterThanOrEqualTo: floor);
+    if (ceiling > 0) q = q.where(board.field, isLessThan: ceiling);
     q = q.orderBy(board.field, descending: true);
     if (after is DocumentSnapshot) q = q.startAfterDocument(after);
     final snap = await q.limit(limit).get().timeout(const Duration(seconds: 15));
@@ -338,8 +351,10 @@ class Leaderboard extends ChangeNotifier {
       final rest = all.where((e) => board.valueOf(e) <= value).take(span + 1).toList();
       return (above.sublist(math.max(0, above.length - span)), rest);
     }
-    final up = await _col
-        .where(board.field, isGreaterThan: value)
+    final ceiling = _ceiling(board);
+    Query<Map<String, dynamic>> uq = _col.where(board.field, isGreaterThan: value);
+    if (ceiling > 0) uq = uq.where(board.field, isLessThan: ceiling);
+    final up = await uq
         .orderBy(board.field)
         .limit(span)
         .get()
@@ -394,8 +409,10 @@ class Leaderboard extends ChangeNotifier {
     final dbg = debugEntries;
     if (dbg != null) return dbg.where((e) => board.valueOf(e) > value).length + 1;
     try {
-      final agg = await _col
-          .where(board.field, isGreaterThan: value)
+      final ceiling = _ceiling(board);
+      Query<Map<String, dynamic>> q = _col.where(board.field, isGreaterThan: value);
+      if (ceiling > 0) q = q.where(board.field, isLessThan: ceiling);
+      final agg = await q
           .count()
           .get()
           .timeout(const Duration(seconds: 10));
