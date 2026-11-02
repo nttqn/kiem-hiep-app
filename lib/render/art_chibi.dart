@@ -1819,12 +1819,22 @@ void _turtle(Canvas c, double walk, bool moving, double attack, double t) {
 // ------------------------------------------------------------------ mounts
 
 /// How much higher a rider is drawn on [d] (hips on the saddle).
-double mountSeatOf(MountDef d) => d.look == 'tiger' || d.look == 'kylin' ? 27 : 26;
+double mountSeatOf(MountDef d) => switch (d.look) {
+      'sword' => _swordSeat,
+      'tiger' || 'kylin' => 27,
+      _ => 26,
+    };
 
 /// A mount at the local origin facing right, its saddle about
 /// 40 units up (see [mountSeatOf]). Tigers and kylins reuse the quadruped body,
-/// scaled up; horses and deer have long legs and a neck.
+/// scaled up; horses and deer have long legs and a neck. A flying sword
+/// leaves the canvas moved by its bob, so the rider standing on it bobs too
+/// (every caller draws inside its own save/restore).
 void drawMount(Canvas c, MountDef d, {double walk = 0, bool moving = false, double t = 0}) {
+  if (d.look == 'sword') {
+    _drawFlyingSword(c, d, moving: moving, t: t);
+    return;
+  }
   if (d.look == 'tiger' || d.look == 'kylin') {
     c.save();
     c.scale(1.4);
@@ -1952,6 +1962,88 @@ void drawMount(Canvas c, MountDef d, {double walk = 0, bool moving = false, doub
   }
   c.restore();
   _saddle(c, d, by - 11 - bob);
+}
+
+/// Height of the blade's flat, where the rider's feet stand.
+const double _swordSeat = 19.5;
+
+/// The sword is drawn this much larger than its sketch below.
+const double _swordScale = 1.3;
+
+/// Phi kiếm: a long sword lying flat in the air, point forward, the rider
+/// standing on the blade. [MountDef.c1] is the blade, c2 the glow and the
+/// tassel, c3 the gilt guard and pommel.
+void _drawFlyingSword(Canvas c, MountDef d, {bool moving = false, double t = 0}) {
+  final bob = math.sin(t * 2.2) * 1.6;
+  c.translate(0, -bob);
+  c.save();
+  c.scale(_swordScale);
+  const y = -_swordSeat / _swordScale;
+  final glow = 0.55 + 0.45 * math.sin(t * 3.1);
+
+  // Sword light under the blade.
+  c.drawOval(
+      Rect.fromCenter(center: const Offset(4, y + 5), width: 78, height: 12),
+      Paint()
+        ..color = col(d.c2).withValues(alpha: 0.22 + 0.12 * glow)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+
+  // Wind streaks trailing behind while flying.
+  if (moving) {
+    for (var i = 0; i < 3; i++) {
+      final ph = (t * 2.4 + i * 0.37) % 1.0;
+      final x0 = -42.0 - ph * 26;
+      final yy = y - 6 + i * 6.0;
+      c.drawLine(
+          Offset(x0, yy),
+          Offset(x0 - 14 + ph * 6, yy),
+          Paint()
+            ..color = col(d.c2).withValues(alpha: (1 - ph) * 0.7)
+            ..strokeWidth = 1.6
+            ..strokeCap = StrokeCap.round);
+    }
+  }
+
+  // Tassel from the pommel, streaming back.
+  final sway = math.sin(t * (moving ? 10 : 3)) * (moving ? 2.5 : 4);
+  final tassel = Path()
+    ..moveTo(-41, y + 1)
+    ..quadraticBezierTo(-50, y + 2 + sway * 0.5, -56 - (moving ? 4 : 0), y + 9 + sway)
+    ..quadraticBezierTo(-50, y + 6 + sway * 0.5, -40, y + 3)
+    ..close();
+  _shape(c, tassel, _flat(shade(d.c2, -0.15)), ow: 1.4);
+
+  // Blade: flat, a ridge down the middle, the point forward.
+  final blade = Path()
+    ..moveTo(-25, y - 2.4)
+    ..lineTo(33, y - 2.4)
+    ..lineTo(45, y + 0.7)
+    ..lineTo(33, y + 3.8)
+    ..lineTo(-25, y + 3.8)
+    ..close();
+  _shape(c, blade, _lit(d.c1, const Rect.fromLTRB(-25, y - 2, 45, y + 3.4)), ow: 1.6);
+  c.drawLine(const Offset(-23, y + 0.6), const Offset(38, y + 0.6),
+      _o
+        ..color = col(shade(d.c2, 0.25 * glow)).withValues(alpha: 0.85)
+        ..strokeWidth = 1.1);
+
+  // Grip, guard, pommel.
+  final grip = Path()..addRRect(RRect.fromLTRBR(-39, y - 0.4, -26, y + 1.8, const Radius.circular(1)));
+  _shape(c, grip, _flat(shade(d.c3, -0.55)), ow: 1.3);
+  final guard = Path()
+    ..moveTo(-28, y - 5)
+    ..quadraticBezierTo(-24, y + 0.7, -28, y + 6.4)
+    ..lineTo(-24, y + 6)
+    ..quadraticBezierTo(-21, y + 0.7, -24, y - 4.6)
+    ..close();
+  _shape(c, guard, _lit(d.c3, const Rect.fromLTRB(-28, y - 5, -21, y + 6.4)), ow: 1.4);
+  _shape(c, Path()..addOval(Rect.fromCircle(center: const Offset(-41, y + 0.7), radius: 2.6)), _flat(d.c3), ow: 1.3);
+
+  // A glint running along the edge.
+  final gx = -20 + ((t * 0.7) % 1.0) * 60;
+  c.drawCircle(Offset(gx, y - 0.6), 1.5,
+      Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.8 * glow));
+  c.restore();
 }
 
 void _saddle(Canvas c, MountDef d, double top) {

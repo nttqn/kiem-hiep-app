@@ -25,7 +25,7 @@ class MountDef {
 
   final String id, name, desc;
 
-  /// Drawing: horse, deer, tiger, kylin.
+  /// Drawing: horse, deer, tiger, kylin, sword.
   final String look;
 
   /// Body, mane (or stripes) and saddle colours.
@@ -120,6 +120,11 @@ const mounts = <MountDef>[
       desc: 'Hươu thần chín sắc, chỉ hiện thân trước bậc lục chuyển.',
       c1: 0xFFF4F0F8, c2: 0xFFB8A0FF, c3: 0xFFFFC34A,
       move: 0.34, bonus: Bonus.hpPct, base: 0.1, perLv: 0.006, source: MountSource.rebirth, need: 6),
+  MountDef(
+      id: 'phikiem', name: 'Thanh Phong Phi Kiếm', look: 'sword',
+      desc: 'Ngự kiếm phi hành, đứng trên thân kiếm mà lướt gió vượt núi.',
+      c1: 0xFFE8EEF4, c2: 0xFF6AD8FF, c3: 0xFFFFC34A,
+      move: 0.33, bonus: Bonus.skillDmg, base: 0.06, perLv: 0.005, source: MountSource.tower, need: 100),
 ];
 
 final Map<String, MountDef> mountById = {for (final m in mounts) m.id: m};

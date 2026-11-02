@@ -106,6 +106,18 @@ void main() {
     });
   });
 
+  test('Phi kiếm: a flying sword mount from Tháp floor 100, the rider standing on it', () {
+    final m = mountById['phikiem']!;
+    expect(m.look, 'sword');
+    expect(m.source, MountSource.tower);
+    final h = HeroData(name: 'T', hanh: Hanh.kim)..towerBest = 99;
+    h.unlockMounts(quiet: true);
+    expect(h.ownsMount('phikiem'), isFalse);
+    h.towerBest = 100;
+    h.unlockMounts(quiet: true);
+    expect(h.ownsMount('phikiem'), isTrue);
+  });
+
   group('U Minh Huyết Hải', () {
     test('opens at the sixth rebirth, scaled up, listed last, off the story road', () {
       expect(huyetHaiMap.rebirths, 6);

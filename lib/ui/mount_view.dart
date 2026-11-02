@@ -28,9 +28,16 @@ class _MountViewState extends State<MountView> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [for (final m in mounts) Expanded(child: _card(m))],
+    // Ten mounts and counting: cards keep a readable width and the row
+    // scrolls sideways once they no longer fit.
+    return LayoutBuilder(
+      builder: (_, c) {
+        final w = math.max(158.0, c.maxWidth / mounts.length);
+        return ListView(
+          scrollDirection: Axis.horizontal,
+          children: [for (final m in mounts) SizedBox(width: w, child: _card(m))],
+        );
+      },
     );
   }
 
@@ -64,7 +71,7 @@ class _MountViewState extends State<MountView> {
                 ),
               ),
             ),
-            Text(m.desc, style: small.copyWith(fontSize: 10.5), maxLines: 3),
+            Text(m.desc, style: small.copyWith(fontSize: 10.5), maxLines: 3, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
             Text(owned ? 'Cấp $lv/$maxMountLevel' : m.howTo, style: bold.copyWith(fontSize: 12, color: cream)),
             Text(m.bonusText(lv), style: small.copyWith(fontSize: 10.5)),
