@@ -177,6 +177,11 @@ class HeroData {
   }
 
   String name;
+
+  /// Last rename (server ms, 0 = never) and the names worn before.
+  int renamedAt = 0;
+  List<String> oldNames = [];
+
   final Hanh hanh;
   bool female;
   int level = 1;
@@ -2888,6 +2893,7 @@ class HeroData {
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
+        'ren': [renamedAt, oldNames],
         'newbie': [newbieClaimed, newbieDay],
         'month': [monthKey, monthDays],
         'week': [weekClaimed.toList(), weekChest],
@@ -3114,6 +3120,13 @@ class HeroData {
     if (fat is List && fat.length == 2) {
       h.fatigueDay = fat[0] as String;
       h.fatigueSec = math.max(0, (fat[1] as num).toDouble());
+    }
+    final ren = m['ren'];
+    if (ren is List && ren.length == 2) {
+      try {
+        h.renamedAt = ren[0] as int;
+        h.oldNames = [for (final v in ren[1] as List) '$v'];
+      } catch (_) {}
     }
     final fun = m['fun'];
     if (fun is List && fun.length == 3) {

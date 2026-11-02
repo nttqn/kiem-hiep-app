@@ -239,6 +239,7 @@ class CloudSave extends ChangeNotifier {
         'sect': info.sect,
         'playSeconds': info.playSeconds,
         'rebirths': info.rebirths,
+        'oldNames': info.oldNames,
         'updated': FieldValue.serverTimestamp(),
       };
 
@@ -257,6 +258,7 @@ class CloudSave extends ChangeNotifier {
         sect: m['sect'] as String? ?? '',
         playSeconds: (m['playSeconds'] as num?)?.toDouble() ?? 0,
         rebirths: (m['rebirths'] as num?)?.toInt() ?? 0,
+        oldNames: [for (final v in m['oldNames'] as List? ?? const []) '$v'],
       )
     );
   }

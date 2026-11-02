@@ -16,6 +16,7 @@ class SlotInfo {
     this.sect = '',
     this.playSeconds = 0,
     this.rebirths = 0,
+    this.oldNames = const [],
   });
 
   factory SlotInfo.ofHero(HeroData h) => SlotInfo(
@@ -26,6 +27,7 @@ class SlotInfo {
         sect: h.sect.name,
         playSeconds: h.playSeconds,
         rebirths: h.rebirths,
+        oldNames: h.oldNames,
       );
 
   /// Ms since epoch of the last write.
@@ -38,6 +40,9 @@ class SlotInfo {
   final String sect;
   final double playSeconds;
   final int rebirths;
+
+  /// Names the hero wore before a rename.
+  final List<String> oldNames;
 
   /// "Cấp 50", with the rebirth count when there is one.
   String get levelText => rebirths > 0 ? 'Cấp $level · Chuyển sinh $rebirths' : 'Cấp $level';
@@ -52,7 +57,9 @@ int compareProgress(SlotInfo a, SlotInfo b) {
   return dt.abs() <= 30 ? 0 : dt.sign.toInt();
 }
 
-bool sameHero(SlotInfo a, SlotInfo b) => a.name == b.name && a.sect == b.sect;
+/// Same character: same sect, and the same name or one it was renamed from.
+bool sameHero(SlotInfo a, SlotInfo b) =>
+    a.sect == b.sect && (a.name == b.name || a.oldNames.contains(b.name) || b.oldNames.contains(a.name));
 
 /// Writing [to] over [from] would throw progress away: [to] is another
 /// character, or the same one further back.

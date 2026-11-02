@@ -16,6 +16,7 @@ import 'gem_tab.dart';
 import 'gold_tab.dart';
 import 'manual_dialog.dart';
 import 'refine_tab.dart';
+import 'rename_dialog.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import 'wardrobe_tab.dart';
@@ -189,7 +190,23 @@ class _CharacterScreenState extends State<CharacterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${h.name} · ${h.sect.name}', style: titleStyle(18)),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text('${h.name} · ${h.sect.name}',
+                          style: titleStyle(18), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                    InkWell(
+                      onTap: () async {
+                        if (await showRenameDialog(context) && mounted) setState(() {});
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(Icons.edit, color: goldLight, size: 18),
+                      ),
+                    ),
+                  ],
+                ),
                 Text('Cấp ${h.level} · Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight)),
                 const SizedBox(height: 6),
                 Expanded(
