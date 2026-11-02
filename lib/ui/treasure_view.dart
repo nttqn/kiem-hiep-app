@@ -92,7 +92,7 @@ class _TreasureViewState extends State<TreasureView> {
               itemBuilder: (_, i) => _offer(i, offers[i]),
             ),
           ),
-          if (h.soulPills > 0 || h.rebirths >= maxRebirths) _soulRow(),
+          if (h.soulPills > 0 || h.condensesSoul) _soulRow(),
           if (_msg != null) Text(_msg!, style: small.copyWith(color: cream)),
         ],
       ),
@@ -108,7 +108,9 @@ class _TreasureViewState extends State<TreasureView> {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                'Linh Phách Đơn: ${h.soulPills} viên. EXP dư sau Chuyển sinh $maxRebirths, cất dành cho lần chuyển sinh sau.',
+                h.nextRebirthPills > 0
+                    ? 'Linh Phách Đơn: ${h.soulPills}/${h.nextRebirthPills} viên cần cho Chuyển sinh ${h.rebirths + 1}. Đổi ra Thần Thiết sẽ phải tích lại.'
+                    : 'Linh Phách Đơn: ${h.soulPills} viên, ngưng tụ từ EXP dư ở cấp $maxLevel.',
                 style: small.copyWith(fontSize: 11),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

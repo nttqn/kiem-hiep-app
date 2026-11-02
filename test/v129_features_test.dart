@@ -26,7 +26,7 @@ void main() {
     });
 
     test('nothing condenses while a rebirth is still to come', () {
-      final h = maxed(rebirths: maxRebirths - 1);
+      final h = maxed(rebirths: lucChuyen - 2);
       h.gainExp(h.soulPillExp * 10.0);
       expect(h.soulPills, 0);
       expect(h.soulExp, 0);
@@ -48,7 +48,9 @@ void main() {
     test('Bế quan EXP counts once all rebirths are done, not while one waits', () {
       const away = Duration(hours: 8);
       expect(offlineReward(maxed(), away)!.exp, greaterThan(0));
-      expect(offlineReward(maxed(rebirths: maxRebirths - 1), away)!.exp, 0);
+      expect(offlineReward(maxed(rebirths: lucChuyen - 2), away)!.exp, 0);
+      // A cs5 hero short of pills for the sixth rebirth keeps condensing.
+      expect(offlineReward(maxed(rebirths: lucChuyen - 1), away)!.exp, greaterThan(0));
     });
   });
 }

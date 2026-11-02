@@ -65,7 +65,7 @@ void main() {
   test('at most six rebirths, with achievements on the way', () {
     final h = HeroData(name: 'T', hanh: Hanh.thuy);
     for (var n = 0; n < maxRebirths; n++) {
-      while (!h.expFull) {
+      while (!h.canRebirth) {
         h.gainExp(h.expNeeded.toDouble());
       }
       expect(h.rebirth(), isTrue);

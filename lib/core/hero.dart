@@ -69,6 +69,10 @@ const int maxRebirths = 6;
 const int lucChuyen = 6;
 const double lucChuyenExpNeed = 4;
 const int lucChuyenPoints = 5;
+
+/// Linh Phách Đơn the [n]th rebirth takes (1.6.0): ten per rebirth from
+/// the sixth on (60, then 70...), spent when reborn.
+int rebirthPillCost(int n) => n >= lucChuyen ? n * 10 : 0;
 const int rebirthLevel = 10;
 const int rebirthPoints = 40;
 const double rebirthHpAtk = 0.05;
@@ -657,7 +661,14 @@ class HeroData {
   /// Level 99 with the EXP bar filled: nothing more to gain.
   bool get expFull => level >= maxLevel && exp >= expNeedAt(maxLevel);
 
-  bool get canRebirth => expFull && rebirths < maxRebirths;
+  bool get canRebirth => expFull && rebirths < maxRebirths && soulPills >= nextRebirthPills;
+
+  /// Linh Phách Đơn the next rebirth needs (0 when none, or none left).
+  int get nextRebirthPills => rebirths < maxRebirths ? rebirthPillCost(rebirths + 1) : 0;
+
+  /// Whether EXP past a full level-99 bar condenses into Linh Phách Đơn:
+  /// after the last rebirth, or while the next one asks for pills.
+  bool get condensesSoul => rebirths >= maxRebirths || nextRebirthPills > 0;
 
   /// Adds EXP and handles level-ups. Returns levels gained. At level 99 the
   /// bar still fills up, which is the requirement for a rebirth.
@@ -666,12 +677,17 @@ class HeroData {
     if (level >= maxLevel) {
       final cap = expNeedAt(maxLevel);
       if (exp >= cap) {
-        if (rebirths >= maxRebirths) _condenseSoul(amount);
+        if (condensesSoul) _condenseSoul(amount);
         return 0;
       }
       exp = math.min(cap, exp + amount.round());
       if (exp >= cap && rebirths < maxRebirths) {
-        notices.add(Notice('Kinh nghiệm đã đầy! Về thành để chuyển sinh.', color: 0xFFFFD34A, big: true));
+        notices.add(Notice(
+            nextRebirthPills > soulPills
+                ? 'Kinh nghiệm đã đầy! Tích đủ $nextRebirthPills Linh Phách Đơn để chuyển sinh.'
+                : 'Kinh nghiệm đã đầy! Về thành để chuyển sinh.',
+            color: 0xFFFFD34A,
+            big: true));
       }
       return 0;
     }
@@ -911,6 +927,7 @@ class HeroData {
   bool rebirth() {
     if (!canRebirth) return false;
     final perLevel = levelPoints;
+    soulPills -= nextRebirthPills;
     rebirths++;
     // A new Luân Hồi chapter starts (after the main story, if unfinished).
     rbQuest = 0;

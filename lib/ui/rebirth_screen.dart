@@ -26,7 +26,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
         title: Text('Chuyển sinh lần ${h.rebirths + 1}?', style: titleStyle(20)),
         content: Text(
           'Nhân vật sẽ trở về cấp $rebirthLevel. Điểm tiềm năng được trả lại để cộng lại '
-          '(thêm $rebirthPoints điểm). Trang bị, kỹ năng, ngọc, linh thú, lượng và nhiệm vụ '
+          '(thêm $rebirthPoints điểm).${h.nextRebirthPills > 0 ? ' Tiêu hao ${h.nextRebirthPills} Linh Phách Đơn.' : ''} Trang bị, kỹ năng, ngọc, linh thú, lượng và nhiệm vụ '
           'được giữ nguyên.',
           style: body,
         ),
@@ -86,6 +86,9 @@ class _RebirthScreenState extends State<RebirthScreen> {
                           Text('Điều kiện', style: bold.copyWith(color: goldLight)),
                           _check('Đạt cấp $maxLevel (hiện tại cấp ${h.level})', atMax),
                           _check('Kinh nghiệm cấp $maxLevel đầy', h.expFull),
+                          if (h.nextRebirthPills > 0)
+                            _check('Linh Phách Đơn: ${h.soulPills}/${h.nextRebirthPills} viên (trừ khi chuyển sinh)',
+                                h.soulPills >= h.nextRebirthPills),
                           const SizedBox(height: 4),
                           Bar(
                             value: atMax ? (h.exp / cap).clamp(0.0, 1.0) : 0,
@@ -94,7 +97,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                             label: atMax ? '${fmt(h.exp)} / ${fmt(cap)}' : 'Cần cấp $maxLevel',
                           ),
                           const SizedBox(height: 10),
-                          if (done) ...[
+                          if (done || h.nextRebirthPills > 0) ...[
                             // Past the last rebirth, EXP goes into Linh Phách Đơn.
                             Text('Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF))),
                             const SizedBox(height: 4),
@@ -104,9 +107,13 @@ class _RebirthScreenState extends State<RebirthScreen> {
                               height: 13,
                               label: h.expFull ? '${fmt(h.soulExp)} / ${fmt(h.soulPillExp)}' : 'Cần đầy kinh nghiệm cấp $maxLevel',
                             ),
-                            _line('Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn, cất dành cho lần chuyển sinh sau.'),
+                            _line(done
+                                ? 'Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn.'
+                                : 'Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn. Cần ${h.nextRebirthPills} viên để chuyển sinh lần ${h.rebirths + 1}.'),
                             _line('Đổi $soulPillsPerIron viên lấy 1 Thần Thiết ở Kỳ Trân Các.'),
-                          ] else ...[
+                          ],
+                          if (!done) ...[
+                            const SizedBox(height: 6),
                             Text('Khi chuyển sinh', style: bold.copyWith(color: goldLight)),
                             _line('Trở về cấp $rebirthLevel, trả lại điểm tiềm năng và tặng thêm $rebirthPoints điểm.'),
                             _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),

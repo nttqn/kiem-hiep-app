@@ -15,6 +15,7 @@ HeroData _cs(int n) {
     while (!h.expFull) {
       h.gainExp(h.expNeeded.toDouble());
     }
+    h.soulPills += h.nextRebirthPills;
     expect(h.rebirth(), isTrue);
   }
   return h;
@@ -27,9 +28,13 @@ void main() {
       while (!h.expFull) {
         h.gainExp(h.expNeeded.toDouble());
       }
+      expect(h.canRebirth, isFalse, reason: 'no Linh Phách Đơn yet');
+      expect(h.rebirth(), isFalse);
+      h.soulPills = 65;
       expect(h.canRebirth, isTrue);
       expect(h.rebirth(), isTrue);
       expect(h.rebirths, 6);
+      expect(h.soulPills, 5, reason: 'sixty spent');
       expect(h.level, rebirthLevel);
       while (!h.expFull) {
         h.gainExp(h.expNeeded.toDouble());
@@ -73,6 +78,31 @@ void main() {
         if (q.type == QuestType.kill || q.type == QuestType.boss) expect(mapOfMob(q.target), isNotNull, reason: q.target);
         if (q.type == QuestType.dungeon) expect(dungeonById[q.target], isNotNull);
       }
+    });
+  });
+
+  group('Linh Phách Đơn cho chuyển sinh', () {
+    test('sixty for the sixth, seventy for a seventh; none before', () {
+      expect(rebirthPillCost(5), 0);
+      expect(rebirthPillCost(6), 60);
+      expect(rebirthPillCost(7), 70);
+    });
+
+    test('a cs5 hero with a full bar condenses pills toward the sixth rebirth', () {
+      final h = _cs(5);
+      while (!h.expFull) {
+        h.gainExp(h.expNeeded.toDouble());
+      }
+      expect(h.condensesSoul, isTrue);
+      h.notices.clear();
+      h.gainExp(h.soulPillExp * 3.0);
+      expect(h.soulPills, greaterThanOrEqualTo(3));
+      final cs4 = _cs(4);
+      while (!cs4.expFull) {
+        cs4.gainExp(cs4.expNeeded.toDouble());
+      }
+      cs4.gainExp(cs4.soulPillExp * 3.0);
+      expect(cs4.soulPills, 0, reason: 'the fifth rebirth needs no pills');
     });
   });
 
