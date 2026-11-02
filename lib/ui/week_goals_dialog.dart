@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/costumes.dart';
 import '../core/week_goals.dart';
 import '../core/world_boss.dart';
 import '../services/analytics.dart';
@@ -60,7 +61,8 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Mỗi ngày mở thêm 3 mục tiêu, làm lúc nào cũng được. Xong cả 21 mục nhận Rương 7 ngày.',
+            Text('Mỗi ngày mở thêm 3 mục tiêu, làm lúc nào cũng được. Xong cả 21 mục nhận Rương 7 ngày '
+                'và ngoại trang ${costumeById[weekChestCostume]!.name}, không có ở đâu khác.',
                 style: small.copyWith(fontSize: 11.5)),
             const SizedBox(height: 8),
             Row(
@@ -72,12 +74,19 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
               ],
             ),
             const SizedBox(height: 8),
-            if (_tab > open)
+            if (_tab > open) ...[
+              // A look at what is coming, so there is a reason to return.
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Mở vào ngày $_tab.', style: body, textAlign: TextAlign.center),
-              )
-            else
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  _tab == open + 1 ? 'Mở sau ${_untilTomorrow()} (0 giờ ngày mai).' : 'Mở vào ngày $_tab của bạn.',
+                  style: bold.copyWith(color: goldLight),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              for (final g in weekGoals.where((g) => g.day == _tab))
+                Opacity(opacity: 0.55, child: IgnorePointer(child: _goal(g))),
+            ] else
               for (final g in weekGoals.where((g) => g.day == _tab)) _goal(g),
             const SizedBox(height: 6),
             Row(
@@ -113,6 +122,13 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
       ),
       actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng'))],
     );
+  }
+
+  /// Hours and minutes to the next Vietnam midnight.
+  String _untilTomorrow() {
+    final now = vnNow();
+    final left = DateTime.utc(now.year, now.month, now.day + 1).difference(DateTime.utc(now.year, now.month, now.day, now.hour, now.minute));
+    return '${left.inHours} giờ ${left.inMinutes % 60} phút';
   }
 
   Widget _dayTab(int d, int open) {

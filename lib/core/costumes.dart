@@ -4,7 +4,7 @@ import 'sect_duty.dart';
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week }
 
 class CostumeDef {
   const CostumeDef({
@@ -43,6 +43,7 @@ class CostumeDef {
         CostumeSource.arena => 'Kết thúc một mùa Lôi đài ở hạng ${arenaTiers[need].name}',
         CostumeSource.sect => 'Sư môn: đạt chức ${sectRanks[need].name}',
         CostumeSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
+        CostumeSource.week => 'Mở Rương 7 ngày (đủ 21 Mục tiêu 7 ngày)',
       };
 }
 
@@ -57,6 +58,13 @@ String _thousands(int n) {
 }
 
 const costumes = <CostumeDef>[
+  // 1.5.0: the reward for finishing Mục tiêu 7 ngày, found nowhere else.
+  CostumeDef(
+    id: 'thatnhat', name: 'Thất Nhật Hiệp Y', desc: 'Áo trắng viền ngọc của tân hiệp khách vượt qua bảy ngày đầu giang hồ.',
+    source: CostumeSource.week, need: 1,
+    robe: 0xFFF2F0EA, trim: 0xFF3AB8A8, pants: 0xFF2A3A48, cape: 0xFF2A8A8A, glow: 0xFF6AE8D8, aura: 0xFFB8FFF0,
+    armor: 2,
+  ),
   CostumeDef(
     id: 'thanhsam', name: 'Thanh Sam Thư Sinh', desc: 'Áo xanh nho nhã của kẻ sĩ giang hồ.',
     source: CostumeSource.gold, need: 150000,

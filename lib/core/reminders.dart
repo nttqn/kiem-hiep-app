@@ -1,6 +1,7 @@
 import 'hero.dart';
 import 'rewards.dart' show offlineCap;
-import 'world_boss.dart' show vnNow;
+import 'week_goals.dart' show weekGoalDay;
+import 'world_boss.dart' show vnNow, vnDayKey;
 
 /// One reminder to set on the phone when the game is left.
 class Reminder {
@@ -29,6 +30,9 @@ DateTime vnAt(DateTime now, int days, int hour, int minute) {
 List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = false}) {
   final out = <Reminder>[];
   final tomorrow = vnAt(now, 1, reminderHour, reminderMinute);
+  // The hero's Mục tiêu 7 ngày day tomorrow (0 when done or not for them).
+  final today = vnDayKey(now);
+  final weekDayTomorrow = h.weekGoalsOpen(today) ? weekGoalDay(h, today) + 1 : 0;
   final full = now.toUtc().add(offlineCap);
   final fullHour = vnNow(full).hour;
   if (!h.canRebirth && fullHour >= 8 && fullHour < 22 && full.difference(tomorrow).inMinutes.abs() > 180) {
@@ -41,8 +45,19 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
     newbieWaiting ? 'Quà tân thủ đang chờ' : 'Quà mới đã sẵn sàng',
     newbieWaiting
         ? 'Quà tân thủ ngày ${h.newbieClaimed + 1} của ${h.name} đang chờ. Đủ 7 ngày nhận Bạch Mã!'
-        : 'Quà đăng nhập, nhiệm vụ ngày và lượt Boss Thế Giới đã làm mới.',
+        : weekDayTomorrow > 1 && weekDayTomorrow <= 7
+            ? 'Mục tiêu 7 ngày: ngày $weekDayTomorrow đã mở 3 mục tiêu mới cho ${h.name}.'
+            : 'Quà đăng nhập, nhiệm vụ ngày và lượt Boss Thế Giới đã làm mới.',
   ));
+  // Trang viên: the first field to ripen, in daytime and not near tomorrow's.
+  final ripe = h.manorOpen ? h.manor.nextReady(now.millisecondsSinceEpoch) : null;
+  if (ripe != null) {
+    final at = DateTime.fromMillisecondsSinceEpoch(ripe, isUtc: true);
+    final hour = vnNow(at).hour;
+    if (hour >= 8 && hour < 22 && at.difference(tomorrow).inMinutes.abs() > 120) {
+      out.add(Reminder(5, at, 'Ruộng linh thảo đã chín', 'Trang viên của ${h.name} có ruộng chín rồi, về thu hoạch nhé!'));
+    }
+  }
   out.add(Reminder(3, vnAt(now, 3, reminderHour, reminderMinute), 'Giang hồ dậy sóng',
       '${h.name} ơi, quái vật lại kéo đến. Mau trở lại hành hiệp!'));
   out.add(Reminder(4, vnAt(now, 7, reminderHour, reminderMinute), 'Giang hồ vẫn chờ',

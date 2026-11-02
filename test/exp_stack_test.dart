@@ -19,4 +19,12 @@ void main() {
     liveEvents = [const LiveEvent(id: 'x15', exp: 1.5)];
     expect(h.expMul, 1.5);
   });
+
+  test('Tụ Bảo Đan and a gold event do not stack either', () {
+    final h = HeroData(name: 'T', hanh: Hanh.kim);
+    h.buffs['tubao'] = 600;
+    expect(h.goldMul, 1.5);
+    liveEvents = [const LiveEvent(id: 'g2', gold: 2)];
+    expect(h.goldMul, 2);
+  });
 }

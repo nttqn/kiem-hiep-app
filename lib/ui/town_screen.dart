@@ -3,15 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../app_version.dart';
-import '../core/alchemy.dart';
 import '../core/content.dart';
+import '../core/clock.dart';
 import '../core/fatigue.dart';
 import '../core/guide.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
 import '../core/hero.dart';
-import '../core/sect_duty.dart';
-import '../core/tower.dart';
 import '../core/week_goals.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
@@ -33,9 +31,12 @@ import 'rewards_ui.dart';
 import 'sect_screen.dart';
 import 'settings_dialog.dart';
 import 'lists.dart';
+import 'manor_screen.dart';
+import '../core/unlocks.dart';
 import 'mail_dialog.dart';
 import 'newbie_dialog.dart';
 import 'play_screen.dart';
+import 'prologue.dart';
 import 'shop_screen.dart';
 import 'theme.dart';
 import 'title_screen.dart';
@@ -70,7 +71,10 @@ class _TownScreenState extends State<TownScreen> {
   /// today's login gift, one after the other.
   Future<void> _welcome(Duration? away) async {
     if (widget.firstVisit) {
-      showGuide(context);
+      // Lời mở đầu, then straight into the first fight (the guide stays in
+      // Cài đặt for later).
+      final go = await showPrologue(context, h);
+      if (go && mounted) _goQuest();
       return;
     }
     if (away != null) {
@@ -528,6 +532,15 @@ class _TownScreenState extends State<TownScreen> {
     return h.realmRunsLeft;
   }
 
+  /// Ripe fields and a full silkworm house at the Trang viên.
+  int _manorReady() {
+    if (!h.manorOpen) return 0;
+    final now = GameClock.nowMs();
+    final m = h.manor;
+    final ripe = m.plots.take(m.openPlots).where((p) => p.ready(now)).length;
+    return ripe + (m.silkSince > 0 && now >= m.silkFullAt() ? 1 : 0);
+  }
+
   /// Lôi đài duels still left today.
   int _arenaLeft() {
     if (!h.arenaOpen) return 0;
@@ -536,55 +549,57 @@ class _TownScreenState extends State<TownScreen> {
   }
 
   Widget _grid(bool pending) {
+    // Each door opens at its level (Mở khóa dần); a closed one shows when.
+    _Tile tile(String id, IconData icon, VoidCallback open, {int badge = 0}) {
+      final f = townFeatureById[id]!;
+      final ok = h.featureIsOpen(id);
+      return _Tile(
+        f.label,
+        icon,
+        ok
+            ? () {
+                if (h.seenFeatures.add(id)) SaveService.instance.save();
+                open();
+              }
+            : () => ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(content: Text('${f.label} mở ở cấp ${f.openLv}'))),
+        badge: ok ? badge : 0,
+        lockedAt: ok ? 0 : f.openLv,
+        fresh: h.featureIsNew(id),
+      );
+    }
+
     final tiles = [
-      _Tile('Luyện công', Icons.landscape, () => _go(const MapListScreen())),
-      _Tile('Vượt ải', Icons.castle, () => _go(const DungeonListScreen()), badge: _realmRunsLeft()),
-      _Tile('Thử thách', Icons.whatshot, () {
-        if (h.level < towerOpenLevel && h.rebirths == 0) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Thử thách mở ở cấp $towerOpenLevel')));
-          return;
-        }
-        _go(const ChallengeScreen());
-      }, badge: (h.level >= worldBossOpenLevel || h.rebirths > 0 ? _bossRunsLeft() : 0) + _arenaLeft()),
-      _Tile('Xếp hạng', Icons.leaderboard, () => _go(const LeaderboardScreen())),
-      _Tile('Nhiệm vụ', Icons.assignment, () => _go(const QuestScreen()),
+      tile('maps', Icons.landscape, () => _go(const MapListScreen())),
+      tile('dungeons', Icons.castle, () => _go(const DungeonListScreen()), badge: _realmRunsLeft()),
+      tile('challenge', Icons.whatshot, () => _go(const ChallengeScreen()),
+          badge: (h.level >= worldBossOpenLevel || h.rebirths > 0 ? _bossRunsLeft() : 0) + _arenaLeft()),
+      tile('quests', Icons.assignment, () => _go(const QuestScreen()),
           badge: h.daily.where((d) => !d.done).length + h.bounties.where((b) => b.done).length),
-      _Tile('Nhân vật', Icons.person, () => _go(const CharacterScreen(tab: 0)),
+      tile('hero', Icons.person, () => _go(const CharacterScreen(tab: 0)),
           badge: pending ? h.freePoints + h.skillPoints : 0),
-      _Tile('Đồng hành', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
-      _Tile('Luyện đan', Icons.science, () {
-        if (!h.alchemyOpen) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Luyện đan mở ở cấp $alchemyOpenLevel')));
-          return;
-        }
-        _go(const AlchemyScreen());
-      }),
-      _Tile('Năng động', Icons.local_fire_department, () => _go(const ActivityScreen()),
-          badge: activityClaimable(h)),
-      _Tile('Sư môn', Icons.temple_buddhist, () {
-        if (!h.sectOpen) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Sư môn mở ở cấp $sectOpenLevel')));
-          return;
-        }
-        _go(const SectScreen());
-      }, badge: _sectBadge()),
-      _Tile('Cửa hàng', Icons.storefront, () => _go(const ShopScreen())),
-      _Tile('Thợ rèn', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
-      _Tile('Thành tựu', Icons.emoji_events, () => _go(const AchievementsScreen()),
-          badge: claimableCount(h)),
-      _Tile('Quà ngày', Icons.card_giftcard, () async {
+      tile('manor', Icons.villa, () => _go(const ManorScreen()), badge: _manorReady()),
+      tile('companions', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
+      tile('rank', Icons.leaderboard, () => _go(const LeaderboardScreen())),
+      tile('alchemy', Icons.science, () => _go(const AlchemyScreen())),
+      tile('activity', Icons.local_fire_department, () => _go(const ActivityScreen()), badge: activityClaimable(h)),
+      tile('sect', Icons.temple_buddhist, () => _go(const SectScreen()), badge: _sectBadge()),
+      tile('shop', Icons.storefront, () => _go(const ShopScreen())),
+      tile('forge', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
+      tile('ach', Icons.emoji_events, () => _go(const AchievementsScreen()), badge: claimableCount(h)),
+      tile('gift', Icons.card_giftcard, () async {
         await showLoginGiftDialog(context, h);
         if (mounted) setState(() {});
       }, badge: h.lastLoginDate == todayKey() ? 0 : 1),
     ];
     return LayoutBuilder(
       builder: (context, c) {
-        final w = (c.maxWidth - 6 * 8) / 7;
+        // Two rows; on a narrow screen the labels wrap to two lines.
+        final per = (tiles.length / 2).ceil();
+        final w = (c.maxWidth - (per - 1) * 6) / per;
         return Wrap(
-          spacing: 8,
+          spacing: 6,
           runSpacing: 8,
           children: [for (final t in tiles) SizedBox(width: w, height: 68, child: t)],
         );
@@ -594,11 +609,17 @@ class _TownScreenState extends State<TownScreen> {
 }
 
 class _Tile extends StatelessWidget {
-  const _Tile(this.label, this.icon, this.onTap, {this.badge = 0});
+  const _Tile(this.label, this.icon, this.onTap, {this.badge = 0, this.lockedAt = 0, this.fresh = false});
   final String label;
   final IconData icon;
   final VoidCallback onTap;
   final int badge;
+
+  /// Level it opens at, 0 when open.
+  final int lockedAt;
+
+  /// Just opened and not yet visited.
+  final bool fresh;
 
   @override
   Widget build(BuildContext context) {
@@ -608,22 +629,43 @@ class _Tile extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Positioned.fill(
-            child: Panel(
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: goldLight, size: 26),
-                  const SizedBox(height: 2),
-                  Text(label,
-                      style: bold.copyWith(fontSize: 11.5),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center),
-                ],
+            child: Opacity(
+              opacity: lockedAt > 0 ? 0.45 : 1,
+              child: Panel(
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, color: goldLight, size: lockedAt > 0 ? 18 : 22),
+                    const SizedBox(height: 2),
+                    Text(label,
+                        style: bold.copyWith(fontSize: 10.5, height: 1.1),
+                        maxLines: lockedAt > 0 ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center),
+                    if (lockedAt > 0)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.lock, size: 10, color: creamDim),
+                          Text(' Cấp $lockedAt', style: small.copyWith(fontSize: 9.5)),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
+          if (fresh)
+            Positioned(
+              left: -2,
+              top: -6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(color: const Color(0xFF2E8A4A), borderRadius: BorderRadius.circular(6)),
+                child: Text('MỚI', style: bold.copyWith(fontSize: 9, color: Colors.white)),
+              ),
+            ),
           if (badge > 0)
             Positioned(
               right: -4,

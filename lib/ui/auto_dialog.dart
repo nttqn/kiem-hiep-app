@@ -74,6 +74,8 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
                   chip('Đi nhặt đồ rơi, linh thảo', c.loot, () => set(() => c.loot = !c.loot)),
                   chip('Để dành tuyệt kỹ cho đông quái, boss', c.saveUltimate,
                       () => set(() => c.saveUltimate = !c.saveUltimate)),
+                  chip('Tự cộng điểm, học chiêu khi lên cấp', c.points, () => set(() => c.points = !c.points)),
+                  chip('Tự mặc đồ tốt hơn khi nhặt', c.gear, () => set(() => c.gear = !c.gear)),
                 ]),
               ],
             ),
@@ -81,7 +83,11 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
         ),
         actions: [
           TextButton(
-            onPressed: c.isDefault ? null : () => set(() => h.autoCfg = AutoConfig()),
+            onPressed: c.isDefault
+                ? null
+                : () => set(() => h.autoCfg = AutoConfig()
+                  ..points = c.points
+                  ..gear = c.gear),
             child: const Text('Mặc định'),
           ),
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Xong')),

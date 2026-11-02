@@ -22,6 +22,7 @@ import 'hanh.dart';
 import 'items.dart';
 import 'live_event.dart';
 import 'lore.dart';
+import 'manor.dart';
 import 'manuals.dart';
 import 'meridians.dart';
 import 'monthly.dart';
@@ -38,6 +39,7 @@ import 'weekly_hunt.dart';
 import 'world_boss.dart';
 import 'sects.dart';
 import 'stats.dart';
+import 'unlocks.dart';
 
 /// 1234567 as "1.234.567" (Vietnamese grouping) for reward lines.
 String _thousands(int v) {
@@ -76,7 +78,11 @@ const int bagSize = 60;
 // ---------------------------------------------------------------- balance
 
 double mobExpAt(int l) => 8 + 4.0 * l;
-int expToNext(int l) => (mobExpAt(l) * (20 + 3.0 * l + 0.25 * l * l)).round();
+int expToNext(int l) => (mobExpAt(l) * (20 + 3.0 * l + 0.25 * l * l) * earlyExpEase(l)).round();
+
+/// The first levels come quicker (1.5.0: half of new players left before
+/// level 10): 60% of the EXP at level 1, rising to all of it at 15.
+double earlyExpEase(int l) => l >= 15 ? 1 : 0.6 + 0.4 * (l - 1) / 14;
 double mobHpAt(int l) => 150 + 50.0 * l + 2.0 * l * l;
 double mobAtkAt(int l) => 8 + 5.0 * l;
 double mobDefAt(int l) => 5 + 2.5 * l;
@@ -188,7 +194,7 @@ class HeroData {
   final List<int> meridianPts = List.filled(5, 0);
   final Map<Slot, Item> equip = {};
   final List<Item> bag = [];
-  int hpPots = 15;
+  int hpPots = 30;
   int mpPots = 10;
   int mainQuest = 0;
   int mainProgress = 0;
@@ -345,6 +351,17 @@ class HeroData {
   /// Cài đặt tự đánh.
   AutoConfig autoCfg = AutoConfig();
 
+  /// Trang viên.
+  Manor manor = Manor();
+
+  /// Town features the player has opened since they unlocked (no MỚI tag).
+  final Set<String> seenFeatures = {};
+
+  bool featureIsOpen(String id) => featureOpen(id, level, rebirths);
+
+  /// Unlocked but not yet visited: the town tags it MỚI.
+  bool featureIsNew(String id) => featureIsOpen(id) && featureLevel(id) > 1 && !seenFeatures.contains(id);
+
   /// Thống kê: the latest battles, newest first, and personal records.
   final List<RunLog> runLog = [];
   HeroRecords records = HeroRecords();
@@ -491,6 +508,7 @@ class HeroData {
     add(sectRankBonus(hanh, sectRank));
     add(divineBonuses(divine));
     add(loreBonuses());
+    add(manor.bonuses());
     return out;
   }
 
@@ -651,9 +669,18 @@ class HeroData {
     }
     if (level >= maxLevel) exp = math.min(exp, expToNext(maxLevel));
     if (gained > 0) {
+      if (autoCfg.points) {
+        autoSpend();
+        autoLearn();
+      }
       recompute();
       notices.add(Notice('THĂNG CẤP $level!', color: 0xFFFFD34A, big: true));
       _levelGifts(level - gained, level);
+      if (rebirths == 0) {
+        for (final f in featuresOpened(level - gained, level)) {
+          notices.add(Notice('Mở khóa: ${f.label}', color: 0xFF8CE07A, big: true));
+        }
+      }
       _checkLevelQuests();
       unlockCostumes();
     }
@@ -1029,6 +1056,7 @@ class HeroData {
         CostumeSource.arena => arenaBestTier >= c.need,
         CostumeSource.sect => sectRank >= c.need,
         CostumeSource.abyss => abyssBossKills >= c.need,
+        CostumeSource.week => weekChest,
         CostumeSource.worldBoss || CostumeSource.gold => false,
       };
 
@@ -1474,7 +1502,8 @@ class HeroData {
     }
   }
   /// Monster gold: Tụ Bảo Đan and today's event.
-  double get goldMul => (buffLeft('tubao') > 0 ? goldPillMul : 1) * EventBoost(vnDayKey()).gold;
+  /// Monster gold: the better of Tụ Bảo Đan and today's event, as for EXP.
+  double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold);
 
   /// Counts buff time down while playing; true when one ran out.
   bool tickBuffs(double dt) {
@@ -2229,6 +2258,89 @@ class HeroData {
     return 'Trang Ký sự: ${c.title} ($n/$lorePagesPer)';
   }
 
+  // ------------------------------------------------------------- trang viên
+
+  bool get manorOpen => level >= manorOpenLevel || rebirths > 0;
+
+  bool cropOpen(Crop c) => level >= c.openLv || rebirths > 0;
+
+  /// First look at the estate: the silkworms start spinning.
+  void manorVisit(int nowMs) {
+    if (manor.silkSince <= 0) manor.silkSince = nowMs;
+  }
+
+  /// Sows [c] in field [i]; false when it cannot be done.
+  bool manorSow(int i, Crop c, int nowMs) {
+    if (!manorOpen || !cropOpen(c) || i < 0 || i >= manor.openPlots || !manor.plots[i].empty || gold < c.seedGold) {
+      return false;
+    }
+    gold -= c.seedGold;
+    final p = manor.plots[i];
+    p.tier = c.tier;
+    p.sownAt = nowMs;
+    p.readyAt = nowMs + cropMinutes(c, manor.level) * 60000;
+    return true;
+  }
+
+  /// Gathers every ripe field; the lines say what came in.
+  List<String> manorHarvest(int nowMs) {
+    final got = List.filled(herbNames.length, 0);
+    for (final p in manor.plots.take(manor.openPlots)) {
+      if (!p.ready(nowMs)) continue;
+      got[p.tier] += cropYield(manor.level);
+      p.tier = -1;
+      p.sownAt = 0;
+      p.readyAt = 0;
+      manor.harvests++;
+    }
+    final lines = <String>[];
+    for (var t = 0; t < got.length; t++) {
+      if (got[t] == 0) continue;
+      addHerb(t, got[t]);
+      lines.add('+${got[t]} ${herbNames[t]}');
+    }
+    return lines;
+  }
+
+  /// Takes the Tơ waiting in the silkworm house.
+  int manorCollectSilk(int nowMs) {
+    final n = manor.silkWaiting(nowMs);
+    manor.silk += n;
+    manor.silkSince = nowMs;
+    return n;
+  }
+
+  /// Sells [n] Tơ for gold; the gold made.
+  int manorSellSilk(int n) {
+    n = math.min(n, manor.silk);
+    if (n <= 0) return 0;
+    manor.silk -= n;
+    final g = n * silkPrice(level);
+    gold += g;
+    return g;
+  }
+
+  bool get manorCanUpgrade =>
+      manor.level < manorMaxLevel && gold >= manorUpGold(manor.level) && manor.silk >= manorUpSilk(manor.level);
+
+  bool manorUpgrade(int nowMs) {
+    if (!manorCanUpgrade) return false;
+    // What was spun so far counts at the old rate.
+    manorCollectSilk(nowMs);
+    gold -= manorUpGold(manor.level);
+    manor.silk -= manorUpSilk(manor.level);
+    manor.level++;
+    return true;
+  }
+
+  bool manorBuy(Keepsake k) {
+    if (manor.keepsakesOwned.contains(k.id) || manor.level < k.openLv || manor.silk < k.silk) return false;
+    manor.silk -= k.silk;
+    manor.keepsakesOwned.add(k.id);
+    recompute();
+    return true;
+  }
+
   // ------------------------------------------------------------- thống kê
 
   /// Files a finished battle; [combat] is the seconds spent actually
@@ -2543,7 +2655,10 @@ class HeroData {
     gold += weekChestGold;
     divineIron += weekChestIron;
     pills['taytuy'] = (pills['taytuy'] ?? 0) + weekChestPills;
+    final look = costumeById[weekChestCostume]!;
+    _grantCostume(look);
     final lines = [
+      'Ngoại trang ${look.name}',
       '+${_thousands(weekChestGold)} lượng',
       '+$weekChestIron Thần Thiết',
       '+$weekChestPills Tẩy Tủy Đan',
@@ -2763,6 +2878,8 @@ class HeroData {
         'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
         'lore': lorePages.toList(),
         'auto': autoCfg.toJson(),
+        'seen': seenFeatures.toList(),
+        'manor': manor.toJson(),
         'dh': [dhWeek, [for (final f in dhFoes) rivalToJson(f)], dhPower, dhWins, dhOut, dhRetried, dhUnpaid, dhChamps],
         'runs': [for (final r in runLog) r.toJson()],
         'rec': records.toJson(),
@@ -2955,6 +3072,14 @@ class HeroData {
       if (c != null && i != null && i >= 0 && i < lorePagesPer) h.lorePages.add(k);
     }
     h.autoCfg = AutoConfig.fromJson(m['auto']);
+    h.manor = Manor.fromJson(m['manor']);
+    final seen = m['seen'];
+    if (seen is List) {
+      h.seenFeatures.addAll(seen.whereType<String>());
+    } else {
+      // Saved before 1.5.0: whatever is open was already found.
+      h.seenFeatures.addAll([for (final f in townFeatures) if (h.featureIsOpen(f.id)) f.id]);
+    }
     final dh = m['dh'];
     if (dh is List && dh.length >= 8) {
       try {

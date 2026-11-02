@@ -57,6 +57,21 @@ const levelGifts = <int, NewbieGift>{
 const int newbieShieldLevel = 20;
 const double newbieAutoPotion = 0.35;
 
+/// Tân thủ: monsters hit a new hero (no rebirth) softer until this level,
+/// half as hard at level 1 (1.5.0: nearly every new player died before
+/// level 3, melee sects over and over among the wolves).
+const int newbieEaseLevel = 12;
+
+double newbieDamageTaken(int level, int rebirths) =>
+    rebirths > 0 || level >= newbieEaseLevel ? 1 : 0.5 + 0.5 * (level - 1) / (newbieEaseLevel - 1);
+
+/// How many camp friends join a monster the hero attacks: none for a hero
+/// this new, one a little later, then two.
+/// Potions a hero under [newbieShieldLevel] is topped up to when they fall.
+const int newbieRevivePots = 10;
+
+int newbieAggroFriends(int level, int rebirths) => rebirths > 0 ? 2 : (level < 6 ? 0 : (level < 10 ? 1 : 2));
+
 /// Short labels of [g], for the gift board.
 List<String> newbieLabels(NewbieGift g, {String Function(String id)? costumeName, String Function(String id)? mountName}) => [
       if (g.gold > 0) '${_dots(g.gold)} lượng',

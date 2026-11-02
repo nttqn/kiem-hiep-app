@@ -2641,10 +2641,12 @@ class World {
   void _aggro(Mob m) {
     m.state = MobState.chase;
     if (m.camp < 0) return;
-    // At most two close friends join in, so a whole camp never piles on.
+    // At most two close friends join in, so a whole camp never piles on;
+    // fewer for a brand-new hero.
+    final friends = newbieAggroFriends(hero.level, hero.rebirths);
     var n = 0;
     for (final o in mobs) {
-      if (n >= 2) break;
+      if (n >= friends) break;
       if (o.alive && o.camp == m.camp && o.state != MobState.chase &&
           _d2(o.x, o.y, m.x, m.y) < 150 * 150) {
         o.state = MobState.chase;
@@ -2810,6 +2812,7 @@ class World {
     var dmg = raw * hanhFactor(from, hero.hanh);
     dmg *= 1 - mitigation(st.def, hero.level);
     if (time < p.guardUntil) dmg *= 1 - p.guardPct;
+    if (dungeon == null || !(dungeon!.isArena || dungeon!.isTower)) dmg *= newbieDamageTaken(hero.level, hero.rebirths);
     dmg *= 0.9 + rng.nextDouble() * 0.2;
     if (p.shield > 0) {
       final take = math.min(p.shield, dmg);
@@ -2882,6 +2885,10 @@ class World {
     if (hero.level >= newbieShieldLevel || hero.rebirths > 0) {
       final loss = (hero.expNeeded * 0.03).round();
       hero.exp = math.max(0, hero.exp - loss);
+    }
+    // ...and finds a few potions in their pack again.
+    if (hero.level < newbieShieldLevel && hero.rebirths == 0 && hero.hpPots < newbieRevivePots) {
+      hero.hpPots = newbieRevivePots;
     }
     p.hp = p.maxHp;
     p.mp = st.maxMp;
@@ -3337,6 +3344,11 @@ class World {
               : 'Đã bán ${it.name} (+${it.sellPrice} lượng)',
           color: it.color));
       _sfx('loot');
+      if (kept && hero.autoCfg.gear && hero.autoEquip() > 0) {
+        hero.recompute();
+        player.maxHp = st.maxHp;
+        events.add(GameEvent(EvKind.loot, text: 'Đã mặc ${it.name}', color: it.color));
+      }
     }
   }
 

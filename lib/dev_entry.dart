@@ -44,6 +44,8 @@ import 'services/perf.dart';
 import 'ui/backdrop.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/world_boss_screen.dart';
+import 'core/clock.dart';
+import 'core/manor.dart';
 import 'core/dai_hoi.dart';
 import 'core/stats.dart';
 import 'core/weekly_hunt.dart';
@@ -61,6 +63,7 @@ import 'ui/rebirth_screen.dart';
 import 'ui/play_screen.dart';
 import 'ui/rewards_ui.dart';
 import 'ui/shop_screen.dart';
+import 'ui/manor_screen.dart';
 import 'ui/stats_screen.dart';
 import 'ui/dai_hoi_screen.dart';
 import 'ui/theme.dart';
@@ -263,6 +266,25 @@ Future<void> main() async {
       final lore = int.tryParse(q['lore'] ?? '') ?? 0;
       for (var i = 0; i < lore && i < lorePageCount; i++) {
         h.lorePages.add(loreKey(loreChapters[i ~/ lorePagesPer].realm, i % lorePagesPer));
+      }
+      // manor=<level>: the Trang viên at that level, fields at every stage,
+      // Tơ in hand and a few keepsakes.
+      final ml = int.tryParse(q['manor'] ?? '');
+      if (ml != null) {
+        final now = GameClock.nowMs();
+        h.manor.level = ml.clamp(1, manorMaxLevel);
+        h.manor.silk = 340;
+        h.manor.silkSince = now - 5 * 3600000;
+        h.manor.keepsakesOwned.addAll(['denlong', 'koi']);
+        final shares = [1.0, 0.75, 0.4, 0.1, -1.0, 1.0];
+        for (var i = 0; i < h.manor.openPlots; i++) {
+          final s = shares[i % shares.length];
+          if (s < 0) continue;
+          final p = h.manor.plots[i];
+          p.tier = i % 3;
+          p.sownAt = now - (s * 3600000).round();
+          p.readyAt = p.sownAt + 3600000;
+        }
       }
       // runs=<n>: that many battles in Thống kê.
       final runs = int.tryParse(q['runs'] ?? '') ?? 0;
@@ -493,6 +515,8 @@ Future<void> main() async {
     'realm' => const DungeonListScreen(realm: true),
     'lore' => const LoreScreen(),
     'stats' => const StatsScreen(),
+    'manor' => const ManorScreen(),
+    'prologue' => const TownScreen(firstVisit: true),
     'daihoi' => const DaiHoiScreen(),
     'rplay' => PlayScreen.dungeon(realmDungeon(int.tryParse(q['ri'] ?? '') ?? 0, SaveService.instance.hero.level)),
     'nmplay' => PlayScreen.dungeon(nightmareDef(int.tryParse(q['nmi'] ?? '') ?? 0,

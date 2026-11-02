@@ -57,6 +57,9 @@ const int weekChestPills = 2;
 const int weekChestIron = 10;
 const int weekChestGold = 100000;
 
+/// ...and an outfit found nowhere else (1.5.0).
+const String weekChestCostume = 'thatnhat';
+
 /// The hero's day (1-based) on Vietnam day [today]; 0 for heroes made
 /// before goals existed, who don't get them.
 int weekGoalDay(HeroData h, String today) {

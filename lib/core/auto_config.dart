@@ -36,10 +36,19 @@ class AutoConfig {
   /// Wait for a crowd (3+) or a boss before the tuyệt kỹ.
   bool saveUltimate = true;
 
+  /// Tự cộng điểm: on a level-up, spread potential points by the sect's
+  /// build and learn skills. Tự mặc đồ: put on a picked-up piece that is
+  /// better than the one worn. Switched on for heroes made in the game from
+  /// 1.5.0 (SaveService.create: most new players never opened the character
+  /// screen and died with points unspent); off for heroes made before, who
+  /// build by hand.
+  bool points = false;
+  bool gear = false;
+
   bool get isDefault =>
       target == AutoTarget.quest && skillsOff.isEmpty && hpPot == 0.42 && mpPot == 0.22 && loot && saveUltimate;
 
-  List<Object> toJson() => [target.index, skillsOff.toList(), hpPot, mpPot, loot, saveUltimate];
+  List<Object> toJson() => [target.index, skillsOff.toList(), hpPot, mpPot, loot, saveUltimate, points, gear];
 
   static AutoConfig fromJson(Object? raw) {
     final c = AutoConfig();
@@ -54,6 +63,9 @@ class AutoConfig {
     if (mp is num) c.mpPot = mp.toDouble().clamp(0.05, 0.8);
     c.loot = raw[4] != false;
     c.saveUltimate = raw[5] != false;
+    // Saved before 1.5.0: those two did not exist, and the hero was built by hand.
+    c.points = raw.length > 7 && raw[6] == true;
+    c.gear = raw.length > 7 && raw[7] == true;
     return c;
   }
 }

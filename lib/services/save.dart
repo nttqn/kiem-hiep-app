@@ -131,6 +131,10 @@ class SaveService extends ChangeNotifier {
     active = slot;
     h.seed = DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
     h.bornDay = vnDayKey();
+    // A new player's points and gear look after themselves (Cài đặt tự đánh).
+    h.autoCfg
+      ..points = true
+      ..gear = true;
     await save();
   }
 
