@@ -65,7 +65,7 @@ class MapListScreen extends StatelessWidget {
                             children: [
                               Text(m.name, style: titleStyle(18, color: cream)),
                               const SizedBox(width: 10),
-                              Text(m.rebirths > 0 ? 'Ngũ chuyển · Thần Thiết' : 'Cấp ${m.minLv}–${m.maxLv}',
+                              Text(m.rebirths > 0 ? '${m.rebirths == 6 ? 'Lục' : 'Ngũ'} chuyển · Thần Thiết' : 'Cấp ${m.minLv}–${m.maxLv}',
                                   style: bold.copyWith(color: goldLight)),
                               if (fit) ...[
                                 const SizedBox(width: 8),
@@ -228,6 +228,7 @@ class _ThemeSwatch extends StatelessWidget {
       MapTheme.summit: [Color(0xFFF4A8BC), Color(0xFF4A4240)],
       MapTheme.abyss: [Color(0xFFB04AFF), Color(0xFF0E0A14)],
       MapTheme.sea: [Color(0xFF5AC8E0), Color(0xFF1E4A5A)],
+      MapTheme.bloodSea: [Color(0xFFFF4A4A), Color(0xFF160808)],
     };
     final c = colors[theme]!;
     return Container(

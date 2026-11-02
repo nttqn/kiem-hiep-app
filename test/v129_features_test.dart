@@ -9,7 +9,7 @@ void main() {
       final h = HeroData(name: 'T', hanh: Hanh.kim)
         ..rebirths = rebirths
         ..level = maxLevel;
-      h.exp = expToNext(maxLevel);
+      h.exp = h.expNeedAt(maxLevel);
       return h;
     }
 

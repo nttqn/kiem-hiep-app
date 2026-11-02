@@ -436,7 +436,7 @@ Future<void> main() async {
     // lpd=<n> Linh Phách Đơn, with the level-99 bar full and a pill 40% on.
     final lpd = int.tryParse(q['lpd'] ?? '');
     if (lpd != null) {
-      h.exp = expToNext(maxLevel);
+      h.exp = h.expNeedAt(maxLevel);
       h.soulPills = lpd;
       h.soulExp = h.soulPillExp * 2 ~/ 5;
     }

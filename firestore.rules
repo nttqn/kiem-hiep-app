@@ -37,7 +37,7 @@ service cloud.firestore {
         && request.resource.data.level is int
         && request.resource.data.level >= 1 && request.resource.data.level <= 99
         && request.resource.data.rebirths is int
-        && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 5
+        && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 6
         && request.resource.data.rank == request.resource.data.rebirths * 100 + request.resource.data.level
         && request.resource.data.power is int
         && request.resource.data.power >= 0 && request.resource.data.power <= 50000000
@@ -86,11 +86,16 @@ service cloud.firestore {
                 && request.resource.data.play >= request.resource.data.rebirths * 7200
                     + request.resource.data.level * 60))
         // Potential points (1.2.4+): no more than the game hands out, as in
-        // HeroData.maxPotential (5 a level, 40 a rebirth, 90 from pills, 100 slack).
+        // HeroData.maxPotential (5 a level, 40 a rebirth, 90 from pills, 100
+        // slack, and 5 more a level in the sixth life, 1.6.0+).
         && (!('pts' in request.resource.data)
             || (request.resource.data.pts is int
-                && request.resource.data.pts <= (request.resource.data.level - 1) * 5
-                    + request.resource.data.rebirths * 40 + 190))
+                && (request.resource.data.pts <= (request.resource.data.level - 1) * 5
+                        + request.resource.data.rebirths * 40 + 190
+                    || (request.resource.data.rebirths >= 6
+                        && request.resource.data.pts <= (request.resource.data.level - 1) * 5
+                            + request.resource.data.level * 5
+                            + request.resource.data.rebirths * 40 + 190))))
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;

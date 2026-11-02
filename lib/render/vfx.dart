@@ -285,7 +285,7 @@ void drawNight(Canvas c, Size size, double darkness, Iterable<Light> lights, Off
 /// Ink for footprints and dust by land.
 int dustOf(MapTheme t) => switch (t) {
       MapTheme.desert || MapTheme.sea => 0xFFB8A070,
-      MapTheme.volcano || MapTheme.abyss => 0xFF4A3A36,
+      MapTheme.volcano || MapTheme.abyss || MapTheme.bloodSea => 0xFF4A3A36,
       MapTheme.snow => 0xFF8AA0B8,
       MapTheme.cave || MapTheme.fortress => 0xFF6A6058,
       _ => 0xFF8A7A5A,

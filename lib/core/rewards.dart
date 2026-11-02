@@ -121,6 +121,8 @@ final achievements = <AchDef>[
   AchDef('lv99', 'Phá toái hư không', 'Đạt cấp 99', 'Võ Thánh', 99, 150000, (h) => h.level),
   AchDef('cs1', 'Tái sinh', 'Chuyển sinh lần đầu', 'Tái Sinh Hiệp Khách', 1, 100000, (h) => h.rebirths),
   AchDef('cs5', 'Ngũ chuyển', 'Chuyển sinh 5 lần', 'Ngũ Chuyển Chân Nhân', 5, 500000, (h) => h.rebirths),
+  AchDef('cs6', 'Lục chuyển', 'Chuyển sinh 6 lần', 'Lục Chuyển Thánh Nhân', 6, 1000000, (h) => h.rebirths),
+  AchDef('hhboss', 'Phá Huyết Hải', 'Đánh bại Huyết Hải Ma Đế', 'Huyết Hải Đồ Đế', 1, 800000, (h) => h.bloodSeaBossKills),
   AchDef('boss1', 'Hạ đầu lĩnh', 'Đánh bại 1 đầu lĩnh', 'Dũng Sĩ', 1, 400, (h) => h.bossKills),
   AchDef('boss25', 'Săn đầu lĩnh', 'Đánh bại 25 đầu lĩnh', 'Thợ Săn Đầu Lĩnh', 25, 8000, (h) => h.bossKills),
   AchDef('dungeon5', 'Vượt ải', 'Vượt 5 ải khác nhau', 'Phá Trận Sư', 5, 2500, _cleared),

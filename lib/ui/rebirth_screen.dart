@@ -61,7 +61,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cap = expToNext(maxLevel);
+    final cap = h.expNeedAt(maxLevel);
     final atMax = h.level >= maxLevel;
     final done = h.rebirths >= maxRebirths;
     return SubScreen(
@@ -112,6 +112,10 @@ class _RebirthScreenState extends State<RebirthScreen> {
                             _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),
                             _line('Mỗi lần: Sinh lực ${_pct(rebirthHpAtk)}, Công lực ${_pct(rebirthHpAtk)}, '
                                 'Phòng thủ ${_pct(rebirthDef)}, Kinh nghiệm nhận ${_pct(rebirthExp)}, vĩnh viễn.'),
+                            if (h.rebirths + 1 >= lucChuyen)
+                              _line('Lục chuyển: mỗi cấp cần gấp ${lucChuyenExpNeed.round()} lần kinh nghiệm, '
+                                  'nhưng được ${pointsPerLevel + lucChuyenPoints} điểm tiềm năng (thay vì $pointsPerLevel). '
+                                  'Mở U Minh Huyết Hải.'),
                           ],
                         ],
                       ),

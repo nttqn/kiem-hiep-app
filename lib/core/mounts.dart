@@ -115,6 +115,11 @@ const mounts = <MountDef>[
       desc: 'Ngựa thần mình phủ vảy rồng, rẽ sóng Đông Hải mà đi.',
       c1: 0xFF2E8AA0, c2: 0xFF8AE8D8, c3: 0xFFFFC34A,
       move: 0.27, bonus: Bonus.hpPct, base: 0.06, perLv: 0.004, source: MountSource.sea, need: 20),
+  MountDef(
+      id: 'cuusac', name: 'Cửu Sắc Thần Lộc', look: 'deer',
+      desc: 'Hươu thần chín sắc, chỉ hiện thân trước bậc lục chuyển.',
+      c1: 0xFFF4F0F8, c2: 0xFFB8A0FF, c3: 0xFFFFC34A,
+      move: 0.34, bonus: Bonus.hpPct, base: 0.1, perLv: 0.006, source: MountSource.rebirth, need: 6),
 ];
 
 final Map<String, MountDef> mountById = {for (final m in mounts) m.id: m};

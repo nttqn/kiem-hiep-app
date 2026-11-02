@@ -4,7 +4,7 @@ import 'sect_duty.dart';
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea }
 
 class CostumeDef {
   const CostumeDef({
@@ -44,6 +44,7 @@ class CostumeDef {
         CostumeSource.sect => 'Sư môn: đạt chức ${sectRanks[need].name}',
         CostumeSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
         CostumeSource.week => 'Mở Rương 7 ngày (đủ 21 Mục tiêu 7 ngày)',
+        CostumeSource.bloodSea => 'Hạ Huyết Hải Ma Đế $need lần (U Minh Huyết Hải)',
       };
 }
 
@@ -145,6 +146,12 @@ const costumes = <CostumeDef>[
     source: CostumeSource.abyss, need: 10,
     robe: 0xFF1A1020, trim: 0xFFB04AFF, pants: 0xFF0E0A14, cape: 0xFF3A0A2A, glow: 0xFFB04AFF,
     aura: 0xFF8A4AFF, armor: 4,
+  ),
+  CostumeDef(
+    id: 'huyethai', name: 'Huyết Hải Đế Bào', desc: 'Long bào đỏ thẫm viền vàng của kẻ đã hạ Huyết Hải Ma Đế.',
+    source: CostumeSource.bloodSea, need: 10,
+    robe: 0xFF5A0A12, trim: 0xFFFFC34A, pants: 0xFF1A0608, cape: 0xFF2A0408, glow: 0xFFFF3A3A,
+    aura: 0xFFFF6A4A, armor: 4,
   ),
 ];
 

@@ -48,6 +48,13 @@ const lhElites = <EliteDef>[
   EliteDef('lh5e', 'Ma Giáo Kiếm Si', 'cultist', 'magiao'),
   EliteDef('lh5f', 'Vân Vụ Kiếm Thánh', 'renegade', 'vanvu'),
   EliteDef('lh5g', 'Kiếm Thánh Vô Danh', 'renegade', 'hoason', hpMul: 45, atkMul: 2.2),
+  // Hồi VI · Huyết Hải Ma Đế: six envoys of the sea of blood under Cửu U.
+  EliteDef('lh6a', 'Huyết Hải Thám Tử', 'bambooAssassin', 'truclam'),
+  EliteDef('lh6b', 'Huyết Cốt Sa Vương', 'scorpion', 'hoangsa'),
+  EliteDef('lh6c', 'Huyết Băng Yêu Nữ', 'iceSpirit', 'bangnguyen'),
+  EliteDef('lh6d', 'Huyết Kỳ Hải Tặc Vương', 'pirate', 'donghai'),
+  EliteDef('lh6e', 'Huyết Vân Ma Kiếm', 'renegade', 'vanvu'),
+  EliteDef('lh6f', 'Huyết Hải Ma Đế Phân Thân', 'assassin', 'hoason', hpMul: 95, atkMul: 2.6),
 ];
 
 final Map<String, EliteDef> eliteById = {for (final e in lhElites) e.id: e};
@@ -208,6 +215,39 @@ final luanHoi = <ChapterDef>[
           'lh5g', 97, last: true),
     ],
   ),
+  ChapterDef(
+    'Huyết Hải Ma Đế',
+    'Cửu U Ma Tôn chỉ là kẻ gác cổng. Dưới đáy vực là U Minh Huyết Hải, nơi '
+        'Huyết Hải Ma Đế đang thức giấc. Lão sai sáu sứ giả rải huyết khí khắp '
+        'giang hồ để mở đường lên dương thế. Lần chuyển sinh thứ sáu, thân thể '
+        'ngươi nặng như núi, mỗi bước tiến đều gian nan hơn, nhưng cũng vững chãi hơn.',
+    [
+      _kill('Huyết khí trong rừng', 'Vượn đen Tử Trúc Lâm uống phải nước nhuốm huyết khí, mắt đỏ như máu.',
+          'ape', 30, 10),
+      _elite('Kẻ do thám', 'Một thám tử Huyết Hải ẩn trong rừng trúc, vẽ bản đồ giang hồ cho Ma Đế.',
+          'lh6a', 14),
+      _dungeon('Mạch máu dưới lòng đất', 'Huyết khí rỉ lên từ sâu trong Hắc Phong Động. Lần theo nó.',
+          'a6', 25),
+      _elite('Sa vương xương máu', 'Huyết Cốt Sa Vương dựng tế đàn giữa sa mạc, hút máu thương đoàn.',
+          'lh6b', 32),
+      _kill('Băng linh nhuốm đỏ', 'Băng linh trên Băng Tuyết Nguyên hóa sắc đỏ, lạnh buốt mà hung bạo.',
+          'iceSpirit', 35, 41),
+      _elite('Yêu nữ băng huyết', 'Huyết Băng Yêu Nữ đóng băng máu kẻ qua đường để dâng Ma Đế.',
+          'lh6c', 45),
+      _boss('Kỳ lân phát cuồng', 'Huyết khí khiến Hỏa Kỳ Lân phát cuồng, thiêu rụi chân Hỏa Diệm Sơn.',
+          'kylin', 53),
+      _elite('Hải tặc cờ máu', 'Hải tặc Đông Hải treo cờ máu, chở huyết khí về đất liền bằng đường biển.',
+          'lh6d', 66),
+      _dungeon('Long Cung nhuốm máu', 'Long Cung dưới đáy biển là trạm trung chuyển của Huyết Hải. Phá nó.',
+          'dh1', 74),
+      _elite('Ma kiếm mây máu', 'Huyết Vân Ma Kiếm phủ mây máu khắp Vân Vụ Sơn, chặn đường lên Hoa Sơn.',
+          'lh6e', 82),
+      _kill('Kiếm khôi hóa máu', 'Kiếm khôi trên Hoa Sơn bị huyết khí điều khiển, quay sang đánh người.',
+          'swordGolem', 40, 89),
+      _elite('Phân thân Ma Đế', 'Ma Đế gửi một phân thân lên đỉnh Hoa Sơn. Hạ nó, rồi xuống Huyết Hải tìm chân thân.',
+          'lh6f', 97, last: true),
+    ],
+  ),
 ];
 
 /// An elite the world should put on the current map.
@@ -218,7 +258,7 @@ class WantedElite {
   final double hpMul, atkMul;
 }
 
-const _roman = ['I', 'II', 'III', 'IV', 'V'];
+const _roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
 /// "Luân Hồi II" for chapter index 1.
 String chapterLabel(int i) => 'Luân Hồi ${_roman[i.clamp(0, _roman.length - 1)]}';

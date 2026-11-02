@@ -62,7 +62,13 @@ const int pointsPerLevel = 5;
 // Chuyển sinh: at level 99 with a full EXP bar the hero may be reborn at
 // [rebirthLevel], keeping gear, skills, gems, pets and gold, for permanent
 // bonuses that stack with each rebirth.
-const int maxRebirths = 5;
+const int maxRebirths = 6;
+
+/// Lục chuyển (1.6.0): the sixth life needs [lucChuyenExpNeed] times the
+/// EXP a level, but every level gives [lucChuyenPoints] more potential.
+const int lucChuyen = 6;
+const double lucChuyenExpNeed = 4;
+const int lucChuyenPoints = 5;
 const int rebirthLevel = 10;
 const int rebirthPoints = 40;
 const double rebirthHpAtk = 0.05;
@@ -640,10 +646,16 @@ class HeroData {
 
   // ------------------------------------------------------------- growth
 
-  int get expNeeded => expToNext(level);
+  int get expNeeded => expNeedAt(level);
+
+  /// EXP from level [l] to the next in this life (lục chuyển needs more).
+  int expNeedAt(int l) => rebirths >= lucChuyen ? (expToNext(l) * lucChuyenExpNeed).round() : expToNext(l);
+
+  /// Potential points a level brings in this life.
+  int get levelPoints => pointsPerLevel + (rebirths >= lucChuyen ? lucChuyenPoints : 0);
 
   /// Level 99 with the EXP bar filled: nothing more to gain.
-  bool get expFull => level >= maxLevel && exp >= expToNext(maxLevel);
+  bool get expFull => level >= maxLevel && exp >= expNeedAt(maxLevel);
 
   bool get canRebirth => expFull && rebirths < maxRebirths;
 
@@ -652,7 +664,7 @@ class HeroData {
   int gainExp(double amount) {
     amount *= 1 + rebirthExp * rebirths;
     if (level >= maxLevel) {
-      final cap = expToNext(maxLevel);
+      final cap = expNeedAt(maxLevel);
       if (exp >= cap) {
         if (rebirths >= maxRebirths) _condenseSoul(amount);
         return 0;
@@ -665,14 +677,14 @@ class HeroData {
     }
     exp += amount.round();
     var gained = 0;
-    while (level < maxLevel && exp >= expToNext(level)) {
-      exp -= expToNext(level);
+    while (level < maxLevel && exp >= expNeedAt(level)) {
+      exp -= expNeedAt(level);
       level++;
       gained++;
-      freePoints += pointsPerLevel;
+      freePoints += levelPoints;
       skillPoints++;
     }
-    if (level >= maxLevel) exp = math.min(exp, expToNext(maxLevel));
+    if (level >= maxLevel) exp = math.min(exp, expNeedAt(maxLevel));
     if (gained > 0) {
       if (autoCfg.points) {
         autoSpend();
@@ -898,6 +910,7 @@ class HeroData {
   /// ones earned above that level) plus [rebirthPoints] more.
   bool rebirth() {
     if (!canRebirth) return false;
+    final perLevel = levelPoints;
     rebirths++;
     // A new Luân Hồi chapter starts (after the main story, if unfinished).
     rbQuest = 0;
@@ -907,7 +920,7 @@ class HeroData {
       total += spent[i];
       spent[i] = 0;
     }
-    total -= (level - rebirthLevel) * pointsPerLevel;
+    total -= (level - rebirthLevel) * perLevel;
     freePoints = math.max(0, total) + rebirthPoints;
     level = rebirthLevel;
     exp = 0;
@@ -1062,6 +1075,7 @@ class HeroData {
         CostumeSource.sect => sectRank >= c.need,
         CostumeSource.abyss => abyssBossKills >= c.need,
         CostumeSource.week => weekChest,
+        CostumeSource.bloodSea => bloodSeaBossKills >= c.need,
         CostumeSource.worldBoss || CostumeSource.gold => false,
       };
 
@@ -1358,6 +1372,9 @@ class HeroData {
 
   /// Cửu U Ma Tôn beaten, for its outfit and mount.
   int get abyssBossKills => bossKillsById[abyssMap.boss] ?? 0;
+
+  /// Huyết Hải Ma Đế beaten, for its outfit.
+  int get bloodSeaBossKills => bossKillsById[huyetHaiMap.boss] ?? 0;
 
   /// Đông Hải Long Vương beaten, for Long Mã.
   int get seaBossKills => bossKillsById[dongHaiMap.boss] ?? 0;
@@ -3255,5 +3272,9 @@ class HeroData {
   /// [rebirthPoints] a rebirth, every Tẩy Tủy Đan, and some slack. The
   /// leaderboard rules repeat this sum.
   int get maxPotential =>
-      (level - 1) * pointsPerLevel + rebirths * rebirthPoints + maxPotentialPills * potentialPerPill + 100;
+      (level - 1) * pointsPerLevel +
+      (rebirths >= lucChuyen ? level * lucChuyenPoints : 0) +
+      rebirths * rebirthPoints +
+      maxPotentialPills * potentialPerPill +
+      100;
 }

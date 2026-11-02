@@ -34,7 +34,7 @@ void main() {
     final i = fieldMaps.indexOf(dongHaiMap);
     expect(fieldMaps[i - 1].id, 'magiao');
     expect(fieldMaps[i + 1].id, 'vanvu');
-    expect(fieldMaps.last, abyssMap);
+    expect(fieldMaps.last, huyetHaiMap);
     for (final id in [...dongHaiMap.mobs, dongHaiMap.boss]) {
       expect(mobById[id], isNotNull);
     }

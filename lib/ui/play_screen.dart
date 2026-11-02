@@ -102,6 +102,7 @@ class _PlayScreenState extends State<PlayScreen> {
   static String _tune(MapTheme t) => switch (t) {
         MapTheme.abyss => 'fortress',
         MapTheme.sea => 'cloud',
+        MapTheme.bloodSea => 'fortress',
         _ => t.name,
       };
 

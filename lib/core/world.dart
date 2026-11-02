@@ -2717,12 +2717,15 @@ class World {
     }
     // Cửu U Ma Vực: Thần Thiết from any kill now and then, the boss's always.
     if (dungeon == null && map.rebirths > 0) {
-      final iron = m.def.boss ? abyssBossIron : (rng.nextDouble() < abyssIronChance ? 1 : 0);
+      final iron = m.def.boss ? bossIronOf(map.rebirths) : (rng.nextDouble() < ironChanceOf(map.rebirths) ? 1 : 0);
       if (iron > 0) {
         hero.divineIron += iron;
         events.add(GameEvent(EvKind.loot, text: 'Nhặt được $iron Thần Thiết', color: 0xFF9FD8FF));
       }
-      if (m.def.boss) hero.unlockCostumes();
+      if (m.def.boss) {
+        hero.unlockCostumes();
+        hero.unlockMounts();
+      }
     }
     // Đông Hải Long Vương counts toward Long Mã.
     if (m.def.id == dongHaiMap.boss) hero.unlockMounts();

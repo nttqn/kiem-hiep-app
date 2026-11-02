@@ -62,7 +62,7 @@ void main() {
     expect(copy.stats.atk, closeTo(h.stats.atk, 1e-9));
   });
 
-  test('at most five rebirths, with achievements on the way', () {
+  test('at most six rebirths, with achievements on the way', () {
     final h = HeroData(name: 'T', hanh: Hanh.thuy);
     for (var n = 0; n < maxRebirths; n++) {
       while (!h.expFull) {
@@ -76,7 +76,7 @@ void main() {
     expect(h.canRebirth, isFalse);
     expect(h.rebirth(), isFalse);
     expect(h.freePoints + h.spent.reduce((a, b) => a + b),
-        (maxLevel - 1) * pointsPerLevel + maxRebirths * rebirthPoints);
+        (maxLevel - 1) * pointsPerLevel + maxRebirths * rebirthPoints + (maxLevel - rebirthLevel) * lucChuyenPoints);
     expect(achievements.firstWhere((a) => a.id == 'cs5').reached(h), isTrue);
   });
 }

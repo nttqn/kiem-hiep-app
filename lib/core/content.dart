@@ -231,6 +231,24 @@ const mobs = <MobDef>[
       body: Body.human, c1: 0xFF140A1A, c2: 0xFF2A0A12, c3: 0xFFFF3A5A,
       variant: 'ancient', size: 1.9, hp: 28, atk: 2.0, def: 1.9,
       speed: 110, exp: 20, boss: true),
+  // U Minh Huyết Hải (after the sixth rebirth): the sea of blood under Cửu U.
+  MobDef(
+      id: 'hhWolf', name: 'Huyết Hải Ma Lang', hanh: Hanh.hoa, body: Body.quad,
+      c1: 0xFF4A1418, c2: 0xFFFF4A3A, c3: 0xFF1A0608, variant: 'wolf',
+      size: 1.3, speed: 140, hp: 1.15, atk: 1.35),
+  MobDef(
+      id: 'hhGolem', name: 'Huyết Thạch Cự Nhân', hanh: Hanh.tho, body: Body.brute,
+      c1: 0xFF3A2024, c2: 0xFFFF6A2A, variant: 'golem', size: 1.6,
+      hp: 1.9, atk: 1.25, def: 1.9, speed: 75),
+  MobDef(
+      id: 'hhSoul', name: 'Huyết Hải U Linh', hanh: Hanh.thuy, body: Body.flyer,
+      c1: 0xFFE83A4A, c2: 0xFFFFD0C8, variant: 'wisp', ranged: true,
+      range: 290, hp: 0.95, atk: 1.3, attackCd: 1.5),
+  MobDef(
+      id: 'hhLord', name: 'Huyết Hải Ma Đế', hanh: Hanh.kim,
+      body: Body.human, c1: 0xFF2A0A0E, c2: 0xFF120406, c3: 0xFFFF2A2A,
+      variant: 'ancient', size: 2.0, hp: 30, atk: 2.1, def: 2.0,
+      speed: 110, exp: 22, boss: true),
   // Đông Hải Quần Đảo
   MobDef(
       id: 'pirate', name: 'Hải Tặc Đao Thủ', hanh: Hanh.kim, body: Body.human,
@@ -253,7 +271,7 @@ const mobs = <MobDef>[
 
 final Map<String, MobDef> mobById = {for (final m in mobs) m.id: m};
 
-enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea }
+enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea, bloodSea }
 
 class MapDef {
   const MapDef({
@@ -311,6 +329,25 @@ const double abyssMul = 8;
 /// Chance a monster there drops Thần Thiết, and the boss's handful.
 const double abyssIronChance = 0.03;
 const int abyssBossIron = 4;
+
+/// U Minh Huyết Hải: below Cửu U, for the sixth rebirth (lục chuyển). Its
+/// monsters are tuned for heroes near a million lực chiến; kills drop
+/// Thần Thiết twice as often, the boss twice as much, and it has its own
+/// outfit.
+const MapDef huyetHaiMap = MapDef(
+    id: 'huyethai', name: 'U Minh Huyết Hải',
+    desc: 'Biển máu dưới đáy Cửu U, nơi Huyết Hải Ma Đế ngự trị. Chỉ bậc lục chuyển mới đặt chân tới.',
+    minLv: 99, maxLv: 99, theme: MapTheme.bloodSea,
+    mobs: ['hhWolf', 'hhGolem', 'hhSoul'], boss: 'hhLord',
+    rebirths: 6, mul: huyetHaiMul);
+
+/// About 2.5 times Cửu U's monsters.
+const double huyetHaiMul = 16;
+
+/// Thần Thiết chance a kill and the boss's handful on a map that needs
+/// [rebirths] rebirths: Cửu U's at five, double at six.
+double ironChanceOf(int rebirths) => abyssIronChance * (rebirths >= 6 ? 2 : 1);
+int bossIronOf(int rebirths) => abyssBossIron * (rebirths >= 6 ? 2 : 1);
 
 const maps = <MapDef>[
   MapDef(
@@ -373,15 +410,16 @@ const MapDef dongHaiMap = MapDef(
 /// Field maps as listed to the player, by level: Đông Hải after Ma Giáo,
 /// Cửu U Ma Vực last.
 final fieldMaps = <MapDef>[
-  ...maps.sublist(0, 7), dongHaiMap, ...maps.sublist(7), abyssMap,
+  ...maps.sublist(0, 7), dongHaiMap, ...maps.sublist(7), abyssMap, huyetHaiMap,
 ];
 
 /// Field maps that are not on the story's road ([maps]).
-bool isSideMap(MapDef m) => m.id == dongHaiMap.id || m.id == abyssMap.id;
+bool isSideMap(MapDef m) => m.id == dongHaiMap.id || m.rebirths > 0;
 
 final Map<String, MapDef> mapById = {
   for (final m in maps) m.id: m,
   abyssMap.id: abyssMap,
+  huyetHaiMap.id: huyetHaiMap,
   dongHaiMap.id: dongHaiMap,
 };
 
