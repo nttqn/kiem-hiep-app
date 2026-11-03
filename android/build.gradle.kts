@@ -2,8 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        // Ad mediation networks (1.7.0) that publish outside Maven Central.
-        maven { url = uri("https://artifact.bytedance.com/repository/pangle/") }
+        // Mintegral (1.7.0 mediation) publishes outside Maven Central.
         maven { url = uri("https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea") }
     }
 }

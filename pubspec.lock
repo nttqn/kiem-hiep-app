@@ -432,14 +432,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.5"
-  gma_mediation_pangle:
-    dependency: "direct main"
-    description:
-      name: gma_mediation_pangle
-      sha256: "6ca3a7fe764675e245d67bc3a53f4e87cd7874032108aa0662f368349997f9a1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.2.1"
   gma_mediation_unity:
     dependency: "direct main"
     description:
