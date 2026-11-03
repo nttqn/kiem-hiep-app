@@ -20,6 +20,7 @@ import 'services/mail.dart';
 import 'core/fishing.dart';
 import 'core/gold_sets.dart';
 import 'core/manuals.dart';
+import 'core/mount_skins.dart';
 import 'core/mounts.dart';
 import 'core/nightmare.dart';
 import 'core/lore.dart';
@@ -346,6 +347,15 @@ Future<void> main() async {
         if (mount == 'all' || m.id == mount) h.mountLevels[m.id] = 3;
       }
       h.activeMount = mount == 'all' ? 'hanhuyet' : mount;
+    }
+    // skin=<id> puts that mount look on (and rides its mount).
+    final skin = skinById[q['skin']];
+    if (skin != null) {
+      h.mountLevels[skin.mount] ??= 3;
+      h.ownedSkins.add(skin.id);
+      h.mountSkin[skin.mount] = skin.id;
+      h.activeMount = skin.mount;
+      h.riding = true;
     }
     final herbsN = int.tryParse(q['herbs'] ?? '');
     if (herbsN != null) h.herbs.fillRange(0, h.herbs.length, herbsN);

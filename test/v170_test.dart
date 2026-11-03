@@ -3,6 +3,8 @@ import 'package:kiem_hiep/core/body_train.dart';
 import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/mount_skins.dart';
+import 'package:kiem_hiep/core/mounts.dart';
 import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/core/world.dart';
 
@@ -89,6 +91,52 @@ void main() {
       final back = HeroData.fromJson(h.toJson());
       expect(back.bodyLv, [3, 1, 4, 1, 5]);
       expect(HeroData.fromJson({...h.toJson()}..remove('lt')).bodyLv, [0, 0, 0, 0, 0]);
+    });
+  });
+
+  group('Ngoại hình thú cưỡi', () {
+    test('every look belongs to a real mount and ids are unique', () {
+      expect(skinById.length, mountSkins.length);
+      for (final s in mountSkins) {
+        expect(mountById.containsKey(s.mount), isTrue, reason: s.id);
+        expect(s.aura == 0 || s.aura >> 24 == 0xFF, isTrue);
+      }
+    });
+
+    test('buy a look, wear it, stats unchanged; saved and loaded', () {
+      final s = skinById['phikiem_tu']!;
+      final h = HeroData(name: 'S', hanh: Hanh.thuy)
+        ..level = 99
+        ..arenaCoins = 30000;
+      expect(h.canGetSkin(s), isFalse, reason: 'needs the mount first');
+      h
+        ..mountLevels['phikiem'] = 5
+        ..activeMount = 'phikiem'
+        ..riding = true
+        ..recompute();
+      final power = h.power;
+      expect(h.getSkin(s), isTrue);
+      expect(h.arenaCoins, 30000 - s.need);
+      expect(h.ridingMount!.c2, s.c2);
+      expect(h.ridingMount!.aura, s.aura);
+      h.recompute();
+      expect(h.power, power);
+      final back = HeroData.fromJson(h.toJson());
+      expect(back.ownsSkin(s.id), isTrue);
+      expect(back.ridingMount!.c2, s.c2);
+      back.wearSkin('phikiem', null);
+      expect(back.ridingMount!.c2, mountById['phikiem']!.c2);
+    });
+
+    test('a tower look is claimed for free once the floor is reached', () {
+      final s = skinById['phikiem_hoa']!;
+      final h = HeroData(name: 'S', hanh: Hanh.thuy)..mountLevels['phikiem'] = 1;
+      h.towerBest = s.need - 1;
+      expect(h.getSkin(s), isFalse);
+      h.towerBest = s.need;
+      final gold = h.gold;
+      expect(h.getSkin(s), isTrue);
+      expect(h.gold, gold);
     });
   });
 }

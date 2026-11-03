@@ -70,6 +70,9 @@ service cloud.firestore {
         // The mount ridden (1.4.0+), shown on Lôi đài copies.
         && (!('mount' in request.resource.data)
             || (request.resource.data.mount is string && request.resource.data.mount.size() <= 20))
+        // Its look (1.7.0+).
+        && (!('skin' in request.resource.data)
+            || (request.resource.data.skin is string && request.resource.data.skin.size() <= 24))
         && (!('mountLv' in request.resource.data)
             || (request.resource.data.mountLv is int
                 && request.resource.data.mountLv >= 1 && request.resource.data.mountLv <= 200))

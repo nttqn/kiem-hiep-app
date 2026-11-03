@@ -21,6 +21,7 @@ class MountDef {
     required this.perLv,
     required this.source,
     required this.need,
+    this.aura = 0,
   });
 
   final String id, name, desc;
@@ -39,6 +40,14 @@ class MountDef {
 
   /// Gold price, tower floor, Uy danh price or rebirth count, by [source].
   final int need;
+
+  /// Glow and sparkles round a dressed mount (see mount_skins.dart), 0 none.
+  final int aura;
+
+  /// This mount wearing other colours; stats unchanged.
+  MountDef skinned(int c1, int c2, int c3, int aura) => MountDef(
+      id: id, name: name, desc: desc, look: look, c1: c1, c2: c2, c3: c3,
+      move: move, bonus: bonus, base: base, perLv: perLv, source: source, need: need, aura: aura);
 
   double moveAt(int lv) => move + 0.01 * (lv - 1);
   double bonusAt(int lv) => base + perLv * (lv - 1);

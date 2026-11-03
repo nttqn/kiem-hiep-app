@@ -27,6 +27,7 @@ import 'manor.dart';
 import 'manuals.dart';
 import 'meridians.dart';
 import 'monthly.dart';
+import 'mount_skins.dart';
 import 'mounts.dart';
 import 'nightmare.dart';
 import 'pets.dart';
@@ -286,6 +287,10 @@ class HeroData {
   // the hero rides at all.
   final Map<String, int> mountLevels = {};
   String activeMount = '';
+
+  /// Mount looks bought, and the one each mount wears.
+  final Set<String> ownedSkins = {};
+  final Map<String, String> mountSkin = {};
   bool riding = true;
 
   // Luyện đan: herbs by tier, pills on hand, buff time left (play seconds)
@@ -1402,7 +1407,10 @@ class HeroData {
   int get seaBossKills => bossKillsById[dongHaiMap.boss] ?? 0;
 
   /// The mount under the hero, if any.
-  MountDef? get ridingMount => riding ? mountById[activeMount] : null;
+  MountDef? get ridingMount {
+    final m = riding ? mountById[activeMount] : null;
+    return m == null ? null : dressed(m);
+  }
 
   bool mountGoalMet(MountDef m) => switch (m.source) {
         MountSource.tower => towerBest >= m.need,
@@ -2909,6 +2917,7 @@ class HeroData {
         'lh': [rbQuest, rbDone],
         'bounty': [bountyDay, bountyLeft, bountyAds, [for (final b in bounties) b.toJson()]],
         'mount': [activeMount, riding, mountLevels],
+        'mskin': [ownedSkins.toList(), mountSkin],
         'alch': [herbs, pills, buffs, potentialPills],
         'arena': [arenaPoints, arenaCoins, arenaDay, arenaFights, arenaAds, arenaSalaryDay, arenaWins, arenaRefresh],
         'season': [arenaSeason, arenaSeasonFights, arenaBestTier, arenaSeasonResult],
@@ -3244,6 +3253,15 @@ class HeroData {
       h.activeMount = h.mountLevels.containsKey(mount[0]) ? mount[0] as String : '';
     }
     h.unlockMounts(quiet: true);
+    final ms = m['mskin'];
+    if (ms is List && ms.length == 2) {
+      for (final v in ms[0] as List) {
+        if (skinById.containsKey(v)) h.ownedSkins.add('$v');
+      }
+      (ms[1] as Map).forEach((k, v) {
+        if (h.ownedSkins.contains(v) && skinById[v]?.mount == k) h.mountSkin['$k'] = '$v';
+      });
+    }
     final alch = m['alch'];
     if (alch is List && alch.length == 4) {
       final hb = alch[0] as List;

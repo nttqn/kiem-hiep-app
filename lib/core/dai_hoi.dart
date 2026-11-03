@@ -84,7 +84,7 @@ DaiHoiPrize daiHoiPrize(int wins, int level) => DaiHoiPrize(
 /// A rival as kept in the save: the bracket must not change when the board
 /// does.
 List<Object> rivalToJson(ArenaRival r) =>
-    [r.name, r.hanh.index, r.level, r.rebirths, r.power, r.female, r.title, r.bot, r.mount, r.mountLv];
+    [r.name, r.hanh.index, r.level, r.rebirths, r.power, r.female, r.title, r.bot, r.mount, r.mountLv, r.skin];
 
 ArenaRival? rivalFromJson(Object? raw) {
   if (raw is! List || raw.length < 8) return null;
@@ -100,6 +100,7 @@ ArenaRival? rivalFromJson(Object? raw) {
       bot: raw[7] as bool,
       mount: raw.length > 9 ? raw[8] as String : '',
       mountLv: raw.length > 9 ? raw[9] as int : 1,
+      skin: raw.length > 10 ? raw[10] as String : '',
     );
   } catch (_) {
     return null;

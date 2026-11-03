@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'content.dart';
 import 'hanh.dart';
+import 'mount_skins.dart';
 import 'mounts.dart';
 
 /// Lôi đài: duels with copies of other players' heroes (from the public
@@ -53,6 +54,7 @@ class ArenaRival {
     this.bot = false,
     this.mount = '',
     this.mountLv = 1,
+    this.skin = '',
   });
 
   final String name;
@@ -69,7 +71,14 @@ class ArenaRival {
   final String mount;
   final int mountLv;
 
-  MountDef? get mountDef => mountById[mount];
+  /// The look the mount wears (mount_skins.dart id), '' for its own.
+  final String skin;
+
+  MountDef? get mountDef {
+    final m = mountById[mount];
+    final s = skinById[skin];
+    return m == null || s == null || s.mount != m.id ? m : m.skinned(s.c1, s.c2, s.c3, s.aura);
+  }
 
   /// Running speed in a duel: a rider is as quick as their mount makes
   /// them (the duelist on foot runs at 150).

@@ -27,6 +27,7 @@ class LbEntry {
     this.dhC = 0,
     this.mount,
     this.mountLv = 1,
+    this.skin = '',
   });
 
   /// `{uid}_{slot}`.
@@ -54,6 +55,9 @@ class LbEntry {
   final String? mount;
   final int mountLv;
 
+  /// Mount look (1.7.0+).
+  final String skin;
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -73,6 +77,7 @@ class LbEntry {
         dhC: (m['dhC'] as num?)?.toInt() ?? 0,
         mount: m['mount'] as String?,
         mountLv: (m['mountLv'] as num?)?.toInt() ?? 1,
+        skin: m['skin'] as String? ?? '',
       );
     } catch (_) {
       return null;
@@ -169,6 +174,7 @@ class Leaderboard extends ChangeNotifier {
       if (h.dhChamps > 0) 'dhC': h.dhChamps,
       'mount': h.ridingMount?.id ?? '',
       'mountLv': h.mountLevels[h.activeMount] ?? 1,
+      'skin': h.ridingMount == null ? '' : h.mountSkin[h.activeMount] ?? '',
     };
     // Play time goes along for the rules' sanity check, but on its own
     // does not call for a write; nor do lực chiến creeping up by a little
@@ -424,6 +430,7 @@ class Leaderboard extends ChangeNotifier {
             // speed only: its stat is already in their lực chiến).
             mount: e.mount ?? botMount(e.level, e.rebirths, math.Random(e.id.hashCode)).$1,
             mountLv: e.mount != null ? e.mountLv : 1 + e.level ~/ 6,
+            skin: e.skin,
           ),
     ];
   }

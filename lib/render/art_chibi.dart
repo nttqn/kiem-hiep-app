@@ -1831,6 +1831,30 @@ double mountSeatOf(MountDef d) => switch (d.look) {
 /// leaves the canvas moved by its bob, so the rider standing on it bobs too
 /// (every caller draws inside its own save/restore).
 void drawMount(Canvas c, MountDef d, {double walk = 0, bool moving = false, double t = 0}) {
+  if (d.aura == 0) {
+    _drawMountBody(c, d, walk: walk, moving: moving, t: t);
+    return;
+  }
+  // A dressed mount: a soft glow on the ground, then sparkles rising.
+  final glow = 0.6 + 0.4 * math.sin(t * 2.6);
+  c.drawOval(
+      Rect.fromCenter(center: const Offset(0, -2), width: 92, height: 22),
+      Paint()
+        ..color = col(d.aura).withValues(alpha: 0.28 * glow)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7));
+  // No save/restore: the flying sword leaves its bob on the canvas for the rider.
+  _drawMountBody(c, d, walk: walk, moving: moving, t: t);
+  final p = Paint();
+  for (var i = 0; i < 7; i++) {
+    final ph = (t * 0.55 + i / 7) % 1.0;
+    final x = -38 + ((i * 37) % 76).toDouble() + math.sin(t * 2 + i) * 4 - (moving ? ph * 22 : 0);
+    final y = -6 - ph * 58;
+    p.color = col(d.aura).withValues(alpha: math.sin(ph * math.pi) * 0.85);
+    c.drawCircle(Offset(x, y), 1.6 + (i % 3) * 0.6, p);
+  }
+}
+
+void _drawMountBody(Canvas c, MountDef d, {double walk = 0, bool moving = false, double t = 0}) {
   if (d.look == 'sword') {
     _drawFlyingSword(c, d, moving: moving, t: t);
     return;

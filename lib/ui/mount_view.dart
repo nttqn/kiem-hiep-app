@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../core/hero.dart';
+import '../core/mount_skins.dart';
 import '../core/mounts.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
@@ -41,6 +42,11 @@ class _MountViewState extends State<MountView> {
     );
   }
 
+  Future<void> _skins(MountDef m) async {
+    await showDialog<void>(context: context, builder: (_) => _SkinDialog(mount: m));
+    _changed();
+  }
+
   Widget _card(MountDef m) {
     final owned = h.ownsMount(m.id);
     final lv = h.mountLevels[m.id] ?? 1;
@@ -53,17 +59,31 @@ class _MountViewState extends State<MountView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(m.name,
-                style: titleStyle(m.name.length > 12 ? 13.5 : 16, color: owned ? goldLight : creamDim),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(m.name,
+                      style: titleStyle(m.name.length > 12 ? 13.5 : 16, color: owned ? goldLight : creamDim),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ),
+                if (skinsOf(m.id).isNotEmpty)
+                  GestureDetector(
+                    onTap: () => _skins(m),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Icon(Icons.palette, size: 20, color: owned ? goldLight : creamDim),
+                    ),
+                  ),
+              ],
+            ),
             Expanded(
               child: Opacity(
                 opacity: owned ? 1 : 0.45,
                 child: LayoutBuilder(
                   builder: (_, c) => Center(
                     child: MountPreview(
-                      mount: m,
+                      mount: owned ? h.dressed(m) : m,
                       rider: ridden ? lookOfHero(h) : null,
                       size: math.max(60, math.min(c.maxWidth, c.maxHeight)),
                     ),
@@ -118,6 +138,110 @@ class _MountViewState extends State<MountView> {
                 style: small.copyWith(fontSize: 10.5, color: creamDim),
                 textAlign: TextAlign.center,
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ngoại hình: the looks a mount can wear.
+class _SkinDialog extends StatefulWidget {
+  const _SkinDialog({required this.mount});
+  final MountDef mount;
+
+  @override
+  State<_SkinDialog> createState() => _SkinDialogState();
+}
+
+class _SkinDialogState extends State<_SkinDialog> {
+  HeroData get h => SaveService.instance.hero;
+
+  @override
+  Widget build(BuildContext context) {
+    final m = widget.mount;
+    final owned = h.ownsMount(m.id);
+    final worn = h.mountSkin[m.id];
+    Widget card({required String name, required MountDef look, required bool on, required Widget action, String? note}) =>
+        SizedBox(
+          width: 150,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Panel(
+              border: on ? goldLight : gold.withValues(alpha: 0.5),
+              padding: const EdgeInsets.all(6),
+              child: Column(
+                children: [
+                  Text(name, style: bold.copyWith(fontSize: 12.5, color: on ? goldLight : cream),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Expanded(child: Center(child: MountPreview(mount: look, size: 110))),
+                  if (note != null) Text(note, style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
+                  const SizedBox(height: 4),
+                  action,
+                ],
+              ),
+            ),
+          ),
+        );
+    return Dialog(
+      backgroundColor: lacquer,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Ngoại hình · ${m.name}', style: titleStyle(18, color: goldLight)),
+            Text(owned ? 'Chỉ đổi dáng vẻ, chỉ số giữ nguyên.' : 'Cần có ${m.name} trước.',
+                style: small.copyWith(fontSize: 11)),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 230,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                children: [
+                  card(
+                    name: 'Nguyên bản',
+                    look: m,
+                    on: worn == null,
+                    action: LButton(
+                      label: worn == null ? 'Đang dùng' : 'Dùng',
+                      small: true,
+                      color: jade,
+                      enabled: owned && worn != null,
+                      onTap: () => setState(() => h.wearSkin(m.id, null)),
+                    ),
+                  ),
+                  for (final s in skinsOf(m.id))
+                    card(
+                      name: s.name,
+                      look: m.skinned(s.c1, s.c2, s.c3, s.aura),
+                      on: worn == s.id,
+                      note: h.ownsSkin(s.id) ? null : s.howTo,
+                      action: h.ownsSkin(s.id)
+                          ? LButton(
+                              label: worn == s.id ? 'Đang dùng' : 'Dùng',
+                              small: true,
+                              color: jade,
+                              enabled: worn != s.id,
+                              onTap: () => setState(() => h.wearSkin(m.id, s.id)),
+                            )
+                          : LButton(
+                              label: s.source == SkinSource.tower ? 'Nhận' : 'Đổi',
+                              small: true,
+                              color: seal,
+                              enabled: h.canGetSkin(s),
+                              onTap: () => setState(() => h.getSkin(s)),
+                            ),
+                    ),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+            ),
           ],
         ),
       ),
