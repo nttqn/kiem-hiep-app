@@ -6,8 +6,8 @@ Kiếm Hiệp Ngũ Hành
 ## Mô tả ngắn (≤ 80 ký tự)
 Nhập vai kiếm hiệp: 5 môn phái ngũ hành, tự động đánh, chơi offline, lưu đám mây
 
-## Mô tả đầy đủ (≤ 4000 ký tự)
-Bước chân vào giang hồ, bái sư một trong năm môn phái, luyện công vượt ải và trở thành Võ Lâm Chí Tôn!
+## Mô tả đầy đủ (≤ 4000 ký tự, cập nhật cho 1.6.0)
+Bước chân vào giang hồ, bái sư một trong năm môn phái, luyện công vượt ải, chuyển sinh sáu lần và trở thành Võ Lâm Chí Tôn!
 
 ⚔️ NĂM MÔN PHÁI – NĂM HỆ NGŨ HÀNH
 • Kim Cang Tự (Kim): côn pháp cương mãnh, máu trâu, dễ chơi nhất.
@@ -17,38 +17,60 @@ Bước chân vào giang hồ, bái sư một trong năm môn phái, luyện cô
 • Huyền Thổ Quán (Thổ): kiếm khí, khiên đất, địa chấn làm choáng.
 Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim: đánh đúng hệ gây thêm 25% sát thương.
 
-🗺️ LUYỆN CÔNG – VƯỢT ẢI – LÀM NHIỆM VỤ
-• 9 bản đồ: đồng cỏ Lạc An, rừng trúc tím, hang Hắc Phong, sa mạc Hoàng Sa, băng nguyên tuyết phủ, núi lửa Hỏa Diệm Sơn, Ma Giáo Tổng Đàn, Vân Vụ Sơn mây phủ và Hoa Sơn Tuyệt Đỉnh.
-• Hơn 35 loại quái: sói, rắn hổ mang, cương thi, nhện độc, bọ cạp, tuyết quái, thạch nhân dung nham, kỳ lân lửa, bạch long, kiếm hồn… cùng các đầu lĩnh có chiêu đánh lan phải né.
-• 18 ải nhiều đợt quái, chấm 3 sao theo thời gian, cùng Tháp Thử Luyện vô tận.
-• Bảng xếp hạng toàn server: Lực chiến, Tháp Thử Luyện, Cấp độ, và Boss Thế Giới mỗi ngày (cần đăng nhập).
-• 56 nhiệm vụ chính tuyến kể chuyện diệt Huyết Ma Giáo và Thiên Ma Lão Tổ, cùng nhiệm vụ hằng ngày.
+🗺️ GIANG HỒ RỘNG LỚN
+• 12 bãi luyện công: đồng cỏ Lạc An, rừng trúc tím, sa mạc Hoàng Sa, núi lửa Hỏa Diệm Sơn, Đông Hải Quần Đảo, Hoa Sơn Tuyệt Đỉnh, Cửu U Ma Vực, U Minh Huyết Hải…
+• 48 loại quái và 12 đầu lĩnh có chiêu đánh lan phải né: cương thi, kỳ lân lửa, bạch long, hải tặc, Đông Hải Long Vương, Cửu U Ma Tôn…
+• 19 ải chấm 3 sao, 18 Ải Ác Mộng đổi ma khí mỗi tuần, 10 Bí cảnh phủ sương chờ khám phá và Tháp Thử Luyện vô tận.
+• 56 nhiệm vụ chính tuyến cùng 6 hồi Luân Hồi (72 nhiệm vụ): Thiên Ma Lão Tổ, Huyết Ma Giáo, Thất Sát Môn, Huyết Hải Ma Đế…
+• Bảng truy nã tinh anh, Tàng Bảo Đồ đào kho báu, câu cá với 36 loài cá.
+
+🏆 TRANH TÀI CÙNG CẢ SERVER
+• Lôi đài: tỷ thí với bản sao nhân vật của người chơi khác, mùa giải 2 tuần trao thưởng theo hạng.
+• Võ Lâm Đại Hội mỗi tuần: 8 cao thủ đấu loại, tranh danh hiệu Võ Lâm Minh Chủ.
+• Boss Thế Giới mỗi ngày, Săn quái tuần, Kênh Thế Giới để trò chuyện.
+• Bảng xếp hạng Lực chiến, Tháp, Cấp độ, Lôi đài, Săn quái, Minh Chủ (cần đăng nhập).
 
 🧙 BUILD NHÂN VẬT THEO Ý MÌNH
-• Mỗi cấp nhận điểm tiềm năng và điểm kỹ năng, tối đa cấp 99, rồi chuyển sinh tới 5 lần để nhận thưởng sinh lực, công lực, phòng thủ vĩnh viễn.
-• 4 chiêu chủ động, 2 nội công và 1 tuyệt kỹ trấn phái cho mỗi phái; đột phá kỹ năng tới cấp 15 và luyện 5 kinh mạch ngũ hành.
-• Trang bị 7 ô, 5 độ hiếm từ Thường đến Truyền thuyết; thợ rèn cường hóa tới +10.
-• Khảm ngọc Ngũ Hành vào trang bị, khảm đủ các hệ để kích hoạt thưởng bộ, hợp 3 viên thành 1 viên cao cấp.
-• 6 linh thú đồng hành: Bạch Hạc, Hắc Hổ, Huyền Quy, Tuyết Hồ, Kỳ Lân Con, Tiểu Bạch Long; tự ra chiêu và tăng chỉ số cho chủ.
+• Tối đa cấp 99, chuyển sinh tới 6 lần để nhận sinh lực, công lực, phòng thủ vĩnh viễn.
+• Mỗi phái 4 chiêu, 2 nội công, 1 tuyệt kỹ; đột phá kỹ năng, bí kíp võ công đổi cách ra đòn, 5 kinh mạch ngũ hành.
+• Trang bị 7 ô, 5 độ hiếm, cường hóa +10, tẩy luyện, khảm ngọc Ngũ Hành, 5 bộ Hoàng Kim, thức tỉnh Thần binh.
+• 5 hiệp khách đồng hành có chuyện riêng, 6 linh thú, 10 thú cưỡi (có cả phi kiếm) và 17 bộ ngoại trang.
+• Sư môn thăng chức tới Chưởng môn, luyện đan, Trang viên trồng linh thảo và nuôi tằm.
 
 🎁 NGÀY NÀO CŨNG CÓ QUÀ
 • Bế quan tu luyện: tắt game vẫn nhận kinh nghiệm và lượng, tới 8 giờ.
-• Quà đăng nhập 7 ngày, ngày 7 tặng trang bị Hiếm.
-• 22 thành tựu mở khóa danh hiệu: Thiếu Hiệp, Đại Hiệp, Tông Sư, Võ Lâm Chí Tôn, Võ Thánh, Ngũ Chuyển Chân Nhân…
+• Quà đăng nhập, Mục tiêu 7 ngày cho tân thủ, rương Năng động ngày và tuần, Hòm thư, sự kiện cuối tuần.
+• 26 thành tựu mở khóa danh hiệu: Đại Hiệp, Võ Thánh, Ngũ Chuyển Chân Nhân, Lục Chuyển Thánh Nhân…
 
 🤖 CHƠI NHẸ NHÀNG, CHƠI MỌI LÚC
-• Đánh thời gian thực bằng joystick và nút chiêu, hoặc bật TỰ ĐỘNG để nhân vật tự tìm quái nhiệm vụ, ra chiêu, uống thuốc.
-• Chơi offline hoàn toàn, không cần mạng.
-• Lưu trữ đám mây (không bắt buộc): đăng nhập Google để giữ nhân vật khi cài lại hay đổi máy.
-• 3 ô nhân vật để thử đủ năm môn phái.
+• Đánh thời gian thực bằng joystick và nút chiêu, hoặc bật TỰ ĐỘNG: nhân vật tự tìm quái nhiệm vụ, ra chiêu, uống thuốc, cộng điểm, mặc đồ; tùy chỉnh được cách tự đánh.
+• Chơi offline không cần mạng (trừ xếp hạng, Lôi đài và trò chuyện). Có chế độ máy yếu cho điện thoại cấu hình thấp.
+• Lưu trữ đám mây (không bắt buộc): đăng nhập Google để giữ nhân vật khi cài lại hay đổi máy. 3 ô nhân vật.
+• Thống kê sát thương và kỷ lục sau mỗi trận.
 
 🎵 ĐẬM CHẤT KIẾM HIỆP
-• Nhân vật và quái vẽ phong cách chibi sinh động, mỗi chiêu một hiệu ứng riêng.
+• Nhân vật và quái vẽ phong cách chibi sinh động, mỗi chiêu một hiệu ứng riêng, có mưa, sấm chớp và đêm tối.
 • Nhạc nền ngũ cung với đàn tranh, nhị, sáo trúc và trống trận, mỗi vùng đất một giai điệu.
 
 Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự chọn xem để nhận thưởng: hồi sinh tại chỗ, nhân đôi phần thưởng, thuốc miễn phí.
 
 Hỗ trợ: trungsmail@gmail.com
+
+## Có gì mới (bản 1.6.0, ≤ 500 ký tự)
+1.6.0 – Lục chuyển & U Minh Huyết Hải
+• Chuyển sinh lần 6: cần 60 Linh Phách Đơn, mỗi cấp cần nhiều kinh nghiệm hơn nhưng được 10 điểm tiềm năng.
+• Luân Hồi VI: Huyết Hải Ma Đế.
+• Bản đồ U Minh Huyết Hải cho bậc lục chuyển: Thần Thiết rơi gấp đôi, ngoại trang Huyết Hải Đế Bào.
+• Thú cưỡi mới: Cửu Sắc Thần Lộc (chuyển sinh 6) và Thanh Phong Phi Kiếm (Tháp tầng 100), đứng trên kiếm mà bay.
+• Thêm thành tựu mới, màn Thú cưỡi dễ xem hơn.
+
+## What's new (1.6.0, en-US)
+1.6.0 – Sixth Rebirth & the Blood Sea
+• Rebirth 6: needs 60 Soul Pills; each level takes more EXP but gives 10 potential points.
+• Luân Hồi VI: the Blood Sea Emperor.
+• New map U Minh Huyết Hải for sixth-rebirth heroes: double Thần Thiết, the Huyết Hải Đế Bào outfit.
+• New mounts: Cửu Sắc Thần Lộc (rebirth 6) and a flying sword, Thanh Phong Phi Kiếm (Tower floor 100) – ride standing on the blade.
+• New achievements; easier-to-browse mount list.
 
 ## Có gì mới (bản 1.2.0, ≤ 500 ký tự)
 SƯ MÔN: mỗi ngày 10 nhiệm vụ môn phái, tích cống hiến, khảo hạch với trưởng bối để thăng chức từ Đệ tử lên Chưởng môn, đổi quà ở Tàng Kinh Các. BÍ KÍP VÕ CÔNG: mỗi chiêu học một thiên (Cuồng Bạo, Tật Phong, Bao La, Ngũ Hành, Trường Tồn) đổi cách ra đòn. ẢI ÁC MỘNG: 18 ải từ cấp 60 tới 99, ma khí đổi mỗi tuần, boss gọi đồng bọn. CÂU CÁ: hồ câu ở mọi bãi luyện công, 36 loài cá và Ngư phổ.
@@ -123,8 +145,8 @@ Kiem Hiep: Five Elements RPG
 ## Short description
 Wuxia action RPG: five element sects, auto battle, offline play and cloud save
 
-## Full description
-Step into the martial world, join one of five sects, train, clear dungeons and become the Supreme Master of the jianghu!
+## Full description (updated for 1.6.0)
+Step into the martial world, join one of five sects, train, clear dungeons, be reborn six times and become the Supreme Master of the jianghu!
 
 ⚔️ FIVE SECTS, FIVE ELEMENTS
 • Kim Cang Temple (Metal): mighty staff arts and iron defence, easiest to start with.
@@ -134,33 +156,39 @@ Step into the martial world, join one of five sects, train, clear dungeons and b
 • Mystic Earth Abbey (Earth): sword energy, earth shields and stunning quakes.
 Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire beats Metal: hit the right element for 25% extra damage.
 
-🗺️ TRAIN, CLEAR DUNGEONS, FOLLOW THE STORY
-• 9 regions from grassland and purple bamboo forests to a dark cave, a desert, snowfields, a volcano, the Demon Cult's fortress, the misty Cloud Mountain and the summit of Mount Hua.
-• Over 35 monsters — wolves, cobras, jiangshi, spiders, scorpions, yetis, lava golems, a fire qilin — and bosses with telegraphed area attacks.
-• 18 multi-wave dungeons with 3-star time ratings, plus the endless Trial Tower.
-• Server-wide leaderboards: combat power, tower floor, level and a daily World Boss (sign-in required).
-• 56 story quests against the Blood Demon Cult and the Heavenly Demon, plus daily quests.
+🗺️ A VAST JIANGHU
+• 12 hunting grounds: grasslands, a purple bamboo forest, a desert, a volcano, the Eastern Sea islands, the summit of Mount Hua, the Nine Netherworld Abyss, the Sea of Blood…
+• 48 monsters and 12 bosses with telegraphed area attacks: jiangshi, a fire qilin, the White Dragon, pirates, the Dragon King of the Eastern Sea…
+• 19 dungeons with 3-star ratings, 18 Nightmare dungeons with weekly curses, 10 fog-covered Secret Realms to explore and the endless Trial Tower.
+• 56 story quests plus 6 Reincarnation chapters (72 quests) against the Heavenly Demon, the Blood Demon Cult, the Seven Killers and the Blood Sea Emperor.
+• A bounty board of named elites, treasure maps to dig up, and fishing with 36 kinds of fish.
+
+🏆 COMPETE WITH THE WHOLE SERVER
+• Arena: duel copies of other players' heroes, with 2-week seasons and rank rewards.
+• Weekly Martial Conclave: an 8-master knockout for the title of Martial Alliance Leader.
+• A daily World Boss, a weekly monster hunt and a World channel to chat.
+• Leaderboards for combat power, tower, level, arena, hunt and champions (sign-in required).
 
 🧙 BUILD YOUR HERO
-• Attribute and skill points every level, up to level 99, then rebirth up to 5 times for permanent HP, attack and defense bonuses.
-• 4 active skills, 2 passives and an ultimate per sect; break skills through to level 15 and train five meridians.
-• 7 gear slots, 5 rarities from Common to Legendary, and forging up to +10.
-• Five-element gems to socket into gear, with set bonuses and gem fusion.
-• 6 spirit-beast companions that fight beside you and boost your stats.
+• Up to level 99, then rebirth up to 6 times for permanent HP, attack and defense.
+• Per sect: 4 active skills, 2 passives and an ultimate; skill breakthroughs, skill manuals that change how each skill fights, five meridians.
+• 7 gear slots, 5 rarities, forging to +10, rerolling, five-element gems, 5 Golden sets and an awakening divine weapon.
+• 5 companions with their own stories, 6 spirit beasts, 10 mounts (a flying sword among them) and 17 outfits.
+• Rise to Sect Master, brew pills, and grow herbs and raise silkworms on your own manor.
 
 🎁 REWARDS EVERY DAY
 • Closed-door training: earn EXP and gold while the game is closed, up to 8 hours.
-• 7-day login gifts with an Epic item on day 7.
-• 22 achievements that unlock titles to wear.
+• Login gifts, 7-day goals for newcomers, daily and weekly activity chests, mail gifts and weekend events.
+• 26 achievements that unlock titles to wear.
 
 🤖 EASY TO PLAY ANYTIME
-• Real-time combat with joystick and skill buttons, or switch on AUTO to hunt quest monsters, cast skills and drink potions for you.
-• Fully playable offline.
-• Optional cloud save: sign in with Google to keep your heroes across reinstalls and phones.
-• 3 character slots to try every sect.
+• Real-time combat with joystick and skill buttons, or switch on AUTO to hunt quest monsters, cast skills, drink potions, spend points and wear better gear; tune how it fights.
+• Play offline with no connection (except leaderboards, arena and chat). A lite mode for low-end phones.
+• Optional cloud save: sign in with Google to keep your heroes across reinstalls and phones. 3 character slots.
+• Damage stats and personal records after every fight.
 
 🎵 PURE WUXIA STYLE
-• Lively chibi heroes and monsters, with a distinct effect for every skill.
+• Lively chibi heroes and monsters, a distinct effect for every skill, with rain, thunderstorms and night.
 • Pentatonic music with guzheng, erhu, bamboo flute and war drums — a different tune for every region.
 
 Free to play with ads. Most ads are optional and give rewards: revive on the spot, double rewards, free potions.
