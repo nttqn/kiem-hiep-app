@@ -30,6 +30,7 @@ import 'core/weather.dart';
 import 'core/sect_duty.dart';
 import 'ui/fishing_view.dart';
 import 'ui/lore_screen.dart';
+import 'ui/mount_view.dart';
 import 'ui/sect_screen.dart';
 import 'ui/activity_screen.dart';
 import 'ui/alchemy_screen.dart';
@@ -520,6 +521,7 @@ Future<void> main() async {
     'outfits' => const _OutfitSheet(),
     'wardrobe' => const CharacterScreen(tab: 5),
     'mounts' => const PetScreen(tab: 1),
+    'skins' => Scaffold(body: MountSkinDialog(mount: mountById[q['skinof'] ?? 'phikiem']!)),
     'comp' => const PetScreen(tab: 2),
     'goldforge' => const CharacterScreen(tab: 6, forge: true),
     'divine' => const CharacterScreen(tab: 7, forge: true),

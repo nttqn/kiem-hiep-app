@@ -17,6 +17,10 @@ HeroData at(Hanh hanh, int level) {
   while (h.level < level) {
     h.gainExp(h.expNeeded.toDouble());
   }
+  // The level-10 gift (1.7.0) gives Ngựa Nâu; these tests buy their own.
+  h.mountLevels.clear();
+  h.activeMount = '';
+  h.recompute();
   h.autoSpend();
   h.autoLearn();
   h.notices.clear();

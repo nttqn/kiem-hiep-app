@@ -43,7 +43,7 @@ class _MountViewState extends State<MountView> {
   }
 
   Future<void> _skins(MountDef m) async {
-    await showDialog<void>(context: context, builder: (_) => _SkinDialog(mount: m));
+    await showDialog<void>(context: context, builder: (_) => MountSkinDialog(mount: m));
     _changed();
   }
 
@@ -146,15 +146,15 @@ class _MountViewState extends State<MountView> {
 }
 
 /// Ngoại hình: the looks a mount can wear.
-class _SkinDialog extends StatefulWidget {
-  const _SkinDialog({required this.mount});
+class MountSkinDialog extends StatefulWidget {
+  const MountSkinDialog({super.key, required this.mount});
   final MountDef mount;
 
   @override
-  State<_SkinDialog> createState() => _SkinDialogState();
+  State<MountSkinDialog> createState() => _MountSkinDialogState();
 }
 
-class _SkinDialogState extends State<_SkinDialog> {
+class _MountSkinDialogState extends State<MountSkinDialog> {
   HeroData get h => SaveService.instance.hero;
 
   @override
@@ -174,7 +174,7 @@ class _SkinDialogState extends State<_SkinDialog> {
                 children: [
                   Text(name, style: bold.copyWith(fontSize: 12.5, color: on ? goldLight : cream),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
-                  Expanded(child: Center(child: MountPreview(mount: look, size: 110))),
+                  Expanded(child: ClipRect(child: Center(child: MountPreview(mount: look, size: look.look == 'sword' ? 82 : 110)))),
                   if (note != null) Text(note, style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   action,
