@@ -71,8 +71,8 @@ class AdsService with WidgetsBindingObserver {
   static const interstitialGap = Duration(minutes: 4);
 
   /// App Open ads (1.7.0) when the player comes back after [appOpenAway].
-  /// Empty until the AdMob App Open units exist: then no App Open ads.
-  static String get appOpenUnit => _ios ? '' : 'ca-app-pub-9078637596840810/4136789119';
+  /// One unit per platform.
+  static String get appOpenUnit => _ios ? 'ca-app-pub-9078637596840810/4638692857' : 'ca-app-pub-9078637596840810/4136789119';
   static const appOpenAway = Duration(minutes: 30);
 
   /// Gói bỏ quảng cáo bought (services/purchase.dart): no interstitial or
