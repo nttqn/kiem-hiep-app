@@ -416,14 +416,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  gma_mediation_meta:
-    dependency: "direct main"
-    description:
-      name: gma_mediation_meta
-      sha256: "7802e6788d525f02eb9e4c8d761574147535a949b18cb0cfd30223f61c0c91df"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.7.1"
   gma_mediation_mintegral:
     dependency: "direct main"
     description:
