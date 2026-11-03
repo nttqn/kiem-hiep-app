@@ -57,7 +57,6 @@ dependencies:
   timezone: ^0.11.2
   in_app_update: ^5.0.0
   in_app_purchase: 3.3.1
-  gma_mediation_applovin: 2.6.5
   gma_mediation_meta: 1.7.1
   gma_mediation_unity: 1.11.1
   gma_mediation_pangle: 4.2.1
