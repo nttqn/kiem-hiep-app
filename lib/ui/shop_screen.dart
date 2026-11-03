@@ -8,6 +8,7 @@ import '../services/ads.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'treasure_view.dart';
+import 'offers_view.dart';
 import 'theme.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -93,7 +94,7 @@ class _ShopScreenState extends State<ShopScreen> {
     return SubScreen(
       title: 'Cửa hàng',
       actions: [
-        for (final (i, name) in const [(0, 'Tạp hóa'), (1, 'Kỳ Trân Các')])
+        for (final (i, name) in const [(0, 'Tạp hóa'), (1, 'Kỳ Trân Các'), (2, 'Ưu đãi')])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: GestureDetector(
@@ -110,7 +111,11 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
       ],
-      child: _tab == 1 ? const TreasureView() : _general(),
+      child: switch (_tab) {
+        1 => const TreasureView(),
+        2 => const OffersView(),
+        _ => _general(),
+      },
     );
   }
 

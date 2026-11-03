@@ -32,7 +32,8 @@ android {
     defaultConfig {
         applicationId = "com.trungsmail.kiemhiep"
         // Firebase Auth needs API 23 or newer.
-        minSdk = maxOf(23, flutter.minSdkVersion)
+        // 24: the ad mediation adapters (1.7.0) need Android 7.
+        minSdk = maxOf(24, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

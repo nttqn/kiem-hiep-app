@@ -31,6 +31,7 @@ import 'mount_skins.dart';
 import 'mounts.dart';
 import 'nightmare.dart';
 import 'pets.dart';
+import 'premium.dart';
 import 'realm.dart';
 import 'sect_duty.dart';
 import 'tang_bao.dart';
@@ -360,6 +361,7 @@ class HeroData {
   // Ải Ác Mộng: best stars by id, and per day the paid clears.
   final Map<String, int> nmStars = {};
   String nmDay = '';
+  int nmAds = 0;
   int nmRuns = 0;
 
   // Tàng Bảo Đồ: maps held, the marked spot, maps dropped today, digs ever.
@@ -399,6 +401,17 @@ class HeroData {
   // Thần binh: the weapon's awakening level and Thần Thiết on hand.
   int divine = 0;
   int divineIron = 0;
+
+  /// Ưu đãi (premium.dart): Nguyệt thẻ's last day and the day last
+  /// claimed, the starter pack, and the day's ad rewards.
+  String cardUntil = '';
+  String cardClaimDay = '';
+  bool starterBought = false;
+  String adDay = '';
+  int adChestN = 0, manorAdN = 0, bodyAdN = 0;
+  bool bodyBoost = false;
+  String trialSkin = '';
+  int trialUntil = 0;
 
   /// Luyện thể: level of each of the five [bodyParts].
   final List<int> bodyLv = List.filled(5, 0);
@@ -1290,7 +1303,8 @@ class HeroData {
   }
 
   /// Free runs today, with any extra from an event.
-  int get wbFreeRuns => worldBossFreeTries + EventBoost(vnDayKey()).wbRuns;
+  int get wbFreeRuns =>
+      worldBossFreeTries + EventBoost(vnDayKey()).wbRuns + (cardActive(vnDayKey()) ? monthCardExtraRuns : 0);
 
   int get wbRunsLeft => wbFreeRuns + wbAdRuns - wbRuns;
 
@@ -2220,9 +2234,20 @@ class HeroData {
     if (nmDay == day) return;
     nmDay = day;
     nmRuns = 0;
+    nmAds = 0;
   }
 
-  int get nmRunsLeft => math.max(0, nightmarePaidRuns - nmRuns);
+  int get nmPaidToday => nightmarePaidRuns + nmAds;
+
+  int get nmRunsLeft => math.max(0, nmPaidToday - nmRuns);
+
+  /// A rewarded ad adds a paid clear (at most [nightmareAdRuns] a day).
+  bool nmAddAdRun(String day) {
+    nmRollDay(day);
+    if (nmAds >= nightmareAdRuns) return false;
+    nmAds++;
+    return true;
+  }
 
   /// Pays a nightmare clear: the first ever pays big; after that the day's
   /// first [nightmarePaidRuns] clears pay.
@@ -2234,7 +2259,7 @@ class HeroData {
     _progressDaily((q) => q.type == QuestType.dungeon);
     _progressDuty((q) => q.kind == DutyKind.dungeon);
     addActivity(ActSource.dungeon);
-    if (!first && nmRuns >= nightmarePaidRuns) {
+    if (!first && nmRuns >= nmPaidToday) {
       lastDungeonGold = 0;
       lastDungeonExp = 0;
       return const ['Hết lượt thưởng Ác Mộng hôm nay'];
@@ -2462,7 +2487,8 @@ class HeroData {
     realmAds = 0;
   }
 
-  int get realmRunsLeft => math.max(0, realmFreeRuns + realmAds - realmRuns);
+  int get realmRunsLeft =>
+      math.max(0, realmFreeRuns + (cardActive(vnDayKey()) ? monthCardExtraRuns : 0) + realmAds - realmRuns);
 
   /// Takes one of the day's runs on the way in.
   bool realmStartRun(String day) {
@@ -2611,6 +2637,8 @@ class HeroData {
       notices.add(Notice('Quà mốc cấp ${e.key}: ${lines.join(', ')}', color: 0xFF8CE07A, big: true));
     }
   }
+
+  List<String> grantGift(NewbieGift g, math.Random rng) => _grantGift(g, rng);
 
   List<String> _grantGift(NewbieGift g, math.Random rng) {
     var gold = g.gold;
@@ -2926,7 +2954,7 @@ class HeroData {
         'sect': [sectRank, sectContrib, sectCoins, sectDay, sectDone, sectDuty?.toJson()],
         'manual': [manualPages, manualOn],
         'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
-        'nm': [nmStars, nmDay, nmRuns],
+        'nm': [nmStars, nmDay, nmRuns, nmAds],
         'realm': [realmStars, realmDay, realmRuns, realmAds],
         'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
         'lore': lorePages.toList(),
@@ -2938,6 +2966,7 @@ class HeroData {
         'rec': records.toJson(),
         'tb': [divine, divineIron],
         'lt': bodyLv,
+        'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
@@ -3094,12 +3123,13 @@ class HeroData {
       h.fishBooks.addAll([for (final v in fish[4] as List) '$v']);
     }
     final nm = m['nm'];
-    if (nm is List && nm.length == 3) {
+    if (nm is List && nm.length >= 3) {
       (nm[0] as Map).forEach((k, v) {
         if (v is int) h.nmStars['$k'] = v.clamp(0, 3);
       });
       h.nmDay = nm[1] as String;
       h.nmRuns = math.max(0, nm[2] as int);
+      if (nm.length > 3) h.nmAds = (nm[3] as int).clamp(0, nightmareAdRuns);
     }
     final rl = m['realm'];
     if (rl is List && rl.length == 4) {
@@ -3158,6 +3188,19 @@ class HeroData {
     if (tb is List && tb.length == 2) {
       h.divine = (tb[0] as int).clamp(0, divineMax);
       h.divineIron = math.max(0, tb[1] as int);
+    }
+    final pay = m['pay'];
+    if (pay is List && pay.length >= 10) {
+      h.cardUntil = pay[0] as String;
+      h.cardClaimDay = pay[1] as String;
+      h.starterBought = pay[2] as bool;
+      h.adDay = pay[3] as String;
+      h.adChestN = (pay[4] as int).clamp(0, adChestMax);
+      h.manorAdN = (pay[5] as int).clamp(0, manorAdMax);
+      h.bodyAdN = (pay[6] as int).clamp(0, bodyAdMax);
+      h.bodyBoost = pay[7] as bool;
+      h.trialSkin = pay[8] as String;
+      h.trialUntil = pay[9] as int;
     }
     final lt = m['lt'];
     if (lt is List) {

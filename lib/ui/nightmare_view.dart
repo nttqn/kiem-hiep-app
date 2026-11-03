@@ -5,15 +5,21 @@ import '../core/divine.dart';
 import '../core/hero.dart';
 import '../core/nightmare.dart';
 import '../core/world_boss.dart';
+import '../services/ads.dart';
 import '../services/save.dart';
 import 'play_screen.dart';
 import 'theme.dart';
 
 /// Ải Ác Mộng: the eighteen nightmares, opened one after another, each with
 /// this week's ma khí.
-class NightmareView extends StatelessWidget {
+class NightmareView extends StatefulWidget {
   const NightmareView({super.key});
 
+  @override
+  State<NightmareView> createState() => _NightmareViewState();
+}
+
+class _NightmareViewState extends State<NightmareView> {
   @override
   Widget build(BuildContext context) {
     final HeroData h = SaveService.instance.hero;
@@ -42,7 +48,24 @@ class NightmareView extends StatelessWidget {
               Column(
                 children: [
                   Text('Lượt thưởng', style: small.copyWith(fontSize: 11)),
-                  Text('${h.nmRunsLeft}/$nightmarePaidRuns', style: titleStyle(20)),
+                  Text('${h.nmRunsLeft}/${h.nmPaidToday}', style: titleStyle(20)),
+                  if (h.nmAds < nightmareAdRuns)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: AdsService.instance.rewardedReady,
+                      builder: (_, ready, _) => LButton(
+                        label: '+1 lượt',
+                        icon: Icons.ondemand_video,
+                        small: true,
+                        color: const Color(0xFF8A5A10),
+                        enabled: ready,
+                        onTap: () async {
+                          if (!await AdsService.instance.showRewarded() || !mounted) return;
+                          h.nmAddAdRun(vnDayKey());
+                          SaveService.instance.save();
+                          setState(() {});
+                        },
+                      ),
+                    ),
                 ],
               ),
             ],

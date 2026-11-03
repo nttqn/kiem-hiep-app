@@ -11,6 +11,9 @@ import 'hero.dart' show mobHpAt;
 /// clears a day pay Hoàng Kim shards, gems and bí kíp pages.
 const int nightmareOpenLevel = 60;
 const int nightmarePaidRuns = 5;
+
+/// Extra paid clears a rewarded ad adds, at most this many a day (1.7.0).
+const int nightmareAdRuns = 2;
 const double nightmareTime = 200;
 
 enum NmAffix { frenzy, fortified, volatile, chill }

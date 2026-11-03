@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'core/newbie.dart';
+
 import 'services/ads.dart';
 import 'services/chat.dart';
 import 'services/cloud.dart';
 import 'services/leaderboard.dart';
 import 'services/notify.dart';
 import 'services/perf.dart';
+import 'services/purchase.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
 import 'ui/theme.dart';
@@ -31,7 +34,14 @@ Future<void> main() async {
   NotifyService.instance.init();
   // Not awaited either: the game starts offline and syncs when it can.
   CloudSave.instance.init();
+  // App Open ads skip new players, as interstitials do.
+  AdsService.instance.appOpenAllowed = () {
+    final s = SaveService.instance;
+    final h = s.active >= 0 ? s.slots[s.active] : null;
+    return h != null && !newbieAdFree(h.level, h.rebirths);
+  };
   AdsService.instance.init();
+  PurchaseService.instance.init();
   runApp(const KiemHiepApp());
 }
 

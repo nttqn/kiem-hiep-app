@@ -8,6 +8,9 @@ import '../core/clock.dart';
 import '../core/gold_sets.dart' show bonusLabel;
 import '../core/hero.dart';
 import '../core/manor.dart';
+import '../core/premium.dart';
+import '../core/world_boss.dart';
+import '../services/ads.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -84,6 +87,24 @@ class _ManorScreenState extends State<ManorScreen> {
                     children: [
                       Text('Ruộng linh thảo', style: titleStyle(18)),
                       const Spacer(),
+                      if (h.manorHasGrowing(_now) && h.manorAdsLeft(vnDayKey()) > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: AdsService.instance.rewardedReady,
+                            builder: (_, ready, _) => LButton(
+                              label: 'Nhanh 1 giờ (${h.manorAdsLeft(vnDayKey())})',
+                              icon: Icons.ondemand_video,
+                              small: true,
+                              color: const Color(0xFF8A5A10),
+                              enabled: ready,
+                              onTap: () async {
+                                if (!await AdsService.instance.showRewarded() || !mounted) return;
+                                if (h.hurryManor(vnDayKey(), _now)) _done('Linh thảo lớn nhanh thêm 1 giờ!');
+                              },
+                            ),
+                          ),
+                        ),
                       LButton(
                         label: ripe > 0 ? 'Thu hoạch ($ripe)' : 'Chưa có ruộng chín',
                         icon: Icons.agriculture,

@@ -1,3 +1,4 @@
+import 'clock.dart';
 import 'hero.dart';
 import 'mounts.dart';
 
@@ -80,7 +81,9 @@ extension MountSkins on HeroData {
 
   /// [m] as the hero has dressed it.
   MountDef dressed(MountDef m) {
-    final s = skinById[mountSkin[m.id]];
+    // A look on trial (an ad) wins over the one worn.
+    final trial = trialUntil > 0 && trialSkin.isNotEmpty && trialUntil > GameClock.nowMs() ? skinById[trialSkin] : null;
+    final s = trial?.mount == m.id ? trial : skinById[mountSkin[m.id]];
     return s == null ? m : m.skinned(s.c1, s.c2, s.c3, s.aura);
   }
 

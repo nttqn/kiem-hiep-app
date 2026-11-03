@@ -5,6 +5,9 @@ import '../core/gold_sets.dart';
 import '../core/hero.dart';
 import '../core/sects.dart';
 import '../services/analytics.dart';
+import '../core/premium.dart';
+import '../core/world_boss.dart';
+import '../services/ads.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
@@ -94,6 +97,7 @@ class _BodyTabState extends State<BodyTab> {
                       style: small.copyWith(fontSize: 11),
                     ),
                     const SizedBox(height: 6),
+                    _boost(),
                     for (var i = 0; i < bodyParts.length; i++) _row(i),
                   ])
                 : Center(
@@ -110,6 +114,39 @@ class _BodyTabState extends State<BodyTab> {
     );
   }
 
+  Widget _boost() {
+    if (h.bodyBoost) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text('Ưu đãi đang chờ: lần luyện kế tiếp miễn lượng, nửa Thần Thiết.',
+            style: bold.copyWith(fontSize: 12, color: jade)),
+      );
+    }
+    if (h.bodyAdsLeft(vnDayKey()) <= 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ValueListenableBuilder<bool>(
+          valueListenable: AdsService.instance.rewardedReady,
+          builder: (_, ready, _) => LButton(
+            label: 'Xem quảng cáo: lần luyện tới miễn lượng, nửa Thần Thiết',
+            icon: Icons.ondemand_video,
+            small: true,
+            color: const Color(0xFF8A5A10),
+            enabled: ready,
+            onTap: () async {
+              if (!await AdsService.instance.showRewarded() || !mounted) return;
+              h.takeBodyAd(vnDayKey());
+              SaveService.instance.save();
+              setState(() {});
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   String _bonusText(Map<Bonus, double> b) => [
         for (final e in b.entries) '${bonusLabel(e.key)} +${(e.value * 100).round()}%',
       ].join(', ');
@@ -122,7 +159,7 @@ class _BodyTabState extends State<BodyTab> {
     final cost = switch (block) {
       BodyBlock.maxed => 'Đã viên mãn',
       BodyBlock.rebirth => 'Cần Chuyển sinh ${bodyRebirthsFor(lv)}',
-      _ => '${bodyIronCost(lv)} Thần Thiết · ${fmt(bodyGoldCost(lv))} lượng${pills > 0 ? ' · $pills Linh Phách Đơn' : ''}',
+      _ => '${h.bodyCost(i).$1} Thần Thiết · ${fmt(h.bodyCost(i).$2)} lượng${pills > 0 ? ' · $pills Linh Phách Đơn' : ''}',
     };
     return Container(
       margin: const EdgeInsets.only(bottom: 4),

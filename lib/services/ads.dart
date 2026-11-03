@@ -4,6 +4,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analytics.dart';
 
@@ -14,7 +15,7 @@ import 'analytics.dart';
 /// Both platforms use the game's own AdMob units; the App IDs live in
 /// android/app/build.gradle.kts and ios/Runner/Info.plist. Everything is a no-op on web and in tests, and
 /// any ad failure just means "no ad", never a blocked game.
-class AdsService {
+class AdsService with WidgetsBindingObserver {
   AdsService._();
   static final AdsService instance = AdsService._();
 
@@ -69,6 +70,22 @@ class AdsService {
   /// the app starting.
   static const interstitialGap = Duration(minutes: 4);
 
+  /// App Open ads (1.7.0) when the player comes back after [appOpenAway].
+  /// Empty until the AdMob App Open units exist: then no App Open ads.
+  static String get appOpenUnit => _ios ? '' : '';
+  static const appOpenAway = Duration(minutes: 30);
+
+  /// Gói bỏ quảng cáo bought (services/purchase.dart): no interstitial or
+  /// App Open ads, and every rewarded ad is granted without being shown.
+  final ValueNotifier<bool> adFree = ValueNotifier(false);
+  static const _adFreeKey = 'no_ads';
+
+  /// Asked before an App Open ad: false while the player is new.
+  bool Function() appOpenAllowed = () => true;
+
+  AppOpenAd? _appOpen;
+  DateTime? _pausedAt;
+
   final ValueNotifier<bool> rewardedReady = ValueNotifier(false);
   bool _started = false;
   RewardedAd? _rewarded;
@@ -79,7 +96,25 @@ class AdsService {
   /// Whether the consent SDK says a privacy-options entry must be offered.
   final ValueNotifier<bool> privacyOptionsRequired = ValueNotifier(false);
 
+  Future<void> loadAdFree() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      setAdFree(p.getBool(_adFreeKey) ?? false, save: false);
+    } catch (_) {}
+  }
+
+  void setAdFree(bool v, {bool save = true}) {
+    adFree.value = v;
+    if (v) rewardedReady.value = true;
+    if (save) {
+      SharedPreferences.getInstance().then((p) => p.setBool(_adFreeKey, v)).catchError((_) => false);
+    }
+  }
+
+  void _setReady(bool v) => rewardedReady.value = v || adFree.value;
+
   Future<void> init() async {
+    await loadAdFree();
     if (!_supported) return;
     try {
       await _gatherConsent();
@@ -89,6 +124,8 @@ class AdsService {
       _started = true;
       _loadRewarded();
       _loadInterstitial();
+      _loadAppOpen();
+      WidgetsBinding.instance.addObserver(this);
     } catch (e) {
       debugPrint('ads off: $e');
     }
@@ -146,11 +183,11 @@ class AdsService {
         onAdLoaded: (ad) {
           _loadingRewarded = false;
           _rewarded = ad;
-          rewardedReady.value = true;
+          _setReady(true);
         },
         onAdFailedToLoad: (_) {
           _loadingRewarded = false;
-          rewardedReady.value = false;
+          _setReady(false);
           // Try again in a minute; no network now may mean network later.
           Timer(const Duration(minutes: 1), _loadRewarded);
         },
@@ -161,13 +198,17 @@ class AdsService {
   /// Shows a rewarded ad. Completes with true only if the player watched
   /// it through and earned the reward.
   Future<bool> showRewarded() async {
+    if (adFree.value) {
+      Analytics.instance.log('ad_free_reward');
+      return true;
+    }
     final ad = _rewarded;
     if (ad == null) {
       _loadRewarded();
       return false;
     }
     _rewarded = null;
-    rewardedReady.value = false;
+    _setReady(false);
     final result = Completer<bool>();
     var earned = false;
     ad.fullScreenContentCallback = FullScreenContentCallback(
@@ -208,7 +249,7 @@ class AdsService {
   /// Call when the player leaves a map or dungeon for town, never during
   /// play. Shows at most once per [interstitialGap].
   void maybeShowInterstitial() {
-    if (!_started) return;
+    if (!_started || adFree.value) return;
     final ad = _interstitial;
     if (ad == null) {
       _loadInterstitial();
@@ -228,5 +269,53 @@ class AdsService {
       },
     );
     _leadIn().then((_) => ad.show());
+  }
+
+  // ------------------------------------------------------------ app open
+
+  void _loadAppOpen() {
+    if (!_started || _appOpen != null || appOpenUnit.isEmpty) return;
+    AppOpenAd.load(
+      adUnitId: appOpenUnit,
+      request: const AdRequest(),
+      adLoadCallback: AppOpenAdLoadCallback(
+        onAdLoaded: (ad) => _appOpen = ad,
+        onAdFailedToLoad: (_) => _appOpen = null,
+      ),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _pausedAt = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      final away = _pausedAt == null ? Duration.zero : DateTime.now().difference(_pausedAt!);
+      _pausedAt = null;
+      if (away >= appOpenAway) _maybeShowAppOpen();
+    }
+  }
+
+  void _maybeShowAppOpen() {
+    final ad = _appOpen;
+    if (!_started || adFree.value || ad == null || !appOpenAllowed()) {
+      _loadAppOpen();
+      return;
+    }
+    if (DateTime.now().difference(_lastFullScreen) < interstitialGap) return;
+    _appOpen = null;
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _lastFullScreen = DateTime.now();
+        _loadAppOpen();
+      },
+      onAdFailedToShowFullScreenContent: (ad, _) {
+        ad.dispose();
+        _loadAppOpen();
+      },
+    );
+    Analytics.instance.log('ad_app_open');
+    ad.show();
   }
 }

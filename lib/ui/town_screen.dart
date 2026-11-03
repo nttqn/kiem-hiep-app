@@ -38,6 +38,8 @@ import 'newbie_dialog.dart';
 import 'play_screen.dart';
 import 'prologue.dart';
 import 'shop_screen.dart';
+import '../core/premium.dart';
+import '../services/purchase.dart';
 import 'theme.dart';
 import 'title_screen.dart';
 import 'week_goals_dialog.dart';
@@ -84,6 +86,19 @@ class _TownScreenState extends State<TownScreen> {
     if (mounted && h.lastLoginDate != todayKey()) await showLoginGiftDialog(context, h);
     if (mounted && h.newbieReady(vnDayKey())) await showNewbieDialog(context);
     await _huntReward();
+    // Bought on the title screen, before a hero was open.
+    final bought = PurchaseService.instance.applyQueued();
+    if (bought != null && bought.isNotEmpty && mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: lacquer,
+          title: Text('Quà đã mua', style: titleStyle(20)),
+          content: Text(bought, style: body),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        ),
+      );
+    }
     // Ask for notifications once the player has stuck around a little.
     if (h.level >= 5 || h.rebirths > 0) await NotifyService.instance.askOnce();
     if (mounted) setState(() {});
@@ -512,6 +527,12 @@ class _TownScreenState extends State<TownScreen> {
     );
   }
 
+  /// Ưu đãi: Nguyệt thẻ to claim, or today's ad chests not yet touched.
+  int _offersBadge() {
+    final d = vnDayKey();
+    return (h.canClaimCard(d) ? 1 : 0) + (h.level >= 5 && h.adChestsLeft(d) == adChestMax ? 1 : 0);
+  }
+
   /// Boss Thế Giới runs still free today, for the Thử thách badge.
   int _bossRunsLeft() {
     h.wbRollDay(vnDayKey());
@@ -585,7 +606,7 @@ class _TownScreenState extends State<TownScreen> {
       tile('alchemy', Icons.science, () => _go(const AlchemyScreen())),
       tile('activity', Icons.local_fire_department, () => _go(const ActivityScreen()), badge: activityClaimable(h)),
       tile('sect', Icons.temple_buddhist, () => _go(const SectScreen()), badge: _sectBadge()),
-      tile('shop', Icons.storefront, () => _go(const ShopScreen())),
+      tile('shop', Icons.storefront, () => _go(ShopScreen(tab: _offersBadge() > 0 ? 2 : 0)), badge: _offersBadge()),
       tile('forge', Icons.hardware, () => _go(const CharacterScreen(tab: 3, forge: true))),
       tile('ach', Icons.emoji_events, () => _go(const AchievementsScreen()), badge: claimableCount(h)),
       tile('gift', Icons.card_giftcard, () async {

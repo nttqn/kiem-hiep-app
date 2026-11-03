@@ -6,6 +6,9 @@ import 'package:flutter/scheduler.dart';
 import '../core/hero.dart';
 import '../core/mount_skins.dart';
 import '../core/mounts.dart';
+import '../core/clock.dart';
+import '../core/premium.dart';
+import '../services/ads.dart';
 import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 import '../services/save.dart';
@@ -196,7 +199,7 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                 style: small.copyWith(fontSize: 11)),
             const SizedBox(height: 6),
             SizedBox(
-              height: 230,
+              height: 262,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 shrinkWrap: true,
@@ -227,12 +230,35 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                               enabled: worn != s.id,
                               onTap: () => setState(() => h.wearSkin(m.id, s.id)),
                             )
-                          : LButton(
-                              label: s.source == SkinSource.tower ? 'Nhận' : 'Đổi',
-                              small: true,
-                              color: seal,
-                              enabled: h.canGetSkin(s),
-                              onTap: () => setState(() => h.getSkin(s)),
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                LButton(
+                                  label: s.source == SkinSource.tower ? 'Nhận' : 'Đổi',
+                                  small: true,
+                                  color: seal,
+                                  enabled: h.canGetSkin(s),
+                                  onTap: () => setState(() => h.getSkin(s)),
+                                ),
+                                if (owned) ...[
+                                  const SizedBox(height: 3),
+                                  h.trialAt(GameClock.nowMs())?.id == s.id
+                                      ? Text('Đang mặc thử', style: small.copyWith(fontSize: 10.5, color: jade))
+                                      : ValueListenableBuilder<bool>(
+                                          valueListenable: AdsService.instance.rewardedReady,
+                                          builder: (_, ready, _) => LButton(
+                                            label: 'Mặc thử',
+                                            small: true,
+                                            color: const Color(0xFF8A5A10),
+                                            enabled: ready,
+                                            onTap: () async {
+                                              if (!await AdsService.instance.showRewarded() || !mounted) return;
+                                              setState(() => h.trySkin(s, GameClock.nowMs()));
+                                            },
+                                          ),
+                                        ),
+                                ],
+                              ],
                             ),
                     ),
                 ],

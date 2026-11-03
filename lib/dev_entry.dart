@@ -11,6 +11,7 @@ import 'core/arena.dart';
 import 'core/companions.dart';
 import 'core/body_train.dart';
 import 'core/content.dart';
+import 'core/premium.dart';
 import 'core/costumes.dart';
 import 'core/divine.dart';
 import 'core/live_event.dart';
@@ -443,6 +444,11 @@ Future<void> main() async {
     // divine=<lv> Thần binh level, iron=<n> Thần Thiết.
     h.divine = (int.tryParse(q['divine'] ?? '') ?? 0).clamp(0, divineMax);
     h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
+    // card=1 a running Nguyệt thẻ; chests=<n> ad chests opened today.
+    if (q['card'] == '1') h.addMonthCard(vnDayKey());
+    for (var i = 0; i < (int.tryParse(q['chests'] ?? '') ?? 0); i++) {
+      h.openAdChest(vnDayKey());
+    }
     // body=a,b,c,d,e Luyện thể levels.
     final body = q['body']?.split(',') ?? const <String>[];
     for (var i = 0; i < body.length && i < h.bodyLv.length; i++) {
@@ -526,6 +532,7 @@ Future<void> main() async {
     'goldforge' => const CharacterScreen(tab: 6, forge: true),
     'divine' => const CharacterScreen(tab: 7, forge: true),
     'body' => const CharacterScreen(tab: 8),
+    'offers' => const ShopScreen(tab: 2),
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),
     'arena' => const ArenaScreen(),

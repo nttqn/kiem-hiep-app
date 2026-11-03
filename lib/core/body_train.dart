@@ -1,4 +1,5 @@
 import 'hero.dart';
+import 'premium.dart';
 import 'sects.dart';
 
 /// Luyện thể (1.7.0): tempering the body for heroes who have done the
@@ -110,8 +111,9 @@ extension BodyTrain on HeroData {
     final lv = bodyLv[i];
     if (lv >= bodyMax) return BodyBlock.maxed;
     if (rebirths < bodyRebirthsFor(lv)) return BodyBlock.rebirth;
-    if (divineIron < bodyIronCost(lv)) return BodyBlock.iron;
-    if (gold < bodyGoldCost(lv)) return BodyBlock.gold;
+    final (iron, cost) = bodyCost(i);
+    if (divineIron < iron) return BodyBlock.iron;
+    if (gold < cost) return BodyBlock.gold;
     if (soulPills < bodyPillCost(lv)) return BodyBlock.pills;
     return null;
   }
@@ -119,8 +121,10 @@ extension BodyTrain on HeroData {
   bool trainBody(int i) {
     if (bodyBlock(i) != null) return false;
     final lv = bodyLv[i];
-    divineIron -= bodyIronCost(lv);
-    gold -= bodyGoldCost(lv);
+    final (iron, cost) = bodyCost(i);
+    divineIron -= iron;
+    gold -= cost;
+    bodyBoost = false;
     soulPills -= bodyPillCost(lv);
     bodyLv[i]++;
     recompute();
