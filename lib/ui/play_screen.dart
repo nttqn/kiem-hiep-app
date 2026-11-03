@@ -386,7 +386,8 @@ class _PlayScreenState extends State<PlayScreen> {
     SoundService.instance.playMusic('menu');
     Navigator.of(context).pop();
     // A full-screen ad only ever on the walk back to town, and rarely.
-    AdsService.instance.maybeShowInterstitial();
+    final h = SaveService.instance.hero;
+    if (!newbieAdFree(h.level, h.rebirths)) AdsService.instance.maybeShowInterstitial();
   }
 
   bool _doubled = false;

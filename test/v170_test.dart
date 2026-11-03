@@ -5,6 +5,7 @@ import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/mount_skins.dart';
 import 'package:kiem_hiep/core/mounts.dart';
+import 'package:kiem_hiep/core/newbie.dart';
 import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/core/world.dart';
 
@@ -137,6 +138,22 @@ void main() {
       final gold = h.gold;
       expect(h.getSkin(s), isTrue);
       expect(h.gold, gold);
+    });
+  });
+
+  group('Tân thủ 1.7.0', () {
+    test('level 10 brings a first mount, ridden at once', () {
+      final h = HeroData(name: 'N', hanh: Hanh.moc)..level = 9;
+      h.gainExp(h.expNeedAt(9).toDouble() + 1);
+      expect(h.level, 10);
+      expect(h.ownsMount('nau'), isTrue);
+      expect(h.ridingMount?.id, 'nau');
+    });
+
+    test('no interstitials before level 15 on a first life', () {
+      expect(newbieAdFree(14, 0), isTrue);
+      expect(newbieAdFree(15, 0), isFalse);
+      expect(newbieAdFree(10, 1), isFalse);
     });
   });
 }

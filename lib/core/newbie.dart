@@ -46,7 +46,8 @@ const newbieGifts = <NewbieGift>[
 /// progress (most new players left within a few days).
 const levelGifts = <int, NewbieGift>{
   5: NewbieGift(gold: 2000, hpPots: 20),
-  10: NewbieGift(item: Rarity.rare, mpPots: 15),
+  // 1.7.0: the first mount the day riding opens.
+  10: NewbieGift(item: Rarity.rare, mpPots: 15, mount: 'nau'),
   15: NewbieGift(gold: 6000, gems: 2, gemTier: 1),
   20: NewbieGift(item: Rarity.epic, hpPots: 20),
   25: NewbieGift(gold: 15000, gems: 2, gemTier: 2),
@@ -55,6 +56,12 @@ const levelGifts = <int, NewbieGift>{
 /// Below this level a death in the field costs no EXP, and a low HP bar
 /// drinks a potion by itself.
 const int newbieShieldLevel = 20;
+
+/// No interstitial ads for a new hero below this level (1.7.0): the first
+/// quarter hour decides whether a player stays.
+const int newbieNoAdsLevel = 15;
+
+bool newbieAdFree(int level, int rebirths) => rebirths == 0 && level < newbieNoAdsLevel;
 const double newbieAutoPotion = 0.35;
 
 /// Tân thủ: monsters hit a new hero (no rebirth) softer until this level,
