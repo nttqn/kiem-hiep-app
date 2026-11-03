@@ -352,6 +352,9 @@ class Player extends Actor {
 
 enum WorldMode { field, dungeon }
 
+/// Move speed while attacking on the run.
+const double runAttackMove = 0.8;
+
 class World {
   World.field(this.hero, this.map, {int? seed})
       : mode = WorldMode.field,
@@ -1921,6 +1924,24 @@ class World {
         _basicAttack(null);
       }
     }
+    // Đánh khi chạy (1.7.0): steering with the joystick while holding the
+    // attack button (or with auto on) hits whatever is already in reach
+    // without stopping; the hero just won't walk over to anything.
+    Mob? runHit;
+    if (manual && (c.attack || auto)) {
+      final t = _pickTarget(sect.basic == BasicKind.melee ? 200 : sect.basicRange + 20);
+      if (t != null) {
+        final reach = sect.basic == BasicKind.melee ? sect.basicRange + t.radius * 0.5 : sect.basicRange;
+        if (_dist(p.x, p.y, t.x, t.y) <= reach) {
+          target = t;
+          runHit = t;
+          if (p.basicCd <= 0) {
+            _aimAt(t.x, t.y);
+            _basicAttack(t);
+          }
+        }
+      }
+    }
     if (autoOn && (kiting || (mx == 0 && my == 0)) && (_autoMoveX != 0 || _autoMoveY != 0)) {
       mx = _autoMoveX;
       my = _autoMoveY;
@@ -1930,10 +1951,11 @@ class World {
 
     final len = math.sqrt(mx * mx + my * my);
     if (len > 0.05) {
-      final sp = st.move * math.min(1, len) * _slowMul(p) * (realmBuffs.contains(RealmBuff.swift) ? 1.3 : 1);
+      final sp = st.move * math.min(1, len) * _slowMul(p) * (realmBuffs.contains(RealmBuff.swift) ? 1.3 : 1) *
+          (runHit != null ? runAttackMove : 1);
       p.x += mx / len * sp * dt;
       p.y += my / len * sp * dt;
-      final back = kiting ? _backFrom : null;
+      final back = kiting ? _backFrom : (runHit != null && p.attackAnim > 0 ? runHit : null);
       if (back != null) {
         // Walking backwards: eyes stay on the monster.
         _aimAt(back.x, back.y);

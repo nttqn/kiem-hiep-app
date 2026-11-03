@@ -9,6 +9,7 @@ import 'ui/chat_screen.dart';
 import 'core/alchemy.dart';
 import 'core/arena.dart';
 import 'core/companions.dart';
+import 'core/body_train.dart';
 import 'core/content.dart';
 import 'core/costumes.dart';
 import 'core/divine.dart';
@@ -431,6 +432,11 @@ Future<void> main() async {
     // divine=<lv> Thần binh level, iron=<n> Thần Thiết.
     h.divine = (int.tryParse(q['divine'] ?? '') ?? 0).clamp(0, divineMax);
     h.divineIron = int.tryParse(q['iron'] ?? '') ?? 0;
+    // body=a,b,c,d,e Luyện thể levels.
+    final body = q['body']?.split(',') ?? const <String>[];
+    for (var i = 0; i < body.length && i < h.bodyLv.length; i++) {
+      h.bodyLv[i] = (int.tryParse(body[i]) ?? 0).clamp(0, bodyMax);
+    }
     // money=<n> lượng.
     h.gold = int.tryParse(q['money'] ?? '') ?? h.gold;
     // lpd=<n> Linh Phách Đơn, with the level-99 bar full and a pill 40% on.
@@ -507,6 +513,7 @@ Future<void> main() async {
     'comp' => const PetScreen(tab: 2),
     'goldforge' => const CharacterScreen(tab: 6, forge: true),
     'divine' => const CharacterScreen(tab: 7, forge: true),
+    'body' => const CharacterScreen(tab: 8),
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),
     'arena' => const ArenaScreen(),

@@ -4,6 +4,7 @@ import 'activity.dart';
 import 'alchemy.dart';
 import 'arena.dart';
 import 'auto_config.dart';
+import 'body_train.dart';
 import 'bounty.dart';
 import 'companions.dart';
 import 'content.dart';
@@ -394,6 +395,9 @@ class HeroData {
   int divine = 0;
   int divineIron = 0;
 
+  /// Luyện thể: level of each of the five [bodyParts].
+  final List<int> bodyLv = List.filled(5, 0);
+
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
   int soulPills = 0;
@@ -522,6 +526,7 @@ class HeroData {
     if (comp != null) add({comp.bonus: comp.bonusAt(companionBonds[comp.id] ?? 1)});
     add(sectRankBonus(hanh, sectRank));
     add(divineBonuses(divine));
+    add(bodyBonuses(bodyLv));
     add(loreBonuses());
     add(manor.bonuses());
     return out;
@@ -2923,6 +2928,7 @@ class HeroData {
         'runs': [for (final r in runLog) r.toJson()],
         'rec': records.toJson(),
         'tb': [divine, divineIron],
+        'lt': bodyLv,
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
@@ -3143,6 +3149,12 @@ class HeroData {
     if (tb is List && tb.length == 2) {
       h.divine = (tb[0] as int).clamp(0, divineMax);
       h.divineIron = math.max(0, tb[1] as int);
+    }
+    final lt = m['lt'];
+    if (lt is List) {
+      for (var i = 0; i < lt.length && i < h.bodyLv.length; i++) {
+        h.bodyLv[i] = (lt[i] as int).clamp(0, bodyMax);
+      }
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {
