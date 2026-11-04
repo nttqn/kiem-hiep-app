@@ -1,0 +1,11 @@
+[
+  {"id": "s1", "scene": "clip:a_fire", "say": "Kiếm Hiệp Ngũ Hành, phiên bản mới đã ra mắt!", "sub": "Kiếm Hiệp Ngũ Hành\nPhiên bản mới 1.7"},
+  {"id": "s2", "scene": "clip:b_ice", "at": 5.6, "say": "Hiệu ứng chiêu thức năm môn phái được vẽ lại hoàn toàn, rực rỡ hơn bao giờ hết.", "sub": "Hiệu ứng chiêu thức mới\ncho cả 5 môn phái"},
+  {"id": "s3", "scene": "clip:c_kim", "say": "Giờ đây vừa chạy vừa đánh, ra chiêu liên tục không bị ngắt.", "sub": "Vừa chạy vừa đánh\nRa chiêu không bị ngắt"},
+  {"id": "s4", "scene": "clip:e_mount2", "at": 0.3, "say": "Mười ba ngoại hình thú cưỡi mới, có hào quang lấp lánh.", "sub": "13 ngoại hình thú cưỡi\nHào quang lấp lánh"},
+  {"id": "s5", "scene": "stills:skins,skins2", "say": "Phi kiếm, bạch hổ, kỳ lân, đổi màu tùy thích.", "sub": "Phi kiếm · Bạch hổ · Kỳ lân\nĐổi ngoại hình tùy thích"},
+  {"id": "s6", "scene": "still:body", "say": "Luyện thể tôi luyện năm bộ phận, đột phá Kim Cương Thân, Bất Hoại Kim Thân.", "sub": "Luyện Thể mới\nĐột phá Bất Hoại Kim Thân"},
+  {"id": "s7", "scene": "clip:f_wboss", "say": "Boss Thế Giới mỗi ngày, đua top cùng cả server.", "sub": "Boss Thế Giới mỗi ngày\nĐua top toàn server"},
+  {"id": "s8", "scene": "clip:b_ice", "at": 1.6, "say": "Người mới được tặng ngựa ở cấp mười. Chơi offline, không cần mạng.", "sub": "Tặng thú cưỡi ở cấp 10\nChơi offline, không cần mạng"},
+  {"id": "s9", "scene": "end", "say": "Tải miễn phí Kiếm Hiệp Ngũ Hành trên Google Play ngay hôm nay!", "sub": "Tải miễn phí trên Google Play"}
+]
