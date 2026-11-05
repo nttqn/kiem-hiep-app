@@ -9,6 +9,7 @@ import '../core/meridians.dart';
 import '../core/items.dart';
 import '../core/manuals.dart';
 import '../core/sects.dart';
+import '../core/star_up.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'body_tab.dart';
@@ -661,22 +662,22 @@ class _CharacterScreenState extends State<CharacterScreen> {
   Future<void> _itemDialog(Item it) async {
     await showDialog<void>(
       context: context,
-      builder: (ctx) => _ItemDialog(item: it, forge: widget.forge),
+      builder: (ctx) => ItemDialog(item: it, forge: widget.forge),
     );
     _changed();
   }
 }
 
-class _ItemDialog extends StatefulWidget {
-  const _ItemDialog({required this.item, required this.forge});
+class ItemDialog extends StatefulWidget {
+  const ItemDialog({super.key, required this.item, required this.forge});
   final Item item;
   final bool forge;
 
   @override
-  State<_ItemDialog> createState() => _ItemDialogState();
+  State<ItemDialog> createState() => _ItemDialogState();
 }
 
-class _ItemDialogState extends State<_ItemDialog> {
+class _ItemDialogState extends State<ItemDialog> {
   String? _msg;
   Color _msgColor = cream;
 
@@ -759,21 +760,19 @@ class _ItemDialogState extends State<_ItemDialog> {
                       ),
                       const SizedBox(height: 6),
                     ],
-                    Text('Cường hóa', style: bold.copyWith(color: goldLight)),
-                    Text(
-                      canEnhance
-                          ? '+${it.plus} → +${it.plus + 1} · tỉ lệ ${(enhanceChance(it.plus) * 100).round()}%'
-                          : 'Đã đạt +$maxPlus',
-                      style: small,
-                    ),
-                    const SizedBox(height: 4),
-                    LButton(
-                      label: canEnhance ? 'Rèn ${fmt(cost)} lượng' : 'Tối đa',
-                      small: true,
-                      color: widget.forge ? seal : const Color(0xFF7A3A1A),
-                      enabled: canEnhance && h.gold >= cost,
-                      onTap: _enhance,
-                    ),
+                    if (canEnhance) ...[
+                      Text('Cường hóa', style: bold.copyWith(color: goldLight)),
+                      Text('+${it.plus} → +${it.plus + 1} · tỉ lệ ${(enhanceChance(it.plus) * 100).round()}%', style: small),
+                      const SizedBox(height: 4),
+                      LButton(
+                        label: 'Rèn ${fmt(cost)} lượng',
+                        small: true,
+                        color: widget.forge ? seal : const Color(0xFF7A3A1A),
+                        enabled: h.gold >= cost,
+                        onTap: _enhance,
+                      ),
+                    ] else
+                      ..._starUp(it),
                     if (_msg != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -807,6 +806,42 @@ class _ItemDialogState extends State<_ItemDialog> {
     });
   }
 
+  /// Thăng Tinh (1.8.0) for a +10 item: the next star's cost and button.
+  List<Widget> _starUp(Item it) {
+    final maxed = it.star >= maxStar;
+    final block = h.starBlock(it);
+    return [
+      Text('Thăng Tinh ${'★' * it.star}${'☆' * (maxStar - it.star)}', style: bold.copyWith(color: goldLight)),
+      if (maxed)
+        Text('Đã đạt ★$maxStar', style: small)
+      else ...[
+        Text(
+          '${starStoneCost[it.star]} Tinh Thạch (có ${fmt(h.starStones)})'
+          '${starSoulCost[it.star] > 0 ? ' · ${starSoulCost[it.star]} Tinh Phách (có ${h.beastSouls})' : ''}'
+          ' · ${fmt(starGoldCost(it.star))} lượng',
+          style: small.copyWith(fontSize: 11),
+        ),
+        Text('+${(starBasePct * 100).round()}% chỉ số gốc, ${starLines[it.slot]!.label.toLowerCase()} +${(starLines[it.slot]!.per * 100).toStringAsFixed(1)}%',
+            style: small.copyWith(fontSize: 11, color: const Color(0xFFFFD34A))),
+      ],
+      const SizedBox(height: 4),
+      LButton(
+        label: maxed ? 'Tối đa' : 'Thăng ★${it.star + 1}',
+        small: true,
+        color: const Color(0xFF8A2A6A),
+        enabled: block == null,
+        onTap: () {
+          if (!h.starUp(it)) return;
+          SaveService.instance.save();
+          setState(() {
+            _msg = 'Thăng Tinh thành công! ★${it.star}';
+            _msgColor = const Color(0xFFFFD34A);
+          });
+        },
+      ),
+    ];
+  }
+
   Widget _statsBlock(Item it, Color rc, String where) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -819,7 +854,10 @@ class _ItemDialogState extends State<_ItemDialog> {
               style: small.copyWith(fontSize: 11.5, color: rc)),
         const SizedBox(height: 6),
         for (final e in it.base.entries)
-          Text('${e.key.label} ${e.key.format(e.value * (1 + 0.1 * it.plus))}', style: bold.copyWith(fontSize: 13)),
+          Text('${e.key.label} ${e.key.format(e.value * (1 + 0.1 * it.plus) * (1 + starBasePct * it.star))}',
+              style: bold.copyWith(fontSize: 13)),
+        if (it.star > 0)
+          Text('★ ${starLines[it.slot]!.at(it.star)}', style: bold.copyWith(fontSize: 13, color: const Color(0xFFFFD34A))),
         for (final e in it.bonus.entries)
           Text('${e.key.label} ${e.key.format(e.value)}',
               style: body.copyWith(fontSize: 13, color: const Color(0xFF8AC8FF))),

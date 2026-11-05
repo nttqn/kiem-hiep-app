@@ -69,6 +69,10 @@ import 'ui/rewards_ui.dart';
 import 'ui/shop_screen.dart';
 import 'ui/manor_screen.dart';
 import 'ui/stats_screen.dart';
+import 'ui/endgame_screens.dart';
+import 'core/hung_thu.dart';
+import 'core/ma_vuc.dart';
+import 'core/tam_ma.dart';
 import 'ui/dai_hoi_screen.dart';
 import 'ui/theme.dart';
 import 'ui/title_screen.dart';
@@ -454,6 +458,30 @@ Future<void> main() async {
     for (var i = 0; i < body.length && i < h.bodyLv.length; i++) {
       h.bodyLv[i] = (int.tryParse(body[i]) ?? 0).clamp(0, bodyMax);
     }
+    // 1.8.0: tm=<floor> Tâm Ma best, mv=<floor> Ma Vực this week, stones=<n>
+    // Tinh Thạch, souls=<n> Tinh Phách, star=<n> every worn item +10 at n stars,
+    // ht=<bits> Hung Thú difficulties slain this week.
+    h.tmBest = int.tryParse(q['tm'] ?? '') ?? h.tmBest;
+    final mv = int.tryParse(q['mv'] ?? '');
+    if (mv != null) {
+      h.mvRollWeek();
+      h.mvBest = mv;
+    }
+    h.starStones = int.tryParse(q['stones'] ?? '') ?? h.starStones;
+    h.beastSouls = int.tryParse(q['souls'] ?? '') ?? h.beastSouls;
+    final star = int.tryParse(q['star'] ?? '');
+    if (star != null) {
+      for (final it in h.equip.values) {
+        it.plus = maxPlus;
+        it.star = star.clamp(0, maxStar);
+      }
+    }
+    final ht = int.tryParse(q['ht'] ?? '');
+    if (ht != null) {
+      h.htRoll(vnDayKey());
+      h.htKilled = ht;
+      if (ht > 0) h.htScore = beastScore(h.htWeek, 2, 96);
+    }
     // money=<n> lượng.
     h.gold = int.tryParse(q['money'] ?? '') ?? h.gold;
     // lpd=<n> Linh Phách Đơn, with the level-99 bar full and a pill 40% on.
@@ -507,7 +535,7 @@ Future<void> main() async {
         : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
     'rank' => const LeaderboardScreen(),
     'chat' => const ChatScreen(),
-    'challenge' => const ChallengeScreen(),
+    'challenge' => ChallengeScreen(tab: int.tryParse(q['tab'] ?? '') ?? 0),
     'boss' => const WorldBossScreen(),
     'treasure' => const ShopScreen(tab: 1),
     'refine' => const CharacterScreen(tab: 4, forge: true),
@@ -532,6 +560,13 @@ Future<void> main() async {
     'goldforge' => const CharacterScreen(tab: 6, forge: true),
     'divine' => const CharacterScreen(tab: 7, forge: true),
     'body' => const CharacterScreen(tab: 8),
+    'tamma' => const TamMaScreen(),
+    'mavuc' => const MaVucScreen(),
+    'beast' => const BeastScreen(),
+    'tmfight' => PlayScreen.dungeon(tamMaDef(SaveService.instance.hero, int.tryParse(q['f'] ?? '') ?? 12)),
+    'mvfight' => PlayScreen.dungeon(maVucFloor(int.tryParse(q['f'] ?? '') ?? 10, huntWeekOf(vnDayKey()))),
+    'htfight' => PlayScreen.dungeon(beastDungeon(int.tryParse(q['f'] ?? '') ?? 2, huntWeekOf(vnDayKey()))),
+    'stardlg' => Scaffold(body: Center(child: ItemDialog(item: SaveService.instance.hero.equip.values.first, forge: true))),
     'offers' => const ShopScreen(tab: 2),
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),

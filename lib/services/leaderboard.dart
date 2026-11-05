@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/arena.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/hung_thu.dart';
+import '../core/ma_vuc.dart';
 import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
@@ -25,6 +27,9 @@ class LbEntry {
     this.arenaS = 0,
     this.wk = 0,
     this.dhC = 0,
+    this.tm = 0,
+    this.mv = 0,
+    this.ht = 0,
     this.mount,
     this.mountLv = 1,
     this.skin = '',
@@ -49,6 +54,10 @@ class LbEntry {
 
   /// Võ Lâm Đại Hội titles won.
   final int dhC;
+
+  /// Tâm Ma Ảo Cảnh best floor; Ma Vực week and floor ([maVucScore]);
+  /// Hung Thú week, difficulty and speed ([beastScore]) (1.8.0+).
+  final int tm, mv, ht;
 
   /// The mount ridden, for Lôi đài copies; '' on foot, null when the row
   /// was written by an app older than 1.4.0, which did not send it.
@@ -75,6 +84,9 @@ class LbEntry {
         arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
         wk: (m['wk'] as num?)?.toInt() ?? 0,
         dhC: (m['dhC'] as num?)?.toInt() ?? 0,
+        tm: (m['tm'] as num?)?.toInt() ?? 0,
+        mv: (m['mv'] as num?)?.toInt() ?? 0,
+        ht: (m['ht'] as num?)?.toInt() ?? 0,
         mount: m['mount'] as String?,
         mountLv: (m['mountLv'] as num?)?.toInt() ?? 1,
         skin: m['skin'] as String? ?? '',
@@ -92,7 +104,7 @@ class LbPage {
   final Object? next;
 }
 
-enum LbBoard { power, tower, rank, arena, hunt, daiHoi }
+enum LbBoard { power, tower, rank, arena, hunt, daiHoi, tamMa, maVuc, beast }
 
 extension LbBoardField on LbBoard {
   String get field => switch (this) {
@@ -102,6 +114,9 @@ extension LbBoardField on LbBoard {
         LbBoard.arena => 'arenaS',
         LbBoard.hunt => 'wk',
         LbBoard.daiHoi => 'dhC',
+        LbBoard.tamMa => 'tm',
+        LbBoard.maVuc => 'mv',
+        LbBoard.beast => 'ht',
       };
 
   int valueOf(LbEntry e) => switch (this) {
@@ -111,6 +126,9 @@ extension LbBoardField on LbBoard {
         LbBoard.arena => e.arenaS,
         LbBoard.hunt => e.wk,
         LbBoard.daiHoi => e.dhC,
+        LbBoard.tamMa => e.tm,
+        LbBoard.maVuc => e.mv,
+        LbBoard.beast => e.ht,
       };
 }
 
@@ -172,6 +190,9 @@ class Leaderboard extends ChangeNotifier {
       'wk': h.huntBoardValue,
       if (h.huntLastScore > 0) 'wkLast': h.huntLastScore,
       if (h.dhChamps > 0) 'dhC': h.dhChamps,
+      if (h.tmBest > 0) 'tm': h.tmBest,
+      if (h.maVucBoardValue > 0) 'mv': h.maVucBoardValue,
+      if (h.beastBoardValue > 0) 'ht': h.beastBoardValue,
       'mount': h.ridingMount?.id ?? '',
       'mountLv': h.mountLevels[h.activeMount] ?? 1,
       'skin': h.ridingMount == null ? '' : h.mountSkin[h.activeMount] ?? '',
@@ -322,6 +343,9 @@ class Leaderboard extends ChangeNotifier {
         LbBoard.arena => arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0),
         LbBoard.hunt => huntScore(huntWeekOf(vnDayKey()), 0),
         LbBoard.daiHoi => 1,
+        LbBoard.tamMa => 1,
+        LbBoard.maVuc => maVucScore(huntWeekOf(vnDayKey()), 1),
+        LbBoard.beast => beastScore(huntWeekOf(vnDayKey()), 1, beastTime),
         _ => 0,
       };
 
@@ -330,6 +354,8 @@ class Leaderboard extends ChangeNotifier {
   int _ceiling(LbBoard board) => switch (board) {
         LbBoard.arena => arenaSeasonScore(arenaSeasonOf(vnDayKey()) + 1, 0),
         LbBoard.hunt => huntScore(huntWeekOf(vnDayKey()) + 1, 0),
+        LbBoard.maVuc => maVucScore(huntWeekOf(vnDayKey()) + 1, 0),
+        LbBoard.beast => beastScore(huntWeekOf(vnDayKey()) + 1, 0, 999),
         _ => 0,
       };
 

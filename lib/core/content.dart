@@ -441,6 +441,12 @@ class DungeonDef {
     this.nightmare = 0,
     this.affix = 0,
     this.realm = 0,
+    this.tamMa = 0,
+    this.tmAffixes = const [],
+    this.maVuc = 0,
+    this.affixes = const [],
+    this.beast = 0,
+    this.beastName = '',
   });
 
   final String id;
@@ -482,6 +488,24 @@ class DungeonDef {
   /// Bí cảnh number (1-based, 0 for none): a wide land explored, not waves.
   final int realm;
   bool get isRealm => realm > 0;
+
+  /// Tâm Ma Ảo Cảnh floor (1.8.0, 0 for none): a duel with the hero's own
+  /// shadow ([rival]), twisted by [tmAffixes] (TmAffix indices).
+  final int tamMa;
+  final List<int> tmAffixes;
+  bool get isTamMa => tamMa > 0;
+
+  /// Ma Vực floor (1.8.0, 0 for none): an endless weekly climb whose
+  /// monsters carry [affixes] (NmAffix indices) all at once.
+  final int maVuc;
+  final List<int> affixes;
+  bool get isMaVuc => maVuc > 0;
+
+  /// Thượng Cổ Hung Thú difficulty (1.8.0, 1-3, 0 for none): the week's
+  /// great beast, [beastName], built on the map's boss.
+  final int beast;
+  final String beastName;
+  bool get isBeast => beast > 0;
 
   MapDef get map => mapById[mapId]!;
 

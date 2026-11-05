@@ -12,6 +12,7 @@ import 'gems.dart';
 import 'gold_sets.dart';
 import 'hanh.dart';
 import 'hero.dart';
+import 'hung_thu.dart';
 import 'items.dart';
 import 'live_event.dart';
 import 'lore.dart';
@@ -23,6 +24,8 @@ import 'realm.dart';
 import 'scenery.dart';
 import 'sects.dart';
 import 'stats.dart';
+import 'tam_ma.dart';
+import 'ma_vuc.dart';
 import 'tang_bao.dart';
 import 'weather.dart';
 import 'world_boss.dart' show vnDayKey;
@@ -530,19 +533,31 @@ class World {
 
   // ------------------------------------------------------------ ác mộng
 
-  NmAffix? get affix => (dungeon?.isNightmare ?? false) ? NmAffix.values[dungeon!.affix] : null;
+  /// The ma khí on this run's monsters: a nightmare's one, or Ma Vực's
+  /// week (1.8.0).
+  late final Set<NmAffix> affixSet = {
+    if (dungeon?.isNightmare ?? false) NmAffix.values[dungeon!.affix],
+    if (dungeon?.isMaVuc ?? false)
+      for (final i in dungeon!.affixes)
+        if (i >= 0 && i < NmAffix.values.length) NmAffix.values[i],
+  };
 
-  /// A nightmare monster: its ma khí on top of the level and multiplier.
+  bool _has(NmAffix a) => affixSet.contains(a);
+
+  /// A nightmare or Ma Vực monster: its ma khí on top of the level and
+  /// multiplier.
   void _nightmare(Mob m) {
-    switch (affix) {
-      case NmAffix.frenzy:
-        m.atk *= 1.25;
-        m.speedMul = 1.25;
-      case NmAffix.fortified:
-        m.maxHp *= 1.6;
-        m.hp = m.maxHp;
-      case NmAffix.volatile || NmAffix.chill || null:
-        break;
+    if (_has(NmAffix.frenzy)) {
+      m.atk *= 1.25;
+      m.speedMul = 1.25;
+    }
+    if (_has(NmAffix.fortified)) {
+      m.maxHp *= 1.6;
+      m.hp = m.maxHp;
+    }
+    if (_has(NmAffix.bulwark)) {
+      m.guardUntil = time + 4;
+      m.guardPct = 0.4;
     }
   }
 
@@ -550,19 +565,21 @@ class World {
   final List<Mob> _newMobs = [];
   final List<Zone> _newZones = [];
 
-  /// The nightmare boss calls for help as it weakens.
+  /// The nightmare boss (and Hung Thú) calls for help as it weakens.
   void _nightmareSummon(Mob m) {
-    if (_summons >= nightmareSummonAt.length || m.hp > m.maxHp * nightmareSummonAt[_summons]) return;
-    _summons++;
     final d = dungeon!;
-    for (var k = 0; k < nightmareAdds; k++) {
-      final a = math.pi * 2 * k / nightmareAdds;
+    final at = d.isBeast ? beastSummonAt : nightmareSummonAt;
+    if (_summons >= at.length || m.hp > m.maxHp * at[_summons]) return;
+    _summons++;
+    final n = d.isBeast ? beastAdds : nightmareAdds;
+    for (var k = 0; k < n; k++) {
+      final a = math.pi * 2 * k / n;
       final def = mobById[map.mobs[rng.nextInt(map.mobs.length)]]!;
       final add = Mob(_uid++, def, d.level, m.x + math.cos(a) * 140, m.y + math.sin(a) * 100)
         ..state = MobState.chase;
       add.maxHp *= 1.2;
       add.hp = add.maxHp;
-      _scale(add, d.mul);
+      _scale(add, d.isBeast ? beastAtkMul[d.beast - 1] * 0.5 : d.mul);
       _nightmare(add);
       _clamp(add);
       _newMobs.add(add);
@@ -640,7 +657,7 @@ class World {
 
   bool get _companionAllowed {
     final d = dungeon;
-    return d == null || !(d.isTower || d.isWorldBoss || d.isArena);
+    return d == null || !(d.isTower || d.isWorldBoss || d.isArena || d.isMaVuc);
   }
 
   void _spawnCompanion() {
@@ -980,6 +997,10 @@ class World {
         _spawnRival(d.rival!);
         return;
       }
+      if (d.isBeast) {
+        _spawnBeast(d);
+        return;
+      }
       // A tower floor without a boss is done once the wave is down.
       if (!d.boss) return;
       final def = mobById[map.boss]!;
@@ -989,8 +1010,8 @@ class World {
       if (d.isNightmare) {
         m.maxHp *= 1.5;
         m.hp = m.maxHp;
-        _nightmare(m);
       }
+      if (d.isNightmare || d.isMaVuc) _nightmare(m);
       mobs.add(m);
       boss = m;
       introBoss = m;
@@ -1000,7 +1021,7 @@ class World {
     }
     events.add(GameEvent(EvKind.wave,
         text: 'Đợt ${wave + 1}/${d.waves.length}', big: true));
-    _pending = d.waves[wave];
+    _pending = _has(NmAffix.swarm) ? (d.waves[wave] * 1.5).round() : d.waves[wave];
     _pendingT = 0;
   }
 
@@ -1047,6 +1068,137 @@ class World {
     boss = m;
     introBoss = m;
     events.add(GameEvent(EvKind.boss, text: '${def.name} giáng thế!', color: 0xFFFF6A4A, big: true));
+  }
+
+  /// Hung Thú: the land's beast grown huge, its HP and attack set by the
+  /// difficulty.
+  bool beastEnraged = false;
+
+  void _spawnBeast(DungeonDef d) {
+    final b = beastOfWeekNamed(d.beastName);
+    final base = mobById[b.base]!;
+    final def = MobDef(
+      id: base.id,
+      name: b.name,
+      hanh: base.hanh,
+      body: base.body,
+      c1: base.c1,
+      c2: base.c2,
+      c3: base.c3,
+      variant: base.variant,
+      size: base.size * 1.45,
+      hp: base.hp,
+      atk: base.atk,
+      def: base.def,
+      speed: base.speed,
+      ranged: base.ranged,
+      range: base.range,
+      attackCd: base.attackCd,
+      exp: base.exp,
+      boss: true,
+    );
+    final i = d.beast - 1;
+    final m = Mob(_uid++, def, 99, width * 0.7, height / 2)..state = MobState.chase;
+    // Every beast is as tough as the next, whatever monster it is drawn from.
+    m.maxHp = mobHpAt(99) * beastBaseHp * beastHpMul[i];
+    m.hp = m.maxHp;
+    m.atk = mobAtkAt(99) * beastBaseAtk * beastAtkMul[i];
+    m.bossCd = 3;
+    mobs.add(m);
+    boss = m;
+    introBoss = m;
+    events.add(GameEvent(EvKind.boss, text: '${b.name} thức tỉnh!', color: 0xFFFF6A4A, big: true));
+  }
+
+  /// The beast's blows: a chain of slams after the hero, a ring around
+  /// itself, or a rain of strikes over the ground. Every one is shown red
+  /// first; berserk, they come quicker.
+  void _beastSkill(Mob m, double dt) {
+    if (!beastEnraged && m.hp < m.maxHp * beastEnrageAt) {
+      beastEnraged = true;
+      m.atk *= 1.4;
+      m.speedMul = 1.25;
+      _shake(10);
+      events.add(GameEvent(EvKind.boss, text: '${m.def.name} cuồng nộ!', color: 0xFFFF3A2A, big: true));
+    }
+    m.bossCd -= dt;
+    if (m.bossCd > 0) return;
+    m.bossCd = (beastEnraged ? 4.2 : 5.8) + rng.nextDouble() * 1.5;
+    final p = player;
+    final slam = 'bossSlam_${m.def.hanh.name}';
+    void hit(double x, double y, double r, double delay, double pw) => zones.add(Zone(
+          fromHero: false,
+          x: x.clamp(40, width - 40),
+          y: y.clamp(40, height - 40),
+          r: r,
+          delay: delay,
+          ticks: 1,
+          interval: 0,
+          power: m.atk * pw,
+          fx: slam,
+        ));
+    switch (rng.nextInt(3)) {
+      case 0:
+        // Three slams: on the hero, then around where they will dodge to.
+        hit(p.x, p.y, 110, 1.0, 2.2);
+        for (var k = 1; k < 3; k++) {
+          final a = rng.nextDouble() * math.pi * 2;
+          hit(p.x + math.cos(a) * 130, p.y + math.sin(a) * 100, 110, 1.0 + 0.55 * k, 2.2);
+        }
+      case 1:
+        // A ring round the beast: stand close in or well clear.
+        for (var k = 0; k < 10; k++) {
+          final a = math.pi * 2 * k / 10;
+          hit(m.x + math.cos(a) * 230, m.y + math.sin(a) * 170, 90, 1.3, 2.6);
+        }
+      default:
+        // Strikes rain over the land, one always on the hero.
+        hit(p.x, p.y, 100, 1.4, 2.4);
+        for (var k = 0; k < 6; k++) {
+          hit(80 + rng.nextDouble() * (width - 160), 80 + rng.nextDouble() * (height - 160), 100, 1.2 + rng.nextDouble() * 0.6, 2.4);
+        }
+    }
+    _shake(4);
+  }
+
+  // ------------------------------------------------------------ tâm ma
+
+  late final Set<TmAffix> _tmSet = {
+    for (final i in dungeon?.tmAffixes ?? const <int>[])
+      if (i >= 0 && i < TmAffix.values.length) TmAffix.values[i],
+  };
+
+  bool _tm(TmAffix a) => _tmSet.contains(a);
+
+  /// Damage the shadow will hand back (Phản chấn), paid in bursts.
+  double _thorns = 0;
+  double _thornsAt = 0;
+  bool _tmRaged = false;
+  double _tmGuardAt = 6;
+
+  /// The shadow's twists, once a frame.
+  void _tamMaTick(Mob m, double dt) {
+    if (_tm(TmAffix.regen) && m.hp < m.maxHp) m.hp = math.min(m.maxHp, m.hp + m.maxHp * 0.015 * dt);
+    if (_tm(TmAffix.guard) && time >= _tmGuardAt) {
+      _tmGuardAt = time + 10;
+      m.guardUntil = time + 3;
+      m.guardPct = 0.6;
+      fx.add(Fx('earthShield', m.x, m.y, life: 3, radius: 60));
+      _text(m.x, m.y - 80, 'Hộ thể!', 0xFFFFD34A, big: true);
+    }
+    if (_tm(TmAffix.rage) && !_tmRaged && m.hp < m.maxHp * 0.4) {
+      _tmRaged = true;
+      m.atk *= 1.5;
+      m.speedMul = 1.3;
+      _shake(8);
+      events.add(GameEvent(EvKind.boss, text: 'Tâm Ma cuồng nộ!', color: 0xFFFF3A2A, big: true));
+    }
+    if (_thorns > 0 && time >= _thornsAt) {
+      _thornsAt = time + 0.5;
+      final t = _thorns;
+      _thorns = 0;
+      _hurtHero(math.min(t, m.atk * 0.8), m.def.hanh);
+    }
   }
 
   /// Ends a Boss Thế Giới run (time up or knocked out) and pays for it.
@@ -1107,7 +1259,9 @@ class World {
         ? hero.sectTrialResult(won)
         : d.daiHoi
             ? hero.daiHoiResult(won)
-            : hero.arenaResult(won, d.rival!);
+            : d.isTamMa
+                ? hero.tamMaResult(won, d.tamMa, rng)
+                : hero.arenaResult(won, d.rival!);
     events.add(won ? GameEvent(EvKind.cleared, value: 1) : GameEvent(EvKind.failed, text: 'Thua trận'));
   }
 
@@ -1830,6 +1984,16 @@ class World {
             events.add(GameEvent(EvKind.cleared, value: 3));
             return;
           }
+          if (d.isMaVuc) {
+            rewardLines = hero.maVucReward(d.maVuc, rng);
+            events.add(GameEvent(EvKind.cleared, value: 3));
+            return;
+          }
+          if (d.isBeast) {
+            rewardLines = hero.beastReward(d.beast, time, rng);
+            events.add(GameEvent(EvKind.cleared, value: 3));
+            return;
+          }
           final stars = d.starsFor(time);
           if (d.isNightmare) {
             rewardLines = hero.nightmareReward(d, stars, rng);
@@ -2333,6 +2497,12 @@ class World {
                 ? 'tower'
                 : d.isWorldBoss
                     ? 'boss'
+                    : d.isTamMa
+                        ? 'tamma'
+                    : d.isMaVuc
+                        ? 'mavuc'
+                    : d.isBeast
+                        ? 'beast'
                     : d.isArena
                         ? (d.daiHoi ? 'daihoi' : 'arena')
                         : d.isNightmare
@@ -2637,7 +2807,9 @@ class World {
 
   void _damageMob(Mob m, double dmg, int color,
       {bool big = false, bool small = false}) {
-    if (m.rival != null && time < m.guardUntil) dmg *= 1 - m.guardPct;
+    if (time < m.guardUntil) dmg *= 1 - m.guardPct;
+    if (m.rival != null && _tm(TmAffix.iron)) dmg *= 0.75;
+    if (m.rival != null && _tm(TmAffix.thorns)) _thorns += dmg * 0.1;
     if (dmg > bestHit) bestHit = dmg;
     if (!small) {
       final hy = m.y - 30 * m.def.size;
@@ -2652,7 +2824,9 @@ class World {
     _lastHitAt = time;
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
-    if (m == boss && m.hp > 0 && affix != null) _nightmareSummon(m);
+    if (m == boss && m.hp > 0 && ((dungeon?.isNightmare ?? false) || (dungeon?.isBeast ?? false))) {
+      _nightmareSummon(m);
+    }
     m.hurt = 0.15;
     _text(m.x + (rng.nextDouble() - 0.5) * 20, m.y - 40 * m.def.size - 10,
         dmg.round().toString(), color,
@@ -2756,7 +2930,7 @@ class World {
       events.add(GameEvent(EvKind.loot, text: 'Nhặt được ${hero.gainManualPage(rng)}', color: 0xFFC88CFF));
     }
     // Ma khí Bạo liệt: the body bursts a moment later.
-    if (affix == NmAffix.volatile && m != boss) {
+    if (_has(NmAffix.volatile) && m != boss) {
       _newZones.add(Zone(
         fromHero: false,
         x: m.x,
@@ -2951,6 +3125,8 @@ class World {
     if (m.attackAnim > 0) m.attackAnim = math.max(0, m.attackAnim - dt * 3);
     _tickDots(m, dt, m);
     if (!m.alive) return;
+    // Ma khí Bất tử.
+    if (_has(NmAffix.regen) && m.hp < m.maxHp) m.hp = math.min(m.maxHp, m.hp + m.maxHp * 0.02 * dt);
     // Knockback slides.
     if (m.kx.abs() + m.ky.abs() > 1) {
       m.x += m.kx * dt;
@@ -3006,7 +3182,10 @@ class World {
           break;
         }
         if (m.rival != null) {
+          if (dungeon?.isTamMa ?? false) _tamMaTick(m, dt);
           _rivalSkills(m);
+        } else if (m == boss && (dungeon?.isBeast ?? false)) {
+          _beastSkill(m, dt);
         } else if (m.def.boss) {
           _bossSkill(m, dt);
         }
@@ -3034,13 +3213,13 @@ class World {
               radius: 12,
               fx: 'mob_${m.def.hanh.name}',
               power: m.atk,
-              status: affix == NmAffix.chill ? Status.slow : Status.none,
+              status: _has(NmAffix.chill) ? Status.slow : Status.none,
               statusPower: 0.3,
               statusTime: 2.5,
             ));
           } else {
             _hurtHero(m.atk, m.def.hanh);
-            if (affix == NmAffix.chill) _statusHero(Status.slow, 0.3, 2.5);
+            if (_has(NmAffix.chill)) _statusHero(Status.slow, 0.3, 2.5);
           }
         }
     }

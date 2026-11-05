@@ -14,6 +14,8 @@ import '../core/world_boss.dart';
 import '../services/analytics.dart';
 import '../services/leaderboard.dart';
 import '../core/hero.dart';
+import '../core/ma_vuc.dart';
+import '../core/tam_ma.dart';
 import '../core/world.dart';
 import '../game/battle_game.dart';
 import '../services/ads.dart';
@@ -116,7 +118,11 @@ class _PlayScreenState extends State<PlayScreen> {
     // Walking out of a duel concedes it (a khảo hạch can just be retried).
     final d = widget.dungeon;
     if (d != null && d.isArena && !d.trial && !world.finished) {
-      d.daiHoi ? hero.daiHoiResult(false) : hero.arenaResult(false, d.rival!);
+      if (d.isTamMa) {
+        hero.tamMaResult(false, d.tamMa, math.Random());
+      } else {
+        d.daiHoi ? hero.daiHoiResult(false) : hero.arenaResult(false, d.rival!);
+      }
     }
     if (!_logged) _logRun(RunResult.left);
     SaveService.instance.save();
@@ -1034,6 +1040,9 @@ class _PlayScreenState extends State<PlayScreen> {
     final d = widget.dungeon!;
     if (d.isTower) return _towerResult(ok, d);
     if (d.isWorldBoss) return _bossResult();
+    if (d.isTamMa) return _climbResult(ok, d);
+    if (d.isMaVuc) return _climbResult(ok, d);
+    if (d.isBeast) return _beastResult(ok, d);
     if (d.isArena) return _arenaResult(ok, d);
     if (d.isRealm) return _realmResult(ok, d);
     return _dim(
@@ -1302,6 +1311,81 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  /// Tâm Ma or Ma Vực floor over: climb on, try again, or go back.
+  Widget _climbResult(bool ok, DungeonDef d) {
+    final tm = d.isTamMa;
+    final floor = tm ? d.tamMa : d.maVuc;
+    final next = ok ? floor + 1 : floor;
+    final left = tm ? hero.tmTriesLeft : 1;
+    final best = tm ? hero.tmBest : hero.mvBest;
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(ok ? (tm ? 'Thắng Tâm Ma tầng $floor!' : 'Vượt Ma Vực tầng $floor!') : 'Dừng bước ở tầng $floor',
+                  style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
+              const SizedBox(height: 4),
+              Text(tm ? 'Tầng cao nhất: $best' : 'Tuần này: tầng $best', style: small),
+              const SizedBox(height: 8),
+              for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
+              if (!ok)
+                Text(tm ? 'Nâng trang bị, Thăng Tinh, rồi đối mặt lại chính mình.' : 'Ma khí quá nặng. Hãy mạnh hơn rồi quay lại.',
+                    style: body, textAlign: TextAlign.center),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LButton(label: 'Về', onTap: _leave),
+                  const SizedBox(width: 10),
+                  LButton(
+                    label: left <= 0 ? 'Hết lượt hôm nay' : (ok ? 'Lên tầng $next' : 'Thử lại'),
+                    color: jade,
+                    enabled: left > 0,
+                    onTap: () {
+                      SaveService.instance.save();
+                      final nd = tm ? tamMaDef(hero, next) : maVucFloor(next, hero.mvWeek);
+                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(nd)));
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Hung Thú slain or not: the pay, the week's mark, back to its screen.
+  Widget _beastResult(bool ok, DungeonDef d) {
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(18),
+        child: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(ok ? 'Hạ ${d.beastName}!' : '${d.beastName} vẫn đứng vững',
+                  style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
+              const SizedBox(height: 4),
+              Text(ok ? 'Thời gian: ${world.finishTime.toStringAsFixed(1)} giây' : 'Còn ${(100 * (world.boss?.hp ?? 0) / (world.boss?.maxHp ?? 1)).round()}% sinh lực',
+                  style: small),
+              const SizedBox(height: 8),
+              for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
+              if (!ok) Text('Né vùng đỏ, mang đủ thuốc, Thăng Tinh trang bị rồi thử lại.', style: body, textAlign: TextAlign.center),
+              const SizedBox(height: 14),
+              LButton(label: 'Về', color: jade, onTap: _leave),
             ],
           ),
         ),

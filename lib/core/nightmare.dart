@@ -16,7 +16,11 @@ const int nightmarePaidRuns = 5;
 const int nightmareAdRuns = 2;
 const double nightmareTime = 200;
 
-enum NmAffix { frenzy, fortified, volatile, chill }
+/// The first four rotate over the nightmares; Ma Vực (1.8.0) adds the rest.
+enum NmAffix { frenzy, fortified, volatile, chill, regen, swarm, bulwark }
+
+/// Ma khí the nightmares rotate through.
+const int nightmareAffixCount = 4;
 
 class NmAffixDef {
   const NmAffixDef(this.name, this.desc);
@@ -28,6 +32,9 @@ const nmAffixes = {
   NmAffix.fortified: NmAffixDef('Kiên cố', 'Quái +60% sinh lực'),
   NmAffix.volatile: NmAffixDef('Bạo liệt', 'Quái chết nổ tung sau 1 giây, tránh xa xác'),
   NmAffix.chill: NmAffixDef('Hàn khí', 'Đòn đánh của quái làm chậm'),
+  NmAffix.regen: NmAffixDef('Bất tử', 'Quái hồi 2% sinh lực mỗi giây'),
+  NmAffix.swarm: NmAffixDef('Quần ma', 'Thêm 50% số quái'),
+  NmAffix.bulwark: NmAffixDef('Hộ thuẫn', 'Quái chịu ít hơn 40% sát thương trong 4 giây đầu'),
 };
 
 int get nightmareCount => dungeons.length;
@@ -54,7 +61,7 @@ NmAffix nightmareAffix(int i, String weekKey) {
   final d = DateTime.utc(int.parse(weekKey.substring(0, 4)), int.parse(weekKey.substring(4, 6)),
       int.parse(weekKey.substring(6, 8)));
   final week = d.millisecondsSinceEpoch ~/ (7 * Duration.millisecondsPerDay);
-  return NmAffix.values[(i + week) % NmAffix.values.length];
+  return NmAffix.values[(i + week) % nightmareAffixCount];
 }
 
 String nightmareWeek(String dayKey) => weekKeyOf(dayKey);

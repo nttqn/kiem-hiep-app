@@ -34,6 +34,7 @@ import 'pets.dart';
 import 'premium.dart';
 import 'realm.dart';
 import 'sect_duty.dart';
+import 'star_up.dart';
 import 'tang_bao.dart';
 import 'tower.dart';
 import 'treasure.dart';
@@ -416,6 +417,24 @@ class HeroData {
   /// Luyện thể: level of each of the five [bodyParts].
   final List<int> bodyLv = List.filled(5, 0);
 
+  /// Tâm Ma Ảo Cảnh (tam_ma.dart): best floor, and the day's lost tries and
+  /// ad tries.
+  int tmBest = 0;
+  String tmDay = '';
+  int tmTries = 0, tmAds = 0;
+
+  /// Ma Vực (ma_vuc.dart): the week counted and the floor reached in it.
+  int mvWeek = 0, mvBest = 0;
+
+  /// Thượng Cổ Hung Thú (hung_thu.dart): the week, the difficulties slain
+  /// in it (bits), its board score; the day's tries.
+  int htWeek = 0, htKilled = 0, htScore = 0;
+  String htDay = '';
+  int htTries = 0;
+
+  /// Thăng Tinh (star_up.dart) materials: Tinh Thạch and Hung Thú Tinh Phách.
+  int starStones = 0, beastSouls = 0;
+
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
   int soulPills = 0;
@@ -545,6 +564,7 @@ class HeroData {
     add(sectRankBonus(hanh, sectRank));
     add(divineBonuses(divine));
     add(bodyBonuses(bodyLv));
+    add(starBonuses(equip.values));
     add(loreBonuses());
     add(manor.bonuses());
     return out;
@@ -2966,6 +2986,7 @@ class HeroData {
         'rec': records.toJson(),
         'tb': [divine, divineIron],
         'lt': bodyLv,
+        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3207,6 +3228,22 @@ class HeroData {
       for (var i = 0; i < lt.length && i < h.bodyLv.length; i++) {
         h.bodyLv[i] = (lt[i] as int).clamp(0, bodyMax);
       }
+    }
+    final eg = m['eg'];
+    if (eg is List && eg.length >= 13) {
+      h.tmBest = math.max(0, eg[0] as int);
+      h.tmDay = eg[1] as String;
+      h.tmTries = math.max(0, eg[2] as int);
+      h.tmAds = math.max(0, eg[3] as int);
+      h.mvWeek = eg[4] as int;
+      h.mvBest = math.max(0, eg[5] as int);
+      h.htWeek = eg[6] as int;
+      h.htKilled = eg[7] as int;
+      h.htScore = math.max(0, eg[8] as int);
+      h.htDay = eg[9] as String;
+      h.htTries = math.max(0, eg[10] as int);
+      h.starStones = math.max(0, eg[11] as int);
+      h.beastSouls = math.max(0, eg[12] as int);
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {

@@ -9,6 +9,7 @@ import '../services/cloud.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'cloud_panel.dart';
+import 'endgame_screens.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -64,6 +65,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.arena => arenaBoardValue(h),
         LbBoard.hunt => h.huntBoardValue,
         LbBoard.daiHoi => h.dhChamps,
+        LbBoard.tamMa || LbBoard.maVuc || LbBoard.beast => endgameBoardMine(b, h),
       };
 
   Future<void> _load() async {
@@ -161,7 +163,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return SubScreen(
       title: 'Xếp hạng',
       actions: [
-        for (final b in LbBoard.values)
+        // The endgame boards (1.8.0) live on their own screens.
+        for (final b in names.keys)
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: GestureDetector(
@@ -336,6 +339,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.arena => '${e.arenaS % 100000} điểm',
         LbBoard.hunt => '${fmt(e.wk % 1000000)} quái',
         LbBoard.daiHoi => '${e.dhC} lần vô địch',
+        LbBoard.tamMa || LbBoard.maVuc || LbBoard.beast => endgameBoardLabel(_board, e),
       };
 
   bool get _offBoard =>

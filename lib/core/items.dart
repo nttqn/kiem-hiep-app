@@ -76,6 +76,7 @@ class Item {
     required this.name,
     this.plus = 0,
     this.set = '',
+    this.star = 0,
     List<Gem?>? gems,
   }) : gems = List<Gem?>.generate(
             socketsFor(rarity), (i) => gems != null && i < gems.length ? gems[i] : null);
@@ -96,16 +97,20 @@ class Item {
   /// Hoàng Kim set id, '' for an ordinary item.
   final String set;
 
+  /// Thăng Tinh stars (1.8.0), 0..[maxStar], for a +[maxPlus] item.
+  int star;
+
   bool get golden => set.isNotEmpty;
   int get color => golden ? goldItemColor : rarity.color;
   String get rarityLabel => golden ? 'Hoàng Kim' : rarity.label;
 
-  String get title => plus > 0 ? '$name +$plus' : name;
+  String get title => '${plus > 0 ? '$name +$plus' : name}${star > 0 ? ' ${'★' * star}' : ''}';
 
-  /// Every stat this item gives right now, base scaled by enhancement.
+  /// Every stat this item gives right now, base scaled by enhancement and
+  /// stars.
   Map<Stat, double> get totals {
     final out = <Stat, double>{};
-    final mul = 1 + 0.1 * plus;
+    final mul = (1 + 0.1 * plus) * (1 + starBasePct * star);
     base.forEach((k, v) => out[k] = (out[k] ?? 0) + v * mul);
     bonus.forEach((k, v) => out[k] = (out[k] ?? 0) + v);
     return out;
@@ -126,6 +131,7 @@ class Item {
         'l': level,
         'r': rarity.index,
         'p': plus,
+        if (star > 0) 'a': star,
         'n': name,
         if (golden) 'k': set,
         if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
@@ -153,6 +159,7 @@ class Item {
       rarity:
           Rarity.values[(m['r'] as int).clamp(0, Rarity.values.length - 1)],
       plus: (m['p'] as int? ?? 0).clamp(0, maxPlus),
+      star: (m['a'] as int? ?? 0).clamp(0, maxStar),
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       set: m['k'] as String? ?? '',
@@ -163,6 +170,11 @@ class Item {
 }
 
 const int maxPlus = 10;
+
+/// Thăng Tinh (1.8.0): stars a +[maxPlus] item can rise, and the base-stat
+/// gain of each.
+const int maxStar = 5;
+const double starBasePct = 0.06;
 
 /// Hoàng Kim items' colour, above Truyền thuyết.
 const int goldItemColor = 0xFFFFD34A;

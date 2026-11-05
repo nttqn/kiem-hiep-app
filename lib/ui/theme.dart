@@ -311,6 +311,13 @@ class ItemTile extends StatelessWidget {
                 top: 2,
                 child: Icon(Icons.star, size: 12, color: Color(goldItemColor)),
               ),
+            if (it != null && it.star > 0)
+              Positioned(
+                right: 3,
+                bottom: 1,
+                child: Text('★${it.star}',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFFFD34A))),
+              ),
             if (it != null)
               Positioned(
                 left: 4,

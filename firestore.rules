@@ -81,6 +81,21 @@ service cloud.firestore {
             || (request.resource.data.dhC is int
                 && request.resource.data.dhC >= 0
                 && request.resource.data.dhC <= weekNow()))
+        // 1.8.0: Tâm Ma best floor; Ma Vực week * 1000 + floor; Hung Thú
+        // week * 10000 + difficulty (1-3) * 1000 + speed. None from a week
+        // still to come.
+        && (!('tm' in request.resource.data)
+            || (request.resource.data.tm is int
+                && request.resource.data.tm >= 0 && request.resource.data.tm <= 1000))
+        && (!('mv' in request.resource.data)
+            || (request.resource.data.mv is int
+                && request.resource.data.mv >= 0
+                && request.resource.data.mv < (weekNow() + 1) * 1000))
+        && (!('ht' in request.resource.data)
+            || (request.resource.data.ht is int
+                && request.resource.data.ht >= 0
+                && request.resource.data.ht % 10000 < 4000
+                && request.resource.data.ht < (weekNow() + 1) * 10000))
         // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
         // rebirth and a minute per level. The fastest real hero seen (a
         // non-stop auto-fight farmer) took about 4.5 hours per rebirth.
