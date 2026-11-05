@@ -194,6 +194,9 @@ class _TownScreenState extends State<TownScreen> {
     ].take(2).toList();
   }
 
+  /// A short screen (see build).
+  bool _short = false;
+
   Widget _banner({
     required IconData icon,
     required Color color,
@@ -203,12 +206,12 @@ class _TownScreenState extends State<TownScreen> {
     VoidCallback? onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: EdgeInsets.only(bottom: _short ? 4 : 6),
       child: GestureDetector(
         onTap: onTap,
         child: Panel(
           border: color,
-          padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+          padding: _short ? const EdgeInsets.fromLTRB(8, 3, 6, 3) : const EdgeInsets.fromLTRB(10, 6, 8, 6),
           child: Row(
             children: [
               Icon(icon, color: color, size: 22),
@@ -219,7 +222,7 @@ class _TownScreenState extends State<TownScreen> {
                     TextSpan(text: '$title  ', style: bold.copyWith(fontSize: 13, color: color)),
                     TextSpan(text: text, style: small.copyWith(fontSize: 11.5, color: cream)),
                   ]),
-                  maxLines: 2,
+                  maxLines: _short ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -357,6 +360,11 @@ class _TownScreenState extends State<TownScreen> {
   Widget build(BuildContext context) {
     final q = h.currentMain;
     final pending = h.freePoints > 0 || h.skillPoints > 0;
+    // Small phones (about 360 points tall): tighter banners and tiles, a
+    // narrower hero card, and the quest and banners scroll instead of
+    // pushing the doors off the bottom.
+    final size = MediaQuery.sizeOf(context);
+    _short = size.height < 420;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -371,7 +379,7 @@ class _TownScreenState extends State<TownScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: 200, child: _heroCard()),
+                  SizedBox(width: (size.width * 0.24).clamp(150.0, 200.0), child: _heroCard()),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -416,10 +424,19 @@ class _TownScreenState extends State<TownScreen> {
                             ),
                           ],
                         ),
-                        if (q != null) _questCard(q),
-                        const SizedBox(height: 6),
-                        ..._banners(),
-                        const Spacer(),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (q != null) _questCard(q),
+                                SizedBox(height: _short ? 4 : 6),
+                                ..._banners(),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
                         _grid(pending),
                       ],
                     ),
@@ -446,7 +463,10 @@ class _TownScreenState extends State<TownScreen> {
           Text(h.name, style: titleStyle(20, color: cream)),
           if (h.title.isNotEmpty)
             Text('« ${h.title} »', style: small.copyWith(color: goldLight, fontStyle: FontStyle.italic)),
-          Text('${h.sect.name} · Cấp ${h.level}', style: body.copyWith(color: hanhColor(h.hanh))),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('${h.sect.name} · Cấp ${h.level}', style: body.copyWith(color: hanhColor(h.hanh)), maxLines: 1),
+          ),
           Text('Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           if (h.rebirths > 0)
             Text('Chuyển sinh lần ${h.rebirths}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
@@ -621,8 +641,8 @@ class _TownScreenState extends State<TownScreen> {
         final w = (c.maxWidth - (per - 1) * 6) / per;
         return Wrap(
           spacing: 6,
-          runSpacing: 8,
-          children: [for (final t in tiles) SizedBox(width: w, height: 68, child: t)],
+          runSpacing: _short ? 7 : 8,
+          children: [for (final t in tiles) SizedBox(width: w, height: _short ? 60 : 68, child: t)],
         );
       },
     );
@@ -657,21 +677,25 @@ class _Tile extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(icon, color: goldLight, size: lockedAt > 0 ? 18 : 22),
-                    const SizedBox(height: 2),
-                    Text(label,
-                        style: bold.copyWith(fontSize: 10.5, height: 1.1),
-                        maxLines: lockedAt > 0 ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center),
-                    if (lockedAt > 0)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, color: goldLight, size: lockedAt > 0 ? 17 : 21),
+                        if (lockedAt > 0) ...[
+                          const SizedBox(width: 2),
                           const Icon(Icons.lock, size: 10, color: creamDim),
-                          Text(' Cấp $lockedAt', style: small.copyWith(fontSize: 9.5)),
+                          Text('$lockedAt', style: small.copyWith(fontSize: 9.5)),
                         ],
-                      ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Flexible(
+                      child: Text(label,
+                          style: bold.copyWith(fontSize: 10.5, height: 1.2),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center),
+                    ),
                   ],
                 ),
               ),
