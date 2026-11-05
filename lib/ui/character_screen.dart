@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/gem_extras.dart';
 import '../core/gems.dart';
 import '../core/gold_sets.dart';
 import '../core/hero.dart';
@@ -834,11 +835,32 @@ class _ItemDialogState extends State<ItemDialog> {
           if (!h.starUp(it)) return;
           SaveService.instance.save();
           setState(() {
-            _msg = 'Thăng Tinh thành công! ★${it.star}';
+            _msg = 'Thăng Tinh thành công! ★${it.star}'
+                '${h.drillAllowed(it) > it.extraSockets ? ' Đã có thể đục thêm lỗ khảm.' : ''}';
             _msgColor = const Color(0xFFFFD34A);
           });
         },
       ),
+      // Đục lỗ (1.8.0): a fourth socket at ★3, a fifth at ★5.
+      if (h.drillAllowed(it) > it.extraSockets) ...[
+        const SizedBox(height: 4),
+        Text('Đục lỗ thứ ${it.gems.length + 1}: ${drillGems[it.extraSockets]} ngọc Thần (có ${h.drillGemsHeld}) · ${fmt(drillGold[it.extraSockets])} lượng',
+            style: small.copyWith(fontSize: 11, color: const Color(0xFF8AC8FF))),
+        LButton(
+          label: 'Đục lỗ khảm',
+          small: true,
+          color: const Color(0xFF3A6A8A),
+          enabled: h.drillBlock(it) == null,
+          onTap: () {
+            if (!h.drillSocket(it)) return;
+            SaveService.instance.save();
+            setState(() {
+              _msg = 'Đã đục lỗ khảm thứ ${it.gems.length}!';
+              _msgColor = const Color(0xFF8AC8FF);
+            });
+          },
+        ),
+      ],
     ];
   }
 

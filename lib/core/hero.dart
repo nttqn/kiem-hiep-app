@@ -435,6 +435,9 @@ class HeroData {
   /// Thăng Tinh (star_up.dart) materials: Tinh Thạch and Hung Thú Tinh Phách.
   int starStones = 0, beastSouls = 0;
 
+  /// Luyện hóa ngọc (gem_extras.dart): the week and Tinh Thạch made in it.
+  int gsWeek = 0, gsMade = 0;
+
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
   int soulPills = 0;
@@ -575,6 +578,9 @@ class HeroData {
   int gemCount(Gem g) => gemBag[g.key] ?? 0;
 
   void addGem(Gem g, [int n = 1]) => gemBag[g.key] = gemCount(g) + n;
+
+  /// Takes [n] of [g] from the bag; false (and nothing taken) when short.
+  bool takeGem(Gem g, [int n = 1]) => _takeGem(g, n);
 
   bool _takeGem(Gem g, [int n = 1]) {
     final c = gemCount(g);
@@ -2986,7 +2992,7 @@ class HeroData {
         'rec': records.toJson(),
         'tb': [divine, divineIron],
         'lt': bodyLv,
-        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls],
+        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3244,6 +3250,10 @@ class HeroData {
       h.htTries = math.max(0, eg[10] as int);
       h.starStones = math.max(0, eg[11] as int);
       h.beastSouls = math.max(0, eg[12] as int);
+      if (eg.length >= 15) {
+        h.gsWeek = eg[13] as int;
+        h.gsMade = math.max(0, eg[14] as int);
+      }
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {

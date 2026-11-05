@@ -458,6 +458,14 @@ Future<void> main() async {
     for (var i = 0; i < body.length && i < h.bodyLv.length; i++) {
       h.bodyLv[i] = (int.tryParse(body[i]) ?? 0).clamp(0, bodyMax);
     }
+    // gembag=1: a rich gem bag (every phase and tier, many Thần).
+    if (q['gembag'] == '1') {
+      for (final hn in Hanh.values) {
+        for (var t = 1; t <= maxGemTier; t++) {
+          h.addGem(Gem(hn, t), const [40, 25, 30, 50, 400, 12, 4][t - 1]);
+        }
+      }
+    }
     // 1.8.0: tm=<floor> Tâm Ma best, mv=<floor> Ma Vực this week, stones=<n>
     // Tinh Thạch, souls=<n> Tinh Phách, star=<n> every worn item +10 at n stars,
     // ht=<bits> Hung Thú difficulties slain this week.

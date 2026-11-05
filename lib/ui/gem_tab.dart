@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/gem_extras.dart';
 import '../core/gems.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
@@ -164,8 +165,19 @@ class _GemTabState extends State<GemTab> {
                   ],
                 ),
                 const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(child: LButton(label: 'Hợp tất cả', icon: Icons.merge_type, small: true, color: jade, onTap: _fuseAllDialog)),
+                    const SizedBox(width: 6),
+                    Expanded(child: LButton(label: 'Chuyển hệ', icon: Icons.swap_horiz, small: true, color: const Color(0xFF3A6A8A), onTap: _convertDialog)),
+                    const SizedBox(width: 6),
+                    Expanded(child: LButton(label: 'Luyện hóa', icon: Icons.auto_awesome, small: true, color: const Color(0xFF8A2A6A), onTap: _refineDialog)),
+                  ],
+                ),
+                const SizedBox(height: 6),
                 Expanded(child: _bagGrid()),
-                if (_msg != null) Text(_msg!, style: small.copyWith(color: cream)),
+                if (_msg != null) Text(_msg!, style: small.copyWith(color: cream), maxLines: 2),
+                if (MediaQuery.sizeOf(context).height >= 420)
                 Text('Ngọc cùng hệ ${h.hanh.label} với môn phái (bản mệnh) mạnh hơn 50%. '
                     'Ngọc rơi từ quái theo hệ của quái, đầu lĩnh luôn rơi.',
                     style: small.copyWith(fontSize: 11)),
@@ -271,13 +283,20 @@ class _GemTabState extends State<GemTab> {
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: n > 0 ? hanhColor(g.hanh).withValues(alpha: 0.7) : Colors.white10),
           ),
-          child: Stack(
+          // A small phone gives cells about 30 points: the gem and its count
+          // share the top line, the Hợp tag the bottom.
+          child: LayoutBuilder(builder: (_, c) {
+            final tight = c.maxHeight < 46;
+            return Stack(
             children: [
-              Center(child: GemIcon(gem: g, size: 26, dim: n == 0)),
+              Align(
+                alignment: tight ? const Alignment(-0.65, -0.6) : Alignment.center,
+                child: GemIcon(gem: g, size: tight ? 15 : 26, dim: n == 0),
+              ),
               Positioned(
-                right: 3,
-                top: 1,
-                child: Text(n > 0 ? '$n' : '', style: bold.copyWith(fontSize: 11)),
+                right: tight ? 2 : 3,
+                top: tight ? 0 : 1,
+                child: Text(n > 0 ? '$n' : '', style: bold.copyWith(fontSize: tight ? 9.5 : 11)),
               ),
               if (canFuse)
                 Positioned(
@@ -294,14 +313,184 @@ class _GemTabState extends State<GemTab> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(color: jade, borderRadius: BorderRadius.circular(4)),
-                      child: const Text('Hợp', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
+                      child: Text('Hợp', style: TextStyle(fontSize: tight ? 7.5 : 9, fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ),
             ],
-          ),
+          );
+          }),
         ),
       ),
     );
+  }
+  // -------------------------------------------------------------- 1.8.0
+
+  Widget _choice(String label, bool on, VoidCallback tap, {Color? color}) => Padding(
+        padding: const EdgeInsets.only(right: 5, bottom: 5),
+        child: GestureDetector(
+          onTap: tap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: on ? seal : lacquerDeep,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: on ? goldLight : (color ?? gold).withValues(alpha: 0.6)),
+            ),
+            child: Text(label, style: bold.copyWith(fontSize: 12, color: color ?? cream)),
+          ),
+        ),
+      );
+
+  Future<void> _dialog(String title, Widget Function(StateSetter set) body) => showDialog<void>(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, set) => AlertDialog(
+            backgroundColor: lacquer,
+            title: Text(title, style: titleStyle(20)),
+            content: SizedBox(width: 470, child: SingleChildScrollView(child: body(set))),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+          ),
+        ),
+      );
+
+  /// Hợp tất cả: every gem below a tier, of a phase or all, fused up to it.
+  Future<void> _fuseAllDialog() async {
+    var upTo = 5;
+    Hanh? only;
+    await _dialog('Hợp tất cả', (set) {
+      final plan = h.fusePlan(upTo, only: only);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Hợp mọi ngọc bậc thấp hơn, 3 viên thành 1, cho tới bậc:', style: body),
+          const SizedBox(height: 4),
+          Wrap(children: [
+            for (var t = 2; t <= maxGemTier; t++) _choice('${gemTierNames[t - 1]} ($t)', upTo == t, () => set(() => upTo = t)),
+          ]),
+          Text('Hệ:', style: body),
+          const SizedBox(height: 4),
+          Wrap(children: [
+            _choice('Tất cả', only == null, () => set(() => only = null)),
+            for (final hn in Hanh.values) _choice(hn.label, only == hn, () => set(() => only = hn), color: hanhColor(hn)),
+          ]),
+          const SizedBox(height: 6),
+          if (plan.fuses == 0)
+            Text('Không đủ ngọc để hợp.', style: small)
+          else ...[
+            Text('${plan.fuses} lần hợp · ${fmt(plan.gold)} lượng', style: bold.copyWith(color: goldLight)),
+            Text('Được: ${[for (final e in plan.made.entries) '${e.value} ${Gem(e.key, upTo).name}'].join(', ')}',
+                style: small.copyWith(color: cream)),
+          ],
+          const SizedBox(height: 8),
+          LButton(
+            label: h.gold < plan.gold ? 'Thiếu lượng' : 'Hợp ngay',
+            color: jade,
+            enabled: plan.fuses > 0 && h.gold >= plan.gold,
+            onTap: () {
+              if (h.fuseAll(upTo, only: only)) {
+                _changed('Đã hợp ${plan.fuses} lần (-${fmt(plan.gold)} lượng).');
+                set(() {});
+              }
+            },
+          ),
+        ],
+      );
+    });
+  }
+
+  /// Chuyển hệ: two gems of one phase for one of another, same tier.
+  Future<void> _convertDialog() async {
+    var from = Hanh.values.firstWhere((hn) => hn != h.hanh);
+    var to = h.hanh;
+    var tier = 5;
+    await _dialog('Chuyển hệ ngọc', (set) {
+      final g = Gem(from, tier);
+      final have = h.gemCount(g);
+      final most = have ~/ convertRatio;
+      Widget go(int n) => Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: LButton(
+              label: n == most ? 'Đổi hết ($n)' : 'Đổi $n',
+              small: true,
+              color: const Color(0xFF3A6A8A),
+              enabled: n > 0 && n <= most && h.gold >= convertCost(tier) * n && from != to,
+              onTap: () {
+                if (h.convertGem(g, to, n)) {
+                  _changed('Đã đổi ${n * convertRatio} ${g.name} lấy $n ${Gem(to, tier).name}.');
+                  set(() {});
+                }
+              },
+            ),
+          );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('$convertRatio viên hệ này đổi 1 viên hệ khác cùng bậc, thêm ${fmt(convertCost(tier))} lượng mỗi viên.', style: body),
+          const SizedBox(height: 6),
+          Text('Bậc:', style: body),
+          Wrap(children: [for (var t = 1; t <= maxGemTier; t++) _choice(gemTierNames[t - 1], tier == t, () => set(() => tier = t))]),
+          Text('Đổi từ:', style: body),
+          Wrap(children: [
+            for (final hn in Hanh.values)
+              _choice('${hn.label} (${h.gemCount(Gem(hn, tier))})', from == hn, () => set(() => from = hn), color: hanhColor(hn)),
+          ]),
+          Text('Sang:', style: body),
+          Wrap(children: [
+            for (final hn in Hanh.values)
+              if (hn != from)
+                _choice(hn == h.hanh ? '${hn.label} (bản mệnh)' : hn.label, to == hn, () => set(() => to = hn), color: hanhColor(hn)),
+          ]),
+          const SizedBox(height: 6),
+          Row(children: [go(1), go(10), go(most)]),
+        ],
+      );
+    });
+  }
+
+  /// Luyện hóa: Thần, Tiên and Thánh gems into Tinh Thạch, capped a week.
+  Future<void> _refineDialog() async {
+    var tier = 5;
+    var hanhSel = Hanh.values.firstWhere((hn) => hn != h.hanh);
+    await _dialog('Luyện hóa ngọc', (set) {
+      final g = Gem(hanhSel, tier);
+      final per = gemsPerStone(tier)!;
+      final left = h.gemStonesLeft;
+      final most = [h.gemCount(g) ~/ per, left].reduce((a, b) => a < b ? a : b);
+      Widget go(int n) => Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: LButton(
+              label: n == most ? 'Tối đa ($n)' : '$n viên',
+              small: true,
+              color: const Color(0xFF8A2A6A),
+              enabled: n > 0 && n <= most,
+              onTap: () {
+                if (h.refineGems(g, n)) {
+                  _changed('Luyện ${n * per} ${g.name} thành $n Tinh Thạch.');
+                  set(() {});
+                }
+              },
+            ),
+          );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Luyện ngọc bậc cao thành Tinh Thạch (dùng để Thăng Tinh): 10 Thần, 3 Tiên hoặc 1 Thánh được 1 viên.', style: body),
+          Text('Tuần này còn luyện được $left/$gemStonesPerWeek Tinh Thạch. Đang có ${fmt(h.starStones)}.',
+              style: bold.copyWith(color: goldLight)),
+          const SizedBox(height: 6),
+          Wrap(children: [for (final t in const [5, 6, 7]) _choice('${gemTierNames[t - 1]} (${gemsPerStone(t)} → 1)', tier == t, () => set(() => tier = t))]),
+          Wrap(children: [
+            for (final hn in Hanh.values)
+              _choice('${hn.label} (${h.gemCount(Gem(hn, tier))})', hanhSel == hn, () => set(() => hanhSel = hn), color: hanhColor(hn)),
+          ]),
+          const SizedBox(height: 6),
+          Row(children: [go(1), go(10), go(most)]),
+        ],
+      );
+    });
   }
 }

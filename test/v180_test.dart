@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/content.dart';
+import 'package:kiem_hiep/core/gem_extras.dart';
+import 'package:kiem_hiep/core/gems.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/hung_thu.dart';
@@ -243,5 +245,84 @@ void main() {
     expect(LbBoard.maVuc.valueOf(e) % 1000, 22);
     expect(LbBoard.beast.valueOf(e), beastScore(2, 2, 95));
     expect(LbBoard.beast.field, 'ht');
+  });
+  group('Ngọc (1.8.0)', () {
+    test('Hợp tất cả fuses every tier up to the one chosen, carrying upward', () {
+      final h = _hero()..gold = 10000000;
+      h.addGem(const Gem(Hanh.kim, 1), 9);
+      h.addGem(const Gem(Hanh.kim, 2), 1);
+      h.addGem(const Gem(Hanh.moc, 1), 5);
+      final plan = h.fusePlan(3);
+      // Kim: 9 → 3 tier 2 (+1 = 4) → 1 tier 3; Mộc: 5 → 1 tier 2, none at 3.
+      expect(plan.fuses, 3 + 1 + 1);
+      expect(plan.made, {Hanh.kim: 1});
+      expect(plan.gold, 4 * fuseCost(1) + fuseCost(2));
+      final g0 = h.gold;
+      expect(h.fuseAll(3), isTrue);
+      expect(h.gold, g0 - plan.gold);
+      expect(h.gemCount(const Gem(Hanh.kim, 3)), 1);
+      expect(h.gemCount(const Gem(Hanh.kim, 2)), 1);
+      expect(h.gemCount(const Gem(Hanh.moc, 2)), 1);
+      expect(h.gemCount(const Gem(Hanh.moc, 1)), 2);
+      expect(h.fusePlan(3, only: Hanh.tho).fuses, 0);
+      h.gold = 0;
+      h.addGem(const Gem(Hanh.thuy, 1), 3);
+      expect(h.fuseAll(2), isFalse, reason: 'no gold');
+    });
+
+    test('Chuyển hệ: two for one of another phase, same tier', () {
+      final h = _hero()..gold = 1000000;
+      h.addGem(const Gem(Hanh.kim, 5), 7);
+      expect(h.convertGem(const Gem(Hanh.kim, 5), Hanh.kim, 1), isFalse);
+      expect(h.convertGem(const Gem(Hanh.kim, 5), Hanh.hoa, 3), isTrue);
+      expect(h.gemCount(const Gem(Hanh.kim, 5)), 1);
+      expect(h.gemCount(const Gem(Hanh.hoa, 5)), 3);
+      expect(h.convertGem(const Gem(Hanh.kim, 5), Hanh.hoa, 1), isFalse, reason: 'one left');
+    });
+
+    test('Luyện hóa: Thần/Tiên/Thánh into Tinh Thạch, 50 a week', () {
+      final h = _hero();
+      h.addGem(const Gem(Hanh.tho, 5), 1000);
+      h.addGem(const Gem(Hanh.tho, 4), 100);
+      expect(h.refineGems(const Gem(Hanh.tho, 4), 1), isFalse, reason: 'tier 4 does not refine');
+      final s0 = h.starStones;
+      expect(h.refineGems(const Gem(Hanh.tho, 5), 30), isTrue);
+      expect(h.gemCount(const Gem(Hanh.tho, 5)), 700);
+      expect(h.starStones, s0 + 30);
+      expect(h.gemStonesLeft, gemStonesPerWeek - 30);
+      expect(h.refineGems(const Gem(Hanh.tho, 5), 21), isFalse, reason: 'over the week');
+      expect(h.refineGems(const Gem(Hanh.tho, 5), 20), isTrue);
+      expect(h.gemStonesLeft, 0);
+      h.gsWeek -= 1;
+      expect(h.gemStonesLeft, gemStonesPerWeek, reason: 'a new week');
+      expect(_roundTrip(h).gsMade, 0);
+    });
+
+    test('Đục lỗ: a fourth socket at ★3, a fifth at ★5, paid in Thần gems', () {
+      final h = _hero()..gold = 100000000;
+      final it = h.equip[Slot.armor]!
+        ..plus = maxPlus
+        ..star = 2;
+      final base = it.gems.length;
+      expect(h.drillBlock(it), DrillBlock.stars);
+      it.star = 3;
+      expect(h.drillBlock(it), DrillBlock.gems);
+      h.addGem(const Gem(Hanh.kim, 5), 20);
+      h.addGem(const Gem(Hanh.moc, 5), 50);
+      h.addGem(const Gem(Hanh.hoa, 5), 100);
+      expect(h.drillSocket(it), isTrue);
+      expect(it.gems.length, base + 1);
+      expect(h.gemCount(const Gem(Hanh.hoa, 5)), 100, reason: 'own phase (Hỏa) spent last');
+      expect(h.gemCount(const Gem(Hanh.moc, 5)), 20, reason: 'the largest other stack first');
+      expect(h.drillBlock(it), DrillBlock.stars, reason: 'the fifth needs ★5');
+      it.star = 5;
+      expect(h.drillSocket(it), isTrue);
+      expect(it.gems.length, base + 2);
+      expect(h.drillBlock(it), DrillBlock.maxed);
+      expect(h.socketGem(it, base + 1, const Gem(Hanh.hoa, 5)), isTrue);
+      final b = _roundTrip(h);
+      expect(b.equip[Slot.armor]!.gems.length, base + 2);
+      expect(b.equip[Slot.armor]!.gems[base + 1], const Gem(Hanh.hoa, 5));
+    });
   });
 }

@@ -77,9 +77,10 @@ class Item {
     this.plus = 0,
     this.set = '',
     this.star = 0,
+    this.extraSockets = 0,
     List<Gem?>? gems,
-  }) : gems = List<Gem?>.generate(
-            socketsFor(rarity), (i) => gems != null && i < gems.length ? gems[i] : null);
+  }) : gems = List<Gem?>.generate(socketsFor(rarity) + extraSockets,
+            (i) => gems != null && i < gems.length ? gems[i] : null);
 
   final Slot slot;
   final int level;
@@ -99,6 +100,9 @@ class Item {
 
   /// Thăng Tinh stars (1.8.0), 0..[maxStar], for a +[maxPlus] item.
   int star;
+
+  /// Sockets drilled past the rarity's own (1.8.0): one at ★3, one at ★5.
+  int extraSockets;
 
   bool get golden => set.isNotEmpty;
   int get color => golden ? goldItemColor : rarity.color;
@@ -132,6 +136,7 @@ class Item {
         'r': rarity.index,
         'p': plus,
         if (star > 0) 'a': star,
+        if (extraSockets > 0) 'e': extraSockets,
         'n': name,
         if (golden) 'k': set,
         if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
@@ -160,6 +165,7 @@ class Item {
           Rarity.values[(m['r'] as int).clamp(0, Rarity.values.length - 1)],
       plus: (m['p'] as int? ?? 0).clamp(0, maxPlus),
       star: (m['a'] as int? ?? 0).clamp(0, maxStar),
+      extraSockets: (m['e'] as int? ?? 0).clamp(0, 2),
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       set: m['k'] as String? ?? '',

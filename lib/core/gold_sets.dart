@@ -133,6 +133,7 @@ Item reforgedGold(Item it, int level) => Item(
       plus: it.plus,
       set: it.set,
       star: it.star,
+      extraSockets: it.extraSockets,
       gems: it.gems,
     );
 
