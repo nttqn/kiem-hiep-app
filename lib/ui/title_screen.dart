@@ -27,8 +27,11 @@ class _TitleScreenState extends State<TitleScreen> {
   @override
   void initState() {
     super.initState();
-    // Back on the hero list: no hero is played on this phone now.
+    // Back on the hero list: no hero is played on this phone now; start
+    // watching the account's marks so a tap on a hero never waits for them.
     Presence.instance.release();
+    Presence.instance.warmUp();
+    CloudSave.instance.addListener(Presence.instance.warmUp);
     SoundService.instance.playMusic('menu');
     // A newer save played on another phone shows up here after sync.
     CloudSave.instance.addListener(_checkConflicts);
@@ -42,6 +45,7 @@ class _TitleScreenState extends State<TitleScreen> {
   @override
   void dispose() {
     CloudSave.instance.removeListener(_checkConflicts);
+    CloudSave.instance.removeListener(Presence.instance.warmUp);
     super.dispose();
   }
 
@@ -272,8 +276,7 @@ class _SlotCard extends StatelessWidget {
       );
       if (go != true || !context.mounted) return;
     }
-    await Presence.instance.claim(index);
-    if (!context.mounted) return;
+    Presence.instance.claim(index);
     SaveService.instance.active = index;
     if (h.savedAt > 0) {
       SaveService.instance.pendingAway =

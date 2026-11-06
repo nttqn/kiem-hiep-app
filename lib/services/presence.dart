@@ -54,38 +54,72 @@ class Presence {
     return FirebaseDatabase.instanceFor(app: Firebase.app(), databaseURL: ChatService.dbUrl).ref('presence/$uid/$slot');
   }
 
-  /// Minutes since another phone last played [slot], or null when no other
-  /// phone has it now (or the check cannot be made).
-  Future<int?> otherPhone(int slot) async {
-    final ref = _ref(slot);
-    if (ref == null) return null;
-    try {
-      final snap = await ref.get().timeout(const Duration(seconds: 6));
-      final v = snap.value;
-      if (v is! Map) return null;
-      final dev = v['device'], at = v['at'];
-      if (dev is! String || at is! num || dev == _device) return null;
-      final ago = GameClock.nowMs() - at.toInt();
-      if (ago > stale.inMilliseconds) return null;
-      return math.max(0, ago ~/ 60000);
-    } catch (e) {
-      debugPrint('presence check: $e');
-      return null;
-    }
+  // The account's marks, kept current by a listener so the hero list never
+  // waits on the network: a one-off read on a cold or refused connection
+  // took up to 20 s per tap in 1.8.1's first build.
+  StreamSubscription<DatabaseEvent>? _sub;
+  String? _subUid;
+  Object? _cache;
+  bool _heard = false;
+
+  void _watch() {
+    final cloud = CloudSave.instance;
+    final uid = cloud.user?.uid;
+    if (!cloud.available || uid == null || uid == _subUid) return;
+    _sub?.cancel();
+    _subUid = uid;
+    _heard = false;
+    _cache = null;
+    _sub = FirebaseDatabase.instanceFor(app: Firebase.app(), databaseURL: ChatService.dbUrl)
+        .ref('presence/$uid')
+        .onValue
+        .listen((e) {
+      _cache = e.snapshot.value;
+      _heard = true;
+    }, onError: (Object e) {
+      // Rules not published yet, or offline: no check, never a wait.
+      debugPrint('presence watch: $e');
+      _heard = true;
+      _cache = null;
+    });
   }
 
-  /// This phone plays [slot] now: marks it, and keeps the mark fresh.
-  Future<void> claim(int slot) async {
+  /// Starts listening as soon as a player is signed in (called on start
+  /// and from the hero list), so the answer is there before a tap.
+  void warmUp() => _watch();
+
+  /// Minutes since another phone last played [slot], or null when no other
+  /// phone has it now (or the check cannot be made). Waits at most about a
+  /// second, only the first time.
+  Future<int?> otherPhone(int slot) async {
+    _watch();
+    if (_subUid == null) return null;
+    for (var i = 0; i < 10 && !_heard; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    final all = _cache;
+    // Keys 0-2 may come back as a list.
+    final v = all is Map ? all['$slot'] : (all is List && slot < all.length ? all[slot] : null);
+    if (v is! Map) return null;
+    final dev = v['device'], at = v['at'];
+    if (dev is! String || at is! num || dev == _device) return null;
+    final ago = GameClock.nowMs() - at.toInt();
+    if (ago > stale.inMilliseconds) return null;
+    return math.max(0, ago ~/ 60000);
+  }
+
+  /// This phone plays [slot] now: marks it (in the background, never
+  /// holding the player up), and keeps the mark fresh.
+  void claim(int slot) {
     release();
     if (lostSlot.value == slot) lostSlot.value = null;
     final ref = _ref(slot);
     if (ref == null) return;
     _slot = slot;
-    try {
-      await ref.set({'device': _device, 'at': ServerValue.timestamp}).timeout(const Duration(seconds: 6));
-    } catch (e) {
-      debugPrint('presence claim: $e');
-    }
+    ref
+        .set({'device': _device, 'at': ServerValue.timestamp})
+        .timeout(const Duration(seconds: 10))
+        .catchError((Object e) => debugPrint('presence claim: $e'));
     _timer = Timer.periodic(beat, (_) => _beat(slot));
   }
 
@@ -93,8 +127,11 @@ class Presence {
     final ref = _ref(slot);
     if (ref == null || _slot != slot) return;
     try {
-      final snap = await ref.get().timeout(const Duration(seconds: 6));
-      final v = snap.value;
+      // The listener's copy is current; a one-off read only without it.
+      final all = _heard ? _cache : null;
+      final v = _heard
+          ? (all is Map ? all['$slot'] : (all is List && slot < all.length ? all[slot] : null))
+          : (await ref.get().timeout(const Duration(seconds: 6))).value;
       if (v is Map && v['device'] is String && v['device'] != _device) {
         // Another phone opened this hero: stop writing it from here.
         _timer?.cancel();
