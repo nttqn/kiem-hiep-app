@@ -55,17 +55,16 @@ service cloud.firestore {
             || (request.resource.data.arenaLast is int
                 && request.resource.data.arenaLast >= 0 && request.resource.data.arenaLast <= 100000000
                 && request.resource.data.arenaLast < (seasonNow() + 1) * 100000))
-        // Săn quái tuần (1.2.6+): week * 1000000 + kills, at most 300000 a
-        // week; and the last finished week's, for its rank reward.
+        // Săn quái tuần (1.2.6+): week * 1000000 + kills (up to 999,999 a
+        // week since 1.8.3, was 300,000); and the last finished week's, for
+        // its rank reward.
         && (!('wk' in request.resource.data)
             || (request.resource.data.wk is int
                 && request.resource.data.wk >= 0 && request.resource.data.wk <= 1000000000
-                && request.resource.data.wk % 1000000 <= 300000
                 && request.resource.data.wk < (weekNow() + 1) * 1000000))
         && (!('wkLast' in request.resource.data)
             || (request.resource.data.wkLast is int
                 && request.resource.data.wkLast >= 0 && request.resource.data.wkLast <= 1000000000
-                && request.resource.data.wkLast % 1000000 <= 300000
                 && request.resource.data.wkLast < (weekNow() + 1) * 1000000))
         // The mount ridden (1.4.0+), shown on Lôi đài copies.
         && (!('mount' in request.resource.data)

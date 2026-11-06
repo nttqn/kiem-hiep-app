@@ -6,7 +6,9 @@ import 'dart:math' as math;
 final DateTime _huntEpoch = DateTime.utc(2026, 10, 26);
 
 /// Most kills one week may count; also the Firestore rules' sanity bound.
-const int huntWeekMax = 300000;
+/// 1.8.3: 999,999 (the most [huntScore] can carry); 300,000 was reached in
+/// days by the top players, who then all tied.
+const int huntWeekMax = 999999;
 
 DateTime? _dayOf(String dayKey) {
   if (dayKey.length != 8) return null;
