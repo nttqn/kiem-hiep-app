@@ -7,7 +7,7 @@ const int chatMaxLen = 120;
 const int chatShown = 100;
 
 /// One message per player per this long.
-const Duration chatCooldown = Duration(minutes: 10);
+const Duration chatCooldown = Duration(minutes: 2);
 
 /// Older messages may be swept by any sender.
 const Duration chatKeep = Duration(days: 3);

@@ -29,7 +29,7 @@
       "last": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
-          ".write": "auth != null && auth.uid === $uid && newData.val() === now && (!data.exists() || data.val() <= now - 600000)"
+          ".write": "auth != null && auth.uid === $uid && newData.val() === now && (!data.exists() || data.val() <= now - 120000)"
         }
       },
       "bans": {
