@@ -159,10 +159,90 @@ Future<void> _write(String name, void Function(Canvas) paint) async {
   f.writeAsBytesSync(bytes!.buffer.asUint8List());
 }
 
+/// One faceted crystal standing at [base], [h] tall and [w] wide.
+void _crystal(Canvas c, Offset base, double w, double h, Color light, Color dark) {
+  final top = base + Offset(0, -h);
+  final l = base + Offset(-w / 2, -h * 0.28);
+  final r = base + Offset(w / 2, -h * 0.28);
+  final left = Path()
+    ..moveTo(top.dx, top.dy)
+    ..lineTo(l.dx, l.dy)
+    ..lineTo(base.dx, base.dy)
+    ..close();
+  final right = Path()
+    ..moveTo(top.dx, top.dy)
+    ..lineTo(r.dx, r.dy)
+    ..lineTo(base.dx, base.dy)
+    ..close();
+  c.drawPath(left, Paint()..shader = ui.Gradient.linear(top, l, [const Color(0xFFF2F8FF), light]));
+  c.drawPath(right, Paint()..shader = ui.Gradient.linear(top, r, [light, dark]));
+  final edge = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 4
+    ..strokeJoin = StrokeJoin.round
+    ..color = const Color(0xFF1A1450);
+  c.drawPath(left, edge);
+  c.drawPath(right, edge);
+}
+
+/// Gói Thăng Tinh: a cluster of Tinh Thạch under a rising gold star, with
+/// the blue flame of a Tinh Phách.
+void _starPack(Canvas c) {
+  _frame(c, const Color(0xFF5B3FA8), const Color(0xFF140C38));
+  _glow(c, const Offset(_s / 2, _s * 0.5), 240, const Color(0x8890B8FF));
+  const star = Offset(_s / 2, 150);
+  _glow(c, star, 120, const Color(0xCCFFF4C8));
+  final pts = <Offset>[
+    for (var i = 0; i < 10; i++) star + Offset.fromDirection(-math.pi / 2 + i * math.pi / 5, i.isEven ? 78 : 32),
+  ];
+  final starPath = Path()..addPolygon(pts, true);
+  c.drawPath(
+    starPath,
+    Paint()
+      ..shader = ui.Gradient.linear(star + const Offset(0, -78), star + const Offset(0, 60),
+          [const Color(0xFFFFF8D8), _gold, _goldDeep], [0, 0.5, 1]),
+  );
+  c.drawPath(
+    starPath,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeJoin = StrokeJoin.round
+      ..color = const Color(0xFF7A4A08),
+  );
+  c.drawOval(Rect.fromCenter(center: const Offset(_s / 2, 432), width: 330, height: 44),
+      Paint()..color = const Color(0x66000000));
+  _crystal(c, const Offset(170, 425), 90, 170, const Color(0xFF7FA8FF), const Color(0xFF3A3AA8));
+  _crystal(c, const Offset(345, 425), 90, 180, const Color(0xFFB08CFF), const Color(0xFF4A2A98));
+  _crystal(c, const Offset(_s / 2, 440), 120, 230, const Color(0xFF8FD8FF), const Color(0xFF2A5AB8));
+  const soul = Offset(105, 300);
+  _glow(c, soul, 70, const Color(0xAA60F0FF));
+  final flame = Path()
+    ..moveTo(soul.dx, soul.dy - 52)
+    ..quadraticBezierTo(soul.dx + 40, soul.dy - 4, soul.dx + 22, soul.dy + 26)
+    ..quadraticBezierTo(soul.dx, soul.dy + 40, soul.dx - 22, soul.dy + 26)
+    ..quadraticBezierTo(soul.dx - 40, soul.dy - 4, soul.dx, soul.dy - 52)
+    ..close();
+  c.drawPath(
+      flame,
+      Paint()
+        ..shader = ui.Gradient.linear(soul + const Offset(0, -52), soul + const Offset(0, 40),
+            [const Color(0xFFE8FFFF), const Color(0xFF40C8F0)]));
+  for (final (p, r) in [
+    (const Offset(400, 110), 24.0),
+    (const Offset(110, 120), 18.0),
+    (const Offset(420, 300), 16.0),
+    (const Offset(335, 225), 12.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFFFF4C8));
+  }
+}
+
 void main() {
   test('iap icons', () async {
     await _write('kh_nguyet_the', _monthCard);
     await _write('kh_goi_tan_thu', _starter);
     await _write('kh_bo_quang_cao', _noAds);
+    await _write('kh_goi_thang_tinh', _starPack);
   });
 }
