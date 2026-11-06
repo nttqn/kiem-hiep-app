@@ -121,6 +121,7 @@ class _TownScreenState extends State<TownScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         backgroundColor: lacquer,
         title: Text('Thưởng Săn quái tuần', style: titleStyle(20)),
         content: Column(

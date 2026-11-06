@@ -316,6 +316,7 @@ class _MaVucScreenState extends State<MaVucScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         backgroundColor: lacquer,
         title: Text('Quét nhanh Ma Vực', style: titleStyle(20)),
         content: Column(

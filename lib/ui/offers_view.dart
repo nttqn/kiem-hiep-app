@@ -55,6 +55,7 @@ class _OffersViewState extends State<OffersView> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         backgroundColor: lacquer,
         title: Text(title, style: titleStyle(20)),
         content: Column(

@@ -203,9 +203,12 @@ class _ManorScreenState extends State<ManorScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
         title: Text('Gieo hạt', style: titleStyle(20)),
+        // Scrolls: on a short phone the last crop (Huyết sâm) sat under the
+        // Đóng button and could not be tapped (1.8.1 review).
         content: SizedBox(
           width: 420,
-          child: Column(
+          child: SingleChildScrollView(
+           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               for (final c in crops)
@@ -243,6 +246,7 @@ class _ManorScreenState extends State<ManorScreen> {
               Text('Linh thảo dùng để luyện đan. Ruộng lớn theo giờ thật, kể cả khi tắt game.',
                   style: small.copyWith(fontSize: 11)),
             ],
+           ),
           ),
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],

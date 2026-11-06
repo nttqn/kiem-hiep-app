@@ -59,6 +59,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         backgroundColor: lacquer,
         title: Text('Thưởng xếp hạng mùa', style: titleStyle(20)),
         content: Column(
@@ -85,6 +86,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         backgroundColor: lacquer,
         title: Text('Kết thúc mùa ${r[0]}', style: titleStyle(20)),
         content: Column(

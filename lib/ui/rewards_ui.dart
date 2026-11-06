@@ -32,6 +32,7 @@ Future<void> showOfflineDialog(BuildContext context, HeroData h, OfflineReward r
     barrierDismissible: false,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setState) => AlertDialog(
+        scrollable: true,
         backgroundColor: lacquer,
         title: Row(
           children: [

@@ -308,6 +308,7 @@ class _PlayScreenState extends State<PlayScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
+          scrollable: true,
           backgroundColor: lacquer,
           title: Text('Thương nhân bí ẩn', style: titleStyle(20)),
           content: Column(

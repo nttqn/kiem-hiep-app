@@ -41,6 +41,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
   Future<void> _tell(String title, List<String> lines) => showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
+          scrollable: true,
           backgroundColor: lacquer,
           title: Text(title, style: titleStyle(20)),
           content: Column(
