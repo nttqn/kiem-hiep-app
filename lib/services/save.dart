@@ -8,6 +8,7 @@ import '../core/clock.dart';
 import '../core/world_boss.dart' show vnDayKey;
 import 'analytics.dart';
 import 'cloud.dart';
+import 'presence.dart';
 import 'sync_plan.dart';
 
 const int slotCount = 3;
@@ -66,7 +67,9 @@ class SaveService extends ChangeNotifier {
   /// Saves the active slot, stamps it and queues the cloud upload.
   Future<void> save() async {
     if (active < 0 || slots[active] == null) return;
-    slots[active]!.savedAt = GameClock.nowMs();
+    // Taken over by another phone (1.8.1): kept here, but stamped as old so
+    // the next sync asks rather than pushing it over that phone's progress.
+    slots[active]!.savedAt = Presence.instance.blocks(active) ? 1 : GameClock.nowMs();
     Analytics.instance.track(active, slots[active]!);
     await writeSlot(active);
     CloudSave.instance.queueUpload(active);

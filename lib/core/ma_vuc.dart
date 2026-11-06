@@ -58,6 +58,9 @@ DungeonDef maVucFloor(int floor, int week) {
   );
 }
 
+/// Share of last week's best floor a Quét nhanh clears (1.8.1).
+const double maVucSweepShare = 0.7;
+
 /// Tinh Thạch and gold for a floor reached for the first time this week.
 int maVucStones(int floor) => 1 + floor ~/ 3;
 int maVucGold(int floor) => 15000 * floor;
@@ -76,8 +79,44 @@ extension MaVuc on HeroData {
   void mvRollWeek() {
     final w = mvThisWeek;
     if (mvWeek == w) return;
+    // Only the week just ended counts for Quét nhanh, not an older one.
+    mvLast = mvWeek == w - 1 ? mvBest : 0;
     mvWeek = w;
     mvBest = 0;
+  }
+
+  /// Quét nhanh (1.8.1): the floor a sweep reaches, [maVucSweepShare] of
+  /// last week's best; 0 when there is nothing to sweep.
+  int get maVucSweepTo {
+    mvRollWeek();
+    final to = (mvLast * maVucSweepShare).floor();
+    return to > mvBest ? to : 0;
+  }
+
+  /// Clears every floor up to [maVucSweepTo] at once with their rewards,
+  /// summed up in the lines returned.
+  List<String> maVucSweep(math.Random rng) {
+    final to = maVucSweepTo;
+    if (to == 0) return const [];
+    final from = mvBest + 1;
+    var stones = 0, g = 0, iron = 0;
+    final gems = <String>[];
+    for (var f = from; f <= to; f++) {
+      final s0 = starStones, g0 = gold, i0 = divineIron;
+      final lines = maVucReward(f, rng);
+      stones += starStones - s0;
+      g += gold - g0;
+      iron += divineIron - i0;
+      gems.addAll(lines.where((l) => l.contains('Ngọc')));
+    }
+    lastDungeonGold = 0;
+    return [
+      'Quét tầng $from-$to',
+      '+$stones Tinh Thạch',
+      '+${fmtThousands(g)} lượng',
+      if (iron > 0) '+$iron Thần Thiết',
+      ...gems,
+    ];
   }
 
   int get maVucBoardValue {

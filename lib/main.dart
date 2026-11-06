@@ -9,6 +9,7 @@ import 'services/cloud.dart';
 import 'services/leaderboard.dart';
 import 'services/notify.dart';
 import 'services/perf.dart';
+import 'services/presence.dart';
 import 'services/purchase.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
@@ -42,7 +43,48 @@ Future<void> main() async {
   };
   AdsService.instance.init();
   PurchaseService.instance.init();
+  await Presence.instance.init();
+  Presence.instance.lostSlot.addListener(_onHeroTakenOver);
   runApp(const KiemHiepApp());
+}
+
+/// Another phone opened the hero played here (1.8.1): tell the player, who
+/// goes back to the hero list; nothing more is uploaded from this phone.
+void _onHeroTakenOver() {
+  final slot = Presence.instance.lostSlot.value;
+  if (slot == null) return;
+  // This phone's copy now counts as the older one: the next sync asks
+  // before it could replace the other phone's progress.
+  final h = SaveService.instance.slots[slot];
+  if (h != null) {
+    h.savedAt = 1;
+    SaveService.instance.writeSlot(slot);
+  }
+  final ctx = AdsService.navigatorKey.currentContext;
+  if (ctx == null) return;
+  showDialog<void>(
+    context: ctx,
+    barrierDismissible: false,
+    builder: (d) => AlertDialog(
+      backgroundColor: lacquer,
+      title: Text('Đang chơi trên máy khác', style: titleStyle(20)),
+      content: Text(
+        'Nhân vật này vừa được mở trên một điện thoại khác cùng tài khoản. '
+        'Để hai máy không ghi đè tiến trình của nhau, máy này sẽ ngừng lưu lên mây và quay về màn hình chọn nhân vật.',
+        style: body,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(d).pop();
+            AdsService.navigatorKey.currentState
+                ?.pushAndRemoveUntil(MaterialPageRoute<void>(builder: (_) => const TitleScreen()), (_) => false);
+          },
+          child: const Text('Về chọn nhân vật'),
+        ),
+      ],
+    ),
+  );
 }
 
 class KiemHiepApp extends StatelessWidget {

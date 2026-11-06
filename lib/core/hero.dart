@@ -423,8 +423,9 @@ class HeroData {
   String tmDay = '';
   int tmTries = 0, tmAds = 0;
 
-  /// Ma Vực (ma_vuc.dart): the week counted and the floor reached in it.
-  int mvWeek = 0, mvBest = 0;
+  /// Ma Vực (ma_vuc.dart): the week counted and the floor reached in it;
+  /// the week before's best, for Quét nhanh (1.8.1).
+  int mvWeek = 0, mvBest = 0, mvLast = 0;
 
   /// Thượng Cổ Hung Thú (hung_thu.dart): the week, the difficulties slain
   /// in it (bits), its board score; the day's tries.
@@ -2994,7 +2995,7 @@ class HeroData {
         'rec': records.toJson(),
         'tb': [divine, divineIron],
         'lt': bodyLv,
-        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade],
+        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3256,6 +3257,7 @@ class HeroData {
         h.gsWeek = eg[13] as int;
         h.gsMade = math.max(0, eg[14] as int);
       }
+      if (eg.length >= 16) h.mvLast = math.max(0, eg[15] as int);
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {

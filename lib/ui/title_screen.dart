@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/clock.dart';
 import '../core/hero.dart';
 import '../services/cloud.dart';
+import '../services/presence.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import '../services/update.dart';
@@ -26,6 +27,8 @@ class _TitleScreenState extends State<TitleScreen> {
   @override
   void initState() {
     super.initState();
+    // Back on the hero list: no hero is played on this phone now.
+    Presence.instance.release();
     SoundService.instance.playMusic('menu');
     // A newer save played on another phone shows up here after sync.
     CloudSave.instance.addListener(_checkConflicts);
@@ -244,6 +247,32 @@ class _SlotCard extends StatelessWidget {
     // The server's time first (a moment at most), for the day's resets and
     // the closed-door training payout.
     await CloudSave.instance.clockReady.timeout(const Duration(seconds: 3), onTimeout: () {});
+    if (!context.mounted) return;
+    // 1.8.1: the same hero open on another phone would overwrite this one's
+    // progress (or be overwritten): ask first.
+    final ago = await Presence.instance.otherPhone(index);
+    if (!context.mounted) return;
+    if (ago != null) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: lacquer,
+          title: Text('Nhân vật đang mở trên máy khác', style: titleStyle(20)),
+          content: Text(
+            '${h.name} đang được chơi trên một điện thoại khác cùng tài khoản '
+            '(${ago == 0 ? 'vừa xong' : '$ago phút trước'}). Hai máy cùng chơi sẽ ghi đè tiến trình của nhau.\n\n'
+            'Chơi ở máy này thì máy kia sẽ tự dừng lưu.',
+            style: body,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Chơi ở máy này')),
+          ],
+        ),
+      );
+      if (go != true || !context.mounted) return;
+    }
+    await Presence.instance.claim(index);
     if (!context.mounted) return;
     SaveService.instance.active = index;
     if (h.savedAt > 0) {

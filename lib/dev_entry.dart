@@ -475,6 +475,12 @@ Future<void> main() async {
       h.mvRollWeek();
       h.mvBest = mv;
     }
+    // mvlast=<floor> last week's Ma Vực best (Quét nhanh).
+    final mvLast = int.tryParse(q['mvlast'] ?? '');
+    if (mvLast != null) {
+      h.mvRollWeek();
+      h.mvLast = mvLast;
+    }
     h.starStones = int.tryParse(q['stones'] ?? '') ?? h.starStones;
     h.beastSouls = int.tryParse(q['souls'] ?? '') ?? h.beastSouls;
     final star = int.tryParse(q['star'] ?? '');

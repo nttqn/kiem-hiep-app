@@ -1,5 +1,14 @@
 {
   "rules": {
+    "presence": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$slot": {
+          ".write": "auth != null && auth.uid === $uid && $slot.matches(/^[0-2]$/)",
+          ".validate": "!newData.exists() || (newData.hasChildren(['device', 'at']) && newData.child('device').isString() && newData.child('device').val().length <= 40 && newData.child('at').val() === now)"
+        }
+      }
+    },
     "chat": {
       "msgs": {
         ".read": true,
@@ -11,7 +20,7 @@
           "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24" },
           "hanh": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4" },
           "level": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 99" },
-          "rebirths": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
+          "rebirths": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 6" },
           "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120" },
           "at": { ".validate": "newData.val() === now" },
           "$other": { ".validate": false }

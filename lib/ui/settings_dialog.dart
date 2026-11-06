@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/cloud.dart';
 import '../services/notify.dart';
 import '../services/perf.dart';
+import '../services/purchase.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'auto_dialog.dart';
@@ -34,6 +35,50 @@ class SettingsButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Lịch sử nạp (1.8.1): purchases made on this phone, with the store's
+/// order ids to match against Play Console when a player writes in.
+Future<void> showPurchaseHistory(BuildContext context) async {
+  final list = await PurchaseService.instance.history();
+  if (!context.mounted) return;
+  String two(int v) => v.toString().padLeft(2, '0');
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: lacquer,
+      title: Text('Lịch sử nạp', style: titleStyle(20)),
+      content: SizedBox(
+        width: 460,
+        child: list.isEmpty
+            ? Text('Chưa có giao dịch nào trên máy này.', style: body)
+            : SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final e in list)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: lacquerDeep, borderRadius: BorderRadius.circular(8)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${e.product} · ${two(e.at.day)}/${two(e.at.month)}/${e.at.year} ${two(e.at.hour)}:${two(e.at.minute)}',
+                                style: bold.copyWith(color: goldLight)),
+                            Text('Nhận bởi: ${e.hero}', style: small.copyWith(color: cream)),
+                            if (e.order.isNotEmpty) SelectableText('Mã đơn: ${e.order}', style: small.copyWith(fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+      ),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+    ),
+  );
 }
 
 Future<void> showSettings(BuildContext context) {
@@ -89,6 +134,14 @@ Future<void> showSettings(BuildContext context) {
                       showCloudPanel(context);
                     },
                   );
+                },
+              ),
+              _Link(
+                icon: Icons.receipt_long,
+                label: 'Lịch sử nạp',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  showPurchaseHistory(context);
                 },
               ),
               const Divider(color: gold, height: 12),

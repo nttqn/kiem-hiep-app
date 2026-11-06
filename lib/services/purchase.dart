@@ -12,6 +12,30 @@ import 'analytics.dart';
 import 'cloud.dart';
 import 'save.dart';
 
+/// One line of the purchase history.
+class PurchaseLog {
+  const PurchaseLog(this.sku, this.order, this.hero, this.at);
+  final String sku, order, hero;
+  final DateTime at;
+
+  String get product => switch (sku) {
+        skuMonthCard => 'Nguyệt thẻ',
+        skuStarter => 'Gói tân thủ',
+        skuNoAds => 'Bỏ quảng cáo',
+        _ => sku,
+      };
+
+  static PurchaseLog? parse(String s) {
+    try {
+      final m = jsonDecode(s) as Map<String, dynamic>;
+      return PurchaseLog(m['sku'] as String, m['order'] as String? ?? '', m['hero'] as String? ?? '',
+          DateTime.fromMillisecondsSinceEpoch(m['at'] as int));
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 /// Google Play / App Store purchases (1.7.0): Nguyệt thẻ and Gói tân thủ
 /// are consumables for the hero playing when bought; Gói bỏ quảng cáo is
 /// a non-consumable for the store account, restored on every start.
@@ -131,6 +155,7 @@ class PurchaseService {
       if (p.status == PurchaseStatus.purchased) {
         message.value = 'Đã bỏ quảng cáo! Phần thưởng quảng cáo nay nhận ngay, không cần xem.';
         Analytics.instance.log('iap_done', {'sku': p.productID});
+        await _addLog(p.productID, p.purchaseID ?? '', 'Cả tài khoản');
       }
       return;
     }
@@ -141,11 +166,43 @@ class PurchaseService {
     final save = SaveService.instance;
     if (save.active >= 0 && save.slots[save.active] != null) {
       message.value = grant(p.productID, id: id);
+      await _addLog(p.productID, p.purchaseID ?? '', save.hero.name);
     } else {
       _queue.add(p.productID);
       message.value = 'Đã mua! Quà sẽ vào nhân vật bạn chọn tiếp theo.';
+      await _addLog(p.productID, p.purchaseID ?? '', 'Nhân vật vào thành tiếp theo');
     }
     await _persist();
+  }
+
+  // ------------------------------------------------------------ nhật ký
+
+  static const _logKey = 'iap_log';
+
+  /// Purchases made on this phone, newest first (1.8.1): what, when, which
+  /// hero got it and the store's order id, to settle a "my purchase is
+  /// gone" with the order list in Play Console.
+  Future<List<PurchaseLog>> history() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      return [
+        for (final s in (p.getStringList(_logKey) ?? const <String>[]).reversed) ?PurchaseLog.parse(s),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> _addLog(String sku, String order, String hero) async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final list = p.getStringList(_logKey) ?? <String>[];
+      list.add(jsonEncode({'sku': sku, 'order': order, 'hero': hero, 'at': DateTime.now().millisecondsSinceEpoch}));
+      // The last hundred are plenty.
+      await p.setStringList(_logKey, list.length > 100 ? list.sublist(list.length - 100) : list);
+    } catch (e) {
+      debugPrint('iap log: $e');
+    }
   }
 
   /// Gives [sku] to the open hero; the line to show.

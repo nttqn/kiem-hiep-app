@@ -15,6 +15,7 @@ import '../core/premium.dart';
 import 'analytics.dart';
 import 'chat.dart';
 import 'leaderboard.dart';
+import 'presence.dart';
 import 'save.dart';
 import 'sync_plan.dart';
 
@@ -464,6 +465,8 @@ class CloudSave extends ChangeNotifier {
   Future<void> _upload(int slot, HeroData h) async {
     // Never into an account these heroes do not belong to.
     if (SaveService.instance.owner != user?.uid) return;
+    // Nor a hero another phone has taken over (1.8.1).
+    if (Presence.instance.blocks(slot)) return;
     final info = _info(h);
     final old = cloudSlots[slot];
     if (old == null || old.data != info.data) {

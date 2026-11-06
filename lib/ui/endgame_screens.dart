@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/arena.dart' show arenaPotions;
@@ -305,6 +307,27 @@ class _MaVucScreenState extends State<MaVucScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _sweep() async {
+    final lines = h.maVucSweep(math.Random());
+    if (lines.isEmpty) return;
+    await SaveService.instance.save();
+    if (!mounted) return;
+    setState(() {});
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        title: Text('Quét nhanh Ma Vực', style: titleStyle(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [for (final l in lines) Text('• $l', style: body)],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     h.mvRollWeek();
@@ -327,12 +350,25 @@ class _MaVucScreenState extends State<MaVucScreen> {
                   Text('Tầng $next', style: titleStyle(24), textAlign: TextAlign.center),
                   Expanded(
                     child: Center(
-                      child: Icon(Icons.blur_circular, size: 130, color: const Color(0xFFB04AFF).withValues(alpha: 0.8)),
+                      child: FittedBox(
+                        child: Icon(Icons.blur_circular, size: 130, color: const Color(0xFFB04AFF).withValues(alpha: 0.8)),
+                      ),
                     ),
                   ),
                   Text('Tuần này đã lên: tầng ${h.mvBest}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
                   Text('Làm mới sau ${huntDaysLeftShown()} ngày', style: small, textAlign: TextAlign.center),
                   const SizedBox(height: 6),
+                  // Quét nhanh (1.8.1): up to 70% of last week's best at once.
+                  if (h.maVucSweepTo > 0) ...[
+                    LButton(
+                      label: 'Quét nhanh tới tầng ${h.maVucSweepTo}',
+                      icon: Icons.fast_forward,
+                      small: true,
+                      color: const Color(0xFF6A3A9A),
+                      onTap: _sweep,
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   LButton(label: 'Vào tầng $next', icon: Icons.whatshot, onTap: _go),
                 ],
               ),

@@ -133,6 +133,31 @@ void main() {
       expect(h.maVucBoardValue, 0);
     });
 
+    test('Quét nhanh clears 70% of last week\'s best at once, paying every floor', () {
+      final h = _hero();
+      final week = huntWeekOf(vnDayKey());
+      h
+        ..mvWeek = week - 1
+        ..mvBest = 30;
+      h.mvRollWeek();
+      expect(h.mvLast, 30);
+      expect(h.maVucSweepTo, 21);
+      final s0 = h.starStones;
+      final lines = h.maVucSweep(math.Random(3));
+      expect(lines.first, 'Quét tầng 1-21');
+      expect(h.mvBest, 21);
+      expect(h.starStones - s0, [for (var f = 1; f <= 21; f++) maVucStones(f)].reduce((a, b) => a + b));
+      expect(h.maVucSweepTo, 0, reason: 'once a week');
+      expect(h.maVucSweep(math.Random(3)), isEmpty);
+      // A gap of more than a week: nothing to sweep.
+      h
+        ..mvWeek = week - 3
+        ..mvBest = 40;
+      h.mvRollWeek();
+      expect(h.maVucSweepTo, 0);
+      expect(_roundTrip(h).mvLast, 0);
+    });
+
     test('Quần ma brings more monsters, Bất tử heals them', () {
       final h = _hero();
       final d = maVucFloor(25, 3);
