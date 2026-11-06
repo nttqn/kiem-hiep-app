@@ -876,10 +876,13 @@ class _ItemDialogState extends State<ItemDialog> {
               style: small.copyWith(fontSize: 11.5, color: rc)),
         const SizedBox(height: 6),
         for (final e in it.base.entries)
-          Text('${e.key.label} ${e.key.format(e.value * (1 + 0.1 * it.plus) * (1 + starBasePct * it.star))}',
+          Text('${e.key.label} ${e.key.format(e.value * it.baseMul)}',
               style: bold.copyWith(fontSize: 13)),
         if (it.star > 0)
           Text('★ ${starLines[it.slot]!.at(it.star)}', style: bold.copyWith(fontSize: 13, color: const Color(0xFFFFD34A))),
+        if (it.glow > 0)
+          Text('Khai Quang ${it.glow}: chỉ số gốc +${(glowPct(it.glow) * 100).round()}%',
+              style: bold.copyWith(fontSize: 13, color: const Color(goldItemColor))),
         for (final e in it.bonus.entries)
           Text('${e.key.label} ${e.key.format(e.value)}',
               style: body.copyWith(fontSize: 13, color: const Color(0xFF8AC8FF))),

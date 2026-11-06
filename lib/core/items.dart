@@ -78,6 +78,7 @@ class Item {
     this.set = '',
     this.star = 0,
     this.extraSockets = 0,
+    this.glow = 0,
     List<Gem?>? gems,
   }) : gems = List<Gem?>.generate(socketsFor(rarity) + extraSockets,
             (i) => gems != null && i < gems.length ? gems[i] : null);
@@ -104,7 +105,13 @@ class Item {
   /// Sockets drilled past the rarity's own (1.8.0): one at ★3, one at ★5.
   int extraSockets;
 
+  /// Khai Quang level of a Hoàng Kim piece (1.9.0), 0..[maxGlow].
+  int glow;
+
   bool get golden => set.isNotEmpty;
+
+  /// What enhancement, stars and Khai Quang multiply the base stats by.
+  double get baseMul => (1 + 0.1 * plus) * (1 + starBasePct * star) * (1 + glowPct(glow));
   int get color => golden ? goldItemColor : rarity.color;
   String get rarityLabel => golden ? 'Hoàng Kim' : rarity.label;
 
@@ -114,7 +121,7 @@ class Item {
   /// stars.
   Map<Stat, double> get totals {
     final out = <Stat, double>{};
-    final mul = (1 + 0.1 * plus) * (1 + starBasePct * star);
+    final mul = baseMul;
     base.forEach((k, v) => out[k] = (out[k] ?? 0) + v * mul);
     bonus.forEach((k, v) => out[k] = (out[k] ?? 0) + v);
     return out;
@@ -137,6 +144,7 @@ class Item {
         'p': plus,
         if (star > 0) 'a': star,
         if (extraSockets > 0) 'e': extraSockets,
+        if (glow > 0) 'o': glow,
         'n': name,
         if (golden) 'k': set,
         if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
@@ -174,6 +182,7 @@ class Item {
       plus: (m['p'] as int? ?? 0).clamp(0, maxPlus),
       star: (m['a'] as int? ?? 0).clamp(0, maxStar),
       extraSockets: (m['e'] as int? ?? 0).clamp(0, 2),
+      glow: (m['k'] is String ? (m['o'] as int? ?? 0) : 0).clamp(0, maxGlow),
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       set: m['k'] as String? ?? '',
@@ -189,6 +198,16 @@ const int maxPlus = 10;
 /// gain of each.
 const int maxStar = 5;
 const double starBasePct = 0.06;
+
+/// Khai Quang (1.9.0): a Hoàng Kim piece's base stats rise by these shares
+/// at levels 1-5, so its 2.1x over a common piece reaches 2.6x.
+const int maxGlow = 5;
+const _glowPct = [0.0, 0.04, 0.08, 0.13, 0.18, 0.24];
+double glowPct(int glow) => _glowPct[glow.clamp(0, maxGlow)];
+
+/// The best an extra line of [s] can roll on a level-[l] item (1.2x the
+/// base); Tinh Luyện (1.9.0) raises a Hoàng Kim line to it.
+double maxRollStat(Stat s, int l) => _roundStat(s, _affixBase(s, l) * 1.2);
 
 /// Hoàng Kim items' colour, above Truyền thuyết.
 const int goldItemColor = 0xFFFFD34A;

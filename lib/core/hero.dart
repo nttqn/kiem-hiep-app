@@ -453,6 +453,10 @@ class HeroData {
   /// The week this hero last bought Gói Thăng Tinh (premium.dart, 1.9.0).
   int stPackWeek = 0;
 
+  /// Hoàng Kim Các (gold_extras.dart, 1.9.0): the week and what was bought.
+  int hkWeek = 0;
+  final Map<String, int> hkBought = {};
+
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
   int soulPills = 0;
@@ -3013,6 +3017,7 @@ class HeroData {
         'tb': [divine, divineIron],
         'lt': bodyLv,
         'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast, stPackWeek],
+        'hk': [hkWeek, hkBought],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3276,6 +3281,11 @@ class HeroData {
       }
       if (eg.length >= 16) h.mvLast = math.max(0, eg[15] as int);
       if (eg.length >= 17) h.stPackWeek = eg[16] as int;
+    }
+    final hk = m['hk'];
+    if (hk is List && hk.length == 2) {
+      h.hkWeek = hk[0] as int;
+      (hk[1] as Map).forEach((k, v) => h.hkBought['$k'] = v as int);
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {
