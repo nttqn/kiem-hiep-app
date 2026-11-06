@@ -62,7 +62,10 @@ DungeonDef maVucFloor(int floor, int week) {
 const double maVucSweepShare = 0.7;
 
 /// Tinh Thạch and gold for a floor reached for the first time this week.
-int maVucStones(int floor) => 1 + floor ~/ 3;
+/// 1.8.3: 1 a floor, 2 + floor/10 on a boss floor (about 110 a week at
+/// floor 64). It was 1 + floor/3, some 730 a week at the floor the top
+/// player reached in the first week, so a ★5 set took two weeks, not six.
+int maVucStones(int floor) => floor % 5 == 0 ? 2 + floor ~/ 10 : 1;
 int maVucGold(int floor) => 15000 * floor;
 int maVucGemTier(int floor) => math.min(maxGemTier, 4 + floor ~/ 12);
 int maVucIron(int floor) => 2 + floor ~/ 10;
