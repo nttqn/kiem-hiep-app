@@ -136,6 +136,21 @@ Future<void> showSettings(BuildContext context) {
                   );
                 },
               ),
+              // Account deletion in plain sight (App Store 5.1.1(v)).
+              ListenableBuilder(
+                listenable: CloudSave.instance,
+                builder: (_, _) => CloudSave.instance.user == null
+                    ? const SizedBox.shrink()
+                    : _Link(
+                        icon: Icons.person_remove,
+                        label: 'Xóa tài khoản',
+                        value: 'Xóa vĩnh viễn',
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          confirmDeleteAccount(context);
+                        },
+                      ),
+              ),
               _Link(
                 icon: Icons.receipt_long,
                 label: 'Lịch sử nạp',

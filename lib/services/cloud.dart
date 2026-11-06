@@ -586,12 +586,15 @@ class CloudSave extends ChangeNotifier {
     notifyListeners();
     try {
       await Leaderboard.instance.withdraw();
-      for (final col in [_slots, _backups]) {
+      // Saves, backups and the purchase ledger (1.8.0), then the phone
+      // marks (1.8.1): nothing of the account is left behind.
+      for (final col in [_slots, _backups, _grants]) {
         final snap = await col.get();
         for (final d in snap.docs) {
           await d.reference.delete();
         }
       }
+      await Presence.instance.forget();
       try {
         await u.delete();
       } on FirebaseAuthException catch (e) {

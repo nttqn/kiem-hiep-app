@@ -300,7 +300,15 @@ class _CloudPanel extends StatelessWidget {
     if (ok == true) await CloudSave.instance.wipeCloudSaves();
   }
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  Future<void> _confirmDelete(BuildContext context) => confirmDeleteAccount(context);
+
+  String _clock(DateTime t) => _clockText(t);
+}
+
+/// Asks, then deletes the account and every cloud copy (App Store 5.1.1(v),
+/// Play's data policy). Reached from the cloud panel and straight from
+/// Cài đặt (1.8.1), where App Review looks for it.
+Future<void> confirmDeleteAccount(BuildContext context) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -320,13 +328,17 @@ class _CloudPanel extends StatelessWidget {
         ],
       ),
     );
-    if (ok == true) await CloudSave.instance.deleteAccount();
-  }
-
-  String _clock(DateTime t) =>
-      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')} '
-      '${t.day}/${t.month}';
+    if (ok != true) return;
+    final done = await CloudSave.instance.deleteAccount();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(done ? 'Đã xóa tài khoản và mọi dữ liệu trên mây.' : 'Chưa xóa được tài khoản, thử lại sau.'),
+    ));
 }
+
+String _clockText(DateTime t) =>
+    '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')} '
+    '${t.day}/${t.month}';
 
 bool _resolving = false;
 

@@ -109,6 +109,23 @@ class Presence {
     }
   }
 
+  /// The account is being deleted: every mark of it goes.
+  Future<void> forget() async {
+    _timer?.cancel();
+    _timer = null;
+    _slot = null;
+    final uid = CloudSave.instance.user?.uid;
+    if (!CloudSave.instance.available || uid == null) return;
+    try {
+      await FirebaseDatabase.instanceFor(app: Firebase.app(), databaseURL: ChatService.dbUrl)
+          .ref('presence/$uid')
+          .remove()
+          .timeout(const Duration(seconds: 6));
+    } catch (e) {
+      debugPrint('presence forget: $e');
+    }
+  }
+
   /// Back on the hero list: the mark goes (if it is still this phone's).
   void release() {
     _timer?.cancel();
