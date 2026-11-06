@@ -161,13 +161,23 @@ service cloud.firestore {
         && request.resource.data.level is int
         && request.resource.data.level >= 1 && request.resource.data.level <= 99
         && request.resource.data.rebirths is int
-        && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 5
+        && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 6
         && request.resource.data.dmg is int
-        && request.resource.data.dmg >= 0 && request.resource.data.dmg <= 1000000000000
+        // A day's damage: no more than worldBossDayCap (world_boss.dart),
+        // 2 billion per (rebirths + 1). 1.8.2: an edited client posted 838
+        // billion under the old 1e12 bound.
+        && request.resource.data.dmg >= 0
+        && request.resource.data.dmg <= 2000000000 * (request.resource.data.rebirths + 1)
+        // Potential points as on the main board (5 more a level in the
+        // sixth life).
         && (!('pts' in request.resource.data)
             || (request.resource.data.pts is int
-                && request.resource.data.pts <= (request.resource.data.level - 1) * 5
-                    + request.resource.data.rebirths * 40 + 190))
+                && (request.resource.data.pts <= (request.resource.data.level - 1) * 5
+                        + request.resource.data.rebirths * 40 + 190
+                    || (request.resource.data.rebirths >= 6
+                        && request.resource.data.pts <= (request.resource.data.level - 1) * 5
+                            + request.resource.data.level * 5
+                            + request.resource.data.rebirths * 40 + 190))))
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }

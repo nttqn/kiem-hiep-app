@@ -292,20 +292,35 @@ class Leaderboard extends ChangeNotifier {
     if (dbg != null) {
       return (List<LbEntry>.of(dbg)..sort((a, b) => b.power.compareTo(a.power))).take(limit).toList();
     }
-    final snap = await _boss(day).orderBy('dmg', descending: true).limit(limit).get().timeout(
-          const Duration(seconds: 15),
-        );
+    // Rows past what anyone could deal in a day are left out (1.8.2: an
+    // edited client posted 838 billion before the rules capped it).
+    final snap = await _boss(day)
+        .where('dmg', isLessThanOrEqualTo: worldBossDayCap(maxRebirths))
+        .orderBy('dmg', descending: true)
+        .limit(limit)
+        .get()
+        .timeout(const Duration(seconds: 15));
     return [
-      for (final d in snap.docs) ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
+      for (final d in snap.docs)
+        if (_plausibleBoss(d.data())) ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
     ];
+  }
+
+  static bool _plausibleBoss(Map<String, dynamic> m) {
+    final dmg = m['dmg'], cs = m['rebirths'];
+    return dmg is num && cs is num && dmg <= worldBossDayCap(cs.toInt());
   }
 
   Future<int?> placeBoss(String day, int dmg) async {
     final dbg = debugBoss;
     if (dbg != null) return dbg.where((e) => e.power > dmg).length + 1;
     try {
-      final agg =
-          await _boss(day).where('dmg', isGreaterThan: dmg).count().get().timeout(const Duration(seconds: 10));
+      final agg = await _boss(day)
+          .where('dmg', isGreaterThan: dmg)
+          .where('dmg', isLessThanOrEqualTo: worldBossDayCap(maxRebirths))
+          .count()
+          .get()
+          .timeout(const Duration(seconds: 10));
       return (agg.count ?? 0) + 1;
     } catch (_) {
       return null;

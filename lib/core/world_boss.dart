@@ -60,6 +60,12 @@ DungeonDef worldBossDef([DateTime? now]) {
 /// Gold for one run.
 int worldBossGold(int damage) => (math.sqrt(math.max(0, damage)) * 4).round();
 
+/// Most damage a day's runs can plausibly add up to, by rebirths: the best
+/// real day seen (2026-11-06) was about 0.5 billion at the top of the game,
+/// and up to 7 runs a day. Boards drop rows above it and the Firestore
+/// rules refuse them (the same sum, firestore.rules).
+int worldBossDayCap(int rebirths) => 2000000000 * (rebirths.clamp(0, 6) + 1);
+
 /// Daily damage totals that pay a bonus, and the gem tier each one gives.
 // Tuned with a simulation: one 60 s run deals about 0.1M at level 30, 0.5M at
 // 50, 1M at 75 and 1-3M at 99 (more after rebirths).
