@@ -44,4 +44,4 @@ DungeonDef towerFloor(int f) {
 int towerGold(int f) => 200 + f * 120;
 
 /// Tier of the gem a boss floor pays: Thô at 5, Tiên from 60, Thánh from 72.
-int towerGemTier(int f) => math.min(maxGemTier, 1 + f ~/ 12);
+int towerGemTier(int f) => math.min(maxRewardGemTier, 1 + f ~/ 12);

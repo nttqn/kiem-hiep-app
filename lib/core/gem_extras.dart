@@ -55,6 +55,8 @@ enum DrillBlock { stars, maxed, gems, gold }
 extension GemExtras on HeroData {
   /// Fusing every phase (or only [only]) from tier 1 up to [upTo].
   FusePlan fusePlan(int upTo, {Hanh? only}) {
+    // Thiên (8) takes a Tinh Phách each: fused one by one, not in bulk.
+    upTo = math.min(upTo, maxRewardGemTier);
     var fuses = 0, cost = 0;
     final made = <Hanh, int>{};
     for (final hn in Hanh.values) {
@@ -73,6 +75,7 @@ extension GemExtras on HeroData {
 
   /// Carries out [fusePlan]; false when the gold falls short.
   bool fuseAll(int upTo, {Hanh? only}) {
+    upTo = math.min(upTo, maxRewardGemTier);
     final plan = fusePlan(upTo, only: only);
     if (plan.fuses == 0 || gold < plan.gold) return false;
     gold -= plan.gold;

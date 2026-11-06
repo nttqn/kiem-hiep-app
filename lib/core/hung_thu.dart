@@ -147,7 +147,7 @@ extension HungThu on HeroData {
       '+${fmtThousands(beastGold[i])} lượng',
     ];
     for (var k = 0; k <= i; k++) {
-      final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxGemTier, beastGemTier[i]));
+      final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxRewardGemTier, beastGemTier[i]));
       addGem(gem);
       lines.add(gem.name);
     }

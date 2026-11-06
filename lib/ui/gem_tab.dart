@@ -61,18 +61,21 @@ class _GemPainter extends CustomPainter {
             end: Alignment.bottomRight,
             colors: [Color.lerp(col, Colors.white, 0.45)!, col, Color.lerp(col, Colors.black, 0.35)!],
           ).createShader(Offset.zero & s));
+    // Thiên (8): a gold rim instead of the dark one.
+    final thien = g.tier >= 8;
     c.drawPath(
         p,
         Paint()
-          ..color = const Color(0xFF2A1810)
+          ..color = thien ? goldLight : const Color(0xFF2A1810)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2);
+          ..strokeWidth = thien ? 1.8 : 1.2);
     c.drawLine(Offset(w * 0.14, h * 0.36), Offset(w * 0.86, h * 0.36),
         Paint()..color = Colors.white.withValues(alpha: 0.6)..strokeWidth = 0.8);
-    // Tier pips.
+    // Tier pips, closer together for eight.
+    final gap = thien ? 0.11 : 0.14;
     for (var i = 0; i < g.tier; i++) {
-      final x = w * 0.5 + (i - (g.tier - 1) / 2) * w * 0.14;
-      c.drawCircle(Offset(x, h * 0.93), w * 0.045, Paint()..color = goldLight);
+      final x = w * 0.5 + (i - (g.tier - 1) / 2) * w * gap;
+      c.drawCircle(Offset(x, h * 0.93), w * (thien ? 0.04 : 0.045), Paint()..color = goldLight);
     }
   }
 
@@ -307,7 +310,9 @@ class _GemTabState extends State<GemTab> {
                       if (h.fuseGem(g)) {
                         _changed('Hợp thành ${Gem(g.hanh, g.tier + 1).name} (-${fuseCost(g.tier)} lượng).');
                       } else {
-                        setState(() => _msg = 'Cần ${fuseCost(g.tier)} lượng để hợp ngọc.');
+                        setState(() => _msg = fuseSouls(g.tier) > 0
+                            ? 'Hợp ngọc Thiên cần 3 ngọc Thánh, 1 Hung Thú Tinh Phách (có ${h.beastSouls}) và ${fuseCost(g.tier)} lượng.'
+                            : 'Cần ${fuseCost(g.tier)} lượng để hợp ngọc.');
                       }
                     },
                     child: Container(
@@ -367,7 +372,7 @@ class _GemTabState extends State<GemTab> {
           Text('Hợp mọi ngọc bậc thấp hơn, 3 viên thành 1, cho tới bậc:', style: body),
           const SizedBox(height: 4),
           Wrap(children: [
-            for (var t = 2; t <= maxGemTier; t++) _choice('${gemTierNames[t - 1]} ($t)', upTo == t, () => set(() => upTo = t)),
+            for (var t = 2; t <= maxRewardGemTier; t++) _choice('${gemTierNames[t - 1]} ($t)', upTo == t, () => set(() => upTo = t)),
           ]),
           Text('Hệ:', style: body),
           const SizedBox(height: 4),

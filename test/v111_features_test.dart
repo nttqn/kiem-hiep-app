@@ -320,7 +320,7 @@ void main() {
         expect(nightmareGemChance(i), lessThan(1));
         expect(nightmarePageChance(i), lessThan(1));
       }
-      expect(nightmareGemTier(nightmareCount - 1), lessThanOrEqualTo(maxGemTier));
+      expect(nightmareGemTier(nightmareCount - 1), lessThanOrEqualTo(maxRewardGemTier));
       expect(nightmareAffix(0, '20261026'), isNot(nightmareAffix(0, '20261102')));
       expect(nightmareAffix(0, '20261026'), nightmareAffix(4, '20261026'));
       final d = nightmareDef(3, NmAffix.chill);

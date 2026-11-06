@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'gems.dart' show maxGemTier;
+import 'gems.dart' show maxRewardGemTier;
 
 /// Hòm thư: gifts the developer posts for every player in the Firebase
 /// console (`mail/{id}`), claimed once per hero.
@@ -82,7 +82,7 @@ class MailDef {
       shards: n('shards', 1000),
       iron: n('iron', 1000),
       gems: n('gems', 50),
-      gemTier: math.max(1, n('gemTier', maxGemTier)),
+      gemTier: math.max(1, n('gemTier', maxRewardGemTier)),
       pages: n('pages', 50),
       hpPots: n('hpPots', 999),
       mpPots: n('mpPots', 999),

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'activity.dart';
 import 'content.dart';
-import 'gems.dart' show maxGemTier;
+import 'gems.dart' show maxRewardGemTier;
 import 'hero.dart' show mobHpAt;
 
 /// Ải Ác Mộng: the eighteen dungeons again for heroes past level 60, as a
@@ -100,7 +100,7 @@ double nightmareExpShare(int i) => 0.04 + 0.004 * i;
 int nightmareShards(int i, int stars) => 1 + (stars >= 3 ? 1 : 0) + i ~/ 4;
 
 /// Gem tier a paid clear may drop.
-int nightmareGemTier(int i) => math.min(maxGemTier, 3 + i ~/ 4);
+int nightmareGemTier(int i) => math.min(maxRewardGemTier, 3 + i ~/ 4);
 
 double nightmareGemChance(int i) => 0.3 + 0.03 * i;
 double nightmarePageChance(int i) => 0.35 + 0.03 * i;

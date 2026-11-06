@@ -67,7 +67,7 @@ const double maVucSweepShare = 0.7;
 /// player reached in the first week, so a ★5 set took two weeks, not six.
 int maVucStones(int floor) => floor % 5 == 0 ? 2 + floor ~/ 10 : 1;
 int maVucGold(int floor) => 15000 * floor;
-int maVucGemTier(int floor) => math.min(maxGemTier, 4 + floor ~/ 12);
+int maVucGemTier(int floor) => math.min(maxRewardGemTier, 4 + floor ~/ 12);
 int maVucIron(int floor) => 2 + floor ~/ 10;
 
 /// One number per week for the board, newer weeks above older ones.

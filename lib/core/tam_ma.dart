@@ -83,7 +83,7 @@ int tamMaStones(int floor) => 3 + floor ~/ 4;
 int tamMaGold(int floor) => 20000 * floor;
 
 /// Every fifth floor adds a gem of this tier; every tenth, a Tinh Phách.
-int tamMaGemTier(int floor) => math.min(maxGemTier, 4 + floor ~/ 10);
+int tamMaGemTier(int floor) => math.min(maxRewardGemTier, 4 + floor ~/ 10);
 
 extension TamMa on HeroData {
   bool get tamMaOpen => power >= tamMaOpenPower || tmBest > 0;

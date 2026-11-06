@@ -68,6 +68,17 @@ const int pointsPerLevel = 5;
 // bonuses that stack with each rebirth.
 const int maxRebirths = 6;
 
+/// Extra crit damage over the base 150%, with diminishing returns (1.9.0):
+/// the first [critSoftFull] counts in full, the rest at [critSoftRate]. A
+/// Liệt Hỏa Bang hero stacking 18 bản mệnh Hỏa gems reached about
+/// +1,200%, which on its own made lực chiến 2.4x that of the same gear
+/// with HP gems. With these values that build loses 18%, the top Hỏa
+/// player 10%, heroes under +800% nothing (measured on real saves).
+const double critSoftFull = 8;
+const double critSoftRate = 0.5;
+
+double critDmgSoftCap(double extra) => extra <= critSoftFull ? extra : critSoftFull + (extra - critSoftFull) * critSoftRate;
+
 /// Lục chuyển (1.6.0): the sixth life needs [lucChuyenExpNeed] times the
 /// EXP a level, but every level gives [lucChuyenPoints] more potential.
 const int lucChuyen = 6;
@@ -614,8 +625,11 @@ class HeroData {
   }
 
   /// Three gems of a tier become one of the next tier, for gold.
+  /// A Thánh into a Thiên (1.9.0) also takes a Hung Thú Tinh Phách.
   bool fuseGem(Gem g) {
     if (g.tier >= maxGemTier || gold < fuseCost(g.tier) || gemCount(g) < 3) return false;
+    if (beastSouls < fuseSouls(g.tier)) return false;
+    beastSouls -= fuseSouls(g.tier);
     gold -= fuseCost(g.tier);
     _takeGem(g, 3);
     addGem(Gem(g.hanh, g.tier + 1));
@@ -687,7 +701,7 @@ class HeroData {
     st.atk = raw * (1 + b(Bonus.atkPct));
     st.def = (2 + 1.5 * l + a[2] * 0.5 + g(Stat.def)) * (1 + b(Bonus.defPct));
     st.crit = math.min(0.6, 0.05 + a[1] * 0.0025 + g(Stat.crit) + b(Bonus.crit));
-    st.critDmg = 1.5 + g(Stat.critDmg) + b(Bonus.critDmg);
+    st.critDmg = 1.5 + critDmgSoftCap(g(Stat.critDmg) + b(Bonus.critDmg));
     st.dodge = math.min(0.35, a[1] * 0.0015 + g(Stat.dodge) + b(Bonus.dodge));
     st.aspd = math.min(2.0, 1 + a[1] * 0.004 + g(Stat.aspd) + b(Bonus.aspd));
     st.move = math.min(320, (165 + g(Stat.move)) * (1 + b(Bonus.move)));

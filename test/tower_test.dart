@@ -39,7 +39,8 @@ void main() {
     expect(towerFloor(60).mul, greaterThan(2));
     expect(towerGemTier(5), 1);
     expect(towerGemTier(60), 6, reason: 'Tiên from 60');
-    expect(towerGemTier(72), maxGemTier, reason: 'Thánh from 72');
+    expect(towerGemTier(72), maxRewardGemTier, reason: 'Thánh from 72');
+    expect(towerGemTier(400), maxRewardGemTier, reason: 'Thiên only from fusing');
   });
 
   test('only a first clear pays, boss floors add a gem, and the best floor saves', () {

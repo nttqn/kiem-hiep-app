@@ -6,9 +6,19 @@ import 'sects.dart';
 
 /// Ngũ hành gems: socketed into gear, one stat each. Monsters drop tiers up
 /// to [maxDropTier]; Tiên and Thánh come only from fusing and the tower.
-const int maxGemTier = 7;
+const int maxGemTier = 8;
 const int maxDropTier = 5;
-const gemTierNames = ['Thô', 'Hoàn', 'Tinh', 'Bảo', 'Thần', 'Tiên', 'Thánh'];
+
+/// The best tier any reward pays (towers, bosses, mail…); Thiên (8, 1.9.0)
+/// comes only from fusing three Thánh with a Hung Thú Tinh Phách.
+const int maxRewardGemTier = 7;
+const gemTierNames = ['Thô', 'Hoàn', 'Tinh', 'Bảo', 'Thần', 'Tiên', 'Thánh', 'Thiên'];
+
+/// Tinh Phách a fuse into tier [tier] + 1 takes besides the three gems.
+int fuseSouls(int tier) => tier + 1 >= 8 ? 1 : 0;
+
+/// How strong a gem of [tier] is, in tier units: Thiên counts as 9.5.
+double gemPower(int tier) => tier >= 8 ? 9.5 : tier.toDouble();
 
 class Gem {
   const Gem(this.hanh, this.tier);
@@ -41,7 +51,7 @@ const double banMenhBonus = 1.5;
 
 /// What one gem adds, before the bản mệnh multiplier.
 Map<Bonus, double> gemEffect(Gem g) {
-  final t = g.tier.toDouble();
+  final t = gemPower(g.tier);
   return switch (g.hanh) {
     Hanh.kim => {Bonus.atkPct: 0.025 * t},
     Hanh.moc => {Bonus.crit: 0.008 * t},
