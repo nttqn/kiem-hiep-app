@@ -27,7 +27,7 @@ const worldBossRotation = [
 
 /// The game's calendar is Vietnam time (UTC+7), so the boss and the board
 /// change at local midnight for every player.
-DateTime vnNow([DateTime? now]) => (now ?? GameClock.now()).toUtc().add(const Duration(hours: 7));
+DateTime vnNow([DateTime? now]) => (now ?? GameClock.dayNow()).toUtc().add(const Duration(hours: 7));
 
 /// `20261024` style key of the Vietnam date.
 String vnDayKey([DateTime? now]) {

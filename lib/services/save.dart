@@ -244,6 +244,6 @@ class SaveService extends ChangeNotifier {
 }
 
 String todayKey() {
-  final d = GameClock.now();
+  final d = GameClock.dayNow();
   return '${d.year}-${d.month}-${d.day}';
 }

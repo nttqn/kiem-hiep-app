@@ -77,7 +77,7 @@ class _OffersViewState extends State<OffersView> {
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final card in [_monthCard(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
+            for (final card in [_monthCard(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
           ],
         );
       },
@@ -179,6 +179,24 @@ class _OffersViewState extends State<OffersView> {
           _line('${starterGift.gems} ngọc bậc ${starterGift.gemTier}'),
           const Spacer(),
           _buy(skuStarter, done: h.starterBought ? 'Đã mua' : null),
+        ],
+      );
+
+  /// Gói Thăng Tinh (1.9.0): once a week a hero.
+  Widget _starPack() => _box(
+        title: 'Gói Thăng Tinh',
+        color: const Color(0xFFFFD34A),
+        icon: Icons.auto_awesome,
+        children: [
+          Text('Mỗi tuần một lần cho ${h.name}:', style: small.copyWith(fontSize: 11.5)),
+          const SizedBox(height: 4),
+          _line('$starPackStones Tinh Thạch'),
+          _line('$starPackSouls Hung Thú Tinh Phách'),
+          _line('Đủ nâng một món từ ★0 lên ★3, hoặc góp sao 4–5'),
+          Text('Có: ${fmt(h.starStones)} Tinh Thạch · ${h.beastSouls} Tinh Phách',
+              style: small.copyWith(fontSize: 10.5, color: creamDim)),
+          const Spacer(),
+          _buy(skuStarPack, done: h.starPackThisWeek ? 'Đã mua tuần này' : null),
         ],
       );
 

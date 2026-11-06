@@ -46,4 +46,34 @@ void main() {
     expect(GameClock.nowMs(), t0);
     expect(GameClock.floor, t0);
   });
+
+  test('offline, setting the phone ahead brings no new day (1.9.0)', () {
+    GameClock.floor = t0; // last online: 10:00 on 2 November (Vietnam)
+    device = t0 + 3 * day;
+    expect(vnDayKey(), '20261102', reason: 'the day stays the last trusted one');
+    expect(GameClock.dayHeld, isTrue);
+    // Real time still runs for timers.
+    expect(GameClock.nowMs(), t0 + 3 * day);
+    // Later the same day offline: nothing held.
+    device = t0 + 5 * 3600000; // 15:00
+    expect(vnDayKey(), '20261102');
+    expect(GameClock.dayHeld, isFalse);
+    // Online again: the real day.
+    device = t0 + day;
+    GameClock.synced(t0 + day);
+    expect(vnDayKey(), '20261103');
+    expect(GameClock.dayHeld, isFalse);
+  });
+
+  test('a phone never online keeps its own days', () {
+    device = t0 + 2 * day;
+    expect(vnDayKey(), '20261104');
+    expect(GameClock.dayHeld, isFalse);
+  });
+
+  test('the Vietnam day ends at 16:59:59.999 UTC', () {
+    expect(GameClock.vnDayEnd(t0), DateTime.utc(2026, 11, 2, 16, 59, 59, 999).millisecondsSinceEpoch);
+    final lateNight = DateTime.utc(2026, 11, 2, 18).millisecondsSinceEpoch; // 01:00 on the 3rd in Vietnam
+    expect(GameClock.vnDayEnd(lateNight), DateTime.utc(2026, 11, 3, 16, 59, 59, 999).millisecondsSinceEpoch);
+  });
 }

@@ -150,6 +150,14 @@ class _TownScreenState extends State<TownScreen> {
         : const <NextStep>[];
     // At most two, so the grid keeps its room on short screens.
     return <Widget>[
+      // 1.9.0: offline past midnight, the new day waits for a connection.
+      if (GameClock.dayHeld)
+        _banner(
+          icon: Icons.wifi_off,
+          color: const Color(0xFF9FD8FF),
+          title: 'Ngày mới đang chờ',
+          text: 'Kết nối mạng để nhận quà, nhiệm vụ và lượt khiêu chiến của ngày mới. Vẫn chơi bình thường khi chưa có mạng.',
+        ),
       if (steps.isNotEmpty)
         _banner(
           icon: Icons.lightbulb,

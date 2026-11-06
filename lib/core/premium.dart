@@ -7,6 +7,8 @@ import 'hero.dart';
 import 'items.dart';
 import 'mount_skins.dart';
 import 'newbie.dart';
+import 'weekly_hunt.dart';
+import 'world_boss.dart' show vnDayKey;
 
 /// Ưu đãi (1.7.0): what a purchase or a chosen rewarded ad gives a hero.
 /// Pure rules; the store and the ads live in services/.
@@ -17,7 +19,13 @@ import 'newbie.dart';
 const String skuMonthCard = 'kh_nguyet_the';
 const String skuNoAds = 'kh_bo_quang_cao';
 const String skuStarter = 'kh_goi_tan_thu';
-const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter};
+
+/// Gói Thăng Tinh (1.9.0): Tinh Thạch and Tinh Phách, once a week a hero.
+const String skuStarPack = 'kh_goi_thang_tinh';
+const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack};
+
+const int starPackStones = 120;
+const int starPackSouls = 3;
 
 // ------------------------------------------------------------ Nguyệt thẻ
 
@@ -124,6 +132,20 @@ extension Premium on HeroData {
         return 'Khôi phục Gói tân thủ: ${grantStarter().join(', ')}';
     }
     return null;
+  }
+
+  // -------------------------------------------------------- Gói Thăng Tinh
+
+  /// Bought this hero's Gói Thăng Tinh this week (Monday to Sunday).
+  bool get starPackThisWeek => stPackWeek == huntWeekOf(vnDayKey());
+
+  /// Gives the pack (a purchase always delivers, even past the weekly
+  /// limit the shop shows).
+  List<String> grantStarPack() {
+    starStones += starPackStones;
+    beastSouls += starPackSouls;
+    stPackWeek = huntWeekOf(vnDayKey());
+    return ['+$starPackStones Tinh Thạch', '+$starPackSouls Hung Thú Tinh Phách'];
   }
 
   bool canClaimCard(String today) => cardActive(today) && cardClaimDay != today;

@@ -33,6 +33,31 @@ class GameClock {
 
   static DateTime now() => DateTime.fromMillisecondsSinceEpoch(nowMs());
 
+  /// The time days are counted by (every daily reset, 1.9.0). With the
+  /// server's time, the same as [nowMs]; offline, the phone's clock but
+  /// never past the end of the Vietnam day of the latest trusted time, so
+  /// setting the phone ahead brings no new day: tomorrow's gifts and runs
+  /// wait until the game has been online once that day. A phone that has
+  /// never been online keeps its own clock.
+  static int dayMs() {
+    final n = nowMs();
+    if (trusted || _floor == 0) return n;
+    return math.min(n, vnDayEnd(_floor));
+  }
+
+  static DateTime dayNow() => DateTime.fromMillisecondsSinceEpoch(dayMs());
+
+  /// Offline past the end of the last trusted day: a new day waits for a
+  /// connection.
+  static bool get dayHeld => !trusted && _floor > 0 && nowMs() > vnDayEnd(_floor);
+
+  /// The last millisecond of the Vietnam (UTC+7) day holding [ms].
+  static int vnDayEnd(int ms) {
+    const off = 7 * 3600000, day = 86400000;
+    final local = ms + off;
+    return local - local % day + day - 1 - off;
+  }
+
   /// The server said it is [serverMs] now.
   static void synced(int serverMs) {
     _serverBase = serverMs;

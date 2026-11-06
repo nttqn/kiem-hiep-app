@@ -22,6 +22,7 @@ class PurchaseLog {
         skuMonthCard => 'Nguyệt thẻ',
         skuStarter => 'Gói tân thủ',
         skuNoAds => 'Bỏ quảng cáo',
+        skuStarPack => 'Gói Thăng Tinh',
         _ => sku,
       };
 
@@ -215,6 +216,8 @@ class PurchaseService {
         text = 'Đã kích hoạt Nguyệt thẻ cho ${h.name}: ${h.cardDaysLeft(vnDayKey())} ngày.';
       case skuStarter:
         text = 'Gói tân thủ cho ${h.name}: ${h.grantStarter().join(', ')}';
+      case skuStarPack:
+        text = 'Gói Thăng Tinh cho ${h.name}: ${h.grantStarPack().join(', ')}';
       default:
         return '';
     }

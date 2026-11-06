@@ -450,6 +450,9 @@ class HeroData {
   /// Luyện hóa ngọc (gem_extras.dart): the week and Tinh Thạch made in it.
   int gsWeek = 0, gsMade = 0;
 
+  /// The week this hero last bought Gói Thăng Tinh (premium.dart, 1.9.0).
+  int stPackWeek = 0;
+
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
   int soulPills = 0;
@@ -3009,7 +3012,7 @@ class HeroData {
         'rec': records.toJson(),
         'tb': [divine, divineIron],
         'lt': bodyLv,
-        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast],
+        'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast, stPackWeek],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3272,6 +3275,7 @@ class HeroData {
         h.gsMade = math.max(0, eg[14] as int);
       }
       if (eg.length >= 16) h.mvLast = math.max(0, eg[15] as int);
+      if (eg.length >= 17) h.stPackWeek = eg[16] as int;
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {
