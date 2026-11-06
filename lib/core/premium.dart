@@ -96,8 +96,34 @@ extension Premium on HeroData {
   }
 
   /// A bought card: 30 days from today, or 30 more after a running one.
-  void addMonthCard(String today) {
-    cardUntil = dayPlus(cardActive(today) ? cardUntil : dayPlus(today, -1), monthCardDays);
+  void addMonthCard(String today) => addCardDays(today, monthCardDays);
+
+  /// [days] more of Nguyệt thẻ (a purchase, or a mail making good a lost one).
+  void addCardDays(String today, int days) {
+    cardUntil = dayPlus(cardActive(today) ? cardUntil : dayPlus(today, -1), days);
+  }
+
+  /// Keeps what was paid for when this hero is replaced by [other], a copy
+  /// of the same hero from another phone: the later Nguyệt thẻ end, and the
+  /// starter pack once bought (1.8.0).
+  void mergePaid(HeroData other) {
+    if (other.cardUntil.compareTo(cardUntil) > 0) cardUntil = other.cardUntil;
+    starterBought = starterBought || other.starterBought;
+  }
+
+  /// Gives back a purchase kept in the cloud ledger ([PaidGrant]) that this
+  /// save lost; the line to show, or null when nothing was missing.
+  String? reapplyGrant(PaidGrant g) {
+    switch (g.sku) {
+      case skuMonthCard:
+        if (g.until.isEmpty || g.until.compareTo(cardUntil) <= 0) return null;
+        cardUntil = g.until;
+        return 'Khôi phục Nguyệt thẻ đến ${g.until.substring(6, 8)}/${g.until.substring(4, 6)}';
+      case skuStarter:
+        if (starterBought) return null;
+        return 'Khôi phục Gói tân thủ: ${grantStarter().join(', ')}';
+    }
+    return null;
   }
 
   bool canClaimCard(String today) => cardActive(today) && cardClaimDay != today;
@@ -220,4 +246,29 @@ extension Premium on HeroData {
 
   /// The look on trial right now, if any.
   MountSkin? trialAt(int nowMs) => trialUntil > nowMs ? skinById[trialSkin] : null;
+}
+
+/// A purchase written to the player's cloud (`users/{uid}/grants/{id}`)
+/// when it is given, so a hero whose save is later overwritten by an older
+/// copy (two phones playing the same hero) gets it back on the next sync.
+class PaidGrant {
+  const PaidGrant({required this.sku, required this.seed, required this.slot, this.until = ''});
+  final String sku;
+
+  /// The hero it went to ([HeroData.seed], and its slot for heroes with no seed).
+  final int seed, slot;
+
+  /// Nguyệt thẻ's last day right after the purchase.
+  final String until;
+
+  Map<String, Object> toJson() => {'sku': sku, 'seed': seed, 'slot': slot, 'until': until};
+
+  static PaidGrant? fromJson(Map<String, dynamic> m) {
+    final sku = m['sku'], seed = m['seed'], slot = m['slot'];
+    if (sku is! String || seed is! num || slot is! num) return null;
+    final u = m['until'];
+    return PaidGrant(sku: sku, seed: seed.toInt(), slot: slot.toInt(), until: u is String ? u : '');
+  }
+
+  bool fits(HeroData h, int heroSlot) => seed != 0 ? h.seed == seed : heroSlot == slot;
 }

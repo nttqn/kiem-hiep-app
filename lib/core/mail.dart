@@ -26,10 +26,17 @@ class MailDef {
     this.pages = 0,
     this.hpPots = 0,
     this.mpPots = 0,
+    this.uid = '',
+    this.card = 0,
   });
 
   final String id, title, body, from, until;
   final int minLevel, gold, shards, iron, gems, gemTier, pages, hpPots, mpPots;
+
+  /// Only for this account (its Firebase uid, the part of a leaderboard row
+  /// id before "_"); empty for everyone. Days of Nguyệt thẻ given (1.8.0).
+  final String uid;
+  final int card;
 
   /// Open on Vietnam day [day].
   bool openOn(String day) =>
@@ -44,6 +51,7 @@ class MailDef {
         if (pages > 0) '$pages trang bí kíp',
         if (hpPots > 0) '$hpPots bình máu',
         if (mpPots > 0) '$mpPots bình nội lực',
+        if (card > 0) '$card ngày Nguyệt thẻ',
       ];
 
   /// Reads a console document; null when it is not a mail. Amounts are
@@ -78,6 +86,8 @@ class MailDef {
       pages: n('pages', 50),
       hpPots: n('hpPots', 999),
       mpPots: n('mpPots', 999),
+      uid: m['uid'] is String ? (m['uid'] as String).trim() : '',
+      card: n('card', 90),
     );
   }
 }

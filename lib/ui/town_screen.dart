@@ -16,6 +16,7 @@ import '../services/ads.dart';
 import '../services/leaderboard.dart';
 import '../services/mail.dart';
 import '../services/notify.dart';
+import '../services/cloud.dart';
 import '../services/save.dart';
 import 'activity_screen.dart';
 import 'alchemy_screen.dart';
@@ -87,8 +88,11 @@ class _TownScreenState extends State<TownScreen> {
     if (mounted && h.newbieReady(vnDayKey())) await showNewbieDialog(context);
     await _huntReward();
     // Bought on the title screen, before a hero was open.
-    final bought = PurchaseService.instance.applyQueued();
-    if (bought != null && bought.isNotEmpty && mounted) {
+    // ...and purchases a sync gave back (a save from another phone had lost them).
+    final back = CloudSave.instance.restoredGrants.join('\n');
+    CloudSave.instance.restoredGrants.clear();
+    final bought = [PurchaseService.instance.applyQueued() ?? '', back].where((l) => l.isNotEmpty).join('\n');
+    if (bought.isNotEmpty && mounted) {
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(

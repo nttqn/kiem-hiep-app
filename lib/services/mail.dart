@@ -48,7 +48,7 @@ class MailService extends ChangeNotifier {
           .get()
           .timeout(const Duration(seconds: 10));
       final out = [for (final d in snap.docs) ?MailDef.fromMap(d.id, _days(d.data()))]
-        ..removeWhere((m) => !m.openOn(today))
+        ..removeWhere((m) => !m.openOn(today) || (m.uid.isNotEmpty && m.uid != CloudSave.instance.user?.uid))
         ..sort((a, b) => b.from.compareTo(a.from));
       mails = out;
     } catch (e) {

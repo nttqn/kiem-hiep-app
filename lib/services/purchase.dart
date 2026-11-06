@@ -9,6 +9,7 @@ import '../core/premium.dart';
 import '../core/world_boss.dart';
 import 'ads.dart';
 import 'analytics.dart';
+import 'cloud.dart';
 import 'save.dart';
 
 /// Google Play / App Store purchases (1.7.0): Nguyệt thẻ and Gói tân thủ
@@ -139,7 +140,7 @@ class PurchaseService {
     Analytics.instance.log('iap_done', {'sku': p.productID});
     final save = SaveService.instance;
     if (save.active >= 0 && save.slots[save.active] != null) {
-      message.value = grant(p.productID);
+      message.value = grant(p.productID, id: id);
     } else {
       _queue.add(p.productID);
       message.value = 'Đã mua! Quà sẽ vào nhân vật bạn chọn tiếp theo.';
@@ -148,7 +149,7 @@ class PurchaseService {
   }
 
   /// Gives [sku] to the open hero; the line to show.
-  String grant(String sku) {
+  String grant(String sku, {String? id}) {
     final h = SaveService.instance.hero;
     final String text;
     switch (sku) {
@@ -161,6 +162,11 @@ class PurchaseService {
         return '';
     }
     SaveService.instance.save();
+    // Remembered in the cloud, so another phone's older save cannot lose it.
+    CloudSave.instance.recordGrant(
+      id ?? 'q${DateTime.now().millisecondsSinceEpoch}',
+      PaidGrant(sku: sku, seed: h.seed, slot: SaveService.instance.active, until: sku == skuMonthCard ? h.cardUntil : ''),
+    );
     changed.value++;
     return text;
   }

@@ -11,6 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/clock.dart';
 import '../core/hero.dart';
+import '../core/premium.dart';
 import 'analytics.dart';
 import 'chat.dart';
 import 'leaderboard.dart';
@@ -226,6 +227,51 @@ class CloudSave extends ChangeNotifier {
   CollectionReference<Map<String, dynamic>> get _slots =>
       FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('slots');
 
+  CollectionReference<Map<String, dynamic>> get _grants =>
+      FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('grants');
+
+  /// Lines about purchases given back after the last sync, for the town.
+  final List<String> restoredGrants = [];
+
+  /// Writes a purchase to this account's ledger (no-op when signed out).
+  Future<void> recordGrant(String id, PaidGrant g) async {
+    if (!available || user == null) return;
+    try {
+      await _grants.doc(id).set(g.toJson()).timeout(const Duration(seconds: 10));
+    } catch (e) {
+      debugPrint('grant record failed: $e');
+    }
+  }
+
+  /// Gives back to the heroes on this device any ledger purchase their save
+  /// lost (an older copy from another phone came over it).
+  Future<void> _reapplyGrants() async {
+    final save = SaveService.instance;
+    try {
+      final snap = await _grants.get().timeout(const Duration(seconds: 10));
+      final grants = [for (final d in snap.docs) ?PaidGrant.fromJson(d.data())];
+      for (var i = 0; i < slotCount; i++) {
+        final h = save.slots[i];
+        if (h == null) continue;
+        var changed = false;
+        for (final g in grants) {
+          if (!g.fits(h, i)) continue;
+          final line = h.reapplyGrant(g);
+          if (line != null) {
+            restoredGrants.add('${h.name}: $line');
+            changed = true;
+          }
+        }
+        if (changed) {
+          await save.writeSlot(i);
+          await _upload(i, h);
+        }
+      }
+    } catch (e) {
+      debugPrint('grants unreadable: $e');
+    }
+  }
+
   CollectionReference<Map<String, dynamic>> get _backups =>
       FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('backups');
 
@@ -329,6 +375,7 @@ class CloudSave extends ChangeNotifier {
             break;
         }
       }
+      await _reapplyGrants();
       lastSync = DateTime.now();
     } catch (e) {
       debugPrint('sync failed: $e');
@@ -405,6 +452,9 @@ class CloudSave extends ChangeNotifier {
   void _apply(int slot, SlotInfo c) {
     try {
       final h = HeroData.fromJson(jsonDecode(c.data) as Map<String, dynamic>);
+      // The same hero from another phone: keep what was paid for here.
+      final old = SaveService.instance.slots[slot];
+      if (old != null && old.seed != 0 && old.seed == h.seed) h.mergePaid(old);
       SaveService.instance.replaceSlot(slot, h);
     } catch (e) {
       debugPrint('cloud slot $slot unreadable: $e');

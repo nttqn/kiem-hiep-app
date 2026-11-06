@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/body_train.dart';
 import 'package:kiem_hiep/core/clock.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/mail.dart';
 import 'package:kiem_hiep/core/manor.dart';
 import 'package:kiem_hiep/core/mount_skins.dart';
 import 'package:kiem_hiep/core/mounts.dart';
@@ -167,5 +169,47 @@ void main() {
     expect(ads.rewardedReady.value, isTrue);
     expect(await ads.showRewarded(), isTrue);
     ads.setAdFree(false, save: false);
+  });
+  group('a purchase survives a save overwritten from another phone (1.8.0)', () {
+    test('restoring the same hero keeps the later Nguyệt thẻ and the starter pack', () {
+      final here = _hero()..seed = 42;
+      here.addMonthCard('20261105');
+      here.starterBought = true;
+      final other = _roundTrip(_hero()..seed = 42);
+      expect(other.cardUntil, '');
+      other.mergePaid(here);
+      expect(other.cardUntil, here.cardUntil);
+      expect(other.starterBought, isTrue);
+    });
+
+    test('the cloud ledger gives back a lost card once, and the starter pack', () {
+      final h = _hero()..seed = 7;
+      final g = PaidGrant.fromJson(const PaidGrant(sku: skuMonthCard, seed: 7, slot: 0, until: '20261204').toJson())!;
+      expect(g.fits(h, 2), isTrue, reason: 'by seed, whatever the slot');
+      expect(g.fits(_hero()..seed = 8, 0), isFalse);
+      expect(h.reapplyGrant(g), isNotNull);
+      expect(h.cardUntil, '20261204');
+      expect(h.reapplyGrant(g), isNull, reason: 'nothing missing now');
+      h.addMonthCard('20261203');
+      expect(h.reapplyGrant(g), isNull, reason: 'never shortens a renewed card');
+      const s = PaidGrant(sku: skuStarter, seed: 7, slot: 0);
+      final bag = h.bag.length;
+      expect(h.reapplyGrant(s), isNotNull);
+      expect(h.starterBought, isTrue);
+      expect(h.bag.length, bag + 1);
+      expect(h.reapplyGrant(s), isNull);
+    });
+
+    test('a mail for one account can carry Nguyệt thẻ days', () {
+      final m = MailDef.fromMap('bu-the', {'title': 'Bù Nguyệt thẻ', 'uid': ' abc ', 'card': 30})!;
+      expect(m.uid, 'abc');
+      expect(m.card, 30);
+      expect(MailDef.fromMap('x', {'card': 9999})!.card, 90, reason: 'capped');
+      final h = _hero();
+      final lines = h.claimMail(m, '20261106', math.Random(1));
+      expect(lines.first, contains('30 ngày'));
+      expect(h.cardActive('20261106'), isTrue);
+      expect(h.cardDaysLeft('20261106'), 30);
+    });
   });
 }

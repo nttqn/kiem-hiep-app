@@ -2901,7 +2901,9 @@ class HeroData {
     divineIron += m.iron;
     hpPots += m.hpPots;
     mpPots += m.mpPots;
+    if (m.card > 0) addCardDays(day, m.card);
     final lines = [
+      if (m.card > 0) '+${m.card} ngày Nguyệt thẻ',
       if (m.gold > 0) '+${_thousands(m.gold)} lượng',
       if (m.shards > 0) '+${m.shards} Mảnh Hoàng Kim',
       if (m.iron > 0) '+${m.iron} Thần Thiết',
