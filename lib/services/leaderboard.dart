@@ -307,8 +307,8 @@ class Leaderboard extends ChangeNotifier {
   }
 
   static bool _plausibleBoss(Map<String, dynamic> m) {
-    final dmg = m['dmg'], cs = m['rebirths'];
-    return dmg is num && cs is num && dmg <= worldBossDayCap(cs.toInt());
+    final dmg = m['dmg'], cs = m['rebirths'], lv = m['level'];
+    return dmg is num && cs is num && lv is num && dmg <= worldBossDayCap(cs.toInt(), lv.toInt());
   }
 
   Future<int?> placeBoss(String day, int dmg) async {

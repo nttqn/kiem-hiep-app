@@ -168,6 +168,10 @@ service cloud.firestore {
         // billion under the old 1e12 bound.
         && request.resource.data.dmg >= 0
         && request.resource.data.dmg <= 2000000000 * (request.resource.data.rebirths + 1)
+        // Before the first rebirth: 2061 x level^3 (1.8.3).
+        && (request.resource.data.rebirths > 0
+            || request.resource.data.dmg <= 2061 * request.resource.data.level
+                * request.resource.data.level * request.resource.data.level)
         // Potential points as on the main board (5 more a level in the
         // sixth life).
         && (!('pts' in request.resource.data)

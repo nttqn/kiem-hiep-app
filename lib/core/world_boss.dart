@@ -64,7 +64,12 @@ int worldBossGold(int damage) => (math.sqrt(math.max(0, damage)) * 4).round();
 /// real day seen (2026-11-06) was about 0.5 billion at the top of the game,
 /// and up to 7 runs a day. Boards drop rows above it and the Firestore
 /// rules refuse them (the same sum, firestore.rules).
-int worldBossDayCap(int rebirths) => 2000000000 * (rebirths.clamp(0, 6) + 1);
+///
+/// Before the first rebirth it also shrinks with the cube of the level
+/// (2,061 x level^3: 2 billion at 99, 22 million at 22), as a fresh hero
+/// is far weaker (1.8.3: a level-22 edited save posted 838 billion).
+int worldBossDayCap(int rebirths, [int level = 99]) =>
+    rebirths > 0 ? 2000000000 * (rebirths.clamp(0, 6) + 1) : 2061 * level.clamp(1, 99) * level.clamp(1, 99) * level.clamp(1, 99);
 
 /// Daily damage totals that pay a bonus, and the gem tier each one gives.
 // Tuned with a simulation: one 60 s run deals about 0.1M at level 30, 0.5M at

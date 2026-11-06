@@ -158,9 +158,17 @@ class Item {
       return out;
     }
 
+    final slot = Slot.values[(m['s'] as int).clamp(0, Slot.values.length - 1)];
+    final level = (m['l'] as int).clamp(1, 99);
+    // An edited save (1.8.3: a level-2 sword carrying 999,999,999 attack)
+    // keeps its item, but no line above what the game can roll for it.
+    final base = stats(m['b'])
+      ..updateAll((s, v) => math.min(v, maxBaseStat(slot, s, level)));
+    final bonus = stats(m['x'])
+      ..updateAll((s, v) => math.min(v, maxAffixStat(s, level)));
     return Item(
-      slot: Slot.values[(m['s'] as int).clamp(0, Slot.values.length - 1)],
-      level: m['l'] as int,
+      slot: slot,
+      level: level,
       rarity:
           Rarity.values[(m['r'] as int).clamp(0, Rarity.values.length - 1)],
       plus: (m['p'] as int? ?? 0).clamp(0, maxPlus),
@@ -169,8 +177,8 @@ class Item {
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       set: m['k'] as String? ?? '',
-      base: stats(m['b']),
-      bonus: stats(m['x']),
+      base: base,
+      bonus: bonus,
     );
   }
 }
@@ -223,6 +231,19 @@ double _affixBase(Stat s, int l) => switch (s) {
       Stat.aspd => 0.02 + 0.0006 * l,
       Stat.move => 5 + 0.15 * l,
     };
+
+/// The most an extra line of [s] can be on a level-[l] item: rolls reach
+/// 1.2x [_affixBase] (refining and reforging keep that), with slack.
+double maxAffixStat(Stat s, int l) => _affixBase(s, l) * 1.25 + (s.isPercent ? 0.002 : 1);
+
+/// The most a base stat of [s] can be on a level-[l] [slot] item: the
+/// slot's base times the best multiplier (Hoàng Kim's 2.1), with slack.
+/// A stat the slot has no base for may not appear at all.
+double maxBaseStat(Slot slot, Stat s, int l) {
+  final b = slotBase(slot, l)[s];
+  if (b == null) return 0;
+  return b * 2.2 + (s.isPercent ? 0.002 : 1);
+}
 
 double _roundStat(Stat s, double v) => s.isPercent ? (v * 1000).round() / 1000 : v.roundToDouble();
 

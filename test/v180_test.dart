@@ -256,6 +256,33 @@ void main() {
     });
   });
 
+  test('an edited item loads with no line above what the game can roll', () {
+    // The weapon of a save edited to 999,999,999 attack (1.8.3).
+    final it = Item.fromJson({
+      's': 0, 'l': 2, 'r': 4, 'p': 0, 'n': 'Phong Vân Trường Kiếm',
+      'b': {'6': 22.0},
+      'x': {'0': 999999999.0, '6': 999999999.0, '11': 1.0, '8': 1.0},
+    });
+    expect(it.bonus[Stat.str], lessThanOrEqualTo(maxAffixStat(Stat.str, 2)));
+    expect(it.bonus[Stat.atk], lessThan(10));
+    expect(it.bonus[Stat.aspd], lessThan(0.05));
+    expect(it.bonus[Stat.crit], lessThan(0.03));
+    expect(it.base[Stat.atk], 22, reason: 'a real base stat stays');
+    // Every line a real item rolls stays as it is.
+    for (var seed = 0; seed < 200; seed++) {
+      for (final r in Rarity.values) {
+        final real = makeItem(slot: Slot.values[seed % 7], level: 1 + seed % 99, rarity: r, sect: _hero().sect, rng: math.Random(seed));
+        final back = Item.fromJson(jsonDecode(jsonEncode(real.toJson())) as Map<String, dynamic>);
+        expect(back.bonus, real.bonus);
+        expect(back.base, real.base);
+      }
+    }
+    // Boss board: before a rebirth the day's cap shrinks with the level.
+    expect(worldBossDayCap(0, 22), lessThan(30000000));
+    expect(worldBossDayCap(0, 99), greaterThan(1900000000));
+    expect(worldBossDayCap(6), 14000000000);
+  });
+
   test('board rows read the endgame fields', () {
     final e = LbEntry.fromDoc('u_0', {
       'name': 'A',
