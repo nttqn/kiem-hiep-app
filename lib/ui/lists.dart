@@ -229,6 +229,7 @@ class _ThemeSwatch extends StatelessWidget {
       MapTheme.abyss: [Color(0xFFB04AFF), Color(0xFF0E0A14)],
       MapTheme.sea: [Color(0xFF5AC8E0), Color(0xFF1E4A5A)],
       MapTheme.bloodSea: [Color(0xFFFF4A4A), Color(0xFF160808)],
+      MapTheme.canyon: [Color(0xFFE89A66), Color(0xFF6A2E1A)],
     };
     final c = colors[theme]!;
     return Container(

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/festival.dart';
 import '../core/premium.dart';
 import '../core/pass_extras.dart';
 import '../core/world_boss.dart';
@@ -25,6 +26,7 @@ class PurchaseLog {
         skuNoAds => 'Bỏ quảng cáo',
         skuStarPack => 'Gói Thăng Tinh',
         skuPass => 'Lệnh Bài Hào Kiệt',
+        skuFest => 'Gói lễ hội',
         _ => sku,
       };
 
@@ -220,6 +222,8 @@ class PurchaseService {
         text = 'Gói tân thủ cho ${h.name}: ${h.grantStarter().join(', ')}';
       case skuStarPack:
         text = 'Gói Thăng Tinh cho ${h.name}: ${h.grantStarPack().join(', ')}';
+      case skuFest:
+        text = 'Gói lễ hội cho ${h.name}: ${h.grantFestPack().join(', ')}';
       case skuPass:
         h.grantPass(vnDayKey());
         text = 'Đã mở Lệnh Bài Hào Kiệt mùa ${h.passSeason} cho ${h.name}. Nhận thưởng trong Lệnh Bài.';

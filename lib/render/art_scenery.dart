@@ -31,6 +31,7 @@ const palettes = <MapTheme, Palette>{
   MapTheme.abyss: Palette(0xFF3A2E44, 0xFF4A3A56, 0xFF2A2032, 0xFF0E0A14, night: 0.3),
   MapTheme.sea: Palette(0xFFD8C690, 0xFFE8D8A6, 0xFFB8AC80, 0xFF3A6A78),
   MapTheme.bloodSea: Palette(0xFF44262A, 0xFF56303A, 0xFF321C20, 0xFF160808, night: 0.3),
+  MapTheme.canyon: Palette(0xFFC07A4E, 0xFFD69466, 0xFFA0603A, 0xFF5A2E1A),
 };
 
 void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {

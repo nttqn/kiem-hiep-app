@@ -6,6 +6,7 @@ import '../app_version.dart';
 import '../core/content.dart';
 import '../core/clock.dart';
 import '../core/fatigue.dart';
+import '../core/festival.dart';
 import '../core/guide.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
@@ -24,6 +25,7 @@ import 'backdrop.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
 import 'chat_screen.dart';
+import 'fest_screen.dart';
 import 'leaderboard_screen.dart';
 import 'world_boss_screen.dart';
 import 'pet_screen.dart';
@@ -143,6 +145,7 @@ class _TownScreenState extends State<TownScreen> {
   List<Widget> _banners() {
     final day = vnDayKey();
     final on = EventBoost(day).on;
+    final fest = festShopOn(day);
     // A new hero sees the next thing worth doing first.
     // The story quest has its own card just above.
     final steps = h.rebirths == 0 && h.level < 30
@@ -157,6 +160,21 @@ class _TownScreenState extends State<TownScreen> {
           color: const Color(0xFF9FD8FF),
           title: 'Ngày mới đang chờ',
           text: 'Kết nối mạng để nhận quà, nhiệm vụ và lượt khiêu chiến của ngày mới. Vẫn chơi bình thường khi chưa có mạng.',
+        ),
+      // 1.11.0: a festival's land and shop.
+      if (fest != null && h.festOpenFor)
+        _banner(
+          icon: Icons.ac_unit,
+          color: const Color(0xFFBFE8FF),
+          title: fest.name,
+          text: festOn(day) != null
+              ? '${fest.landName} đang mở đến ${dayLabel(fest.until)} · có ${fmt(h.festId == fest.id ? h.festCoins : 0)} ${fest.coin}'
+              : 'Đã kết thúc, đổi ${fest.coin} lấy quà đến hết ${dayLabel(dayAfter(fest.until, fest.shopDays))}',
+          action: h.festTasksReady > 0 ? 'Nhận' : 'Vào',
+          onTap: () async {
+            await Navigator.of(context).push(fadeRoute(const FestScreen()));
+            if (mounted) setState(() {});
+          },
         ),
       if (steps.isNotEmpty)
         _banner(
@@ -198,6 +216,7 @@ class _TownScreenState extends State<TownScreen> {
           },
         ),
       for (final e in on)
+        if (e.perks.isNotEmpty)
         _banner(
           icon: Icons.celebration,
           color: const Color(0xFFFFB03A),

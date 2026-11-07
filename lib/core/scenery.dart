@@ -161,6 +161,7 @@ const _landmarks = <MapTheme, List<String>>{
   MapTheme.abyss: ['lm_buddha', 'lm_ruin'],
   MapTheme.sea: ['lm_wreck', 'lm_shrine'],
   MapTheme.bloodSea: ['lm_ruin', 'lm_buddha'],
+  MapTheme.canyon: ['lm_buddha', 'lm_ruin'],
 };
 
 const _propKinds = <MapTheme, List<String>>{
@@ -176,6 +177,7 @@ const _propKinds = <MapTheme, List<String>>{
   MapTheme.abyss: ['rockSpire', 'deadTree', 'swordStone', 'crystal', 'brazier'],
   MapTheme.sea: ['palm', 'palm', 'coral', 'rock', 'anchor', 'palm', 'coral'],
   MapTheme.bloodSea: ['rockSpire', 'deadTree', 'brazier', 'rockSpire', 'crystal'],
+  MapTheme.canyon: ['rockSpire', 'rockSpire', 'deadTree', 'pillar', 'rock', 'brazier'],
 };
 
 const _decalKinds = <MapTheme, List<String>>{
@@ -191,4 +193,5 @@ const _decalKinds = <MapTheme, List<String>>{
   MapTheme.abyss: ['crack', 'bones', 'ember', 'skull', 'crack'],
   MapTheme.sea: ['shell', 'starfish', 'ripple', 'tidePool', 'shell', 'pebble'],
   MapTheme.bloodSea: ['ember', 'bones', 'skull', 'crack', 'ember'],
+  MapTheme.canyon: ['pebble', 'ripple', 'crack', 'skull', 'pebble'],
 };

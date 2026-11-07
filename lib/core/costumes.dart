@@ -4,7 +4,7 @@ import 'sect_duty.dart';
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass, fest }
 
 class CostumeDef {
   const CostumeDef({
@@ -46,6 +46,7 @@ class CostumeDef {
         CostumeSource.week => 'Mở Rương 7 ngày (đủ 21 Mục tiêu 7 ngày)',
         CostumeSource.bloodSea => 'Hạ Huyết Hải Ma Đế $need lần (U Minh Huyết Hải)',
         CostumeSource.pass => 'Lệnh Bài: bậc 30 nhánh Hào Kiệt (mùa ${need + 1}, ${need + 4}, ${need + 7}…)',
+        CostumeSource.fest => 'Đổi ở cửa hàng lễ hội',
       };
 }
 
@@ -173,6 +174,13 @@ const costumes = <CostumeDef>[
     source: CostumeSource.pass, need: 2,
     robe: 0xFF2A4A8A, trim: 0xFFE8F0FF, pants: 0xFF141E3A, cape: 0xFF8AC8FF, glow: 0xFFBFE8FF,
     aura: 0xFFE0F4FF, armor: 3,
+  ),
+  // Lễ hội (festival.dart, 1.11.0): bought with the festival's coins.
+  CostumeDef(
+    id: 'fest_hanmai', name: 'Hàn Mai Tuyết Y', desc: 'Bạch y thêu hoa mai đỏ, choàng lông tuyết của đêm hội Đông Chí.',
+    source: CostumeSource.fest, need: 0,
+    robe: 0xFFF4F8FC, trim: 0xFFC8342A, pants: 0xFF8A1A1A, cape: 0xFFE8F0F8, glow: 0xFFFFB0B0,
+    aura: 0xFFFFFFFF, armor: 3,
   ),
 ];
 

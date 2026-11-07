@@ -63,6 +63,13 @@ const loreChapters = <LoreChapter>[
     'Tuyết Sơn Yêu Vương canh giữ hang, có lẽ từng là con vật ông nuôi.',
     'Tấm bia cuối chỉ còn một câu: "Kiếm lạnh, lòng đừng lạnh."',
   ], Bonus.critDmg, 0.05),
+  LoreChapter('r11', 'Bích họa Thiên Phật', [
+    'Thương đoàn đi Tây Vực xưa kia đều dừng ở Thiên Phật Động thắp hương cầu bình an.',
+    'Các họa sư vẽ lên vách đá suốt ba trăm năm, mỗi hang một tích truyện.',
+    'Bái Hỏa Giáo kéo tới, đốt kinh Phật, bắt họa sư vẽ lửa thánh đè lên bích họa cũ.',
+    'Một họa sư già giấu bản đồ mật thất vào nét áo của một vị Bồ Tát.',
+    'Dưới lớp lửa vẽ đè, Bồ Tát vẫn mỉm cười, tay chỉ về phương đông: Hoa Sơn.',
+  ], Bonus.critDmg, 0.04),
   LoreChapter('r6', 'Lửa phong ấn', [
     'Miệng núi lửa này bị năm vị chưởng môn hợp sức phong ấn.',
     'Bên dưới là Hỏa Kỳ Lân, thần thú giữ mạch lửa của đất trời.',

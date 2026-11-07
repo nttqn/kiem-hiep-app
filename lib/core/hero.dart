@@ -6,6 +6,7 @@ import 'arena.dart';
 import 'auto_config.dart';
 import 'pass_extras.dart';
 import 'body_train.dart';
+import 'branches.dart';
 import 'bounty.dart';
 import 'companions.dart';
 import 'content.dart';
@@ -463,6 +464,46 @@ class HeroData {
   /// was bought for.
   int passSeason = 0, passXp = 0, passFree = 0, passPaidTaken = 0, passPaidSeason = 0;
 
+  /// Lễ hội (festival.dart, 1.11.0): the festival, its coins, what the shop
+  /// sold, the pack; and today's coins from kills, kills, bosses, tasks taken.
+  String festId = '', festDay = '';
+  int festCoins = 0, festEarned = 0, festKills = 0, festBoss = 0, festTasks = 0;
+  bool festPack = false;
+  final Map<String, int> festBought = {};
+
+  /// Lưu phái (branches.dart, 1.11.0): the school (0/1 of the sect's two,
+  /// -1 none yet) and its Tu vi.
+  int branch = -1, branchLv = 1;
+
+  bool get branchOpen => rebirths >= branchOpenRebirths;
+
+  BranchDef? get branchDef =>
+      branchOpen && branch >= 0 && branch < branchesOf(hanh).length ? branchesOf(hanh)[branch] : null;
+
+  /// Takes school [i]: free the first time, then [branchSwitchCost]. Tu vi stays.
+  bool pickBranch(int i) {
+    if (!branchOpen || i < 0 || i >= branchesOf(hanh).length || i == branch) return false;
+    final cost = branch < 0 ? 0 : branchSwitchCost(rebirths);
+    if (gold < cost) return false;
+    gold -= cost;
+    branch = i;
+    recompute();
+    return true;
+  }
+
+  bool get canRaiseBranch =>
+      branchDef != null && branchLv < maxBranchLevel &&
+      gold >= branchGoldCost(branchLv) && divineIron >= branchIronCost(branchLv);
+
+  bool raiseBranch() {
+    if (!canRaiseBranch) return false;
+    gold -= branchGoldCost(branchLv);
+    divineIron -= branchIronCost(branchLv);
+    branchLv++;
+    recompute();
+    return true;
+  }
+
   /// Nhiệm vụ Lệnh Bài: the week, the quests done (bit per kind), counts
   /// toward them; Rương thêm taken past tier 30.
   int passQWeek = 0, passQDone = 0, passExtraTaken = 0;
@@ -600,6 +641,8 @@ class HeroData {
     add(starBonuses(equip.values));
     add(loreBonuses());
     add(manor.bonuses());
+    final br = branchDef;
+    if (br != null) add(branchBonus(br, branchLv));
     return out;
   }
 
@@ -1011,6 +1054,9 @@ class HeroData {
     final perLevel = levelPoints;
     soulPills -= nextRebirthPills;
     rebirths++;
+    if (rebirths == branchOpenRebirths) {
+      notices.add(Notice('Mở Lưu phái: chọn một trong hai phái hệ ở Kỹ năng', color: 0xFFFFD34A, big: true));
+    }
     // A new Luân Hồi chapter starts (after the main story, if unfinished).
     rbQuest = 0;
     if (mainQuest >= mainQuests.length) mainProgress = 0;
@@ -1175,7 +1221,7 @@ class HeroData {
         CostumeSource.abyss => abyssBossKills >= c.need,
         CostumeSource.week => weekChest,
         CostumeSource.bloodSea => bloodSeaBossKills >= c.need,
-        CostumeSource.worldBoss || CostumeSource.gold || CostumeSource.pass => false,
+        CostumeSource.worldBoss || CostumeSource.gold || CostumeSource.pass || CostumeSource.fest => false,
       };
 
   /// Grants every outfit whose goal is met; [quiet] skips the notices (when
@@ -1479,6 +1525,9 @@ class HeroData {
   /// Đông Hải Long Vương beaten, for Long Mã.
   int get seaBossKills => bossKillsById[dongHaiMap.boss] ?? 0;
 
+  /// Xích Sa Pháp Vương beaten (1.11.0), for Bạch Đà.
+  int get westBossKills => bossKillsById[tayVucMap.boss] ?? 0;
+
   /// The mount under the hero, if any.
   MountDef? get ridingMount {
     final m = riding ? mountById[activeMount] : null;
@@ -1490,6 +1539,7 @@ class HeroData {
         MountSource.rebirth => rebirths >= m.need,
         MountSource.abyss => abyssBossKills >= m.need,
         MountSource.sea => seaBossKills >= m.need,
+        MountSource.west => westBossKills >= m.need,
         MountSource.gold || MountSource.arena => false,
       };
 
@@ -2219,7 +2269,7 @@ class HeroData {
 
   /// Skill [i] as the hero casts it, with its bí kíp.
   SkillDef castSkill(int i) {
-    final s = sect.skills[i];
+    final s = applyBranch(sect.skills[i], branchDef);
     final k = manualOf(s.id);
     if (k == null) return s;
     return applyManual(s, k, manualLevel(manualKey(s.id, k)), hanh);
@@ -3035,6 +3085,8 @@ class HeroData {
         'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast, stPackWeek],
         'hk': [hkWeek, hkBought],
         'lb': [passSeason, passXp, passFree, passPaidTaken, passPaidSeason, passQWeek, passQDone, passQCounts, passExtraTaken],
+        'lp': [branch, branchLv],
+        'fest': [festId, festDay, festCoins, festEarned, festKills, festBoss, festTasks, festPack, festBought],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3319,6 +3371,29 @@ class HeroData {
         });
         h.passExtraTaken = math.max(0, lb[8] as int);
       }
+    }
+    final fest = m['fest'];
+    if (fest is List && fest.length == 9 && fest[0] is String && fest[1] is String && fest[8] is Map) {
+      try {
+        h.festId = fest[0] as String;
+        h.festDay = fest[1] as String;
+        h.festCoins = math.max(0, fest[2] as int);
+        h.festEarned = math.max(0, fest[3] as int);
+        h.festKills = math.max(0, fest[4] as int);
+        h.festBoss = math.max(0, fest[5] as int);
+        h.festTasks = fest[6] as int;
+        h.festPack = fest[7] == true;
+        (fest[8] as Map).forEach((k, v) {
+          if (v is int) h.festBought['$k'] = v;
+        });
+      } catch (_) {
+        // A damaged festival entry only loses the festival.
+      }
+    }
+    final lp = m['lp'];
+    if (lp is List && lp.length >= 2 && lp[0] is int && lp[1] is int) {
+      h.branch = (lp[0] as int).clamp(-1, 1);
+      h.branchLv = (lp[1] as int).clamp(1, maxBranchLevel);
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {

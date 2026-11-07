@@ -238,6 +238,67 @@ void _starPack(Canvas c) {
   }
 }
 
+/// Gói lễ hội (Đông Chí): a big snowflake on night blue, a red lantern
+/// hanging beside it.
+void _fest(Canvas c) {
+  _frame(c, const Color(0xFF2A5A9A), const Color(0xFF0A1630));
+  const m = Offset(_s * 0.44, _s * 0.5);
+  _glow(c, m, 220, const Color(0x88BFE8FF));
+  final ice = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..color = const Color(0xFFF4FBFF);
+  final rim = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..color = const Color(0xFF3A7AC0);
+  for (final (p, w) in [(rim, 30.0), (ice, 18.0)]) {
+    p.strokeWidth = w;
+    for (var i = 0; i < 6; i++) {
+      final a = -math.pi / 2 + i * math.pi / 3;
+      final tip = m + Offset.fromDirection(a, 150);
+      c.drawLine(m, tip, p);
+      for (final k in [0.55, 0.8]) {
+        final b = m + Offset.fromDirection(a, 150 * k);
+        c.drawLine(b, b + Offset.fromDirection(a - 0.75, 46 * (1.1 - k)), p);
+        c.drawLine(b, b + Offset.fromDirection(a + 0.75, 46 * (1.1 - k)), p);
+      }
+    }
+  }
+  c.drawCircle(m, 30, Paint()..color = const Color(0xFFF4FBFF));
+  // Lantern on a cord.
+  const l = Offset(398, 290);
+  c.drawLine(const Offset(398, 40), l + const Offset(0, -64), Paint()
+    ..strokeWidth = 4
+    ..color = _gold);
+  _glow(c, l, 110, const Color(0xAAFF6A3A));
+  final body = Rect.fromCenter(center: l, width: 108, height: 118);
+  c.drawOval(body, Paint()..shader = ui.Gradient.radial(l + const Offset(-14, -18), 70, [const Color(0xFFFF7A4A), const Color(0xFFB3161A)]));
+  for (final dx in [-26.0, 0.0, 26.0]) {
+    c.drawLine(Offset(l.dx + dx, body.top + 8), Offset(l.dx + dx, body.bottom - 8), Paint()
+      ..strokeWidth = 3
+      ..color = const Color(0x88701010));
+  }
+  for (final y in [body.top - 4, body.bottom + 4]) {
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(l.dx, y), width: 62, height: 18), const Radius.circular(5)),
+        Paint()..color = _gold);
+  }
+  final tassel = Path()
+    ..moveTo(l.dx - 10, body.bottom + 12)
+    ..lineTo(l.dx + 10, body.bottom + 12)
+    ..lineTo(l.dx + 14, body.bottom + 72)
+    ..lineTo(l.dx - 14, body.bottom + 72)
+    ..close();
+  c.drawPath(tassel, Paint()..color = const Color(0xFFE8342A));
+  for (final (p, r) in [
+    (const Offset(96, 110), 20.0),
+    (const Offset(120, 420), 16.0),
+    (const Offset(300, 450), 12.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFF4FBFF));
+  }
+}
+
 /// Lệnh Bài: a gold command token with a red seal and a hanging tassel.
 void _pass(Canvas c) {
   _frame(c, const Color(0xFFA8301E), const Color(0xFF2A0806));
@@ -340,5 +401,6 @@ void main() {
     await _write('kh_goi_tan_thu', _starter);
     await _write('kh_bo_quang_cao', _noAds);
     await _write('kh_goi_thang_tinh', _starPack);
+    await _write('kh_goi_le_hoi', _fest);
   });
 }

@@ -105,6 +105,7 @@ class _PlayScreenState extends State<PlayScreen> {
         MapTheme.abyss => 'fortress',
         MapTheme.sea => 'cloud',
         MapTheme.bloodSea => 'fortress',
+        MapTheme.canyon => 'desert',
         _ => t.name,
       };
 

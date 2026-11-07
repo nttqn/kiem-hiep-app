@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'body_train.dart';
+import 'festival.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'hero.dart';
@@ -24,7 +25,7 @@ const String skuStarter = 'kh_goi_tan_thu';
 const String skuStarPack = 'kh_goi_thang_tinh';
 /// Lệnh Bài (1.10.0): the paid track of the running season, for one hero.
 const String skuPass = 'kh_lenh_bai';
-const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass};
+const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest};
 
 const int starPackStones = 120;
 const int starPackSouls = 3;
@@ -135,6 +136,9 @@ extension Premium on HeroData {
         if (s <= 0 || s <= passPaidSeason) return null;
         passPaidSeason = s;
         return 'Khôi phục Lệnh Bài Hào Kiệt mùa $s';
+      case skuFest:
+        if (festPack) return null;
+        return 'Khôi phục Gói lễ hội: ${grantFestPack().join(', ')}';
       case skuStarter:
         if (starterBought) return null;
         return 'Khôi phục Gói tân thủ: ${grantStarter().join(', ')}';

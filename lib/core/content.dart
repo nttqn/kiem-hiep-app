@@ -267,11 +267,54 @@ const mobs = <MobDef>[
       body: Body.serpent, c1: 0xFF1E6A8A, c2: 0xFF8AE0D8, c3: 0xFFFFD34A,
       variant: 'dragon', size: 2.2, hp: 21, atk: 1.8, def: 1.7, speed: 90,
       exp: 15, boss: true),
+  // Tây Vực Cổ Đạo (1.11.0)
+  MobDef(
+      id: 'tvRider', name: 'Hồ Kỵ Đao Khách', hanh: Hanh.kim, body: Body.human,
+      c1: 0xFFB8743A, c2: 0xFF5A2A1A, c3: 0xFFE8D8B0, variant: 'saber',
+      hp: 1.1, atk: 1.15, speed: 112),
+  MobDef(
+      id: 'tvWorm', name: 'Xích Sa Trùng', hanh: Hanh.tho, body: Body.serpent,
+      c1: 0xFFC0582E, c2: 0xFFF0C080, c3: 0xFF5A1A10,
+      size: 1.15, hp: 1.35, atk: 1.05, def: 1.3, speed: 85),
+  MobDef(
+      id: 'tvPriest', name: 'Bái Hỏa Tế Tư', hanh: Hanh.hoa, body: Body.human,
+      c1: 0xFFE8D8C0, c2: 0xFFB3261E, c3: 0xFFFFC34A, variant: 'darts',
+      ranged: true, range: 250, hp: 0.8, atk: 1.1, attackCd: 1.8),
+  MobDef(
+      id: 'tvKing', name: 'Xích Sa Pháp Vương', hanh: Hanh.hoa,
+      body: Body.human, c1: 0xFFD8402E, c2: 0xFF3A1A0A, c3: 0xFFFFD34A,
+      variant: 'demonLord', size: 1.75, hp: 17, atk: 1.7, def: 1.5,
+      speed: 95, exp: 13, boss: true),
 ];
 
-final Map<String, MobDef> mobById = {for (final m in mobs) m.id: m};
+/// Lễ hội Đông Chí's monsters (festival.dart, 1.11.0), kept out of [mobs]
+/// so no quest, bounty or list picks them.
+const festMobs = <MobDef>[
+  MobDef(
+      id: 'fdSnowman', name: 'Tuyết Nhân Tinh', hanh: Hanh.thuy, body: Body.brute,
+      c1: 0xFFF6FAFC, c2: 0xFF9AC8E8, c3: 0xFFC8342A, variant: 'yeti', size: 1.15,
+      hp: 1.35, atk: 1.05, speed: 80),
+  MobDef(
+      id: 'fdBoar', name: 'Băng Nha Trư', hanh: Hanh.tho, body: Body.quad,
+      c1: 0xFFAFC4D4, c2: 0xFF5A6A80, c3: 0xFFE8F4FF, variant: 'boar',
+      hp: 1.1, atk: 1.1, def: 1.2, speed: 100),
+  MobDef(
+      id: 'fdLantern', name: 'Đăng Lung Yêu', hanh: Hanh.hoa, body: Body.flyer,
+      c1: 0xFFE8342A, c2: 0xFFFFD34A, variant: 'wisp', ranged: true,
+      range: 250, hp: 0.8, atk: 1.1, attackCd: 1.8),
+  MobDef(
+      id: 'fdDragon', name: 'Hàn Nguyệt Băng Long', hanh: Hanh.thuy,
+      body: Body.serpent, c1: 0xFFD8F0FF, c2: 0xFF6AB8FF, c3: 0xFFFFD34A,
+      variant: 'dragon', size: 2.1, hp: 20, atk: 1.75, def: 1.6, speed: 90,
+      exp: 14, boss: true),
+];
 
-enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea, bloodSea }
+final Map<String, MobDef> mobById = {
+  for (final m in mobs) m.id: m,
+  for (final m in festMobs) m.id: m,
+};
+
+enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea, bloodSea, canyon }
 
 class MapDef {
   const MapDef({
@@ -407,20 +450,31 @@ const MapDef dongHaiMap = MapDef(
     minLv: 62, maxLv: 80, theme: MapTheme.sea,
     mobs: ['pirate', 'crab', 'jelly'], boss: 'seaDragon');
 
-/// Field maps as listed to the player, by level: Đông Hải after Ma Giáo,
-/// Cửu U Ma Vực last.
+/// Tây Vực Cổ Đạo (1.11.0): the old silk road west of Hoàng Sa Mạc, red
+/// canyons and cave temples, a side land for the long climb between
+/// Băng Tuyết Nguyên and Hỏa Diệm Sơn. Off the story road like Đông Hải.
+const MapDef tayVucMap = MapDef(
+    id: 'tayvuc', name: 'Tây Vực Cổ Đạo',
+    desc: 'Con đường tơ lụa cũ qua hẻm núi đỏ, Bái Hỏa Giáo chiếm động Phật, thương đoàn không dám qua.',
+    minLv: 40, maxLv: 56, theme: MapTheme.canyon,
+    mobs: ['tvRider', 'tvWorm', 'tvPriest'], boss: 'tvKing');
+
+/// Field maps as listed to the player, by level: Tây Vực after Băng Tuyết,
+/// Đông Hải after Ma Giáo, Cửu U Ma Vực last.
 final fieldMaps = <MapDef>[
-  ...maps.sublist(0, 7), dongHaiMap, ...maps.sublist(7), abyssMap, huyetHaiMap,
+  ...maps.sublist(0, 5), tayVucMap, ...maps.sublist(5, 7), dongHaiMap, ...maps.sublist(7), abyssMap, huyetHaiMap,
 ];
 
 /// Field maps that are not on the story's road ([maps]).
-bool isSideMap(MapDef m) => m.id == dongHaiMap.id || m.rebirths > 0;
+bool isSideMap(MapDef m) =>
+    m.id == dongHaiMap.id || m.id == tayVucMap.id || m.rebirths > 0 || m.id.startsWith('fest_');
 
 final Map<String, MapDef> mapById = {
   for (final m in maps) m.id: m,
   abyssMap.id: abyssMap,
   huyetHaiMap.id: huyetHaiMap,
   dongHaiMap.id: dongHaiMap,
+  tayVucMap.id: tayVucMap,
 };
 
 class DungeonDef {
@@ -556,8 +610,13 @@ const dungeons = <DungeonDef>[
       level: 97, waves: [12, 14, 16]),
 ];
 
-/// Dungeons off the main ladder (not Ác Mộng's eighteen): Đông Hải's.
+/// Dungeons off the main ladder (not Ác Mộng's eighteen): Đông Hải's and
+/// Tây Vực's.
 const extraDungeons = <DungeonDef>[
+  DungeonDef(id: 'tv1', name: 'Ngọc Môn Quan', mapId: 'tayvuc',
+      level: 43, waves: [8, 10, 12]),
+  DungeonDef(id: 'tv2', name: 'Bái Hỏa Thánh Điện', mapId: 'tayvuc',
+      level: 53, waves: [9, 11, 13]),
   DungeonDef(id: 'dh1', name: 'Long Cung Thủy Phủ', mapId: 'donghai',
       level: 74, waves: [10, 12, 14]),
 ];

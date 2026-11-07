@@ -4,7 +4,7 @@ import 'mounts.dart';
 
 /// Ngoại hình thú cưỡi (1.7.0): new colours and an aura for a mount the
 /// hero owns. Looks only: the mount's stats stay the same.
-enum SkinSource { gold, arena, iron, tower }
+enum SkinSource { gold, arena, iron, tower, fest }
 
 class MountSkin {
   const MountSkin({
@@ -34,6 +34,7 @@ class MountSkin {
         SkinSource.arena => '${fmtNeed(need)} Uy danh',
         SkinSource.iron => '$need Thần Thiết',
         SkinSource.tower => 'Vượt Tháp tầng $need',
+        SkinSource.fest => 'Đổi ở cửa hàng Lễ hội Đông Chí',
       };
 }
 
@@ -70,6 +71,9 @@ const mountSkins = <MountSkin>[
       aura: 0xFFC88CFF, source: SkinSource.arena, need: 20000),
   MountSkin(id: 'phikiem_bang', mount: 'phikiem', name: 'Hàn Băng Phi Kiếm', c1: 0xFFF0FAFF, c2: 0xFF9FE8FF, c3: 0xFF3A6AA8,
       aura: 0xFFBFF0FF, source: SkinSource.iron, need: 100),
+  // Lễ hội Đông Chí (1.11.0): for the Ngựa Nâu every hero gets at level 10.
+  MountSkin(id: 'nau_tuyet', mount: 'nau', name: 'Tuyết Câu Đăng Hội', c1: 0xFFF4F8FC, c2: 0xFFC8342A, c3: 0xFFFFD34A,
+      aura: 0xFFFFE0E0, source: SkinSource.fest, need: 0),
 ];
 
 final Map<String, MountSkin> skinById = {for (final s in mountSkins) s.id: s};
@@ -94,6 +98,7 @@ extension MountSkins on HeroData {
       SkinSource.arena => arenaCoins >= s.need,
       SkinSource.iron => divineIron >= s.need,
       SkinSource.tower => towerBest >= s.need,
+      SkinSource.fest => false,
     };
   }
 
@@ -109,6 +114,8 @@ extension MountSkins on HeroData {
         divineIron -= s.need;
       case SkinSource.tower:
         break;
+      case SkinSource.fest:
+        return false;
     }
     ownedSkins.add(s.id);
     mountSkin[s.mount] = s.id;

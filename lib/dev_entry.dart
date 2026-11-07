@@ -14,6 +14,7 @@ import 'core/content.dart';
 import 'core/premium.dart';
 import 'core/costumes.dart';
 import 'core/divine.dart';
+import 'core/festival.dart';
 import 'core/live_event.dart';
 import 'core/mail.dart';
 import 'core/newbie.dart';
@@ -60,6 +61,7 @@ import 'core/items.dart';
 import 'services/save.dart';
 import 'services/sound.dart';
 import 'ui/character_screen.dart';
+import 'ui/fest_screen.dart';
 import 'ui/create_screen.dart';
 import 'ui/lists.dart';
 import 'ui/pet_screen.dart';
@@ -529,6 +531,19 @@ Future<void> main() async {
         LiveEvent(id: 'dev', name: 'Đại hội cuối tuần', desc: 'Giang hồ mở hội', exp: 2, gems: 2, wbRuns: 1),
       ];
     }
+    // fest=1: Lễ hội Đông Chí open today; festcoins=<n> its coins.
+    if (q['fest'] == '1') {
+      liveEvents = [...liveEvents, const LiveEvent(id: 'devfest', fest: 'dongchi')];
+      h.festRoll(festivals.first, vnDayKey());
+      h.festCoins = int.tryParse(q['festcoins'] ?? '') ?? 1200;
+      h.festKills = 75;
+    }
+    // branch=<0|1>[:lv]: Lưu phái taken (needs cs>=1).
+    final br = q['branch']?.split(':');
+    if (br != null && h.rebirths > 0) {
+      h.branch = int.tryParse(br[0]) ?? -1;
+      if (br.length > 1) h.branchLv = int.tryParse(br[1]) ?? 1;
+    }
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();
     h.recompute();
@@ -584,6 +599,8 @@ Future<void> main() async {
     'offers' => const ShopScreen(tab: 2),
     'alchemy' => const AlchemyScreen(),
     'activity' => const ActivityScreen(),
+    'fest' => const FestScreen(),
+    'branch' => const CharacterScreen(tab: 1),
     'arena' => const ArenaScreen(),
     'sect' => const SectScreen(),
     'nightmare' => const DungeonListScreen(nightmare: true),

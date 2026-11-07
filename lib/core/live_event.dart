@@ -10,6 +10,9 @@
 ///   EXP, gem drops and Ác Mộng Thần Thiết (2 = double), 1 to 3.
 /// * `wbRuns`: extra free Boss Thế Giới runs a day, 0 to 3.
 ///
+/// * `fest`: a festival id (festival.dart, e.g. `dongchi`) to open its land
+///   and shop on these days, beyond the dates built into the app.
+///
 /// When several are on at once the strongest of each boost applies.
 class LiveEvent {
   const LiveEvent({
@@ -24,12 +27,14 @@ class LiveEvent {
     this.gems = 1,
     this.iron = 1,
     this.wbRuns = 0,
+    this.fest = '',
   });
 
   final String id, name, desc, from, until;
   final bool weekends;
   final double gold, exp, gems, iron;
   final int wbRuns;
+  final String fest;
 
   /// Running on Vietnam day [day] (`20261101`).
   bool activeOn(String day) {
@@ -83,8 +88,9 @@ class LiveEvent {
       gems: mul('gems'),
       iron: mul('iron'),
       wbRuns: runs is num ? runs.toInt().clamp(0, 3) : 0,
+      fest: text('fest', ''),
     );
-    return e.perks.isEmpty ? null : e;
+    return e.perks.isEmpty && e.fest.isEmpty ? null : e;
   }
 }
 

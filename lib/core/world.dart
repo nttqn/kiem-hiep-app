@@ -7,6 +7,7 @@ import 'clock.dart';
 import 'companions.dart';
 import 'content.dart';
 import 'divine.dart';
+import 'festival.dart';
 import 'fishing.dart';
 import 'gems.dart';
 import 'gold_sets.dart';
@@ -930,7 +931,10 @@ class World {
       // Đông Hải grows Ma Giáo's herbs.
       : map.id == dongHaiMap.id
           ? maps.indexWhere((m) => m.id == 'magiao')
-          : math.max(0, maps.indexOf(map)));
+          // Tây Vực grows Hỏa Diệm Sơn's.
+          : map.id == tayVucMap.id
+              ? maps.indexWhere((m) => m.id == 'hoadiem')
+              : math.max(0, maps.indexOf(map)));
 
   void _plantHerbs() {
     final r = math.Random(map.id.hashCode ^ 0x5eed);
@@ -1281,7 +1285,8 @@ class World {
     return mode == WorldMode.field && s != null && s.mapId == map.id ? s : null;
   }
 
-  bool get canReadMap => mode == WorldMode.field && hero.tbdMaps > 0 && hero.tbdSpot == null;
+  // Not on a festival land: it closes, and the spot with it.
+  bool get canReadMap => mode == WorldMode.field && !isFestMap(map) && hero.tbdMaps > 0 && hero.tbdSpot == null;
 
   final Set<int> _ambush = {};
   double _ambushX = 0, _ambushY = 0;
@@ -2924,7 +2929,15 @@ class World {
       }
     }
     // Đông Hải Long Vương counts toward Long Mã.
-    if (m.def.id == dongHaiMap.boss) hero.unlockMounts();
+    if (m.def.id == dongHaiMap.boss || m.def.id == tayVucMap.boss) hero.unlockMounts();
+    // Lễ hội: the festival's coins.
+    if (dungeon == null && isFestMap(map)) {
+      final f = festOn(vnDayKey());
+      final coins = hero.festKill(m.def, elite: m.elite, rng: rng);
+      if (coins > 0 && f != null) {
+        events.add(GameEvent(EvKind.loot, text: '+$coins ${f.coin}', color: 0xFFE8F4FF));
+      }
+    }
     if (m.big && hero.manualOpen && dungeon?.isTower != true &&
         rng.nextDouble() < (m.def.boss ? bossPageChance : elitePageChance)) {
       events.add(GameEvent(EvKind.loot, text: 'Nhặt được ${hero.gainManualPage(rng)}', color: 0xFFC88CFF));

@@ -11,13 +11,18 @@ import 'package:kiem_hiep/render/art_figures.dart';
 void main() {
   test('monster sheet', () async {
     const cell = 230.0, rowH = 190.0;
-    final w = cell * 4, h = rowH * maps.length;
+    // Story lands, then the side lands and the festival's.
+    final rows = [
+      for (final m in [...maps, dongHaiMap, tayVucMap]) [...m.mobs, m.boss],
+      [for (final m in festMobs) m.id],
+    ];
+    final w = cell * 4, h = rowH * rows.length;
     final rec = ui.PictureRecorder();
     final c = Canvas(rec);
-    for (var r = 0; r < maps.length; r++) {
+    for (var r = 0; r < rows.length; r++) {
       c.drawRect(Rect.fromLTWH(0, r * rowH, w, rowH),
           Paint()..color = Color(r.isEven ? 0xFF6E9B4A : 0xFF5E8A40));
-      final ids = [...maps[r].mobs, maps[r].boss];
+      final ids = rows[r];
       for (var i = 0; i < ids.length; i++) {
         final d = mobById[ids[i]]!;
         final s = (d.boss ? 1.6 : 2.4) * (d.size > 1 ? 1 / d.size * 1.3 : 1);

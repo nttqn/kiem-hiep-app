@@ -136,6 +136,7 @@ class _MountViewState extends State<MountView> {
                   MountSource.rebirth => 'Đã chuyển sinh: ${h.rebirths}/${m.need}',
                   MountSource.abyss => 'Đã hạ Ma Tôn: ${h.abyssBossKills}/${m.need}',
                   MountSource.sea => 'Đã hạ Long Vương: ${h.seaBossKills}/${m.need}',
+                  MountSource.west => 'Đã hạ Pháp Vương: ${h.westBossKills}/${m.need}',
                   _ => 'Uy danh: ${fmt(h.arenaCoins)}/${fmt(m.need)}',
                 },
                 style: small.copyWith(fontSize: 10.5, color: creamDim),
@@ -234,7 +235,11 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 LButton(
-                                  label: s.source == SkinSource.tower ? 'Nhận' : 'Đổi',
+                                  label: switch (s.source) {
+                                    SkinSource.tower => 'Nhận',
+                                    SkinSource.fest => 'Lễ hội',
+                                    _ => 'Đổi',
+                                  },
                                   small: true,
                                   color: seal,
                                   enabled: h.canGetSkin(s),

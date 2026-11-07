@@ -4,7 +4,7 @@ import 'sects.dart';
 
 /// Thú cưỡi: the hero rides one on every map. Each mount adds running speed
 /// and one stat; feeding (gold) raises its level and both bonuses.
-enum MountSource { gold, tower, arena, rebirth, abyss, sea }
+enum MountSource { gold, tower, arena, rebirth, abyss, sea, west }
 
 class MountDef {
   const MountDef({
@@ -71,6 +71,7 @@ class MountDef {
         MountSource.rebirth => 'Chuyển sinh lần $need',
         MountSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
         MountSource.sea => 'Hạ Đông Hải Long Vương $need lần (Đông Hải Quần Đảo)',
+        MountSource.west => 'Hạ Xích Sa Pháp Vương $need lần (Tây Vực Cổ Đạo)',
       };
 }
 
@@ -124,6 +125,11 @@ const mounts = <MountDef>[
       desc: 'Ngựa thần mình phủ vảy rồng, rẽ sóng Đông Hải mà đi.',
       c1: 0xFF2E8AA0, c2: 0xFF8AE8D8, c3: 0xFFFFC34A,
       move: 0.27, bonus: Bonus.hpPct, base: 0.06, perLv: 0.004, source: MountSource.sea, need: 20),
+  MountDef(
+      id: 'bachda', name: 'Bạch Đà Tây Vực', look: 'camel',
+      desc: 'Lạc đà trắng hai bướu của thương đoàn Tây Vực, vượt cát đỏ không biết mệt.',
+      c1: 0xFFE8DCC4, c2: 0xFFB89A70, c3: 0xFFB3261E,
+      move: 0.22, bonus: Bonus.defPct, base: 0.06, perLv: 0.004, source: MountSource.west, need: 15),
   MountDef(
       id: 'cuusac', name: 'Cửu Sắc Thần Lộc', look: 'deer',
       desc: 'Hươu thần chín sắc, chỉ hiện thân trước bậc lục chuyển.',

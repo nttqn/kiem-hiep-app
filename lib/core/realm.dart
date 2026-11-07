@@ -43,6 +43,8 @@ const realms = <RealmDef>[
       desc: 'Tòa thành vùi trong cát, kho báu thương đoàn còn nằm dưới đổ nát.'),
   RealmDef(id: 'r5', name: 'Hàn Băng Cổ Động', mapId: 'bangnguyen', level: 41,
       desc: 'Băng động ngàn năm, bia đá khắc võ công tiền nhân ẩn trong tuyết.'),
+  RealmDef(id: 'r11', name: 'Thiên Phật Động', mapId: 'tayvuc', level: 47,
+      desc: 'Nghìn hang Phật khoét vào vách núi đỏ, bích họa cổ giấu lối vào mật thất.'),
   RealmDef(id: 'r6', name: 'Xích Viêm Cấm Địa', mapId: 'hoadiem', level: 51,
       desc: 'Miệng núi lửa bị phong ấn, linh khí hỏa hệ dồi dào nhất thiên hạ.'),
   RealmDef(id: 'r7', name: 'Huyết Ma Mật Cảnh', mapId: 'magiao', level: 64,

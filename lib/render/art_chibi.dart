@@ -1875,6 +1875,7 @@ void _drawMountBody(Canvas c, MountDef d, {double walk = 0, bool moving = false,
     return;
   }
   final deer = d.look == 'deer';
+  final camel = d.look == 'camel';
   final gallop = moving ? walk * 2.2 : 0.0;
   final bob = moving ? (math.sin(gallop * 2)).abs() * 1.5 : math.sin(t * 2) * 0.4;
   c.save();
@@ -1921,20 +1922,36 @@ void _drawMountBody(Canvas c, MountDef d, {double walk = 0, bool moving = false,
     }
   }
 
+  if (camel) {
+    // Two humps either side of the saddle.
+    for (final hx in const [-12.0, 12.0]) {
+      final hump = Rect.fromCenter(center: Offset(hx, by - 11), width: 17, height: 15);
+      _shape(c, Path()..addOval(hump), _lit(d.c1, hump), ow: 1.6);
+    }
+  }
+
   leg(-10, math.pi * 0.6, d.c1);
   leg(19, math.pi * 1.6, d.c1);
 
   // Neck and head, nodding with the gallop.
   final nod = moving ? math.sin(gallop) * 1.5 : math.sin(t * 1.5) * 0.8;
-  final neck = Path()
-    ..moveTo(12, by - 8)
-    ..lineTo(22, by - 27 + nod)
-    ..lineTo(31, by - 25 + nod)
-    ..lineTo(25, by + 2)
-    ..close();
-  _shape(c, neck, _lit(d.c1, Rect.fromLTRB(12, by - 27, 31, by + 2)));
-  final hx = 32.0, hy = by - 24 + nod;
-  if (!deer) {
+  // A camel's neck dips forward and curls up to a head held high and far out.
+  final neck = camel
+      ? (Path()
+        ..moveTo(14, by - 6)
+        ..quadraticBezierTo(30, by + 2, 34, by - 30 + nod)
+        ..lineTo(42, by - 30 + nod)
+        ..quadraticBezierTo(38, by + 10, 22, by + 6)
+        ..close())
+      : (Path()
+        ..moveTo(12, by - 8)
+        ..lineTo(22, by - 27 + nod)
+        ..lineTo(31, by - 25 + nod)
+        ..lineTo(25, by + 2)
+        ..close());
+  _shape(c, neck, _lit(d.c1, Rect.fromLTRB(12, by - 30, 42, by + 6)));
+  final hx = camel ? 42.0 : 32.0, hy = by - (camel ? 32 : 24) + nod;
+  if (!deer && !camel) {
     // Mane along the neck.
     final mane = Path()..moveTo(11, by - 7);
     for (var i = 0; i <= 5; i++) {
@@ -1978,6 +1995,15 @@ void _drawMountBody(Canvas c, MountDef d, {double walk = 0, bool moving = false,
             ..color = col(shade(d.c3, 0.2 * glow))
             ..strokeWidth = 1.8);
     }
+  } else if (camel) {
+    // A tasselled halter and a bell under the chin.
+    c.drawLine(Offset(hx - 4, hy - 5), Offset(hx + 5, hy + 4), _o
+      ..color = col(d.c3)
+      ..strokeWidth = 1.6);
+    c.drawCircle(Offset(hx - 2, hy + 9), 2.2, _flat(0xFFE8C547));
+    c.drawLine(Offset(hx - 2, hy + 4), Offset(hx - 2, hy + 7), _o
+      ..color = col(d.c3)
+      ..strokeWidth = 1.2);
   } else {
     // Bridle.
     c.drawLine(Offset(hx - 4, hy - 5), Offset(hx + 5, hy + 4), _o

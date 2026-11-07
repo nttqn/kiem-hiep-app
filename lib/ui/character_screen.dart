@@ -15,6 +15,7 @@ import '../core/star_up.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'body_tab.dart';
+import 'branch_dialog.dart';
 import 'divine_tab.dart';
 import 'gem_tab.dart';
 import 'gold_tab.dart';
@@ -388,6 +389,18 @@ class _CharacterScreenState extends State<CharacterScreen> {
               ),
             ),
             const Spacer(),
+            if (h.branchOpen) ...[
+              LButton(
+                label: h.branchDef?.name ?? 'Lưu phái •',
+                small: true,
+                color: branchWaiting(h) ? seal : const Color(0xFF8A6A1A),
+                onTap: () async {
+                  await showBranchDialog(context, h);
+                  _changed();
+                },
+              ),
+              const SizedBox(width: 6),
+            ],
             LButton(
               label: 'Tự học',
               small: true,
