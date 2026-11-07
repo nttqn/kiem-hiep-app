@@ -51,7 +51,24 @@ const levelGifts = <int, NewbieGift>{
   15: NewbieGift(gold: 6000, gems: 2, gemTier: 1),
   20: NewbieGift(item: Rarity.epic, hpPots: 20),
   25: NewbieGift(gold: 15000, gems: 2, gemTier: 2),
+  // 1.10.0: on to the first rebirth (nearly half the board was a hero of
+  // level 50-99 never reborn).
+  30: NewbieGift(gold: 30000, gems: 2, gemTier: 2, hpPots: 30),
+  40: NewbieGift(item: Rarity.epic, gems: 2, gemTier: 3),
+  50: NewbieGift(gold: 80000, gems: 3, gemTier: 3, mpPots: 30),
+  60: NewbieGift(item: Rarity.legend, gems: 2, gemTier: 4),
+  70: NewbieGift(gold: 150000, gems: 3, gemTier: 4, hpPots: 50),
+  80: NewbieGift(item: Rarity.legend, gems: 3, gemTier: 4),
+  90: NewbieGift(gold: 300000, item: Rarity.legend, gems: 3, gemTier: 5),
 };
+
+/// The next Quà mốc cấp above [level], if any.
+int? nextLevelGift(int level) {
+  for (final l in levelGifts.keys) {
+    if (l > level) return l;
+  }
+  return null;
+}
 
 /// Below this level a death in the field costs no EXP, and a low HP bar
 /// drinks a potion by itself.

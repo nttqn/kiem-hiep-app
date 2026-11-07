@@ -4,7 +4,7 @@ import 'sect_duty.dart';
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass }
 
 class CostumeDef {
   const CostumeDef({
@@ -45,6 +45,7 @@ class CostumeDef {
         CostumeSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
         CostumeSource.week => 'Mở Rương 7 ngày (đủ 21 Mục tiêu 7 ngày)',
         CostumeSource.bloodSea => 'Hạ Huyết Hải Ma Đế $need lần (U Minh Huyết Hải)',
+        CostumeSource.pass => 'Lệnh Bài: bậc 30 nhánh Hào Kiệt (mùa ${need + 1}, ${need + 4}, ${need + 7}…)',
       };
 }
 
@@ -152,6 +153,26 @@ const costumes = <CostumeDef>[
     source: CostumeSource.bloodSea, need: 10,
     robe: 0xFF5A0A12, trim: 0xFFFFC34A, pants: 0xFF1A0608, cape: 0xFF2A0408, glow: 0xFFFF3A3A,
     aura: 0xFFFF6A4A, armor: 4,
+  ),
+  // Lệnh Bài season outfits (1.10.0), in turn: battle_pass.dart's
+  // passCostumes; [need] is the turn (season need + 1, + 4…).
+  CostumeDef(
+    id: 'lb_thanhvan', name: 'Thanh Vân Lệnh Bào', desc: 'Bạch bào viền thanh ngọc của bậc hào kiệt mang Lệnh Bài.',
+    source: CostumeSource.pass, need: 0,
+    robe: 0xFFE8F4F0, trim: 0xFF3AB8A0, pants: 0xFF2A4A48, cape: 0xFF1E6A68, glow: 0xFF6AE8D0,
+    aura: 0xFF9AF0E0, armor: 3,
+  ),
+  CostumeDef(
+    id: 'lb_xichdiem', name: 'Xích Diệm Lệnh Bào', desc: 'Hồng bào thêu vàng, rực như lửa luyện Lệnh Bài.',
+    source: CostumeSource.pass, need: 1,
+    robe: 0xFF9A1E1A, trim: 0xFFFFC34A, pants: 0xFF2A0E0A, cape: 0xFFE85A1A, glow: 0xFFFFA03A,
+    aura: 0xFFFFC07A, armor: 3,
+  ),
+  CostumeDef(
+    id: 'lb_hanbang', name: 'Hàn Băng Lệnh Bào', desc: 'Lam bào viền bạc, lạnh như băng tuyết đỉnh núi.',
+    source: CostumeSource.pass, need: 2,
+    robe: 0xFF2A4A8A, trim: 0xFFE8F0FF, pants: 0xFF141E3A, cape: 0xFF8AC8FF, glow: 0xFFBFE8FF,
+    aura: 0xFFE0F4FF, armor: 3,
   ),
 ];
 

@@ -238,8 +238,104 @@ void _starPack(Canvas c) {
   }
 }
 
+/// Lệnh Bài: a gold command token with a red seal and a hanging tassel.
+void _pass(Canvas c) {
+  _frame(c, const Color(0xFFA8301E), const Color(0xFF2A0806));
+  const m = Offset(_s / 2, _s * 0.46);
+  _glow(c, m, 230, const Color(0x99FFC34A));
+  // Tassel cord and tassel below the token.
+  final cord = Paint()
+    ..color = const Color(0xFFD8281E)
+    ..strokeWidth = 8
+    ..strokeCap = StrokeCap.round;
+  c.drawLine(const Offset(_s / 2, 380), const Offset(_s / 2, 420), cord);
+  final tassel = Path()
+    ..moveTo(_s / 2 - 10, 418)
+    ..lineTo(_s / 2 + 10, 418)
+    ..lineTo(_s / 2 + 26, 478)
+    ..lineTo(_s / 2 - 26, 478)
+    ..close();
+  c.drawPath(tassel, Paint()..color = const Color(0xFFE83A2A));
+  c.drawCircle(const Offset(_s / 2, 418), 12, Paint()..color = _gold);
+  // The token: a tall plaque with a rounded top.
+  final token = RRect.fromRectAndCorners(
+    Rect.fromCenter(center: m, width: 230, height: 290),
+    topLeft: const Radius.circular(70),
+    topRight: const Radius.circular(70),
+    bottomLeft: const Radius.circular(18),
+    bottomRight: const Radius.circular(18),
+  );
+  c.drawRRect(
+    token,
+    Paint()
+      ..shader = ui.Gradient.linear(m + const Offset(-115, -145), m + const Offset(115, 145),
+          [const Color(0xFFFFF4C8), _gold, _goldDeep], [0, 0.45, 1]),
+  );
+  c.drawRRect(
+    token,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7
+      ..color = const Color(0xFF6A4008),
+  );
+  c.drawRRect(
+    token.deflate(16),
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..color = const Color(0xFF8A5A10),
+  );
+  // Red seal with two crossed swords.
+  c.drawCircle(m, 66, Paint()..color = const Color(0xFFB8261A));
+  c.drawCircle(
+    m,
+    66,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..color = const Color(0xFF6A0E08),
+  );
+  for (final dir in const [-1.0, 1.0]) {
+    c.save();
+    c.translate(m.dx, m.dy);
+    c.rotate(dir * math.pi / 4);
+    // Blade, guard and grip, pointing up.
+    final blade = Path()
+      ..moveTo(0, -52)
+      ..lineTo(7, -40)
+      ..lineTo(6, 18)
+      ..lineTo(-6, 18)
+      ..lineTo(-7, -40)
+      ..close();
+    c.drawPath(blade, Paint()..color = const Color(0xFFF4F0E6));
+    c.drawPath(
+      blade,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = const Color(0xFF6A0E08),
+    );
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: const Offset(0, 22), width: 34, height: 8), const Radius.circular(4)),
+        Paint()..color = const Color(0xFFFFE08A));
+    c.drawRect(Rect.fromCenter(center: const Offset(0, 38), width: 9, height: 24), Paint()..color = const Color(0xFF6A3A10));
+    c.drawCircle(const Offset(0, 52), 6, Paint()..color = const Color(0xFFFFE08A));
+    c.restore();
+  }
+  // Hole for the cord at the top.
+  c.drawCircle(m + const Offset(0, -112), 10, Paint()..color = const Color(0xFF6A4008));
+  for (final (p, r) in [
+    (const Offset(100, 120), 22.0),
+    (const Offset(415, 130), 26.0),
+    (const Offset(420, 360), 14.0),
+    (const Offset(92, 340), 16.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFFFF4C8));
+  }
+}
+
 void main() {
   test('iap icons', () async {
+    await _write('kh_lenh_bai', _pass);
     await _write('kh_nguyet_the', _monthCard);
     await _write('kh_goi_tan_thu', _starter);
     await _write('kh_bo_quang_cao', _noAds);

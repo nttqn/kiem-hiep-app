@@ -3,10 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/activity.dart';
+import '../core/battle_pass.dart';
 import '../core/hero.dart';
+import '../core/pass_extras.dart';
 import '../core/world_boss.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
+import 'pass_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -18,7 +21,9 @@ int activityClaimable(HeroData h) {
     if (h.actCanClaim(i)) n++;
     if (h.actCanClaim(i, weekly: true)) n++;
   }
-  return n;
+  // Lệnh Bài rewards waiting (1.10.0) are opened from here too.
+  h.passRoll(vnDayKey());
+  return n + h.passWaiting;
 }
 
 /// Điểm năng động: where today's points come from, and the day's and the
@@ -79,6 +84,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 for (final s in ActSource.values) _source(s),
               ],
             ),
+          ),
+          // Lệnh Bài (1.10.0): climbed with these same points.
+          const SizedBox(height: 4),
+          LButton(
+            label: !h.passOpen
+                ? 'Lệnh Bài (mở $passOpenText)'
+                : (h.passWaiting > 0 ? 'Lệnh Bài · nhận ${h.passWaiting}' : 'Lệnh Bài · bậc ${h.passTier}/$passTiers'),
+            icon: Icons.workspace_premium,
+            small: true,
+            color: const Color(0xFF8A6A1A),
+            onTap: () async {
+              await Navigator.of(context).push(fadeRoute(const PassScreen()));
+              if (mounted) setState(() {});
+            },
           ),
         ],
       ),

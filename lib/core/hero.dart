@@ -4,6 +4,7 @@ import 'activity.dart';
 import 'alchemy.dart';
 import 'arena.dart';
 import 'auto_config.dart';
+import 'pass_extras.dart';
 import 'body_train.dart';
 import 'bounty.dart';
 import 'companions.dart';
@@ -456,6 +457,11 @@ class HeroData {
   /// Hoàng Kim Các (gold_extras.dart, 1.9.0): the week and what was bought.
   int hkWeek = 0;
   final Map<String, int> hkBought = {};
+
+  /// Lệnh Bài (pass_extras.dart, 1.10.0): the season, its Năng động points,
+  /// the tiers taken on each track (bit t-1), and the season the paid track
+  /// was bought for.
+  int passSeason = 0, passXp = 0, passFree = 0, passPaidTaken = 0, passPaidSeason = 0;
 
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
@@ -1164,7 +1170,7 @@ class HeroData {
         CostumeSource.abyss => abyssBossKills >= c.need,
         CostumeSource.week => weekChest,
         CostumeSource.bloodSea => bloodSeaBossKills >= c.need,
-        CostumeSource.worldBoss || CostumeSource.gold => false,
+        CostumeSource.worldBoss || CostumeSource.gold || CostumeSource.pass => false,
       };
 
   /// Grants every outfit whose goal is met; [quiet] skips the notices (when
@@ -1848,10 +1854,13 @@ class HeroData {
 
   /// Records [n] actions of [s] toward today's and the week's points.
   void addActivity(ActSource s, [int n = 1]) {
-    actRollDay(vnDayKey());
+    final day = vnDayKey();
+    actRollDay(day);
     final before = actPoints;
     actCounts[s] = (actCounts[s] ?? 0) + n;
     actWeekPoints += actPoints - before;
+    // The same points climb the Lệnh Bài (1.10.0).
+    if (actPoints > before) addPassXp(day, actPoints - before);
   }
 
   bool actCanClaim(int i, {bool weekly = false}) => weekly
@@ -3018,6 +3027,7 @@ class HeroData {
         'lt': bodyLv,
         'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast, stPackWeek],
         'hk': [hkWeek, hkBought],
+        'lb': [passSeason, passXp, passFree, passPaidTaken, passPaidSeason],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3286,6 +3296,14 @@ class HeroData {
     if (hk is List && hk.length == 2) {
       h.hkWeek = hk[0] as int;
       (hk[1] as Map).forEach((k, v) => h.hkBought['$k'] = v as int);
+    }
+    final lb = m['lb'];
+    if (lb is List && lb.length >= 5 && lb.every((v) => v is int)) {
+      h.passSeason = lb[0] as int;
+      h.passXp = math.max(0, lb[1] as int);
+      h.passFree = lb[2] as int;
+      h.passPaidTaken = lb[3] as int;
+      h.passPaidSeason = lb[4] as int;
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {

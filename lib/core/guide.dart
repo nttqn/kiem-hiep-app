@@ -1,6 +1,7 @@
 import 'content.dart';
 import 'hero.dart';
 import 'items.dart';
+import 'newbie.dart';
 
 /// Nên làm gì tiếp: the few things most worth doing now, best first, for
 /// the town's hint strip and its list.
@@ -47,6 +48,18 @@ List<NextStep> nextSteps(HeroData h, String day) {
     out.add(NextStep(StepKind.treasure, 'Tàng Bảo Đồ', 'Có ${h.tbdMaps} tấm, ra bản đồ luyện công rồi bấm đọc.', 'Đi'));
   } else if (h.tbdSpot != null) {
     out.add(NextStep(StepKind.treasure, 'Tàng Bảo Đồ', 'Điểm đào đang chờ ở ${mapById[h.tbdSpot!.mapId]!.name}.', 'Đi'));
+  }
+  // 1.10.0: a hero not yet reborn is shown the way there.
+  if (h.rebirths == 0 && h.level >= 30 && h.level < maxLevel) {
+    final gift = nextLevelGift(h.level);
+    out.add(NextStep(
+      StepKind.train,
+      'Hướng tới chuyển sinh',
+      'Còn ${maxLevel - h.level} cấp đến 99. Chuyển sinh: +$rebirthPoints điểm tiềm năng, '
+          '+${(rebirthHpAtk * 100).round()}% sinh lực và công, +${(rebirthExp * 100).round()}% kinh nghiệm. '
+          '${gift != null ? 'Quà mốc cấp $gift đang chờ. ' : ''}Luyện ở ${trainingMap(h).name}, làm Bí cảnh và Truy Nã mỗi ngày.',
+      'Đi',
+    ));
   }
   return out;
 }

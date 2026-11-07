@@ -6,6 +6,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/premium.dart';
+import '../core/pass_extras.dart';
 import '../core/world_boss.dart';
 import 'ads.dart';
 import 'analytics.dart';
@@ -23,6 +24,7 @@ class PurchaseLog {
         skuStarter => 'Gói tân thủ',
         skuNoAds => 'Bỏ quảng cáo',
         skuStarPack => 'Gói Thăng Tinh',
+        skuPass => 'Lệnh Bài Hào Kiệt',
         _ => sku,
       };
 
@@ -218,6 +220,9 @@ class PurchaseService {
         text = 'Gói tân thủ cho ${h.name}: ${h.grantStarter().join(', ')}';
       case skuStarPack:
         text = 'Gói Thăng Tinh cho ${h.name}: ${h.grantStarPack().join(', ')}';
+      case skuPass:
+        h.grantPass(vnDayKey());
+        text = 'Đã mở Lệnh Bài Hào Kiệt mùa ${h.passSeason} cho ${h.name}. Nhận thưởng trong Lệnh Bài.';
       default:
         return '';
     }
@@ -225,7 +230,11 @@ class PurchaseService {
     // Remembered in the cloud, so another phone's older save cannot lose it.
     CloudSave.instance.recordGrant(
       id ?? 'q${DateTime.now().millisecondsSinceEpoch}',
-      PaidGrant(sku: sku, seed: h.seed, slot: SaveService.instance.active, until: sku == skuMonthCard ? h.cardUntil : ''),
+      PaidGrant(sku: sku, seed: h.seed, slot: SaveService.instance.active, until: switch (sku) {
+        skuMonthCard => h.cardUntil,
+        skuPass => '${h.passSeason}',
+        _ => '',
+      }),
     );
     changed.value++;
     return text;

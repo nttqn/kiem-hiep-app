@@ -22,7 +22,9 @@ const String skuStarter = 'kh_goi_tan_thu';
 
 /// Gói Thăng Tinh (1.9.0): Tinh Thạch and Tinh Phách, once a week a hero.
 const String skuStarPack = 'kh_goi_thang_tinh';
-const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack};
+/// Lệnh Bài (1.10.0): the paid track of the running season, for one hero.
+const String skuPass = 'kh_lenh_bai';
+const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass};
 
 const int starPackStones = 120;
 const int starPackSouls = 3;
@@ -117,6 +119,7 @@ extension Premium on HeroData {
   void mergePaid(HeroData other) {
     if (other.cardUntil.compareTo(cardUntil) > 0) cardUntil = other.cardUntil;
     starterBought = starterBought || other.starterBought;
+    if (other.passPaidSeason > passPaidSeason) passPaidSeason = other.passPaidSeason;
   }
 
   /// Gives back a purchase kept in the cloud ledger ([PaidGrant]) that this
@@ -127,6 +130,11 @@ extension Premium on HeroData {
         if (g.until.isEmpty || g.until.compareTo(cardUntil) <= 0) return null;
         cardUntil = g.until;
         return 'Khôi phục Nguyệt thẻ đến ${g.until.substring(6, 8)}/${g.until.substring(4, 6)}';
+      case skuPass:
+        final s = int.tryParse(g.until) ?? 0;
+        if (s <= 0 || s <= passPaidSeason) return null;
+        passPaidSeason = s;
+        return 'Khôi phục Lệnh Bài Hào Kiệt mùa $s';
       case skuStarter:
         if (starterBought) return null;
         return 'Khôi phục Gói tân thủ: ${grantStarter().join(', ')}';
