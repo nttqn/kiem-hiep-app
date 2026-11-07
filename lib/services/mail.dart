@@ -12,7 +12,7 @@ import 'cloud.dart';
 /// Hòm thư and Sự kiện: reads the gifts posted in `mail` and the boosts in
 /// `events` (Firebase console). No sign-in needed.
 ///
-/// 1.9.0: one listener for each, for as long as the app runs, instead of
+/// 1.9.1: one listener for each, for as long as the app runs, instead of
 /// reading every document again every ten minutes: Firestore then bills
 /// the documents once, and after that only the ones that change.
 class MailService extends ChangeNotifier {

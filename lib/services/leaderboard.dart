@@ -211,7 +211,7 @@ class Leaderboard extends ChangeNotifier {
     final quiet = at != null && now.difference(at) < _powerQuiet;
     final same = _sent[id] == key && last == h.power && _sentHunt[id] == h.huntBoardValue;
     // Forced or not, a row identical to the one sent is not sent again
-    // (1.9.0: opening the board used to write every time).
+    // (1.9.1: opening the board used to write every time).
     if (same ||
         (!force &&
             _sent[id] == key &&
@@ -359,7 +359,7 @@ class Leaderboard extends ChangeNotifier {
   static const int pageSize = 50;
 
   /// First pages of [top] read lately, so flipping between boards does not
-  /// read the same rows again (1.9.0). Cleared when this player's row is
+  /// read the same rows again (1.9.1). Cleared when this player's row is
   /// written.
   final Map<String, (DateTime, LbPage)> _topCache = {};
   static const Duration _topFresh = Duration(minutes: 3);

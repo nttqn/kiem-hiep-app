@@ -505,7 +505,7 @@ class CloudSave extends ChangeNotifier {
   }
 
   /// Called after every local save; uploads at most every ten minutes (and
-  /// on app pause), which keeps Firestore writes down (1.9.0: was five).
+  /// on app pause), which keeps Firestore writes down (1.9.1: was five).
   void queueUpload(int slot) {
     if (!available || user == null || conflicts.contains(slot)) return;
     _dirty.add(slot);
