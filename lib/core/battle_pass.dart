@@ -18,9 +18,9 @@ const int passTierXp = 100;
 /// Mảnh Hoàng Kim instead of a season outfit already owned.
 const int passOwnedShards = 20;
 
-/// The Săn quái week season 1 starts: Monday 2026-11-16.
-const int passFirstWeek = 4;
-const String passOpenText = 'thứ Hai 16/11';
+/// The Săn quái week season 1 starts: Monday 2026-11-09.
+const int passFirstWeek = 3;
+const String passOpenText = 'thứ Hai 9/11';
 
 /// The season of [dayKey]; 0 before the first.
 int passSeasonOf(String dayKey) {
@@ -101,3 +101,34 @@ PassReward passPaidReward(int t) {
       },
   };
 }
+
+// ------------------------------------------------------------ weekly quests
+
+/// Nhiệm vụ Lệnh Bài: a few goals a week, each worth Lệnh Bài points once
+/// done (given at once), so a player who came late or missed days can
+/// still reach tier 30, and the strongest have endgame goals.
+enum PassQuestKind { kills, dungeon, bounty, worldBoss, arena, maVuc, beast, tamMa }
+
+class PassQuest {
+  const PassQuest(this.kind, this.label, this.target, this.xp);
+  final PassQuestKind kind;
+  final String label;
+  final int target, xp;
+}
+
+const passQuests = <PassQuest>[
+  PassQuest(PassQuestKind.kills, 'Hạ 2.000 quái', 2000, 50),
+  PassQuest(PassQuestKind.dungeon, 'Vượt ải, bí cảnh hoặc tháp 15 lần', 15, 50),
+  PassQuest(PassQuestKind.bounty, 'Nộp 10 Truy Nã', 10, 50),
+  PassQuest(PassQuestKind.worldBoss, 'Đánh Boss Thế Giới 5 lần', 5, 50),
+  PassQuest(PassQuestKind.arena, 'Đấu Lôi đài 15 trận', 15, 50),
+  PassQuest(PassQuestKind.maVuc, 'Cửu U Ma Vực: vượt tầng 20', 20, 70),
+  PassQuest(PassQuestKind.beast, 'Hạ Thượng Cổ Hung Thú ở 2 cấp độ', 2, 70),
+  PassQuest(PassQuestKind.tamMa, 'Tâm Ma Ảo Cảnh: vượt 3 tầng mới', 3, 70),
+];
+
+// ------------------------------------------------------------ past tier 30
+
+/// Rương thêm: past the last tier, a small chest for every this many points.
+const int passExtraXp = 150;
+const passExtraReward = PassReward(goldK: 5, stones: 3, shards: 2);

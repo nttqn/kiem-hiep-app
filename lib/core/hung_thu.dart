@@ -4,6 +4,7 @@ import 'content.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'hero.dart';
+import 'pass_extras.dart';
 import 'premium.dart';
 import 'tam_ma.dart' show fmtThousands;
 import 'weekly_hunt.dart';
@@ -137,6 +138,7 @@ extension HungThu on HeroData {
       return ['Đã hạ ${beastLevels[i]} tuần này', '+${fmtThousands(g)} lượng'];
     }
     htKilled |= 1 << difficulty;
+    passCheckQuests(vnDayKey());
     starStones += beastStones[i];
     beastSouls += beastSoulsFor(i);
     gold += beastGold[i];

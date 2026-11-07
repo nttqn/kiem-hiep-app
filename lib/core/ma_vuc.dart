@@ -4,6 +4,7 @@ import 'content.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'hero.dart';
+import 'pass_extras.dart';
 import 'nightmare.dart';
 import 'tam_ma.dart' show fmtThousands;
 import 'weekly_hunt.dart';
@@ -135,6 +136,7 @@ extension MaVuc on HeroData {
       return const ['Tầng đã vượt tuần này'];
     }
     mvBest = floor;
+    passCheckQuests(vnDayKey());
     final stones = maVucStones(floor);
     final g = maVucGold(floor);
     starStones += stones;

@@ -5,6 +5,7 @@ import 'content.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'hero.dart';
+import 'pass_extras.dart';
 import 'premium.dart';
 import 'world_boss.dart';
 
@@ -116,6 +117,7 @@ extension TamMa on HeroData {
     }
     if (floor <= tmBest) return const ['Tầng đã vượt trước đây'];
     tmBest = floor;
+    passCount(vnDayKey(), 'tamMa');
     final stones = tamMaStones(floor);
     final g = tamMaGold(floor);
     starStones += stones;

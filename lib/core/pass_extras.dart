@@ -4,9 +4,13 @@ import 'alchemy.dart';
 import 'battle_pass.dart';
 import 'costumes.dart';
 import 'gems.dart';
+import 'hung_thu.dart';
+import 'ma_vuc.dart';
+import 'tam_ma.dart';
+import 'weekly_hunt.dart';
 import 'hanh.dart';
 import 'hero.dart';
-import 'world_boss.dart' show vnDayKey;
+import 'world_boss.dart' show vnDayKey, worldBossOpenLevel;
 
 /// Short labels of [r] for a hero of [level] and [rebirths], in [season].
 List<String> passLabels(PassReward r, int level, int rebirths, int season) => [
@@ -42,7 +46,78 @@ extension PassExtras on HeroData {
     passXp = 0;
     passFree = 0;
     passPaidTaken = 0;
+    passExtraTaken = 0;
   }
+
+  // -------------------------------------------------------- weekly quests
+
+  void passQRoll(String day) {
+    final w = huntWeekOf(day);
+    if (passQWeek == w) return;
+    passQWeek = w;
+    passQDone = 0;
+    passQCounts.clear();
+  }
+
+  /// Counts [n] of quest kind [kind] (a [PassQuestKind] name) this week.
+  void passCount(String day, String kind, [int n = 1]) {
+    passQRoll(day);
+    passQCounts[kind] = (passQCounts[kind] ?? 0) + n;
+    passCheckQuests(day);
+  }
+
+  /// Whether this hero can work on [q] at all.
+  bool passQuestOpen(PassQuest q) => switch (q.kind) {
+        PassQuestKind.worldBoss => level >= worldBossOpenLevel || rebirths > 0,
+        PassQuestKind.arena => arenaOpen,
+        PassQuestKind.maVuc => maVucOpen,
+        PassQuestKind.beast => beastOpen,
+        PassQuestKind.tamMa => tamMaOpen,
+        _ => true,
+      };
+
+  /// Progress on [q] in the week of [day] (today by default), capped at its
+  /// target. Reads only.
+  int passQuestProgress(PassQuest q, [String? day]) {
+    final w = huntWeekOf(day ?? vnDayKey());
+    final v = switch (q.kind) {
+      PassQuestKind.maVuc => mvWeek == w ? mvBest : 0,
+      PassQuestKind.beast => htWeek == w ? _bits(htKilled) : 0,
+      _ => passQWeek == w ? passQCounts[q.kind.name] ?? 0 : 0,
+    };
+    return math.min(q.target, v);
+  }
+
+  /// Done this week (a week not rolled yet counts as none done).
+  bool passQuestDone(PassQuest q, [String? day]) =>
+      passQWeek == huntWeekOf(day ?? vnDayKey()) && passQDone & (1 << q.kind.index) != 0;
+
+  /// Marks quests newly met and adds their points (only while a season runs).
+  void passCheckQuests(String day) {
+    passRoll(day);
+    if (!passOpen) return;
+    passQRoll(day);
+    for (final q in passQuests) {
+      if (passQuestDone(q, day) || passQuestProgress(q, day) < q.target) continue;
+      passQDone |= 1 << q.kind.index;
+      passXp += q.xp;
+      notices.add(Notice('Nhiệm vụ Lệnh Bài: ${q.label} (+${q.xp} điểm)', color: 0xFFFFD34A));
+    }
+  }
+
+  static int _bits(int v) {
+    var n = 0;
+    for (var x = v; x > 0; x >>= 1) {
+      n += x & 1;
+    }
+    return n;
+  }
+
+  // -------------------------------------------------------- past tier 30
+
+  /// Rương thêm reached and not yet opened.
+  int get passExtraReady =>
+      math.max(0, (passXp - passTiers * passTierXp) ~/ passExtraXp - passExtraTaken);
 
   void addPassXp(String day, int n) {
     passRoll(day);
@@ -69,7 +144,7 @@ extension PassExtras on HeroData {
       if (passCanClaim(t, paid: false)) n++;
       if (passCanClaim(t, paid: true)) n++;
     }
-    return n;
+    return n + passExtraReady;
   }
 
   /// Takes tier [t] of a track; what came in, or null.
@@ -98,7 +173,19 @@ extension PassExtras on HeroData {
         if (passCanClaim(t, paid: paid)) lines.addAll(_passTake(t, paid, rng));
       }
     }
+    final extra = passExtraReady;
+    if (extra > 0) lines.addAll(_passTakeExtra(extra, rng));
     return lines;
+  }
+
+  /// Opens [n] Rương thêm at once.
+  List<String> _passTakeExtra(int n, math.Random rng) {
+    passExtraTaken += n;
+    final r = passExtraReward;
+    return _grantReward(
+      PassReward(goldK: r.goldK * n, stones: r.stones * n, shards: r.shards * n),
+      rng,
+    );
   }
 
   List<String> _passTake(int t, bool paid, math.Random rng) {
@@ -107,7 +194,10 @@ extension PassExtras on HeroData {
     } else {
       passFree |= 1 << (t - 1);
     }
-    final r = paid ? passPaidReward(t) : passFreeReward(t);
+    return _grantReward(paid ? passPaidReward(t) : passFreeReward(t), rng);
+  }
+
+  List<String> _grantReward(PassReward r, math.Random rng) {
     final lines = <String>[];
     var shards = r.shards;
     if (r.costume) {

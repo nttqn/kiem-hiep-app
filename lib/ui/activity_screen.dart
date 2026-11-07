@@ -142,8 +142,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
             children: [
               Text(weekly ? 'Quà tuần' : 'Quà ngày', style: titleStyle(18)),
               const SizedBox(width: 10),
-              Text(weekly ? 'Điểm tuần: $pts (làm mới thứ Hai)' : 'Điểm năng động: $pts',
-                  style: bold.copyWith(color: goldLight)),
+              Flexible(
+                child: Text(weekly ? 'Điểm tuần: $pts (làm mới thứ Hai)' : 'Điểm năng động: $pts',
+                    style: bold.copyWith(color: goldLight), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -212,11 +214,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   ),
                 ),
               ),
-              Text(claimed ? 'Đã nhận' : (can ? 'Chạm để mở!' : what),
-                  style: small.copyWith(fontSize: 9.5, color: can ? cream : creamDim),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center),
+              // Gives way to the icon on short screens (760x344 overflowed
+              // by a few pixels with three lines).
+              Flexible(
+                flex: 2,
+                child: Text(claimed ? 'Đã nhận' : (can ? 'Chạm để mở!' : what),
+                    style: small.copyWith(fontSize: 9.5, color: can ? cream : creamDim),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center),
+              ),
             ],
           ),
         ),

@@ -463,6 +463,11 @@ class HeroData {
   /// was bought for.
   int passSeason = 0, passXp = 0, passFree = 0, passPaidTaken = 0, passPaidSeason = 0;
 
+  /// Nhiệm vụ Lệnh Bài: the week, the quests done (bit per kind), counts
+  /// toward them; Rương thêm taken past tier 30.
+  int passQWeek = 0, passQDone = 0, passExtraTaken = 0;
+  final Map<String, int> passQCounts = {};
+
   /// Linh Phách Đơn: EXP earned past the last rebirth's full bar, condensed
   /// into pills ([soulExp] toward the next) and kept for a later rebirth.
   int soulPills = 0;
@@ -1861,6 +1866,8 @@ class HeroData {
     actWeekPoints += actPoints - before;
     // The same points climb the Lệnh Bài (1.10.0).
     if (actPoints > before) addPassXp(day, actPoints - before);
+    // Counted in full (not capped) toward Nhiệm vụ Lệnh Bài.
+    passCount(day, s.name, n);
   }
 
   bool actCanClaim(int i, {bool weekly = false}) => weekly
@@ -3027,7 +3034,7 @@ class HeroData {
         'lt': bodyLv,
         'eg': [tmBest, tmDay, tmTries, tmAds, mvWeek, mvBest, htWeek, htKilled, htScore, htDay, htTries, starStones, beastSouls, gsWeek, gsMade, mvLast, stPackWeek],
         'hk': [hkWeek, hkBought],
-        'lb': [passSeason, passXp, passFree, passPaidTaken, passPaidSeason],
+        'lb': [passSeason, passXp, passFree, passPaidTaken, passPaidSeason, passQWeek, passQDone, passQCounts, passExtraTaken],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         'mail': mailClaimed.toList(),
@@ -3298,12 +3305,20 @@ class HeroData {
       (hk[1] as Map).forEach((k, v) => h.hkBought['$k'] = v as int);
     }
     final lb = m['lb'];
-    if (lb is List && lb.length >= 5 && lb.every((v) => v is int)) {
+    if (lb is List && lb.length >= 5 && lb.take(5).every((v) => v is int)) {
       h.passSeason = lb[0] as int;
       h.passXp = math.max(0, lb[1] as int);
       h.passFree = lb[2] as int;
       h.passPaidTaken = lb[3] as int;
       h.passPaidSeason = lb[4] as int;
+      if (lb.length >= 9 && lb[5] is int && lb[6] is int && lb[7] is Map && lb[8] is int) {
+        h.passQWeek = lb[5] as int;
+        h.passQDone = lb[6] as int;
+        (lb[7] as Map).forEach((k, v) {
+          if (v is int) h.passQCounts['$k'] = v;
+        });
+        h.passExtraTaken = math.max(0, lb[8] as int);
+      }
     }
     final lpd = m['lpd'];
     if (lpd is List && lpd.length == 2) {

@@ -15,19 +15,20 @@ HeroData _hero() => HeroData(name: 'P', hanh: Hanh.thuy)..level = 80;
 
 HeroData _roundTrip(HeroData h) => HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
 
-const _day = '20261130'; // season 1, its third week
+const _day = '20261130'; // season 1, its fourth week
 const _next = '20261214'; // season 2
 
 void main() {
-  test('seasons are four Săn quái weeks', () {
+  test('seasons are four Săn quái weeks from Monday 9/11', () {
     expect(passSeasonOf('20261026'), 0, reason: 'not open yet');
-    expect(passSeasonOf('20261115'), 0);
-    expect(passSeasonOf('20261116'), 1);
-    expect(passSeasonOf('20261213'), 1);
+    expect(passSeasonOf('20261108'), 0);
+    expect(passSeasonOf('20261109'), 1);
+    expect(passSeasonOf('20261206'), 1);
+    expect(passSeasonOf('20261207'), 2);
     expect(passSeasonOf(_next), 2);
-    expect(passDaysLeft('20261116'), 28);
-    expect(passDaysLeft('20261213'), 1);
-    final early = _hero()..addPassXp('20261110', 50);
+    expect(passDaysLeft('20261109'), 28);
+    expect(passDaysLeft('20261206'), 1);
+    final early = _hero()..addPassXp('20261105', 50);
     expect((early.passSeason, early.passXp), (0, 0), reason: 'nothing counts before season 1');
     for (final id in passCostumes) {
       expect(costumeById[id]?.source, CostumeSource.pass, reason: id);
@@ -116,5 +117,48 @@ void main() {
     expect(nextSteps(h, _day).any((s) => s.title == 'Hướng tới chuyển sinh'), isTrue);
     h.rebirths = 1;
     expect(nextSteps(h, _day).any((s) => s.title == 'Hướng tới chuyển sinh'), isFalse);
+  });
+
+  test('weekly quests add points once, counted in full', () {
+    final h = _hero()..passSeason = 1;
+    const week = '20261130';
+    final q = passQuests.firstWhere((q) => q.kind == PassQuestKind.bounty);
+    h.passCount(week, 'bounty', q.target - 1);
+    expect(h.passQuestDone(q, week), isFalse);
+    final xp = h.passXp;
+    h.passCount(week, 'bounty');
+    expect(h.passQuestDone(q, week), isTrue);
+    expect(h.passXp, xp + q.xp);
+    h.passCount(week, 'bounty', 5);
+    expect(h.passXp, xp + q.xp, reason: 'once a week');
+    final back = _roundTrip(h);
+    expect((back.passQWeek, back.passQDone, back.passQCounts['bounty']), (h.passQWeek, h.passQDone, q.target + 5));
+    h.passCount('20261207', 'bounty');
+    expect((h.passQDone, h.passQCounts['bounty']), (0, 1), reason: 'a new week starts over');
+  });
+
+  test('quests for closed modes are hidden; none count before season 1', () {
+    final low = HeroData(name: 'N', hanh: Hanh.moc)..level = 12;
+    expect(passQuests.where(low.passQuestOpen).map((q) => q.kind),
+        containsAll([PassQuestKind.kills, PassQuestKind.dungeon, PassQuestKind.bounty]));
+    expect(low.passQuestOpen(passQuests.firstWhere((q) => q.kind == PassQuestKind.beast)), isFalse);
+    final early = _hero();
+    early.passCount('20261105', 'bounty', 50);
+    expect(early.passXp, 0);
+  });
+
+  test('past tier 30, Rương thêm every $passExtraXp points', () {
+    final h = _hero();
+    h.addPassXp(_day, passTiers * passTierXp + passExtraXp * 2 + 10);
+    expect(h.passExtraReady, 2);
+    h.passClaimAll();
+    expect(h.passExtraReady, 0);
+    expect(h.passExtraTaken, 2);
+    h.addPassXp(_day, passExtraXp);
+    expect(h.passExtraReady, 1);
+    final back = _roundTrip(h);
+    expect(back.passExtraTaken, 2);
+    h.passRoll(_next);
+    expect((h.passExtraTaken, h.passExtraReady), (0, 0), reason: 'opened at the season roll, then reset');
   });
 }

@@ -7,6 +7,7 @@ import '../core/costumes.dart';
 import '../core/hero.dart';
 import '../core/pass_extras.dart';
 import '../core/premium.dart';
+import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import '../services/purchase.dart';
 import '../services/save.dart';
@@ -147,8 +148,13 @@ class _PassScreenState extends State<PassScreen> {
   Widget _header() {
     final day = vnDayKey();
     final tier = h.passTier;
-    final inTier = tier >= passTiers ? passTierXp : h.passXp - tier * passTierXp;
+    final maxed = tier >= passTiers;
+    // Past tier 30 the bar fills toward the next Rương thêm.
+    final inTier = maxed ? (h.passXp - passTiers * passTierXp) % passExtraXp : h.passXp - tier * passTierXp;
+    final barTop = maxed ? passExtraXp : passTierXp;
     final waiting = h.passWaiting;
+    final open = [for (final q in passQuests) if (h.passQuestOpen(q)) q];
+    final done = open.where(h.passQuestDone).length;
     final price = _iap.priceOf(skuPass);
     return Panel(
       padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
@@ -164,17 +170,33 @@ class _PassScreenState extends State<PassScreen> {
                     Text('Mùa ${h.passSeason}', style: titleStyle(17)),
                     const SizedBox(width: 8),
                     Flexible(
+                      child: GestureDetector(
+                        onTap: () => _quests(open),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: seal,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: goldLight),
+                          ),
+                          child: Text('Nhiệm vụ tuần $done/${open.length}',
+                              style: bold.copyWith(fontSize: 11.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
                       child: Text('Bậc $tier/$passTiers · còn ${passDaysLeft(day)} ngày',
                           style: bold.copyWith(color: goldLight, fontSize: 13), overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
                 const SizedBox(height: 3),
-                Bar(value: inTier / passTierXp, color: expGold, height: 6),
+                Bar(value: inTier / barTop, color: expGold, height: 6),
                 const SizedBox(height: 2),
                 Text(
-                  tier >= passTiers
-                      ? 'Đã đạt bậc tối đa mùa này.'
+                  maxed
+                      ? 'Bậc tối đa! Mỗi $passExtraXp điểm thêm mở một Rương thêm (Tinh Thạch, Mảnh Hoàng Kim): $inTier/$passExtraXp.'
                       : 'Điểm Năng động = kinh nghiệm Lệnh Bài: $inTier/$passTierXp đến bậc ${tier + 1}. '
                           'Hết mùa, phần thưởng đã đạt mà chưa nhận sẽ tự gửi.',
                   style: small.copyWith(fontSize: 10.5),
@@ -206,6 +228,65 @@ class _PassScreenState extends State<PassScreen> {
                 onTap: _confirmBuy,
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  /// Nhiệm vụ Lệnh Bài of this week, with progress (scrolls on short phones).
+  Future<void> _quests(List<PassQuest> open) async {
+    final day = vnDayKey();
+    h.passCheckQuests(day);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        scrollable: true,
+        title: Text('Nhiệm vụ Lệnh Bài tuần này', style: titleStyle(18)),
+        // A fixed width: the dialog sizes to its content's intrinsic width,
+        // which the progress bars cannot give.
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Xong là cộng điểm Lệnh Bài ngay. Làm mới thứ Hai (còn ${huntDaysLeft(day)} ngày).',
+                  style: small.copyWith(fontSize: 11.5)),
+              const SizedBox(height: 6),
+              for (final q in open) _questRow(q),
+              if (open.length < passQuests.length)
+                Text('Nhiệm vụ Ma Vực, Hung Thú, Tâm Ma hiện khi mở được các chế độ đó.',
+                    style: small.copyWith(fontSize: 11, color: creamDim)),
+            ],
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Widget _questRow(PassQuest q) {
+    final done = h.passQuestDone(q);
+    final got = h.passQuestProgress(q);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(q.label,
+                    style: small.copyWith(fontSize: 12.5, color: done ? const Color(0xFF8CE07A) : cream)),
+              ),
+              Text(done ? '✓ +${q.xp}' : '$got/${q.target} · +${q.xp}',
+                  style: bold.copyWith(fontSize: 12, color: done ? const Color(0xFF8CE07A) : goldLight)),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Bar(value: got / q.target, color: done ? jade : expGold, height: 4),
         ],
       ),
     );
