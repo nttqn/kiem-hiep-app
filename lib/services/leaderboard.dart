@@ -160,6 +160,39 @@ class Leaderboard extends ChangeNotifier {
 
   CollectionReference<Map<String, dynamic>> get _col => FirebaseFirestore.instance.collection('leaderboard');
 
+  /// Accounts banned by hand (`lbBans/{uid}` in the console): their rows
+  /// are left out of every board and of Lôi đài (1.9.1), so a ban no longer
+  /// needs their rows deleted too. Read at most every half hour.
+  Set<String> _banned = const {};
+  DateTime? _bannedAt;
+
+  Future<Set<String>> _bans() async {
+    final at = _bannedAt;
+    if (at != null && DateTime.now().difference(at) < const Duration(minutes: 30)) return _banned;
+    _bannedAt = DateTime.now();
+    try {
+      final snap = await FirebaseFirestore.instance.collection('lbBans').limit(500).get().timeout(
+            const Duration(seconds: 8),
+          );
+      _banned = {for (final d in snap.docs) d.id};
+    } catch (e) {
+      debugPrint('lbBans read failed: $e');
+    }
+    return _banned;
+  }
+
+  /// Whether row [id] (`{uid}_{slot}`) belongs to a banned account.
+  static bool bannedRow(Set<String> bans, String id) {
+    if (bans.isEmpty) return false;
+    final i = id.lastIndexOf('_');
+    return bans.contains(i > 0 ? id.substring(0, i) : id);
+  }
+
+  /// Day boards of Boss Thế Giới read lately (1.9.1), cleared on this
+  /// player's own write.
+  final Map<String, (DateTime, List<LbEntry>)> _bossCache = {};
+  static const Duration _bossFresh = Duration(minutes: 3);
+
   /// What was last written per row, so unchanged heroes cost no writes.
   final Map<String, String> _sent = {};
   final Map<String, int> _sentPower = {};
@@ -275,6 +308,8 @@ class Leaderboard extends ChangeNotifier {
   Future<void> submitBoss(int slot, HeroData h) async {
     final uid = myUid;
     if (hidden || uid == null || debugBoss != null || h.wbDay.isEmpty) return;
+    final sentKey = '${h.wbDay}/${uid}_$slot';
+    if (_bossSent[sentKey] == h.wbTotal) return; // nothing new to write
     try {
       await _boss(h.wbDay).doc('${uid}_$slot').set({
         'uid': uid,
@@ -286,10 +321,14 @@ class Leaderboard extends ChangeNotifier {
         'pts': h.potentialTotal,
         'updated': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 8));
+      _bossSent[sentKey] = h.wbTotal;
+      _bossCache.remove(h.wbDay);
     } catch (e) {
       debugPrint('boss submit failed: $e');
     }
   }
+
+  final Map<String, int> _bossSent = {};
 
   /// The day's top [limit] damage totals (damage carried in [LbEntry.power]).
   Future<List<LbEntry>> topBoss(String day, {int limit = 30}) async {
@@ -297,6 +336,9 @@ class Leaderboard extends ChangeNotifier {
     if (dbg != null) {
       return (List<LbEntry>.of(dbg)..sort((a, b) => b.power.compareTo(a.power))).take(limit).toList();
     }
+    final cached = _bossCache['$day/$limit'];
+    if (cached != null && DateTime.now().difference(cached.$1) < _bossFresh) return cached.$2;
+    final bans = await _bans();
     // Rows past what anyone could deal in a day are left out (1.8.2: an
     // edited client posted 838 billion before the rules capped it).
     final snap = await _boss(day)
@@ -305,10 +347,13 @@ class Leaderboard extends ChangeNotifier {
         .limit(limit)
         .get()
         .timeout(const Duration(seconds: 15));
-    return [
+    final rows = [
       for (final d in snap.docs)
-        if (_plausibleBoss(d.data())) ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
+        if (_plausibleBoss(d.data()) && !bannedRow(bans, d.id))
+          ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
     ];
+    _bossCache['$day/$limit'] = (DateTime.now(), rows);
+    return rows;
   }
 
   static bool _plausibleBoss(Map<String, dynamic> m) {
@@ -418,9 +463,10 @@ class Leaderboard extends ChangeNotifier {
     if (ceiling > 0) q = q.where(board.field, isLessThan: ceiling);
     q = q.orderBy(board.field, descending: true);
     if (after is DocumentSnapshot) q = q.startAfterDocument(after);
+    final bans = await _bans();
     final snap = await q.limit(limit).get().timeout(const Duration(seconds: 15));
     final page = LbPage(
-      [for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data())],
+      [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())],
       snap.docs.length == limit ? snap.docs.last : null,
     );
     if (after == null) _topCache[key] = (DateTime.now(), page);
@@ -441,6 +487,7 @@ class Leaderboard extends ChangeNotifier {
     final ceiling = _ceiling(board);
     Query<Map<String, dynamic>> uq = _col.where(board.field, isGreaterThan: value);
     if (ceiling > 0) uq = uq.where(board.field, isLessThan: ceiling);
+    final bans = await _bans();
     final up = await uq
         .orderBy(board.field)
         .limit(span)
@@ -452,8 +499,8 @@ class Leaderboard extends ChangeNotifier {
           const Duration(seconds: 15),
         );
     return (
-      [for (final d in up.docs.reversed) ?LbEntry.fromDoc(d.id, d.data())],
-      [for (final d in down.docs) ?LbEntry.fromDoc(d.id, d.data())],
+      [for (final d in up.docs.reversed) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())],
+      [for (final d in down.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())],
     );
   }
 
@@ -471,6 +518,7 @@ class Leaderboard extends ChangeNotifier {
       if (c != null && DateTime.now().difference(c.$1) < _poolFresh && (power - c.$2).abs() <= c.$2 * 0.1) {
         return c.$3;
       }
+      final bans = await _bans();
       final snap = await _col
           .where('power', isGreaterThanOrEqualTo: (power * 0.6).round())
           .where('power', isLessThanOrEqualTo: (power * 1.5).round())
@@ -478,7 +526,7 @@ class Leaderboard extends ChangeNotifier {
           .limit(40)
           .get()
           .timeout(const Duration(seconds: 10));
-      rows = [for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data())];
+      rows = [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())];
     }
     final out = [
       for (final e in rows)

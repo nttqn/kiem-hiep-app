@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/gem_extras.dart';
 import '../core/gems.dart';
+import '../core/gold_extras.dart';
 import '../core/gold_sets.dart';
 import '../core/hero.dart';
 import '../core/meridians.dart';
@@ -90,7 +91,12 @@ class _CharacterScreenState extends State<CharacterScreen> {
             child: _TabChip(
               label: names[i],
               on: _tab == i,
-              badge: i == 0 ? h.freePoints : (i == 1 ? h.skillPoints : 0),
+              badge: switch (i) {
+                0 => h.freePoints,
+                1 => h.skillPoints,
+                6 => h.hkFresh ? 1 : 0,
+                _ => 0,
+              },
               onTap: () => setState(() => _tab = i),
             ),
           ),

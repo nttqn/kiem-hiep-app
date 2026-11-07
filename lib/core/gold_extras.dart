@@ -60,6 +60,55 @@ extension GoldExtras on HeroData {
     return true;
   }
 
+  /// The Hoàng Kim pieces worn, in slot order.
+  List<Item> get wornGold => [for (final s in Slot.values) if (equip[s]?.golden ?? false) equip[s]!];
+
+  /// Khai Quang tất cả (1.9.1): raises the lowest worn piece a level at a
+  /// time, while the shards last. Returns (levels, shards); with [dry] it
+  /// only counts.
+  (int, int) glowAll({bool dry = false}) {
+    final lv = {for (final it in wornGold) it: it.glow};
+    var left = goldShards, levels = 0;
+    while (true) {
+      final open = lv.entries.where((e) => e.value < maxGlow).toList();
+      if (open.isEmpty) break;
+      open.sort((a, b) => a.value.compareTo(b.value));
+      final e = open.first;
+      final cost = goldGlowCost[e.value];
+      if (left < cost) break;
+      left -= cost;
+      lv[e.key] = e.value + 1;
+      levels++;
+    }
+    final spent = goldShards - left;
+    if (!dry && levels > 0) {
+      lv.forEach((it, g) => it.glow = g);
+      goldShards = left;
+      recompute();
+    }
+    return (levels, spent);
+  }
+
+  /// Tinh Luyện tất cả (1.9.1): every line of the worn pieces not yet at its
+  /// best, while the shards last. Returns (lines, shards).
+  (int, int) perfectAll({bool dry = false}) {
+    var left = goldShards, lines = 0;
+    for (final it in wornGold) {
+      for (final s in it.bonus.keys.toList()) {
+        if (it.bonus[s]! >= maxRollStat(s, it.level) || left < goldPerfectCost) continue;
+        left -= goldPerfectCost;
+        lines++;
+        if (!dry) it.bonus[s] = maxRollStat(s, it.level);
+      }
+    }
+    final spent = goldShards - left;
+    if (!dry && lines > 0) {
+      goldShards = left;
+      recompute();
+    }
+    return (lines, spent);
+  }
+
   // -------------------------------------------------------- Tinh Luyện
 
   /// Whether line [s] of [it] can still be raised.
@@ -77,6 +126,13 @@ extension GoldExtras on HeroData {
   }
 
   // -------------------------------------------------------- Hoàng Kim Các
+
+  /// A new week's Hoàng Kim Các not looked at yet, with shards to spend
+  /// (1.9.1: a dot on the Hoàng Kim tab).
+  bool get hkFresh =>
+      goldOpen &&
+      hkWeek != huntWeekOf(vnDayKey()) &&
+      goldShards >= goldWares.map((w) => w.price).reduce(math.min);
 
   void hkRollWeek() {
     final w = huntWeekOf(vnDayKey());

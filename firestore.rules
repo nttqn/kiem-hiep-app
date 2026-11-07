@@ -118,6 +118,13 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    // Banned accounts, written by hand in the console. The app reads the
+    // list (1.9.1) to leave their rows off the boards; uids are public in
+    // the leaderboard row ids anyway.
+    match /lbBans/{id} {
+      allow read: if true;
+    }
+
     // Cheating reports from the leaderboard, read in the console.
     match /lbReports/{id} {
       allow create: if request.auth != null

@@ -7,6 +7,7 @@ import 'package:kiem_hiep/core/gold_sets.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/services/leaderboard.dart';
 
 HeroData _hero() => HeroData(name: 'P', hanh: Hanh.hoa)
   ..level = 99
@@ -88,5 +89,50 @@ void main() {
     for (final w in goldWares) {
       expect(h.buyGoldWare(w, math.Random(1)) != null || w.id == 'stones', isTrue, reason: w.id);
     }
+  });
+
+  test('Khai Quang tất cả levels the lowest pieces first, within the shards', () {
+    final h = _hero();
+    final a = _gold(h, Slot.weapon), b = _gold(h, Slot.armor);
+    h.equip[Slot.weapon] = a;
+    h.equip[Slot.armor] = b;
+    a.glow = 2;
+    h.goldShards = goldGlowCost[0] + goldGlowCost[1] + 5;
+    final (n, cost) = h.glowAll(dry: true);
+    expect((n, cost), (2, goldGlowCost[0] + goldGlowCost[1]));
+    expect(b.glow, 0, reason: 'a dry run changes nothing');
+    expect(h.glowAll(), (2, goldGlowCost[0] + goldGlowCost[1]));
+    expect((a.glow, b.glow), (2, 2));
+    expect(h.goldShards, 5);
+  });
+
+  test('Tinh Luyện tất cả raises every short line it can pay for', () {
+    final h = _hero();
+    final it = _gold(h, Slot.weapon);
+    h.equip[Slot.weapon] = it;
+    for (final s in it.bonus.keys.toList()) {
+      it.bonus[s] = it.bonus[s]! * 0.5;
+    }
+    final lines = it.bonus.length;
+    h.goldShards = goldPerfectCost * (lines - 1);
+    expect(h.perfectAll(), (lines - 1, goldPerfectCost * (lines - 1)));
+    expect(h.goldShards, 0);
+    expect(it.bonus.entries.where((e) => e.value >= maxRollStat(e.key, it.level)).length, lines - 1);
+  });
+
+  test('Hoàng Kim Các shows a dot for a new week until opened', () {
+    final h = _hero()..goldShards = 100;
+    expect(h.hkFresh, isTrue);
+    h.hkRollWeek();
+    expect(h.hkFresh, isFalse);
+    h.hkWeek = 0;
+    h.goldShards = 0;
+    expect(h.hkFresh, isFalse, reason: 'nothing to buy with');
+  });
+
+  test('banned rows are matched by account', () {
+    expect(Leaderboard.bannedRow({'abc'}, 'abc_1'), isTrue);
+    expect(Leaderboard.bannedRow({'abc'}, 'abcd_0'), isFalse);
+    expect(Leaderboard.bannedRow(const {}, 'abc_0'), isFalse);
   });
 }

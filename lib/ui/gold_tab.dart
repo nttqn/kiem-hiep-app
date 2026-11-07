@@ -76,10 +76,18 @@ class _GoldTabState extends State<GoldTab> {
     Widget chip(int i, String label) => Padding(
           padding: const EdgeInsets.only(right: 6),
           child: GestureDetector(
-            onTap: () => setState(() {
-              _mode = i;
-              _msg = null;
-            }),
+            onTap: () {
+              setState(() {
+                _mode = i;
+                _msg = null;
+              });
+              if (i == 2 && h.hkFresh) {
+                // Seen this week's goods: the tab's dot goes.
+                h.hkRollWeek();
+                SaveService.instance.save();
+                widget.onChanged();
+              }
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
@@ -126,9 +134,36 @@ class _GoldTabState extends State<GoldTab> {
     widget.onChanged();
   }
 
+  /// "Do it for every piece" with a confirm showing what it costs (1.9.1).
+  Widget _allButton(String label, String unit, (int, int) Function({bool dry}) run) {
+    final (n, cost) = run(dry: true);
+    return LButton(
+      label: n > 0 ? '$label · $cost' : label,
+      small: true,
+      color: const Color(0xFF8A6A1A),
+      enabled: n > 0,
+      onTap: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: lacquer,
+            content: Text('$label: +$n $unit cho đồ Hoàng Kim đang mặc, tốn $cost Mảnh Hoàng Kim?', style: body),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đồng ý')),
+            ],
+          ),
+        );
+        if (ok != true || !mounted) return;
+        final (done, spent) = run(dry: false);
+        if (done > 0) _done('$label: +$done $unit, tốn $spent mảnh.');
+      },
+    );
+  }
+
   /// Khai Quang and Tinh Luyện for each Hoàng Kim piece worn.
   Widget _glowPanel() {
-    final worn = [for (final s in Slot.values) if (h.equip[s]?.golden ?? false) h.equip[s]!];
+    final worn = h.wornGold;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -137,6 +172,17 @@ class _GoldTabState extends State<GoldTab> {
             'Tinh Luyện: chạm một dòng phụ để đưa lên mức tối đa ($goldPerfectCost mảnh).',
             style: small.copyWith(fontSize: 11)),
         const SizedBox(height: 4),
+        if (worn.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Expanded(child: _allButton('Khai Quang tất cả', 'cấp Khai Quang', h.glowAll)),
+                const SizedBox(width: 6),
+                Expanded(child: _allButton('Tinh Luyện tất cả', 'dòng phụ', h.perfectAll)),
+              ],
+            ),
+          ),
         Expanded(
           child: worn.isEmpty
               ? Center(child: Text('Hãy mặc đồ Hoàng Kim để Khai Quang.', style: body))
