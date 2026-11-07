@@ -10,21 +10,27 @@ import '../core/world_boss.dart';
 import 'cloud.dart';
 
 /// Hòm thư and Sự kiện: reads the gifts posted in `mail` and the boosts in
-/// `events` (Firebase console). No sign-in needed; a handful of reads at
-/// most every ten minutes, from the town.
+/// `events` (Firebase console). No sign-in needed.
+///
+/// 1.9.0: one listener for each, for as long as the app runs, instead of
+/// reading every document again every ten minutes: Firestore then bills
+/// the documents once, and after that only the ones that change.
 class MailService extends ChangeNotifier {
   MailService._();
   static final MailService instance = MailService._();
 
   List<MailDef> mails = const [];
-  DateTime? _fetched;
-  bool _busy = false;
+
+  /// Every mail document as last heard, before the day and player filter.
+  List<MailDef> _all = const [];
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _mailSub, _eventSub;
 
   /// Mails to show instead of Firestore (dev build screenshots).
   List<MailDef>? debugMails;
 
-  /// The open mails, newest first, after a fetch at most every [every].
-  Future<void> refresh({Duration every = const Duration(minutes: 10)}) async {
+  /// Starts listening if not yet, and filters the open mails, newest first,
+  /// for today and the player signed in now.
+  Future<void> refresh() async {
     final dbg = debugMails;
     if (dbg != null) {
       if (!identical(mails, dbg)) {
@@ -33,42 +39,46 @@ class MailService extends ChangeNotifier {
       }
       return;
     }
-    if (_busy || !CloudSave.instance.available) return;
-    final last = _fetched;
-    if (last != null && DateTime.now().difference(last) < every) return;
-    _busy = true;
-    try {
-      final today = vnDayKey();
-      // Every mail document (keep the collection small: delete old ones).
-      // `until` may be typed in the console as text or as a timestamp, so
-      // dates are filtered here rather than in the query.
-      final snap = await FirebaseFirestore.instance
-          .collection('mail')
-          .limit(30)
-          .get()
-          .timeout(const Duration(seconds: 10));
-      final out = [for (final d in snap.docs) ?MailDef.fromMap(d.id, _days(d.data()))]
-        ..removeWhere((m) => !m.openOn(today) || (m.uid.isNotEmpty && m.uid != CloudSave.instance.user?.uid))
-        ..sort((a, b) => b.from.compareTo(a.from));
-      mails = out;
-    } catch (e) {
-      debugPrint('mail fetch failed: $e');
-    }
-    // Sự kiện (`events`), read alongside: a few documents at most.
-    try {
-      final snap = await FirebaseFirestore.instance
-          .collection('events')
-          .limit(10)
-          .get()
-          .timeout(const Duration(seconds: 10));
-      liveEvents = [for (final d in snap.docs) ?LiveEvent.fromMap(d.id, _days(d.data()))];
-    } catch (e) {
-      debugPrint('events fetch failed: $e');
-    }
-    // Try again at the next interval, whether it worked or not.
-    _fetched = DateTime.now();
-    _busy = false;
-    notifyListeners();
+    if (!CloudSave.instance.available) return;
+    _listen();
+    _filter();
+  }
+
+  void _listen() {
+    final db = FirebaseFirestore.instance;
+    // Keep the collection small (delete old mails): each listener start
+    // reads every document. `until` may be typed in the console as text
+    // or as a timestamp, so dates are filtered here, not in the query.
+    _mailSub ??= db.collection('mail').limit(30).snapshots().listen(
+      (snap) {
+        _all = [for (final d in snap.docs) ?MailDef.fromMap(d.id, _days(d.data()))];
+        _filter();
+        notifyListeners();
+      },
+      onError: (Object e) {
+        debugPrint('mail listen failed: $e');
+        _mailSub = null; // the next refresh tries again
+      },
+    );
+    _eventSub ??= db.collection('events').limit(10).snapshots().listen(
+      (snap) {
+        liveEvents = [for (final d in snap.docs) ?LiveEvent.fromMap(d.id, _days(d.data()))];
+        notifyListeners();
+      },
+      onError: (Object e) {
+        debugPrint('events listen failed: $e');
+        _eventSub = null;
+      },
+    );
+  }
+
+  void _filter() {
+    final today = vnDayKey();
+    final uid = CloudSave.instance.user?.uid;
+    mails = [
+      for (final m in _all)
+        if (m.openOn(today) && (m.uid.isEmpty || m.uid == uid)) m,
+    ]..sort((a, b) => b.from.compareTo(a.from));
   }
 
   /// [m] with console timestamps in `from` / `until` turned into Vietnam

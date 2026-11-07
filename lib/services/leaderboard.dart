@@ -209,11 +209,15 @@ class Leaderboard extends ChangeNotifier {
     final now = DateTime.now();
     final at = _sentAt[id];
     final quiet = at != null && now.difference(at) < _powerQuiet;
-    if (!force &&
-        _sent[id] == key &&
-        last != null &&
-        (last == h.power || ((h.power - last).abs() < last * 0.03 && quiet)) &&
-        (_sentHunt[id] == h.huntBoardValue || quiet)) {
+    final same = _sent[id] == key && last == h.power && _sentHunt[id] == h.huntBoardValue;
+    // Forced or not, a row identical to the one sent is not sent again
+    // (1.9.0: opening the board used to write every time).
+    if (same ||
+        (!force &&
+            _sent[id] == key &&
+            last != null &&
+            ((h.power - last).abs() < last * 0.03 && quiet) &&
+            (_sentHunt[id] == h.huntBoardValue || quiet))) {
       return;
     }
     try {
@@ -233,6 +237,7 @@ class Leaderboard extends ChangeNotifier {
       _sentPower[id] = h.power;
       _sentHunt[id] = h.huntBoardValue;
       _sentAt[id] = now;
+      _topCache.clear(); // show this player's new numbers next time
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
     }
@@ -353,6 +358,16 @@ class Leaderboard extends ChangeNotifier {
   /// Rows per page of [top].
   static const int pageSize = 50;
 
+  /// First pages of [top] read lately, so flipping between boards does not
+  /// read the same rows again (1.9.0). Cleared when this player's row is
+  /// written.
+  final Map<String, (DateTime, LbPage)> _topCache = {};
+  static const Duration _topFresh = Duration(minutes: 3);
+
+  /// Lôi đài challengers read lately, reused while lực chiến stays close.
+  (DateTime, int, List<ArenaRival>)? _poolCache;
+  static const Duration _poolFresh = Duration(minutes: 15);
+
   /// The Lôi đài board lists this season only.
   int _floor(LbBoard board) => switch (board) {
         LbBoard.arena => arenaSeasonScore(arenaSeasonOf(vnDayKey()), 0),
@@ -394,6 +409,9 @@ class Leaderboard extends ChangeNotifier {
       final rows = all.skip(from).take(limit).toList();
       return LbPage(rows, from + rows.length < all.length ? from + rows.length : null);
     }
+    final key = '${board.name}/$limit/$floor';
+    final cached = after == null ? _topCache[key] : null;
+    if (cached != null && DateTime.now().difference(cached.$1) < _topFresh) return cached.$2;
     final ceiling = _ceiling(board);
     Query<Map<String, dynamic>> q = _col;
     if (floor > 0) q = q.where(board.field, isGreaterThanOrEqualTo: floor);
@@ -401,10 +419,12 @@ class Leaderboard extends ChangeNotifier {
     q = q.orderBy(board.field, descending: true);
     if (after is DocumentSnapshot) q = q.startAfterDocument(after);
     final snap = await q.limit(limit).get().timeout(const Duration(seconds: 15));
-    return LbPage(
+    final page = LbPage(
       [for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data())],
       snap.docs.length == limit ? snap.docs.last : null,
     );
+    if (after == null) _topCache[key] = (DateTime.now(), page);
+    return page;
   }
 
   /// The rows around a value of [value] on [board]: up to [span] above it,
@@ -447,6 +467,10 @@ class Leaderboard extends ChangeNotifier {
       rows = dbg;
     } else {
       if (!_cloud.available) return const [];
+      final c = _poolCache;
+      if (c != null && DateTime.now().difference(c.$1) < _poolFresh && (power - c.$2).abs() <= c.$2 * 0.1) {
+        return c.$3;
+      }
       final snap = await _col
           .where('power', isGreaterThanOrEqualTo: (power * 0.6).round())
           .where('power', isLessThanOrEqualTo: (power * 1.5).round())
@@ -456,7 +480,7 @@ class Leaderboard extends ChangeNotifier {
           .timeout(const Duration(seconds: 10));
       rows = [for (final d in snap.docs) ?LbEntry.fromDoc(d.id, d.data())];
     }
-    return [
+    final out = [
       for (final e in rows)
         if (me == null || !e.id.startsWith('${me}_'))
           ArenaRival(
@@ -474,6 +498,8 @@ class Leaderboard extends ChangeNotifier {
             skin: e.skin,
           ),
     ];
+    if (dbg == null) _poolCache = (DateTime.now(), power, out);
+    return out;
   }
 
   /// 1-based place a value of [value] would hold on [board].

@@ -504,12 +504,12 @@ class CloudSave extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Called after every local save; uploads at most every five minutes (and
-  /// on app pause), which keeps a busy day inside Firestore's free writes.
+  /// Called after every local save; uploads at most every ten minutes (and
+  /// on app pause), which keeps Firestore writes down (1.9.0: was five).
   void queueUpload(int slot) {
     if (!available || user == null || conflicts.contains(slot)) return;
     _dirty.add(slot);
-    _debounce ??= Timer(const Duration(minutes: 5), flush);
+    _debounce ??= Timer(const Duration(minutes: 10), flush);
   }
 
   /// Uploads pending slots now (also on app pause).
