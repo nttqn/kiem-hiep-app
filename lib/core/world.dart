@@ -41,6 +41,11 @@ const double autoBackClear = 170;
 const double autoBackTime = 0.7;
 const double autoBackRest = 1.0;
 
+/// Poison and burn (1.11.0): the share of the skill power bonus they get,
+/// and of the crit bonus a critical tick adds.
+const double dotSkillShare = 0.5;
+const double dotCritShare = 0.5;
+
 class Dot {
   Dot(this.kind, this.perTick, this.until, this.next);
   final Status kind;
@@ -2797,7 +2802,9 @@ class World {
         // Bosses shrug most of it off.
         m.stunUntil = time + statusTime * (m.def.boss ? 0.3 : 1);
       case Status.poison || Status.burn:
-        final per = st.atk * statusPower * 0.5 * (1 + st.dotPct);
+        // 1.11.0: half the skill power bonus counts too (players asked
+        // for stronger poison and burn); ticks may crit (see _tickDots).
+        final per = st.atk * statusPower * 0.5 * (1 + st.dotPct) * (1 + st.skillDmg * dotSkillShare);
         m.dots.removeWhere((d) => d.kind == status);
         m.dots.add(Dot(status, per, time + statusTime, time + 0.5));
       case Status.none:
@@ -3123,8 +3130,11 @@ class World {
       if (time >= d.next && time <= d.until + 0.01) {
         d.next += 0.5;
         if (m != null && m.alive) {
-          _damageMob(m, d.perTick * (1 - mitigation(m.defense, hero.level)),
-              d.kind == Status.poison ? 0xFF9CF06A : 0xFFFF9A4A,
+          // A tick can crit at the hero's chance, for half the crit bonus.
+          final crit = rng.nextDouble() < st.crit;
+          final mul = crit ? 1 + (st.critDmg - 1) * dotCritShare : 1.0;
+          _damageMob(m, d.perTick * mul * (1 - mitigation(m.defense, hero.level)),
+              crit ? 0xFFFFE08A : (d.kind == Status.poison ? 0xFF9CF06A : 0xFFFF9A4A),
               small: true);
         }
       }
