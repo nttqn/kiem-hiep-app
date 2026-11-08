@@ -2884,7 +2884,9 @@ class World {
         hero.expMul *
         // Tougher monsters of a field like Cửu U Ma Vực pay somewhat more.
         (dungeon == null ? math.sqrt(map.mul) : 1);
-    _text(m.x, m.y - 70, '+${xp.round()} EXP', 0xFFB8E0FF, small: true);
+    // What the bar really gets: gainExp adds the rebirth bonus (+50% each),
+    // which the number used to leave out (a cs6 hero saw a quarter of it).
+    _text(m.x, m.y - 70, '+${(xp * (1 + rebirthExp * hero.rebirths)).round()} EXP', 0xFFB8E0FF, small: true);
     hero.onKill(m.def, rng);
     if (m.elite) {
       hero.onEliteKill(m.eliteKey!, rng);
