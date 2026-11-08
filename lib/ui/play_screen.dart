@@ -26,7 +26,7 @@ import '../core/sects.dart';
 import '../render/art_figures.dart' show rivalGear;
 import 'backdrop.dart' show FigurePreview;
 import 'fishing_view.dart';
-import 'world_boss_screen.dart' show BossPreview;
+import 'world_boss_screen.dart' show BossPreview, bossArtIds;
 import 'hud.dart';
 import 'theme.dart';
 import 'auto_dialog.dart';
@@ -175,7 +175,18 @@ class _PlayScreenState extends State<PlayScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(width: 110, height: 104, child: FittedBox(child: portrait)),
+                // A painted boss stands taller than the band, out over its top.
+                r == null && bossArtIds.contains(m.def.id)
+                    ? SizedBox(
+                        width: 150,
+                        height: 104,
+                        child: OverflowBox(
+                          maxHeight: 156,
+                          alignment: Alignment.bottomCenter,
+                          child: SizedBox(width: 150, height: 156, child: FittedBox(child: portrait)),
+                        ),
+                      )
+                    : SizedBox(width: 110, height: 104, child: FittedBox(child: portrait)),
                 const SizedBox(width: 10),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,

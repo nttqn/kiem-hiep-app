@@ -486,7 +486,11 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
   }
 }
 
-/// A gently animated monster portrait.
+/// Bosses with a painted portrait in assets/art/{id}.webp (1.11.1).
+const bossArtIds = {'banditBoss', 'snakeKing', 'zombieKing', 'scorpionKing', 'yetiKing', 'kylin', 'demonLord'};
+
+/// A boss's painted portrait, or a gently animated drawing of the monster
+/// for those without one yet.
 class BossPreview extends StatefulWidget {
   const BossPreview({super.key, required this.def, this.size = 120});
   final MobDef def;
@@ -499,11 +503,13 @@ class BossPreview extends StatefulWidget {
 class _BossPreviewState extends State<BossPreview> with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   final ValueNotifier<double> _t = ValueNotifier(0);
+  bool get _painted => bossArtIds.contains(widget.def.id);
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker((d) => _t.value = d.inMicroseconds / 1e6)..start();
+    _ticker = createTicker((d) => _t.value = d.inMicroseconds / 1e6);
+    if (!_painted) _ticker.start();
   }
 
   @override
@@ -512,11 +518,25 @@ class _BossPreviewState extends State<BossPreview> with SingleTickerProviderStat
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) => CustomPaint(
+  Widget _drawn() => CustomPaint(
         size: Size.square(widget.size),
         painter: _BossPainter(_t, widget.def),
       );
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_painted) return _drawn();
+    // A little larger than the drawing: a portrait fills its square.
+    return SizedBox.square(
+      dimension: widget.size * 1.2,
+      child: Image.asset(
+        'assets/art/${widget.def.id}.webp',
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => _drawn(),
+      ),
+    );
+  }
 }
 
 class _BossPainter extends CustomPainter {
