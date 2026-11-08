@@ -182,7 +182,15 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
     );
   }
 
-  Widget _pillIcon(PillDef p, {double size = 30}) => Container(
+  /// Pills with a painted icon (assets/art/icons/pill_{id}.webp, 1.11.1).
+  static const _paintedPills = {'songboi', 'tubao', 'cuongluc', 'kimcang', 'taytuy'};
+
+  Widget _pillIcon(PillDef p, {double size = 30}) => _paintedPills.contains(p.id)
+      ? Image.asset('assets/art/icons/pill_${p.id}.webp',
+          width: size * 1.25, height: size * 1.25, filterQuality: FilterQuality.medium)
+      : _pillDot(p, size);
+
+  Widget _pillDot(PillDef p, double size) => Container(
         width: size,
         height: size,
         decoration: BoxDecoration(

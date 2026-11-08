@@ -284,10 +284,18 @@ class ItemTile extends StatelessWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: CustomPaint(
-                painter: SlotGlyph(it?.slot ?? slot ?? Slot.weapon,
-                    it == null ? Colors.white24 : c),
-              ),
+              child: () {
+                final glyph = CustomPaint(
+                  painter: SlotGlyph(it?.slot ?? slot ?? Slot.weapon, it == null ? Colors.white24 : c),
+                );
+                final path = it == null ? null : itemIconPath(it);
+                if (path == null) return glyph;
+                // 1.11.1: the painted icon of its kind and material tier.
+                return Padding(
+                  padding: EdgeInsets.all(size * 0.08),
+                  child: Image.asset(path, filterQuality: FilterQuality.medium, errorBuilder: (_, _, _) => glyph),
+                );
+              }(),
             ),
             if (it != null && (it.rarity.index >= Rarity.epic.index || it.golden))
               Positioned.fill(
@@ -303,7 +311,7 @@ class ItemTile extends StatelessWidget {
                 right: 3,
                 top: 1,
                 child: Text('+${it.plus}',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: goldLight)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: goldLight, shadows: _tileTextShadow)),
               ),
             if (it != null && it.golden)
               const Positioned(
@@ -316,14 +324,14 @@ class ItemTile extends StatelessWidget {
                 right: 3,
                 bottom: 1,
                 child: Text('★${it.star}',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFFFD34A))),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFFFD34A), shadows: _tileTextShadow)),
               ),
             if (it != null)
               Positioned(
                 left: 4,
                 bottom: 1,
                 child: Text('${it.level}',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: creamDim)),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: cream, shadows: _tileTextShadow)),
               ),
           ],
         ),
@@ -654,3 +662,38 @@ Widget tabChip(String name, bool on, VoidCallback onTap) => Padding(
         ),
       ),
     );
+
+/// Painted icon (assets/art/icons, 1.11.1) of an item: its kind (a weapon
+/// by the sect's weapon at the end of its name) and its material tier,
+/// the same steps as the look on the hero (level / 20: iron, bronze, jade,
+/// gold, celestial). Null for anything without one.
+String? itemIconPath(Item it) {
+  final tier = (it.level ~/ 20).clamp(0, 4) + 1;
+  final kind = switch (it.slot) {
+    Slot.weapon => weaponIconOf(it.name),
+    Slot.hat => 'hat',
+    Slot.armor => 'armor',
+    Slot.belt => 'belt',
+    Slot.boots => 'boots',
+    Slot.amulet => 'amulet',
+    Slot.ring => 'ring',
+  };
+  return kind == null ? null : 'assets/art/icons/${kind}_$tier.webp';
+}
+
+/// The weapon icon set for an item named [name] (Trường Kiếm before Kiếm).
+String? weaponIconOf(String name) {
+  if (name.endsWith('Trường Kiếm')) return 'w_truongkiem';
+  if (name.endsWith('Kiếm')) return 'w_kiem';
+  if (name.endsWith('Đao')) return 'w_dao';
+  if (name.endsWith('Côn')) return 'w_con';
+  if (name.endsWith('Phi Tiêu')) return 'w_phitieu';
+  return null;
+}
+
+/// A dark edge under the numbers on an item tile, readable over a bright
+/// painted icon.
+const _tileTextShadow = [
+  Shadow(color: Color(0xF0000000), offset: Offset(0.8, 0.8), blurRadius: 1.5),
+  Shadow(color: Color(0xC0000000), offset: Offset(-0.6, -0.6), blurRadius: 1.5),
+];

@@ -16,19 +16,46 @@ class GemIcon extends StatelessWidget {
   final bool dim;
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _GemPainter(gem, dim));
+  Widget build(BuildContext context) {
+    final g = gem;
+    if (g == null) return CustomPaint(size: Size.square(size), painter: _GemPainter(gem, dim));
+    // 1.11.1: the painted gem of its phase, the tier pips drawn below it.
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            bottom: size * 0.12,
+            child: Opacity(
+              opacity: dim ? 0.35 : 1,
+              child: Image.asset(
+                'assets/art/icons/gem_${g.hanh.name}.webp',
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (_, _, _) => CustomPaint(painter: _GemPainter(gem, dim)),
+              ),
+            ),
+          ),
+          Positioned.fill(child: CustomPaint(painter: _GemPainter(gem, dim, pipsOnly: true))),
+        ],
+      ),
+    );
+  }
 }
 
 class _GemPainter extends CustomPainter {
-  _GemPainter(this.gem, this.dim);
+  _GemPainter(this.gem, this.dim, {this.pipsOnly = false});
   final Gem? gem;
   final bool dim;
+  final bool pipsOnly;
 
   @override
   void paint(Canvas c, Size s) {
     final w = s.width, h = s.height;
     final g = gem;
+    if (pipsOnly && g != null) {
+      _pips(c, w, h, g);
+      return;
+    }
     if (g == null) {
       // Empty socket: a dark ring.
       c.drawCircle(Offset(w / 2, h / 2), w * 0.36, Paint()..color = const Color(0xFF120A08));
@@ -71,16 +98,22 @@ class _GemPainter extends CustomPainter {
           ..strokeWidth = thien ? 1.8 : 1.2);
     c.drawLine(Offset(w * 0.14, h * 0.36), Offset(w * 0.86, h * 0.36),
         Paint()..color = Colors.white.withValues(alpha: 0.6)..strokeWidth = 0.8);
-    // Tier pips, closer together for eight.
+    _pips(c, w, h, g);
+  }
+
+  /// Tier pips, closer together for eight (Thiên, in gold).
+  void _pips(Canvas c, double w, double h, Gem g) {
+    final thien = g.tier >= 8;
     final gap = thien ? 0.11 : 0.14;
     for (var i = 0; i < g.tier; i++) {
       final x = w * 0.5 + (i - (g.tier - 1) / 2) * w * gap;
-      c.drawCircle(Offset(x, h * 0.93), w * (thien ? 0.04 : 0.045), Paint()..color = goldLight);
+      c.drawCircle(Offset(x, h * 0.93), w * (thien ? 0.05 : 0.045) + 0.6, Paint()..color = const Color(0xFF2A1810));
+      c.drawCircle(Offset(x, h * 0.93), w * (thien ? 0.04 : 0.045), Paint()..color = thien ? const Color(0xFFFFF4C8) : goldLight);
     }
   }
 
   @override
-  bool shouldRepaint(_GemPainter old) => old.gem != gem || old.dim != dim;
+  bool shouldRepaint(_GemPainter old) => old.gem != gem || old.dim != dim || old.pipsOnly != pipsOnly;
 }
 
 /// Character screen tab: socket gems into worn gear, fuse gems.

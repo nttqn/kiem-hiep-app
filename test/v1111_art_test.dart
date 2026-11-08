@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/companions.dart';
 import 'package:kiem_hiep/core/content.dart';
+import 'package:kiem_hiep/core/hanh.dart';
+import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/core/sects.dart';
+import 'package:kiem_hiep/ui/theme.dart' show itemIconPath;
 import 'package:kiem_hiep/ui/world_boss_screen.dart' show bossArtIds;
 
 void main() {
@@ -16,5 +20,20 @@ void main() {
     }
     final bosses = [for (final m in [...mobs, ...festMobs]) if (m.boss) m.id];
     expect(bosses.where((id) => !bossArtIds.contains(id)), isEmpty);
+  });
+
+  test('every item kind and tier has its painted icon', () {
+    for (final h in Hanh.values) {
+      for (final slot in Slot.values) {
+        for (final lv in [1, 25, 45, 65, 99]) {
+          final it = Item(slot: slot, level: lv, rarity: Rarity.rare, base: const {}, bonus: const {},
+              name: '${tierName(lv)} ${slotNoun(slot, sectOf(h))}');
+          final path = itemIconPath(it);
+          expect(path, isNotNull, reason: it.name);
+          expect(File(path!).existsSync(), isTrue, reason: path);
+        }
+      }
+      expect(File('assets/art/icons/gem_${h.name}.webp').existsSync(), isTrue);
+    }
   });
 }
