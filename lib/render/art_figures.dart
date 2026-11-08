@@ -893,19 +893,38 @@ HeroGear rivalGear(ArenaRival r) {
 
 HumanLook rivalLook(ArenaRival r) => heroLook(r.hanh, female: r.female, gear: rivalGear(r));
 
-/// A hiệp khách's gear look grows with hảo cảm.
+/// A hiệp khách's gear look grows with hảo cảm: the weapon, belt, boots and
+/// a cape. No helmet or armour plates (1.11.0), so they stay the people of
+/// their painted portraits.
 HeroGear companionGear(int bond) {
   final t = companionGearTier(bond);
-  return HeroGear(weapon: t, hat: t, armor: t, belt: t, boots: t, cape: t >= 3);
+  return HeroGear(weapon: t, belt: t, boots: t, cape: t >= 3);
 }
 
-HumanLook companionLook(CompanionDef c, int bond) =>
-    heroLook(c.hanh, female: c.female, gear: companionGear(bond), costume: c.look);
+/// Hair and headband as their portraits show them (null keeps the sect's).
+const _companionHead = <String, (Hair?, int?, int?)>{
+  'lamdiep': (Hair.bun, null, null),
+  'macliet': (null, null, 0xFFC8342A),
+  'truongphong': (null, 0xFFEDEDF0, null),
+};
+
+HumanLook companionLook(CompanionDef c, int bond) {
+  final (hair, hairColor, band) = _companionHead[c.id] ?? (null, null, null);
+  return heroLook(c.hanh,
+      female: c.female, gear: companionGear(bond), costume: c.look, hair: hair, hairColor: hairColor, band: band);
+}
 
 /// Hero look for a sect wearing [gear] and, over it, [costume]; female
-/// variants swap the hair.
+/// variants swap the hair. [hair], [hairColor] and [band] override the
+/// sect's (a hiệp khách's own head).
 HumanLook heroLook(Hanh h,
-    {bool female = false, int glow = 0, HeroGear gear = HeroGear.none, CostumeDef? costume}) {
+    {bool female = false,
+    int glow = 0,
+    HeroGear gear = HeroGear.none,
+    CostumeDef? costume,
+    Hair? hair,
+    int? hairColor,
+    int? band}) {
   final base = _sectLook(h, female, glow == 0 ? gear.glow : glow);
   final o = costume;
   final wt = gear.weapon;
@@ -922,13 +941,13 @@ HumanLook heroLook(Hanh h,
     robe: o?.robe ?? base.robe,
     trim: trim,
     pants: o?.pants ?? base.pants,
-    hairColor: base.hairColor,
-    hair: base.hair,
+    hairColor: hairColor ?? base.hairColor,
+    hair: hair ?? base.hair,
     weapon: base.weapon,
     blade: blade,
     female: base.female,
     mask: base.mask,
-    band: base.band,
+    band: band ?? base.band,
     cape: cape,
     longRobe: base.longRobe,
     glow: glowCol,

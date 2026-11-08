@@ -132,7 +132,7 @@ final companions = <CompanionDef>[
     id: 'truongphong', name: 'Cổ Trường Phong', title: 'Lão đạo Huyền Thổ Quán', hanh: Hanh.tho,
     desc: 'Lão đạo sĩ say khướt, kiếm khí vẫn kinh người.',
     unlock: 60, price: 120000, bonus: Bonus.hpPct, base: 0.05, perLv: 0.007,
-    look: _look('c_truongphong', 0xFF8A7A5A, 0xFF3A2A1A, 0xFF4A3A2A, cape: 0xFF5A4A30, blade: 0xFFF0E8C8),
+    look: _look('c_truongphong', 0xFF6A4A30, 0xFFD8A845, 0xFF3A2A1A, cape: 0xFF4A3220, blade: 0xFFF0E8C8),
     stories: [
       'Lão đạo say rượu nằm giữa đường, tự xưng biết trước thiên cơ và bảo thiếu hiệp "có duyên".',
       'Cổ Trường Phong từng là đệ nhất kiếm Huyền Thổ Quán, bỏ kiếm ba mươi năm vì một lần lỡ tay.',
