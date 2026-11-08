@@ -65,7 +65,7 @@ class WorldRenderer {
   final Map<String, TextPainter> _texts = {};
 
   TextPainter _label(String s, int color, double size, {bool bold = true}) {
-    final key = '$s|$color|$size';
+    final key = '$s|$color|$size|$liteGraphics';
     final hit = _texts[key];
     if (hit != null) return hit;
     if (_texts.length > 400) _texts.clear();
@@ -77,9 +77,11 @@ class WorldRenderer {
           fontSize: size,
           fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
           color: Color(color),
-          shadows: const [
-            Shadow(color: Color(0xCC000000), offset: Offset(1, 1), blurRadius: 1.5),
-          ],
+          // A hard shadow in Chế độ máy yếu: a blurred one under every
+          // damage number and name is costly on weak GPUs.
+          shadows: liteGraphics
+              ? const [Shadow(color: Color(0xCC000000), offset: Offset(1, 1))]
+              : const [Shadow(color: Color(0xCC000000), offset: Offset(1, 1), blurRadius: 1.5)],
         ),
       ),
       textDirection: TextDirection.ltr,

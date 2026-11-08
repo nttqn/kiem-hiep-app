@@ -1840,8 +1840,8 @@ void drawMount(Canvas c, MountDef d, {double walk = 0, bool moving = false, doub
   c.drawOval(
       Rect.fromCenter(center: const Offset(0, -2), width: 92, height: 22),
       Paint()
-        ..color = col(d.aura).withValues(alpha: 0.28 * glow)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7));
+        ..color = col(d.aura).withValues(alpha: (liteGraphics ? 0.16 : 0.28) * glow)
+        ..maskFilter = softBlur(7));
   // No save/restore: the flying sword leaves its bob on the canvas for the rider.
   _drawMountBody(c, d, walk: walk, moving: moving, t: t);
   final p = Paint();
@@ -2036,7 +2036,7 @@ void _drawFlyingSword(Canvas c, MountDef d, {bool moving = false, double t = 0})
       Rect.fromCenter(center: const Offset(4, y + 5), width: 78, height: 12),
       Paint()
         ..color = col(d.c2).withValues(alpha: 0.22 + 0.12 * glow)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+        ..maskFilter = softBlur(4));
 
   // Wind streaks trailing behind while flying.
   if (moving) {
