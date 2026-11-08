@@ -2991,6 +2991,9 @@ class World {
               (0.7 + rng.nextDouble() * 0.6) *
               (m.big ? 15 : 1) *
               (m.nightborn ? nightMobGold : 1) *
+              // 1.11.1: like EXP, +50% a rebirth (endgame costs outgrew
+              // what the fields paid).
+              (1 + rebirthGold * hero.rebirths) *
               hero.goldMul)
           .round();
       drops.add(Drop(m.x + jx(), m.y + jx(), gold: g));

@@ -24,7 +24,9 @@ OfflineReward? offlineReward(HeroData h, Duration away) {
   final t = away > offlineCap ? offlineCap : away;
   final minutes = t.inSeconds / 60;
   final exp = (mobExpAt(h.level) * 2 * minutes).round();
-  final gold = ((1 + 0.4 * h.level) * 1.0 * minutes).round();
+  // Gold grows with rebirths as field gold does (1.11.1); EXP gets its
+  // rebirth bonus in gainExp.
+  final gold = ((1 + 0.4 * h.level) * (1 + rebirthGold * h.rebirths) * minutes).round();
   // A full bar waits for a rebirth; past the last one it fills Linh Phách Đơn.
   return OfflineReward(t, h.canRebirth ? 0 : exp, gold);
 }

@@ -77,7 +77,7 @@ class _OffersViewState extends State<OffersView> {
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final card in [_monthCard(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
+            for (final card in [_monthCard(), _goldPack(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
           ],
         );
       },
@@ -179,6 +179,22 @@ class _OffersViewState extends State<OffersView> {
           _line('${starterGift.gems} ngọc bậc ${starterGift.gemTier}'),
           const Spacer(),
           _buy(skuStarter, done: h.starterBought ? 'Đã mua' : null),
+        ],
+      );
+
+  /// Hòm Ngân Lượng (1.11.1): gold for this hero, as often as wanted.
+  Widget _goldPack() => _box(
+        title: 'Hòm Ngân Lượng',
+        color: const Color(0xFFFFC34A),
+        icon: Icons.savings,
+        children: [
+          Text('Nhận ngay cho ${h.name}:', style: small.copyWith(fontSize: 11.5)),
+          const SizedBox(height: 4),
+          _line('${fmt(goldPackFor(h.level, h.rebirths))} lượng'),
+          _line('Tăng theo cấp và số lần chuyển sinh'),
+          _line('Mua bao nhiêu lần cũng được'),
+          const Spacer(),
+          _buy(skuGoldPack),
         ],
       );
 

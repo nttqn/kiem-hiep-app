@@ -25,7 +25,14 @@ const String skuStarter = 'kh_goi_tan_thu';
 const String skuStarPack = 'kh_goi_thang_tinh';
 /// Lệnh Bài (1.10.0): the paid track of the running season, for one hero.
 const String skuPass = 'kh_lenh_bai';
-const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest};
+/// Hòm Ngân Lượng (1.11.1): gold for one hero, any number of times.
+const String skuGoldPack = 'kh_hom_ngan_luong';
+const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest, skuGoldPack};
+
+/// Gold in a Hòm Ngân Lượng: grows with level and rebirths so it keeps its
+/// worth (about 6.5 million at level 99 after five rebirths, less than a
+/// month of Nguyệt thẻ gives besides its gems, iron and runs).
+int goldPackFor(int level, int rebirths) => (100000 + 10000 * level) * (1 + rebirths);
 
 const int starPackStones = 120;
 const int starPackSouls = 3;
@@ -158,6 +165,13 @@ extension Premium on HeroData {
     beastSouls += starPackSouls;
     stPackWeek = huntWeekOf(vnDayKey());
     return ['+$starPackStones Tinh Thạch', '+$starPackSouls Hung Thú Tinh Phách'];
+  }
+
+  /// Hòm Ngân Lượng bought.
+  List<String> grantGoldPack() {
+    final g = goldPackFor(level, rebirths);
+    gold += g;
+    return ['+$g lượng'];
   }
 
   bool canClaimCard(String today) => cardActive(today) && cardClaimDay != today;

@@ -96,6 +96,9 @@ const double rebirthHpAtk = 0.05;
 const double rebirthDef = 0.04;
 const double rebirthExp = 0.5;
 
+/// Monster gold per rebirth (1.11.1), as [rebirthExp].
+const double rebirthGold = 0.5;
+
 /// Permanent bonuses after [n] rebirths.
 Map<Bonus, double> rebirthBonuses(int n) => n <= 0
     ? const {}

@@ -238,6 +238,66 @@ void _starPack(Canvas c) {
   }
 }
 
+/// One gold sycee (nguyên bảo): a boat-shaped ingot with a raised dome.
+void _sycee(Canvas c, Offset o, double w) {
+  final h = w * 0.55;
+  final boat = Path()
+    ..moveTo(o.dx - w / 2, o.dy - h * 0.55)
+    ..quadraticBezierTo(o.dx - w * 0.38, o.dy + h * 0.45, o.dx, o.dy + h * 0.45)
+    ..quadraticBezierTo(o.dx + w * 0.38, o.dy + h * 0.45, o.dx + w / 2, o.dy - h * 0.55)
+    ..quadraticBezierTo(o.dx + w * 0.2, o.dy - h * 0.05, o.dx, o.dy - h * 0.05)
+    ..quadraticBezierTo(o.dx - w * 0.2, o.dy - h * 0.05, o.dx - w / 2, o.dy - h * 0.55)
+    ..close();
+  final rect = Rect.fromCenter(center: o, width: w, height: h * 1.2);
+  c.drawPath(boat, Paint()..shader = ui.Gradient.linear(rect.topCenter, rect.bottomCenter, [const Color(0xFFFFF0B0), _gold, _goldDeep], [0, 0.5, 1]));
+  c.drawPath(boat, Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = w * 0.04
+    ..color = const Color(0xFF7A4A08));
+  final dome = Rect.fromCenter(center: o.translate(0, -h * 0.12), width: w * 0.46, height: h * 0.62);
+  c.drawOval(dome, Paint()..shader = ui.Gradient.radial(dome.center.translate(-w * 0.06, -h * 0.1), w * 0.3, [const Color(0xFFFFF8D8), _gold]));
+  c.drawOval(dome, Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = w * 0.035
+    ..color = const Color(0xFF7A4A08));
+}
+
+/// Hòm Ngân Lượng: an open lacquered chest heaped with gold sycee.
+void _goldPack(Canvas c) {
+  _frame(c, const Color(0xFF8A2A1A), const Color(0xFF200806));
+  _glow(c, const Offset(_s / 2, _s * 0.5), 230, const Color(0xAAFFD34A));
+  // Chest body and lid.
+  const body = Rect.fromLTRB(110, 270, 402, 430);
+  c.drawRRect(RRect.fromRectAndRadius(body, const Radius.circular(18)),
+      Paint()..shader = ui.Gradient.linear(body.topCenter, body.bottomCenter, [const Color(0xFFB3261E), const Color(0xFF5A0E0A)]));
+  final band = Paint()..color = _gold;
+  c.drawRect(const Rect.fromLTRB(110, 300, 402, 316), band);
+  c.drawRect(const Rect.fromLTRB(240, 270, 272, 430), band);
+  c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTRB(236, 330, 276, 372), const Radius.circular(6)),
+      Paint()..color = const Color(0xFF7A4A08));
+  final lid = Path()
+    ..moveTo(110, 270)
+    ..lineTo(150, 150)
+    ..lineTo(362, 150)
+    ..lineTo(402, 270)
+    ..close();
+  c.drawPath(lid, Paint()..color = const Color(0xFF3A0A08));
+  // Gold heaped over the rim.
+  for (final (x, y, w) in [
+    (176.0, 268.0, 110.0), (336.0, 268.0, 110.0), (256.0, 262.0, 130.0),
+    (206.0, 222.0, 110.0), (306.0, 222.0, 110.0), (256.0, 186.0, 120.0),
+  ]) {
+    _sycee(c, Offset(x, y), w);
+  }
+  for (final (p, r) in [
+    (const Offset(120, 130), 22.0),
+    (const Offset(400, 120), 18.0),
+    (const Offset(430, 330), 14.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFFFF4C8));
+  }
+}
+
 /// Gói lễ hội (Đông Chí): a big snowflake on night blue, a red lantern
 /// hanging beside it.
 void _fest(Canvas c) {
@@ -402,5 +462,6 @@ void main() {
     await _write('kh_bo_quang_cao', _noAds);
     await _write('kh_goi_thang_tinh', _starPack);
     await _write('kh_goi_le_hoi', _fest);
+    await _write('kh_hom_ngan_luong', _goldPack);
   });
 }
