@@ -58,3 +58,6 @@ store/video/
 
 # Ad videos (large binaries; keep locally / on YouTube)
 store/ads/*.mp4
+
+# ChatGPT source pictures (large); the game uses assets/art/*.webp from tool/art.js
+art_in/

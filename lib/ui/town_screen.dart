@@ -405,6 +405,7 @@ class _TownScreenState extends State<TownScreen> {
       child: Scaffold(
         body: Backdrop(
           town: true,
+          image: 'assets/art/town.webp',
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),

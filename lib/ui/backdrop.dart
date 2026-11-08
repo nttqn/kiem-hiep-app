@@ -16,9 +16,15 @@ import '../render/art_fx.dart';
 /// Ink-wash mountains at dusk (or under the moon after 18:00 Vietnam time),
 /// ranges drifting at their own pace, mist and birds. [town] adds a city gate.
 class Backdrop extends StatefulWidget {
-  const Backdrop({super.key, this.town = false, this.child});
+  const Backdrop({super.key, this.town = false, this.child, this.image, this.align = Alignment.center});
   final bool town;
   final Widget? child;
+
+  /// A painted picture (1.11.0, assets/art) instead of the drawn scene,
+  /// covering the screen at [align], dimmed toward the bottom (more at
+  /// night) so the panels and cards on top stay readable.
+  final String? image;
+  final Alignment align;
 
   @override
   State<Backdrop> createState() => _BackdropState();
@@ -32,7 +38,9 @@ class _BackdropState extends State<Backdrop> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker((d) => _t.value = d.inMicroseconds / 1e6)..start();
+    _ticker = createTicker((d) => _t.value = d.inMicroseconds / 1e6);
+    // A still picture needs no clock.
+    if (widget.image == null) _ticker.start();
   }
 
   @override
@@ -43,12 +51,31 @@ class _BackdropState extends State<Backdrop> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final image = widget.image;
     return Stack(
       fit: StackFit.expand,
       children: [
-        RepaintBoundary(
-          child: CustomPaint(painter: _BackdropPainter(_t, widget.town, _night)),
-        ),
+        if (image != null) ...[
+          Image.asset(image, fit: BoxFit.cover, alignment: widget.align, filterQuality: FilterQuality.medium),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  // Titles sit at the top, on pale rice paper: dim it too.
+                  Colors.black.withValues(alpha: _night ? 0.5 : 0.32),
+                  Colors.black.withValues(alpha: _night ? 0.55 : 0.22),
+                  Colors.black.withValues(alpha: _night ? 0.75 : 0.6),
+                ],
+                stops: const [0, 0.45, 1],
+              ),
+            ),
+          ),
+        ] else
+          RepaintBoundary(
+            child: CustomPaint(painter: _BackdropPainter(_t, widget.town, _night)),
+          ),
         if (widget.child != null) widget.child!,
       ],
     );

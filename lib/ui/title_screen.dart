@@ -67,6 +67,9 @@ class _TitleScreenState extends State<TitleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Backdrop(
+        image: 'assets/art/title.webp',
+        // The swordsman stands at the left; keep him in on narrow screens.
+        align: const Alignment(-0.55, 0),
         child: SafeArea(
           child: ListenableBuilder(
             listenable: Listenable.merge([SaveService.instance, CloudSave.instance]),
@@ -91,7 +94,11 @@ class _TitleScreenState extends State<TitleScreen> {
           const SizedBox(height: 4),
           Text(
             'Ngũ hành tương khắc · Ngũ phái tranh hùng',
-            style: body.copyWith(color: goldLight.withValues(alpha: 0.85)),
+            style: body.copyWith(
+              color: goldLight,
+              fontWeight: FontWeight.w700,
+              shadows: const [Shadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 3)],
+            ),
           ),
           const Spacer(),
           // Five slots (1.11.0): centred when they fit, scrolled when not.

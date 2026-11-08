@@ -81,6 +81,7 @@ flutter:
   assets:
     - assets/audio/
     - assets/audio/music/
+    - assets/art/
 
   fonts:
     - family: BeVietnam

@@ -17,6 +17,14 @@ class CompanionView extends StatefulWidget {
   State<CompanionView> createState() => _CompanionViewState();
 }
 
+/// Greyscale for a companion not met yet.
+const _grey = ColorFilter.matrix(<double>[
+  0.2126, 0.7152, 0.0722, 0, 0,
+  0.2126, 0.7152, 0.0722, 0, 0,
+  0.2126, 0.7152, 0.0722, 0, 0,
+  0, 0, 0, 1, 0,
+]);
+
 class _CompanionViewState extends State<CompanionView> {
   HeroData get h => SaveService.instance.hero;
 
@@ -58,8 +66,62 @@ class _CompanionViewState extends State<CompanionView> {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Panel(
         border: along ? goldLight : (owned ? hanhColor(c.hanh) : gold.withValues(alpha: 0.4)),
-        padding: const EdgeInsets.all(8),
-        child: Column(
+        padding: EdgeInsets.zero,
+        // 1.11.0: a painted portrait (assets/art/<id>.webp) fills the card
+        // behind the words, grey and faded until they travel with the hero.
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: owned ? 1 : 0.5,
+                  child: ColorFiltered(
+                    colorFilter: owned ? const ColorFilter.mode(Colors.transparent, BlendMode.dst) : _grey,
+                    child: Image.asset(
+                      'assets/art/${c.id}.webp',
+                      fit: BoxFit.cover,
+                      alignment: const Alignment(0, -0.7),
+                      filterQuality: FilterQuality.medium,
+                      errorBuilder: (_, _, _) => FittedBox(
+                        child: FigurePreview(
+                          hanh: c.hanh,
+                          female: c.female,
+                          gear: companionGear(bond),
+                          costume: c.look,
+                          scale: 1.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Dark at the top for the name, darker below for the numbers.
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xAA1A0E0A), Color(0x001A0E0A), Color(0x001A0E0A), Color(0xF21A0E0A)],
+                      stops: [0, 0.22, 0.5, 0.85],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: _cardBody(c, owned, bond, along, met, skills),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cardBody(CompanionDef c, bool owned, int bond, bool along, bool met, int skills) {
+    return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(c.name,
@@ -67,26 +129,41 @@ class _CompanionViewState extends State<CompanionView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             Text(c.title,
-                style: small.copyWith(fontSize: 10.5, color: hanhColor(c.hanh)),
+                style: small.copyWith(
+                    fontSize: 10.5,
+                    color: hanhColor(c.hanh),
+                    shadows: const [Shadow(color: Colors.black87, offset: Offset(1, 1), blurRadius: 2)]),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
+            // Tap the picture for their stories.
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: owned ? () => _stories(c, bond) : null,
-                child: Opacity(
-                  opacity: owned ? 1 : 0.45,
-                  child: FittedBox(
-                    child: FigurePreview(
-                      hanh: c.hanh,
-                      female: c.female,
-                      gear: companionGear(bond),
-                      costume: c.look,
-                      scale: 1.6,
-                    ),
-                  ),
+              ),
+            ),
+            // The numbers and buttons on a dark veil of their own, so they
+            // read over any part of the picture.
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: const Color(0xD81A0E0A),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(5, 3, 5, 5),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: _cardFoot(c, owned, bond, along, met, skills),
                 ),
               ),
             ),
+          ],
+        );
+  }
+
+  List<Widget> _cardFoot(CompanionDef c, bool owned, int bond, bool along, bool met, int skills) {
+    return [
             Text(
               owned ? 'Hảo cảm $bond/$maxBond' : (met ? 'Mời: ${fmt(c.price)} lượng' : 'Gặp ở cấp ${c.unlock}'),
               style: bold.copyWith(fontSize: 12, color: cream),
@@ -132,10 +209,7 @@ class _CompanionViewState extends State<CompanionView> {
                   _stories(c, 1);
                 },
               ),
-          ],
-        ),
-      ),
-    );
+    ];
   }
 
   /// Their story so far; later parts show the hảo cảm they need.
