@@ -11,9 +11,11 @@ import 'cloud.dart';
 import 'presence.dart';
 import 'sync_plan.dart';
 
-const int slotCount = 3;
+/// Character slots: three until 1.11.0, five since (older apps only read and
+/// sync slots 0-2 and ignore the rest).
+const int slotCount = 5;
 
-/// Three character slots plus small settings, in shared preferences, with
+/// The character slots plus small settings, in shared preferences, with
 /// every save mirrored to [CloudSave] when the player is signed in.
 class SaveService extends ChangeNotifier {
   SaveService._();

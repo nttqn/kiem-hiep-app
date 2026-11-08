@@ -12,6 +12,7 @@ import '../core/ma_vuc.dart';
 import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
+import 'save.dart' show slotCount;
 
 /// One row of the public leaderboard: a hero of a signed-in player.
 class LbEntry {
@@ -381,7 +382,7 @@ class Leaderboard extends ChangeNotifier {
   Future<void> withdraw({int? slot}) async {
     final uid = myUid;
     if (uid == null) return;
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < slotCount; i++) {
       if (slot != null && i != slot) continue;
       try {
         await _col.doc('${uid}_$i').delete();

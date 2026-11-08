@@ -7,7 +7,7 @@ service cloud.firestore {
     }
 
     // Public leaderboard: anyone reads; a signed-in player writes only the
-    // rows of their own three slots, with sane values.
+    // rows of their own five slots (three before 1.11.0), with sane values.
     match /leaderboard/{id} {
       // Săn quái week and Lôi đài season now, by server time in Vietnam
       // (UTC+7), counted from 2026-10-26 as the app does, an hour of slack
@@ -25,7 +25,7 @@ service cloud.firestore {
 
       allow read: if true;
       allow create, update: if request.auth != null
-        && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2']
+        && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3', request.auth.uid + '_4']
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
@@ -167,7 +167,7 @@ service cloud.firestore {
         // November on the 6th (1.8.3). Yesterday's is fine (a run that
         // ended just after midnight).
         && int(day) <= vnToday()
-        && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2']
+        && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3', request.auth.uid + '_4']
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0

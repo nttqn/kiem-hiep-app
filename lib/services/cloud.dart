@@ -19,7 +19,7 @@ import 'presence.dart';
 import 'save.dart';
 import 'sync_plan.dart';
 
-/// Online save: the three slots mirrored to Firestore under the signed-in
+/// Online save: the character slots mirrored to Firestore under the signed-in
 /// player (`users/{uid}/slots/{0..2}`), so reinstalling or changing phone
 /// (Android or iPhone) keeps progress. A cloud copy about to be replaced by
 /// one that is behind it (or another character) is first kept in

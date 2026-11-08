@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/clock.dart';
@@ -92,15 +94,25 @@ class _TitleScreenState extends State<TitleScreen> {
             style: body.copyWith(color: goldLight.withValues(alpha: 0.85)),
           ),
           const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < slotCount; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: _SlotCard(index: i),
+          // Five slots (1.11.0): centred when they fit, scrolled when not.
+          LayoutBuilder(
+            builder: (context, c) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: math.max(0, c.maxWidth - 16)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < slotCount; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: _SlotCard(index: i),
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
           const SizedBox(height: 18),
         ],
@@ -181,7 +193,7 @@ class _SlotCard extends StatelessWidget {
       child: Panel(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
         child: SizedBox(
-          width: 178,
+          width: 160,
           height: 176,
           child: h == null
               ? Column(
@@ -203,8 +215,21 @@ class _SlotCard extends StatelessWidget {
               : Column(
                   children: [
                     Expanded(
-                      child: Center(
-                        child: FigurePreview.of(h, scale: 1.25),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: Center(child: FigurePreview.of(h, scale: 1.25))),
+                          // Delete, in plain sight (it used to need a long press).
+                          Positioned(
+                            top: -6,
+                            right: -8,
+                            child: IconButton(
+                              tooltip: 'Xóa nhân vật',
+                              visualDensity: VisualDensity.compact,
+                              icon: Icon(Icons.delete_outline, size: 20, color: creamDim.withValues(alpha: 0.8)),
+                              onPressed: () => _confirmDelete(context, h),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Text(
@@ -224,9 +249,13 @@ class _SlotCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 5),
-                        Text(
-                          '${h.sect.name} · Cấp ${h.level}',
-                          style: small.copyWith(color: cream),
+                        Flexible(
+                          child: Text(
+                            '${h.sect.name} · Cấp ${h.level}',
+                            style: small.copyWith(color: cream),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -286,30 +315,59 @@ class _SlotCard extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, HeroData h) async {
+    // A reborn hero is many hours of play: its name must be typed.
+    final typed = h.rebirths > 0;
+    final ctrl = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: lacquer,
-        title: Text('Xóa nhân vật?', style: titleStyle(20)),
-        content: Text(
-          '${h.name} (${h.sect.name}, cấp ${h.level}) sẽ bị xóa vĩnh viễn.',
-          style: body,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Xóa',
-              style: TextStyle(color: Color(0xFFFF7A6A)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          final match = !typed || deleteNameMatches(ctrl.text, h.name);
+          return AlertDialog(
+            backgroundColor: lacquer,
+            scrollable: true,
+            title: Text('Xóa nhân vật?', style: titleStyle(20)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '${h.name} (${h.sect.name}, ${SlotInfo.ofHero(h).levelText}) sẽ bị xóa khỏi máy và đám mây.',
+                  style: body,
+                ),
+                if (typed) ...[
+                  const SizedBox(height: 8),
+                  Text('Gõ tên nhân vật để xác nhận:', style: small.copyWith(color: cream)),
+                  TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    style: body,
+                    decoration: InputDecoration(hintText: h.name, isDense: true),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ],
+              ],
             ),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: match ? () => Navigator.pop(ctx, true) : null,
+                child: Text(
+                  'Xóa',
+                  style: TextStyle(color: match ? const Color(0xFFFF7A6A) : creamDim),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
     if (ok == true) SaveService.instance.delete(index);
   }
 }
+
+/// The typed name matches (spaces at the ends and letter case ignored).
+bool deleteNameMatches(String typed, String name) => typed.trim().toLowerCase() == name.trim().toLowerCase();

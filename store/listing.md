@@ -45,7 +45,7 @@ Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, 
 🤖 CHƠI NHẸ NHÀNG, CHƠI MỌI LÚC
 • Đánh thời gian thực bằng joystick và nút chiêu, hoặc bật TỰ ĐỘNG: nhân vật tự tìm quái nhiệm vụ, ra chiêu, uống thuốc, cộng điểm, mặc đồ; tùy chỉnh được cách tự đánh.
 • Chơi offline không cần mạng (trừ xếp hạng, Lôi đài và trò chuyện). Có chế độ máy yếu cho điện thoại cấu hình thấp.
-• Lưu trữ đám mây (không bắt buộc): đăng nhập Google để giữ nhân vật khi cài lại hay đổi máy. 3 ô nhân vật.
+• Lưu trữ đám mây (không bắt buộc): đăng nhập Google để giữ nhân vật khi cài lại hay đổi máy. 5 ô nhân vật.
 • Thống kê sát thương và kỷ lục sau mỗi trận.
 
 🎵 ĐẬM CHẤT KIẾM HIỆP
@@ -184,7 +184,7 @@ Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire be
 🤖 EASY TO PLAY ANYTIME
 • Real-time combat with joystick and skill buttons, or switch on AUTO to hunt quest monsters, cast skills, drink potions, spend points and wear better gear; tune how it fights.
 • Play offline with no connection (except leaderboards, arena and chat). A lite mode for low-end phones.
-• Optional cloud save: sign in with Google to keep your heroes across reinstalls and phones. 3 character slots.
+• Optional cloud save: sign in with Google to keep your heroes across reinstalls and phones. 5 character slots.
 • Damage stats and personal records after every fight.
 
 🎵 PURE WUXIA STYLE

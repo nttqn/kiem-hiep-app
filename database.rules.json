@@ -4,7 +4,7 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         "$slot": {
-          ".write": "auth != null && auth.uid === $uid && $slot.matches(/^[0-2]$/)",
+          ".write": "auth != null && auth.uid === $uid && $slot.matches(/^[0-4]$/)",
           ".validate": "!newData.exists() || (newData.hasChildren(['device', 'at']) && newData.child('device').isString() && newData.child('device').val().length <= 40 && newData.child('at').val() === now)"
         }
       }
