@@ -19,6 +19,11 @@ const sheets = {
   pills: ['pill_songboi', 'pill_tubao', 'pill_cuongluc', 'pill_kimcang', 'pill_taytuy'],
   // Single icons.
   pill_hoixuan: ['pill_hoixuan'],
+  skills_kim: ['sk_kim1', 'sk_kim2', 'sk_kim3', 'sk_kim4', 'sk_kim5', 'sk_kim6', 'sk_kim7'],
+  skills_moc: ['sk_moc1', 'sk_moc2', 'sk_moc3', 'sk_moc4', 'sk_moc5', 'sk_moc6', 'sk_moc7'],
+  skills_thuy: ['sk_thuy1', 'sk_thuy2', 'sk_thuy3', 'sk_thuy4', 'sk_thuy5', 'sk_thuy6', 'sk_thuy7'],
+  skills_hoa: ['sk_hoa1', 'sk_hoa2', 'sk_hoa3', 'sk_hoa4', 'sk_hoa5', 'sk_hoa6', 'sk_hoa7'],
+  skills_tho: ['sk_tho1', 'sk_tho2', 'sk_tho3', 'sk_tho4', 'sk_tho5', 'sk_tho6', 'sk_tho7'],
 };
 
 async function cut(sheet, names) {
@@ -109,7 +114,16 @@ async function cut(sheet, names) {
     best.x0 = Math.min(best.x0, bl.x0); best.x1 = Math.max(best.x1, bl.x1);
     best.y0 = Math.min(best.y0, bl.y0); best.y1 = Math.max(best.y1, bl.y1);
   }
-  big.sort((p, q) => p.sx / p.n - q.sx / q.n);
+  // Reading order: rows (a centre more than half an icon below the row's
+  // first starts a new one), then left to right.
+  big.sort((p, q) => p.sy / p.n - q.sy / q.n);
+  const rowGap = big.reduce((m, b) => m + (b.y1 - b.y0), 0) / big.length / 2;
+  let row = 0, top = big[0].sy / big[0].n;
+  for (const b of big) {
+    if (b.sy / b.n - top > rowGap) { row++; top = b.sy / b.n; }
+    b.row = row;
+  }
+  big.sort((p, q) => p.row - q.row || p.sx / p.n - q.sx / q.n);
   // Every visible cell belongs to the icon whose outline it reaches first
   // (a breadth-first flood from all outlines at once): bright blades,
   // tassels and glows go with their own item, never a neighbour's.
