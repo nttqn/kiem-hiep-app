@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app_version.dart';
 import '../core/content.dart';
+import '../core/ngo_dao.dart';
 import '../core/clock.dart';
 import '../core/fatigue.dart';
 import '../core/festival.dart';
@@ -512,19 +513,27 @@ class _TownScreenState extends State<TownScreen> {
               style: small.copyWith(fontSize: 11, color: const Color(0xFFF0C060)),
             ),
           const SizedBox(height: 6),
-          Bar(
-            value: (h.exp / h.expNeeded).clamp(0.0, 1.0),
-            color: expGold,
-            height: 13,
-            label: h.expFull ? 'ĐẦY' : '${fmt(h.exp)} / ${fmt(h.expNeeded)}',
-          ),
+          if (h.daoOpen && h.expFull)
+            Bar(
+              value: h.daoProgress,
+              color: Color(daoColor(h.daoLv)),
+              height: 13,
+              label: h.daoWaiting ? '${daoName(h.daoLv)} · VIÊN MÃN' : daoName(h.daoLv),
+            )
+          else
+            Bar(
+              value: (h.exp / h.expNeeded).clamp(0.0, 1.0),
+              color: expGold,
+              height: 13,
+              label: h.expFull ? 'ĐẦY' : '${fmt(h.exp)} / ${fmt(h.expNeeded)}',
+            ),
           if (h.level >= maxLevel) ...[
             const SizedBox(height: 6),
             LButton(
-              label: h.canRebirth ? 'Chuyển sinh!' : 'Chuyển sinh',
-              icon: Icons.autorenew,
+              label: h.daoOpen ? (h.canKiep ? 'Độ kiếp!' : 'Ngộ Đạo') : h.canRebirth ? 'Chuyển sinh!' : 'Chuyển sinh',
+              icon: h.daoOpen ? Icons.auto_awesome : Icons.autorenew,
               small: true,
-              color: h.canRebirth ? seal : const Color(0xFF5A4A3A),
+              color: h.canRebirth || h.canKiep ? seal : const Color(0xFF5A4A3A),
               onTap: () => _go(const RebirthScreen()),
             ),
           ],

@@ -25,6 +25,7 @@ import 'realm.dart';
 import 'scenery.dart';
 import 'sects.dart';
 import 'stats.dart';
+import 'ngo_dao.dart';
 import 'tam_ma.dart';
 import 'ma_vuc.dart';
 import 'tang_bao.dart';
@@ -1256,7 +1257,7 @@ class World {
     mobs.add(m);
     boss = m;
     introBoss = m;
-    events.add(GameEvent(EvKind.boss, text: '${r.name} lên lôi đài!', color: 0xFFFF6A4A, big: true));
+    events.add(GameEvent(EvKind.boss, text: dungeon!.isKiep ? 'Tâm ma hiện hình!' : '${r.name} lên lôi đài!', color: 0xFFFF6A4A, big: true));
   }
 
   void _endArena(bool won) {
@@ -1266,6 +1267,8 @@ class World {
     final d = dungeon!;
     rewardLines = d.trial
         ? hero.sectTrialResult(won)
+        : d.isKiep
+        ? hero.kiepResult(won)
         : d.daiHoi
             ? hero.daiHoiResult(won)
             : d.isTamMa
@@ -2509,6 +2512,8 @@ class World {
                     ? 'boss'
                     : d.isTamMa
                         ? 'tamma'
+                    : d.isKiep
+                        ? 'kiep'
                     : d.isMaVuc
                         ? 'mavuc'
                     : d.isBeast
@@ -3210,7 +3215,7 @@ class World {
           break;
         }
         if (m.rival != null) {
-          if (dungeon?.isTamMa ?? false) _tamMaTick(m, dt);
+          if ((dungeon?.isTamMa ?? false) || (dungeon?.isKiep ?? false)) _tamMaTick(m, dt);
           _rivalSkills(m);
         } else if (m == boss && (dungeon?.isBeast ?? false)) {
           _beastSkill(m, dt);

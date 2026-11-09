@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/hanh.dart';
+import '../core/ngo_dao.dart';
 import '../core/hero.dart';
 import '../core/sects.dart';
 import '../core/weekly_hunt.dart';
@@ -61,7 +62,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   int _mine(LbBoard b) => switch (b) {
         LbBoard.power => h.power,
         LbBoard.tower => h.towerBest,
-        LbBoard.rank => h.rebirths * 100 + h.level,
+        LbBoard.rank => rankScore(h.rebirths, h.level, h.daoLv),
         LbBoard.arena => arenaBoardValue(h),
         LbBoard.hunt => h.huntBoardValue,
         LbBoard.daiHoi => h.dhChamps,
@@ -319,6 +320,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 Text(e.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis),
                 Text(
                   '${sectOf(hn).name} · Cấp ${e.level}${e.rebirths > 0 ? ' · Chuyển sinh ${e.rebirths}' : ''}'
+                  '${e.dao > 0 && _board != LbBoard.rank ? ' · ${daoName(e.dao)}' : ''}'
                   '${e.title.isNotEmpty ? ' · « ${e.title} »' : ''}',
                   style: small.copyWith(fontSize: 11),
                   overflow: TextOverflow.ellipsis,
@@ -335,7 +337,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String _value(LbEntry e) => switch (_board) {
         LbBoard.power => fmt(e.power),
         LbBoard.tower => 'Tầng ${e.tower}',
-        LbBoard.rank => e.rebirths > 0 ? 'CS${e.rebirths} · ${e.level}' : 'Cấp ${e.level}',
+        LbBoard.rank => e.dao > 0 ? daoName(e.dao) : e.rebirths > 0 ? 'CS${e.rebirths} · ${e.level}' : 'Cấp ${e.level}',
         LbBoard.arena => '${e.arenaS % 100000} điểm',
         LbBoard.hunt => '${fmt(e.wk % 1000000)} quái',
         LbBoard.daiHoi => '${e.dhC} lần vô địch',
@@ -359,6 +361,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _stat('Lực chiến', fmt(h.power)),
           _stat('Tháp Thử Luyện', 'Tầng ${h.towerBest}'),
           _stat('Chuyển sinh', '${h.rebirths}'),
+          if (h.daoLv > 0) _stat('Ngộ Đạo', daoName(h.daoLv)),
           _stat('Lôi đài', '${h.arenaPoints} điểm'),
           _stat('Săn quái tuần', fmt(h.huntKills)),
           _stat('Minh Chủ', '${h.dhChamps} lần'),

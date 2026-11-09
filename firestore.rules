@@ -113,6 +113,18 @@ service cloud.firestore {
                         && request.resource.data.pts <= (request.resource.data.level - 1) * 5
                             + request.resource.data.level * 5
                             + request.resource.data.rebirths * 40 + 190))))
+        // Ngộ Đạo tầng (1.12.0+): only in the sixth life at level 99, and
+        // at least ten minutes of play a tầng past that.
+        && (!('dao' in request.resource.data)
+            || (request.resource.data.dao is int
+                && request.resource.data.dao >= 0 && request.resource.data.dao <= 999
+                && (request.resource.data.dao == 0 || request.resource.data.rank == 699)
+                && (!('play' in request.resource.data)
+                    || request.resource.data.play >= 6 * 7200 + 99 * 60 + request.resource.data.dao * 600)))
+        // The Cấp độ board's value (1.12.0+): rank * 1000 + Ngộ Đạo tầng.
+        && (!('rk' in request.resource.data)
+            || request.resource.data.rk == request.resource.data.rank * 1000
+                + ('dao' in request.resource.data ? request.resource.data.dao : 0))
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'core/activity.dart';
+import 'core/ngo_dao.dart';
 import 'core/chat.dart';
 import 'services/chat.dart';
 import 'ui/chat_screen.dart';
@@ -138,6 +139,8 @@ Future<void> main() async {
           tower: math.max(0, 96 - i * 4 ~/ (n / names.length).ceil()),
           title: i == 0 ? 'Ngũ Chuyển Chân Nhân' : (i < 4 ? 'Võ Thánh' : ''),
           arenaS: arenaSeasonScore(arenaSeasonOf(vnDayKey()), 2150 - i * 95),
+          dao: i < 3 ? 23 - i * 7 : 0,
+          rk: i < 3 ? rankScore(6, 99, 23 - i * 7) : null,
         ),
     ];
   }
@@ -506,6 +509,13 @@ Future<void> main() async {
       h.exp = h.expNeedAt(maxLevel);
       h.soulPills = lpd;
       h.soulExp = h.soulPillExp * 2 ~/ 5;
+    }
+    // dao=<tầng> Ngộ Đạo, its bar 60% on (full at a gate).
+    final dao = int.tryParse(q['dao'] ?? '');
+    if (dao != null) {
+      h.daoLv = dao;
+      h.daoExp = daoAtGate(dao) ? daoCost(dao) : daoCost(dao) * 3 ~/ 5;
+      h.recompute();
     }
     // view=0|1|2 Tầm nhìn Gần/Vừa/Xa.
     final view = int.tryParse(q['view'] ?? '');

@@ -34,7 +34,9 @@ class LbEntry {
     this.mount,
     this.mountLv = 1,
     this.skin = '',
-  });
+    this.dao = 0,
+    int? rk,
+  }) : rk = rk ?? (rebirths * 100 + level) * 1000;
 
   /// `{uid}_{slot}`.
   final String id;
@@ -68,6 +70,11 @@ class LbEntry {
   /// Mount look (1.7.0+).
   final String skin;
 
+  /// Ngộ Đạo tầng (1.12.0+), and the Cấp độ board's value ([rankScore]);
+  /// rows from older apps have no `rk` and are left off that board.
+  final int dao;
+  final int rk;
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -91,6 +98,8 @@ class LbEntry {
         mount: m['mount'] as String?,
         mountLv: (m['mountLv'] as num?)?.toInt() ?? 1,
         skin: m['skin'] as String? ?? '',
+        dao: (m['dao'] as num?)?.toInt() ?? 0,
+        rk: (m['rk'] as num?)?.toInt(),
       );
     } catch (_) {
       return null;
@@ -111,7 +120,7 @@ extension LbBoardField on LbBoard {
   String get field => switch (this) {
         LbBoard.power => 'power',
         LbBoard.tower => 'tower',
-        LbBoard.rank => 'rank',
+        LbBoard.rank => 'rk',
         LbBoard.arena => 'arenaS',
         LbBoard.hunt => 'wk',
         LbBoard.daiHoi => 'dhC',
@@ -123,7 +132,7 @@ extension LbBoardField on LbBoard {
   int valueOf(LbEntry e) => switch (this) {
         LbBoard.power => e.power,
         LbBoard.tower => e.tower,
-        LbBoard.rank => e.rank,
+        LbBoard.rank => e.rk,
         LbBoard.arena => e.arenaS,
         LbBoard.hunt => e.wk,
         LbBoard.daiHoi => e.dhC,
@@ -132,6 +141,10 @@ extension LbBoardField on LbBoard {
         LbBoard.beast => e.ht,
       };
 }
+
+/// The Cấp độ board's value (1.12.0): rebirths, then level, then Ngộ Đạo
+/// tầng, which only a sixth-rebirth level-99 hero has.
+int rankScore(int rebirths, int level, int dao) => (rebirths * 100 + level) * 1000 + dao.clamp(0, 999);
 
 /// This hero's Lôi đài board value: 0 until they fight this season.
 int arenaBoardValue(HeroData h) =>
@@ -216,6 +229,8 @@ class Leaderboard extends ChangeNotifier {
       'level': h.level,
       'rebirths': h.rebirths,
       'rank': h.rebirths * 100 + h.level,
+      'rk': rankScore(h.rebirths, h.level, h.daoLv),
+      if (h.daoLv > 0) 'dao': h.daoLv,
       'power': h.power,
       'tower': h.towerBest,
       'title': h.title.length > 40 ? h.title.substring(0, 40) : h.title,

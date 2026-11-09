@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../core/hero.dart';
+import '../core/ngo_dao.dart';
+import '../core/sects.dart';
+import '../core/tam_ma.dart';
 import '../services/save.dart';
+import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -65,7 +69,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
     final atMax = h.level >= maxLevel;
     final done = h.rebirths >= maxRebirths;
     return SubScreen(
-      title: 'Chuyển sinh',
+      title: done ? 'Chuyển sinh · Ngộ Đạo' : 'Chuyển sinh',
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -143,6 +147,9 @@ class _RebirthScreenState extends State<RebirthScreen> {
             ),
           ),
           const SizedBox(width: 10),
+          if (done)
+            SizedBox(width: 360, child: _daoPanel())
+          else
           SizedBox(
             width: 330,
             child: Panel(
@@ -170,6 +177,104 @@ class _RebirthScreenState extends State<RebirthScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _kiep() async {
+    if (!h.canKiep) return;
+    await Navigator.of(context).push(fadeRoute(PlayScreen.dungeon(h.kiepDef())));
+    await SaveService.instance.save();
+    if (mounted) setState(() {});
+  }
+
+  /// Ngộ Đạo (1.12.0): the cảnh giới, its bar, what it gives and the gate.
+  Widget _daoPanel() {
+    final lv = h.daoLv;
+    final c = Color(daoColor(lv));
+    final b = daoBonuses(lv);
+    final gate = daoAtGate(lv);
+    final open = h.expFull;
+    String pct(Bonus k) => '+${(((b[k] ?? 0) * 1000).round() / 10).toString().replaceAll('.', ',')}%';
+    return Panel(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: c, size: 20),
+              const SizedBox(width: 6),
+              Expanded(child: Text(daoName(lv), style: titleStyle(19, color: c), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Bar(
+            value: open ? h.daoProgress : 0,
+            color: c,
+            height: 13,
+            label: !open
+                ? 'Cần đầy kinh nghiệm cấp $maxLevel'
+                : h.daoWaiting
+                    ? 'Viên mãn · chờ Độ kiếp'
+                    : 'Đạo hạnh ${fmt(h.daoExp)} / ${fmt(daoCost(lv))}',
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (lv > 0)
+                    Text('Đang có: Sinh lực ${pct(Bonus.hpPct)}, Công lực ${pct(Bonus.atkPct)}, Phòng thủ ${pct(Bonus.defPct)}',
+                        style: bold.copyWith(fontSize: 13, color: cream)),
+                  if (gate) ...[
+                    _line('Độ kiếp vào ${daoStages[h.kiepStage].name}: thắng Tâm Ma Kiếp trong ${kiepTime.round()} giây, '
+                        'tốn ${kiepPills(lv)} Linh Phách Đơn (có ${h.soulPills}). Thua không mất gì, đánh lại được.'),
+                    _line('Tâm ma biến: ${[for (final a in kiepAffixes(h.kiepStage)) tmAffixes[TmAffix.values[a]]!.name].join(', ')}.'),
+                  ],
+                  _line('Đã đầy cấp $maxLevel, kinh nghiệm vừa ngưng tụ Linh Phách Đơn vừa tăng Đạo hạnh.'),
+                  _line('Mỗi tầng: Sinh lực, Công lực +${(daoHpAtk * 100).toStringAsFixed(1).replaceAll('.', ',')}%, '
+                      'Phòng thủ +${(daoDef * 100).toStringAsFixed(1).replaceAll('.', ',')}%. Mỗi cảnh giới mới thêm '
+                      '+${(daoStageHpAtk * 100).round()}% Sinh lực, Công lực.'),
+                  _line('Chín tầng một cảnh giới; Chân Tiên không có giới hạn. Cảnh giới hiện trên Bảng xếp hạng.'),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      for (var i = 0; i < daoStages.length; i++)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: i <= daoStageOf(lv) ? Color(daoStages[i].color).withValues(alpha: 0.25) : lacquerDeep,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: i == daoStageOf(lv) ? Color(daoStages[i].color) : gold.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(daoStages[i].name,
+                              style: small.copyWith(
+                                  fontSize: 11, color: i <= daoStageOf(lv) ? Color(daoStages[i].color) : creamDim)),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (gate) ...[
+            const SizedBox(height: 6),
+            Center(
+              child: LButton(
+                label: h.daoWaiting ? 'Độ kiếp' : 'Độ kiếp (chưa viên mãn)',
+                icon: Icons.bolt,
+                width: 260,
+                enabled: h.canKiep,
+                onTap: _kiep,
+              ),
+            ),
+          ],
         ],
       ),
     );

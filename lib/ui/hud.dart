@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/alchemy.dart';
+import '../core/ngo_dao.dart';
 import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/hanh.dart';
@@ -473,6 +474,20 @@ class ExpStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     // Past the last rebirth the bar fills Linh Phách Đơn instead.
     final soul = hero.expFull && !hero.canRebirth;
+    // Past the sixth rebirth it shows Ngộ Đạo (1.12.0).
+    if (soul && hero.daoOpen) {
+      final d = hero.daoProgress;
+      return IgnorePointer(
+        child: Bar(
+          value: d,
+          color: Color(daoColor(hero.daoLv)),
+          height: 9,
+          label: hero.daoWaiting
+              ? '${daoName(hero.daoLv)} · viên mãn, chờ Độ kiếp · Linh Phách Đơn ${hero.soulPills}'
+              : '${daoName(hero.daoLv)} · ${(d * 100).toStringAsFixed(1)}% · Linh Phách Đơn ${hero.soulPills}',
+        ),
+      );
+    }
     final v = soul
         ? (hero.soulExp / hero.soulPillExp).clamp(0.0, 1.0)
         : (hero.exp / hero.expNeeded).clamp(0.0, 1.0);

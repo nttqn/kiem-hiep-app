@@ -496,6 +496,7 @@ class DungeonDef {
     this.affix = 0,
     this.realm = 0,
     this.tamMa = 0,
+    this.kiep = 0,
     this.tmAffixes = const [],
     this.maVuc = 0,
     this.affixes = const [],
@@ -548,6 +549,11 @@ class DungeonDef {
   final int tamMa;
   final List<int> tmAffixes;
   bool get isTamMa => tamMa > 0;
+
+  /// Độ kiếp (1.12.0, 0 for none): the duel into this cảnh giới of Ngộ
+  /// Đạo, a heart demon twisted by [tmAffixes] as in Tâm Ma.
+  final int kiep;
+  bool get isKiep => kiep > 0;
 
   /// Ma Vực floor (1.8.0, 0 for none): an endless weekly climb whose
   /// monsters carry [affixes] (NmAffix indices) all at once.

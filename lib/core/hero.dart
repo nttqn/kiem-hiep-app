@@ -20,6 +20,7 @@ import 'fishing.dart';
 import 'luan_hoi.dart';
 import 'mail.dart';
 import 'newbie.dart';
+import 'ngo_dao.dart';
 import 'gems.dart';
 import 'hanh.dart';
 import 'items.dart';
@@ -517,6 +518,12 @@ class HeroData {
   int soulPills = 0;
   int soulExp = 0;
 
+  /// Ngộ Đạo (1.12.0): tầng reached (0 before the first), Đạo hạnh toward
+  /// the next, and whether the full-bar-at-a-gate notice was given.
+  int daoLv = 0;
+  int daoExp = 0;
+  bool daoNotified = false;
+
   /// Hòm thư gifts this hero has taken (mail ids).
   final Set<String> mailClaimed = {};
 
@@ -641,6 +648,7 @@ class HeroData {
     add(sectRankBonus(hanh, sectRank));
     add(divineBonuses(divine));
     add(bodyBonuses(bodyLv));
+    add(daoBonuses(daoLv));
     add(starBonuses(equip.values));
     add(loreBonuses());
     add(manor.bonuses());
@@ -806,6 +814,7 @@ class HeroData {
       final cap = expNeedAt(maxLevel);
       if (exp >= cap) {
         if (condensesSoul) _condenseSoul(amount);
+        gainDao(amount);
         return 0;
       }
       exp = math.min(cap, exp + amount.round());
@@ -3092,6 +3101,7 @@ class HeroData {
         'fest': [festId, festDay, festCoins, festEarned, festKills, festBoss, festTasks, festPack, festBought],
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
+        if (daoLv > 0 || daoExp > 0) 'dao': [daoLv, daoExp, daoNotified],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
@@ -3402,6 +3412,12 @@ class HeroData {
     if (lpd is List && lpd.length == 2) {
       h.soulPills = math.max(0, lpd[0] as int);
       h.soulExp = math.max(0, lpd[1] as int);
+    }
+    final dao = m['dao'];
+    if (dao is List && dao.length >= 2) {
+      h.daoLv = math.max(0, (dao[0] as num).toInt());
+      h.daoExp = math.max(0, (dao[1] as num).toInt());
+      h.daoNotified = dao.length > 2 && dao[2] == true;
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
     final fat = m['fat'];

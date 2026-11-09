@@ -145,9 +145,10 @@ class _PlayScreenState extends State<PlayScreen> {
     _bannerTimer?.cancel();
     _introTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
-    // Walking out of a duel concedes it (a khảo hạch can just be retried).
+    // Walking out of a duel concedes it (a khảo hạch or Độ kiếp can just be
+    // retried).
     final d = widget.dungeon;
-    if (d != null && d.isArena && !d.trial && !world.finished) {
+    if (d != null && d.isArena && !d.trial && !d.isKiep && !world.finished) {
       if (d.isTamMa) {
         hero.tamMaResult(false, d.tamMa, math.Random());
       } else {
@@ -303,7 +304,7 @@ class _PlayScreenState extends State<PlayScreen> {
           Leaderboard.instance.submitBoss(SaveService.instance.active, hero);
           Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
         } else if (d != null && d.isArena) {
-          Analytics.instance.log(d.trial ? 'sect_trial' : 'arena_fight', {'won': 1, 'level': hero.level});
+          Analytics.instance.log(d.trial ? 'sect_trial' : d.isKiep ? 'do_kiep' : 'arena_fight', {'won': 1, 'level': hero.level, if (d.isKiep) 'stage': d.kiep});
         } else if (d != null && d.isRealm) {
           Analytics.instance.log('realm_clear',
               {'id': d.id, 'stars': e.value.round(), 'explored': (world.explored * 100).round(), 'level': hero.level});
@@ -319,7 +320,8 @@ class _PlayScreenState extends State<PlayScreen> {
         _logRun(RunResult.lost);
         SaveService.instance.save();
         if (widget.dungeon?.isArena ?? false) {
-          Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : 'arena_fight', {'won': 0, 'level': hero.level});
+          Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : widget.dungeon!.isKiep ? 'do_kiep' : 'arena_fight',
+              {'won': 0, 'level': hero.level, if (widget.dungeon!.isKiep) 'stage': widget.dungeon!.kiep});
         }
         if (widget.dungeon?.isRealm ?? false) {
           Analytics.instance.log('realm_fail', {'id': widget.dungeon!.id, 'pillars': world.pillarsLit, 'level': hero.level});
@@ -1291,7 +1293,7 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(won ? 'Đánh bại ${r.name}!' : 'Thua ${r.name}',
+              Text(d.isKiep ? (won ? 'Độ kiếp thành công!' : 'Độ kiếp thất bại') : won ? 'Đánh bại ${r.name}!' : 'Thua ${r.name}',
                   style: titleStyle(26, color: won ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
               const SizedBox(height: 4),
               Text(won ? 'Thời gian: ${world.finishTime.toStringAsFixed(1)} giây' : 'Hãy luyện thêm rồi phục thù.',
@@ -1299,7 +1301,10 @@ class _PlayScreenState extends State<PlayScreen> {
               const SizedBox(height: 8),
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
               const SizedBox(height: 14),
-              LButton(label: d.trial ? 'Về Sư môn' : d.daiHoi ? 'Về Đại Hội' : 'Về Lôi đài', color: jade, onTap: _leave),
+              LButton(
+                  label: d.trial ? 'Về Sư môn' : d.isKiep ? 'Về Ngộ Đạo' : d.daiHoi ? 'Về Đại Hội' : 'Về Lôi đài',
+                  color: jade,
+                  onTap: _leave),
             ],
           ),
         ),
