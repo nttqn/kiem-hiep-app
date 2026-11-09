@@ -443,7 +443,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
           SizedBox(
             width: 52,
             height: 52,
-            child: CustomPaint(painter: SkillGlyph(sk, h.hanh, locked: locked)),
+            child: SkillIcon(sk, h.hanh, locked: locked),
           ),
           const SizedBox(width: 8),
           Expanded(

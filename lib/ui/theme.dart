@@ -535,10 +535,13 @@ class SlotGlyph extends CustomPainter {
 
 /// Round skill badge with a glyph for how the skill is delivered.
 class SkillGlyph extends CustomPainter {
-  SkillGlyph(this.skill, this.hanh, {this.locked = false, this.cooldown = 0});
+  SkillGlyph(this.skill, this.hanh, {this.locked = false, this.cooldown = 0, this.overlayOnly = false});
   final SkillDef skill;
   final Hanh hanh;
   final bool locked;
+
+  /// Only the cooldown sweep, lock shade and rim, over a painted icon.
+  final bool overlayOnly;
 
   /// 0..1 remaining cooldown, drawn as a dark sweep.
   final double cooldown;
@@ -547,6 +550,19 @@ class SkillGlyph extends CustomPainter {
   void paint(Canvas c, Size s) {
     final r = s.width / 2;
     final ctr = Offset(r, r);
+    if (!overlayOnly) _face(c, r, ctr);
+    if (cooldown > 0) {
+      c.drawArc(Rect.fromCircle(center: ctr, radius: r), -math.pi / 2, math.pi * 2 * cooldown, true,
+          Paint()..color = const Color(0xAA000000));
+    }
+    if (locked) c.drawCircle(ctr, r, Paint()..color = const Color(0xAA000000));
+    c.drawCircle(ctr, r - 1, Paint()
+      ..color = goldLight.withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = skill.ultimate ? 3.5 : 2);
+  }
+
+  void _face(Canvas c, double r, Offset ctr) {
     final hc = hanhColor(hanh);
     c.drawCircle(
         ctr,
@@ -662,20 +678,39 @@ class SkillGlyph extends CustomPainter {
         c.drawCircle(o(0, 0.275), r * 0.275, Paint()..color = Color.lerp(hc, Colors.black, 0.6)!);
     }
     }
-    if (cooldown > 0) {
-      c.drawArc(Rect.fromCircle(center: ctr, radius: r), -math.pi / 2, math.pi * 2 * cooldown, true,
-          Paint()..color = const Color(0xAA000000));
-    }
-    if (locked) c.drawCircle(ctr, r, Paint()..color = const Color(0xAA000000));
-    c.drawCircle(ctr, r - 1, Paint()
-      ..color = goldLight.withValues(alpha: 0.9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = skill.ultimate ? 3.5 : 2);
   }
 
   @override
   bool shouldRepaint(SkillGlyph old) =>
-      old.cooldown != cooldown || old.locked != locked || old.skill != skill;
+      old.cooldown != cooldown || old.locked != locked || old.skill != skill || old.overlayOnly != overlayOnly;
+}
+
+/// A skill's painted icon (assets/art/icons/sk_{id}.webp, 1.11.2) cut round,
+/// under the cooldown sweep, lock shade and rim; the drawn glyph stands in
+/// for one not there.
+class SkillIcon extends StatelessWidget {
+  const SkillIcon(this.skill, this.hanh, {super.key, this.locked = false, this.cooldown = 0});
+  final SkillDef skill;
+  final Hanh hanh;
+  final bool locked;
+  final double cooldown;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ClipOval(
+          child: Image.asset('assets/art/icons/sk_${skill.id}.webp',
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.medium,
+              gaplessPlayback: true,
+              errorBuilder: (_, _, _) => CustomPaint(painter: SkillGlyph(skill, hanh))),
+        ),
+        CustomPaint(painter: SkillGlyph(skill, hanh, locked: locked, cooldown: cooldown, overlayOnly: true)),
+      ],
+    );
+  }
 }
 
 Route<T> fadeRoute<T>(Widget page) => PageRouteBuilder<T>(

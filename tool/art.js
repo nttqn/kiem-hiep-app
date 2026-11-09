@@ -33,7 +33,8 @@ async function portrait(name, height) {
     const a = data[i + 3];
     data[i + 3] = a <= lo ? 0 : a >= hi ? 255 : Math.round((a - lo) * 255 / (hi - lo));
   }
-  const img = sharp(data, { raw: info }).trim({ threshold: 1 }).resize({ height });
+  const img = sharp(data, { raw: info }).trim({ threshold: 1 })
+    .resize(typeof height === 'number' ? { height } : { ...height, fit: 'inside' });
   await img.clone().webp({ quality: 85, alphaQuality: 90 }).toFile(path.join(out, name + '.webp'));
   if (preview) {
     const buf = await img.clone().png().toBuffer();
@@ -51,6 +52,7 @@ async function portrait(name, height) {
     if (only && !only.split(',').includes(name)) continue;
     if (backgrounds.includes(name)) await bg(name);
     else if (name.startsWith('map_')) await mapTile(name);
+    else if (/^(mount|pet)_/.test(name)) await portrait(name, { width: 900, height: 560 });
     else await portrait(name, companions.includes(name) || name.startsWith('sect_') ? 720 : 600);
     console.log(name, fs.statSync(path.join(out, name + '.webp')).size);
   }

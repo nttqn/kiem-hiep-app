@@ -5,6 +5,8 @@ import 'package:kiem_hiep/core/companions.dart';
 import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/core/mounts.dart';
+import 'package:kiem_hiep/core/pets.dart';
 import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/ui/theme.dart' show itemIconPath, mapArtPath;
 import 'package:kiem_hiep/ui/world_boss_screen.dart' show bossArtIds;
@@ -46,6 +48,20 @@ void main() {
     for (final t in MapTheme.values) {
       expect(File(mapArtPath(t.name)).existsSync(), isTrue, reason: t.name);
       expect(File('assets/art/land_${t.name}.webp').existsSync(), isTrue, reason: t.name);
+    }
+  });
+
+  test('every skill, mount and pet has its painting', () {
+    for (final h in Hanh.values) {
+      for (final sk in sectOf(h).skills) {
+        expect(File('assets/art/icons/sk_${sk.id}.webp').existsSync(), isTrue, reason: sk.id);
+      }
+    }
+    for (final m in mounts) {
+      expect(File('assets/art/mount_${m.id}.webp').existsSync(), isTrue, reason: m.id);
+    }
+    for (final p in pets) {
+      expect(File('assets/art/pet_${p.id}.webp').existsSync(), isTrue, reason: p.id);
     }
   });
 }

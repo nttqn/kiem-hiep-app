@@ -641,9 +641,7 @@ class SkillButton extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Positioned.fill(
-              child: CustomPaint(
-                painter: SkillGlyph(skill, hanh, locked: !learned, cooldown: cooldown),
-              ),
+              child: SkillIcon(skill, hanh, locked: !learned, cooldown: cooldown),
             ),
             if (!learned)
               Column(

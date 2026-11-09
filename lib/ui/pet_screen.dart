@@ -93,9 +93,14 @@ class _PetScreenState extends State<PetScreen> {
               child: Opacity(
                 opacity: owned ? 1 : 0.4,
                 child: LayoutBuilder(
-                  builder: (_, c) => Center(
-                    child: PetPreview(look: p.look, size: math.max(60, math.min(c.maxWidth, c.maxHeight) * 0.95)),
-                  ),
+                  builder: (_, c) => Image.asset('assets/art/pet_${p.id}.webp',
+                      width: c.maxWidth,
+                      height: c.maxHeight,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium,
+                      errorBuilder: (_, _, _) => Center(
+                            child: PetPreview(look: p.look, size: math.max(60, math.min(c.maxWidth, c.maxHeight) * 0.95)),
+                          )),
                 ),
               ),
             ),

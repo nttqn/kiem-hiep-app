@@ -167,7 +167,7 @@ class _CreateScreenState extends State<CreateScreen> {
                                         child: SizedBox(
                                           width: 34,
                                           height: 34,
-                                          child: CustomPaint(painter: SkillGlyph(sk, _hanh)),
+                                          child: SkillIcon(sk, _hanh),
                                         ),
                                       ),
                                   ],

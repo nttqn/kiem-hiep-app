@@ -83,15 +83,36 @@ class _MountViewState extends State<MountView> {
             Expanded(
               child: Opacity(
                 opacity: owned ? 1 : 0.45,
-                child: LayoutBuilder(
-                  builder: (_, c) => Center(
-                    child: MountPreview(
-                      mount: owned ? h.dressed(m) : m,
-                      rider: ridden ? lookOfHero(h) : null,
-                      size: math.max(60, math.min(c.maxWidth, c.maxHeight)),
-                    ),
-                  ),
-                ),
+                child: LayoutBuilder(builder: (_, c) {
+                  final chibi = MountPreview(
+                    mount: owned ? h.dressed(m) : m,
+                    rider: ridden ? lookOfHero(h) : null,
+                    size: math.max(60, math.min(c.maxWidth, c.maxHeight)),
+                  );
+                  // The painting (1.11.2) shows the mount's own colours, so
+                  // one in a skin keeps its drawn figure; the one ridden has
+                  // its rider small in the corner.
+                  if (owned && h.mountSkin[m.id] != null) return Center(child: chibi);
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset('assets/art/mount_${m.id}.webp',
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.medium,
+                          errorBuilder: (_, _, _) => Center(child: chibi)),
+                      if (ridden)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: MountPreview(
+                            mount: h.dressed(m),
+                            rider: lookOfHero(h),
+                            size: math.max(40, math.min(c.maxWidth, c.maxHeight) * 0.42),
+                          ),
+                        ),
+                    ],
+                  );
+                }),
               ),
             ),
             Text(m.desc, style: small.copyWith(fontSize: 10.5), maxLines: 3, overflow: TextOverflow.ellipsis),
