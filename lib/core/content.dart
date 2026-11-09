@@ -1,4 +1,5 @@
 import 'arena.dart';
+import 'gold_boss.dart';
 import 'hanh.dart';
 import 'luan_hoi.dart';
 
@@ -312,6 +313,7 @@ const festMobs = <MobDef>[
 final Map<String, MobDef> mobById = {
   for (final m in mobs) m.id: m,
   for (final m in festMobs) m.id: m,
+  for (final m in goldBossMobs) m.id: m,
 };
 
 enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea, bloodSea, canyon }
@@ -497,6 +499,7 @@ class DungeonDef {
     this.realm = 0,
     this.tamMa = 0,
     this.kiep = 0,
+    this.golden = false,
     this.tmAffixes = const [],
     this.maVuc = 0,
     this.affixes = const [],
@@ -554,6 +557,9 @@ class DungeonDef {
   /// Đạo, a heart demon twisted by [tmAffixes] as in Tâm Ma.
   final int kiep;
   bool get isKiep => kiep > 0;
+
+  /// Boss Hoàng Kim (1.12.0): a [worldBoss] run scored on its own board.
+  final bool golden;
 
   /// Ma Vực floor (1.8.0, 0 for none): an endless weekly climb whose
   /// monsters carry [affixes] (NmAffix indices) all at once.

@@ -8,6 +8,7 @@ import '../core/ngo_dao.dart';
 import '../core/clock.dart';
 import '../core/fatigue.dart';
 import '../core/festival.dart';
+import '../core/gold_boss.dart';
 import '../core/guide.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
@@ -27,6 +28,7 @@ import '../core/rewards.dart';
 import 'character_screen.dart';
 import 'chat_screen.dart';
 import 'fest_screen.dart';
+import 'gold_boss_screen.dart';
 import 'leaderboard_screen.dart';
 import 'world_boss_screen.dart';
 import 'pet_screen.dart';
@@ -161,6 +163,22 @@ class _TownScreenState extends State<TownScreen> {
           color: const Color(0xFF9FD8FF),
           title: 'Ngày mới đang chờ',
           text: 'Kết nối mạng để nhận quà, nhiệm vụ và lượt khiêu chiến của ngày mới. Vẫn chơi bình thường khi chưa có mạng.',
+        ),
+      // 1.12.0: Boss Hoàng Kim while a session is open, or its board
+      // reward waiting.
+      if (h.goldBossOpen && (goldBossSessionAt() >= 0 || h.gbRankDue))
+        _banner(
+          icon: Icons.workspace_premium,
+          color: const Color(0xFFFFD34A),
+          title: goldBossSessionAt() >= 0 ? 'Boss Hoàng Kim xuất hiện!' : 'Boss Hoàng Kim',
+          text: goldBossSessionAt() >= 0
+              ? '${goldBossOf().name} đang giáng thế · còn ${goldBossLeft().inMinutes + 1} phút · lượt còn ${h.gbRunsLeft}'
+              : 'Thưởng xếp hạng hôm qua đang chờ nhận.',
+          action: goldBossSessionAt() >= 0 ? 'Vào' : 'Nhận',
+          onTap: () async {
+            await Navigator.of(context).push(fadeRoute(const GoldBossScreen()));
+            if (mounted) setState(() {});
+          },
         ),
       // 1.11.0: a festival's land and shop.
       if (fest != null && h.festOpenFor)

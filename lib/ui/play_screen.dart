@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/content.dart';
+import '../core/gold_boss.dart';
 import '../core/newbie.dart';
 import '../core/realm.dart';
 import '../core/stats.dart';
@@ -301,8 +302,9 @@ class _PlayScreenState extends State<PlayScreen> {
         SaveService.instance.save();
         final d = widget.dungeon;
         if (d != null && d.isWorldBoss) {
-          Leaderboard.instance.submitBoss(SaveService.instance.active, hero);
-          Analytics.instance.log('world_boss_run', {'damage': world.bossDamage.round(), 'level': hero.level});
+          Leaderboard.instance.submitBoss(SaveService.instance.active, hero, golden: d.golden);
+          Analytics.instance.log(d.golden ? 'gold_boss_run' : 'world_boss_run',
+              {'damage': world.bossDamage.round(), 'level': hero.level});
         } else if (d != null && d.isArena) {
           Analytics.instance.log(d.trial ? 'sect_trial' : d.isKiep ? 'do_kiep' : 'arena_fight', {'won': 1, 'level': hero.level, if (d.isKiep) 'stage': d.kiep});
         } else if (d != null && d.isRealm) {
@@ -1230,7 +1232,8 @@ class _PlayScreenState extends State<PlayScreen> {
   /// Boss Thế Giới run over: the damage, the day so far, another run.
   Widget _bossResult() {
     final day = vnDayKey();
-    final left = hero.wbRunsLeft;
+    final golden = widget.dungeon!.golden;
+    final left = golden ? hero.gbRunsLeft : hero.wbRunsLeft;
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -1244,7 +1247,10 @@ class _PlayScreenState extends State<PlayScreen> {
               Text(fmt(world.bossDamage.round()), style: titleStyle(40, color: const Color(0xFFFF9A5A))),
               Text('sát thương lượt này', style: small),
               const SizedBox(height: 8),
-              Text('Tổng hôm nay: ${fmt(hero.wbTotal)} · Cao nhất: ${fmt(hero.wbBest)}',
+              Text(
+                  golden
+                      ? 'Tổng hôm nay: ${fmt(hero.gbTotal)} · Cao nhất: ${fmt(hero.gbBest)}'
+                      : 'Tổng hôm nay: ${fmt(hero.wbTotal)} · Cao nhất: ${fmt(hero.wbBest)}',
                   style: bold.copyWith(color: cream)),
               for (final l in world.rewardLines.skip(1)) Text(l, style: bold.copyWith(color: goldLight)),
               const SizedBox(height: 10),
@@ -1264,13 +1270,14 @@ class _PlayScreenState extends State<PlayScreen> {
                   LButton(label: 'Về', onTap: _leave),
                   const SizedBox(width: 10),
                   LButton(
-                    label: left > 0 ? 'Đánh tiếp (còn $left)' : 'Hết lượt hôm nay',
+                    label: left > 0 ? 'Đánh tiếp (còn $left)' : golden ? 'Hết lượt khung này' : 'Hết lượt hôm nay',
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
-                      if (!hero.wbStartRun(day)) return;
+                      if (!(golden ? hero.gbStartRun(day) : hero.wbStartRun(day))) return;
                       SaveService.instance.save();
-                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(worldBossDef())));
+                      Navigator.of(context)
+                          .pushReplacement(fadeRoute(PlayScreen.dungeon(golden ? goldBossDef() : worldBossDef())));
                     },
                   ),
                 ],

@@ -584,6 +584,22 @@ HumanLook _humanFor(MobDef d) => _humanCache.putIfAbsent(d.id, () {
               skin: 0xFFD8C8C0, robe: d.c1, trim: d.c3, pants: d.c2,
               hairColor: 0xFFF2F2F6, hair: Hair.long, weapon: Weapon.sword,
               blade: d.c3, cape: 0xFF120A18, glow: d.c3);
+        // Boss Hoàng Kim (1.12.0).
+        case 'gbSpear':
+          return HumanLook(
+              skin: 0xFFD8A880, robe: d.c1, trim: d.c2, pants: 0xFF3A2418,
+              hair: Hair.crown, hairColor: 0xFF1E1A18, weapon: Weapon.spear,
+              blade: d.c3, cape: d.c2, armor: d.c1, glow: 0xFFFFD34A, longRobe: false);
+        case 'gbBandit':
+          return HumanLook(
+              skin: 0xFFB8845A, robe: d.c1, trim: d.c3, pants: 0xFF1E1610,
+              hair: Hair.topknot, band: d.c2, weapon: Weapon.bigSaber,
+              blade: 0xFFE8EEF4, cape: d.c2, glow: 0xFFFF6A3A, longRobe: false);
+        case 'gbLady':
+          return HumanLook(
+              skin: 0xFFF2D8C8, robe: d.c1, trim: d.c2, pants: d.c2,
+              hair: Hair.bun, hairColor: 0xFF1A1A2A, female: true, weapon: Weapon.sword,
+              blade: d.c3, cape: 0xFFBFE0FF, glow: d.c3);
         case 'demonLord':
           return HumanLook(
               skin: 0xFFE0C0B0, robe: d.c1, trim: d.c3, pants: d.c2,

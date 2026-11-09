@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/arena.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/gold_boss.dart';
 import '../core/hung_thu.dart';
 import '../core/ma_vuc.dart';
 import '../core/weekly_hunt.dart';
@@ -314,31 +315,38 @@ class Leaderboard extends ChangeNotifier {
   // ------------------------------------------------------------ boss
 
   /// The day's Boss Thế Giới board: `worldboss/{yyyymmdd}/hits/{uid}_{slot}`.
-  CollectionReference<Map<String, dynamic>> _boss(String day) =>
-      FirebaseFirestore.instance.collection('worldboss').doc(day).collection('hits');
+  /// Boss Hoàng Kim's ([golden], 1.12.0): `goldboss/{yyyymmdd}/hits/...`.
+  CollectionReference<Map<String, dynamic>> _boss(String day, {bool golden = false}) =>
+      FirebaseFirestore.instance.collection(golden ? 'goldboss' : 'worldboss').doc(day).collection('hits');
+
+  int _bossCap(int rebirths, int level, bool golden) =>
+      golden ? goldBossDayCap(rebirths, level) : worldBossDayCap(rebirths, level);
 
   /// Rows to show for the boss board in the dev build.
   List<LbEntry>? debugBoss;
 
-  /// Writes [h]'s damage total for its Boss Thế Giới day.
-  Future<void> submitBoss(int slot, HeroData h) async {
+  /// Writes [h]'s damage total for its Boss Thế Giới day, or its Boss
+  /// Hoàng Kim day when [golden].
+  Future<void> submitBoss(int slot, HeroData h, {bool golden = false}) async {
     final uid = myUid;
-    if (hidden || uid == null || debugBoss != null || h.wbDay.isEmpty) return;
-    final sentKey = '${h.wbDay}/${uid}_$slot';
-    if (_bossSent[sentKey] == h.wbTotal) return; // nothing new to write
+    final day = golden ? h.gbDay : h.wbDay;
+    final total = golden ? h.gbTotal : h.wbTotal;
+    if (hidden || uid == null || debugBoss != null || day.isEmpty) return;
+    final sentKey = '${golden ? 'g' : ''}$day/${uid}_$slot';
+    if (_bossSent[sentKey] == total) return; // nothing new to write
     try {
-      await _boss(h.wbDay).doc('${uid}_$slot').set({
+      await _boss(day, golden: golden).doc('${uid}_$slot').set({
         'uid': uid,
         'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
         'hanh': h.hanh.index,
         'level': h.level,
         'rebirths': h.rebirths,
-        'dmg': h.wbTotal,
+        'dmg': total,
         'pts': h.potentialTotal,
         'updated': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 8));
-      _bossSent[sentKey] = h.wbTotal;
-      _bossCache.remove(h.wbDay);
+      _bossSent[sentKey] = total;
+      _bossCache.removeWhere((k, _) => k.startsWith('${golden ? 'g' : ''}$day/'));
     } catch (e) {
       debugPrint('boss submit failed: $e');
     }
@@ -347,43 +355,47 @@ class Leaderboard extends ChangeNotifier {
   final Map<String, int> _bossSent = {};
 
   /// The day's top [limit] damage totals (damage carried in [LbEntry.power]).
-  Future<List<LbEntry>> topBoss(String day, {int limit = 30}) async {
+  Future<List<LbEntry>> topBoss(String day, {int limit = 30, bool golden = false}) async {
     final dbg = debugBoss;
     if (dbg != null) {
       return (List<LbEntry>.of(dbg)..sort((a, b) => b.power.compareTo(a.power))).take(limit).toList();
     }
-    final cached = _bossCache['$day/$limit'];
+    final key = '${golden ? 'g' : ''}$day/$limit';
+    final cached = _bossCache[key];
     if (cached != null && DateTime.now().difference(cached.$1) < _bossFresh) return cached.$2;
     final bans = await _bans();
     // Rows past what anyone could deal in a day are left out (1.8.2: an
     // edited client posted 838 billion before the rules capped it).
-    final snap = await _boss(day)
-        .where('dmg', isLessThanOrEqualTo: worldBossDayCap(maxRebirths))
+    final snap = await _boss(day, golden: golden)
+        .where('dmg', isLessThanOrEqualTo: _bossCap(maxRebirths, 99, golden))
         .orderBy('dmg', descending: true)
         .limit(limit)
         .get()
         .timeout(const Duration(seconds: 15));
     final rows = [
       for (final d in snap.docs)
-        if (_plausibleBoss(d.data()) && !bannedRow(bans, d.id))
+        if (_plausibleBoss(d.data(), golden) && !bannedRow(bans, d.id))
           ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
     ];
-    _bossCache['$day/$limit'] = (DateTime.now(), rows);
+    _bossCache[key] = (DateTime.now(), rows);
     return rows;
   }
 
-  static bool _plausibleBoss(Map<String, dynamic> m) {
+  static bool _plausibleBoss(Map<String, dynamic> m, [bool golden = false]) {
     final dmg = m['dmg'], cs = m['rebirths'], lv = m['level'];
-    return dmg is num && cs is num && lv is num && dmg <= worldBossDayCap(cs.toInt(), lv.toInt());
+    return dmg is num &&
+        cs is num &&
+        lv is num &&
+        dmg <= (golden ? goldBossDayCap(cs.toInt(), lv.toInt()) : worldBossDayCap(cs.toInt(), lv.toInt()));
   }
 
-  Future<int?> placeBoss(String day, int dmg) async {
+  Future<int?> placeBoss(String day, int dmg, {bool golden = false}) async {
     final dbg = debugBoss;
     if (dbg != null) return dbg.where((e) => e.power > dmg).length + 1;
     try {
-      final agg = await _boss(day)
+      final agg = await _boss(day, golden: golden)
           .where('dmg', isGreaterThan: dmg)
-          .where('dmg', isLessThanOrEqualTo: worldBossDayCap(maxRebirths))
+          .where('dmg', isLessThanOrEqualTo: _bossCap(maxRebirths, 99, golden))
           .count()
           .get()
           .timeout(const Duration(seconds: 10));
@@ -391,6 +403,22 @@ class Leaderboard extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Place of this hero's finished Boss Hoàng Kim day [day] (total [dmg]):
+  /// 0 when its row is not on that day's board (not signed in then, hidden,
+  /// or a different total), null when it can't be read now.
+  Future<int?> placeGoldDay(int slot, String day, int dmg) async {
+    final uid = myUid;
+    if (debugBoss != null) return 2;
+    if (uid == null) return null;
+    try {
+      final mine = await _boss(day, golden: true).doc('${uid}_$slot').get().timeout(const Duration(seconds: 10));
+      if (!mine.exists || (mine.data()?['dmg'] as num?)?.toInt() != dmg) return 0;
+    } catch (_) {
+      return null;
+    }
+    return placeBoss(day, dmg, golden: true);
   }
 
   /// Removes this player's rows (hiding, deleting a slot or the account).
@@ -402,6 +430,7 @@ class Leaderboard extends ChangeNotifier {
       try {
         await _col.doc('${uid}_$i').delete();
         await _boss(vnDayKey()).doc('${uid}_$i').delete();
+        await _boss(vnDayKey(), golden: true).doc('${uid}_$i').delete();
       } catch (_) {}
     }
   }

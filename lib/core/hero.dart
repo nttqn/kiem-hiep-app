@@ -521,6 +521,15 @@ class HeroData {
   /// Ngộ Đạo (1.12.0): tầng reached (0 before the first), Đạo hạnh toward
   /// the next, and whether the full-bar-at-a-gate notice was given.
   int daoLv = 0;
+
+  /// Boss Hoàng Kim (1.12.0): the day, runs in each session, the day's
+  /// damage and best run, sessions paid for joining (bits), the session of
+  /// the run under way; the last day's total awaiting its board place.
+  String gbDay = '';
+  int gbRuns0 = 0, gbRuns1 = 0, gbTotal = 0, gbBest = 0, gbPaid = 0, gbSession = 0;
+  String gbLastDay = '';
+  int gbLastTotal = 0;
+  bool gbRankDue = false;
   int daoExp = 0;
   bool daoNotified = false;
 
@@ -3102,6 +3111,7 @@ class HeroData {
         'pay': [cardUntil, cardClaimDay, starterBought, adDay, adChestN, manorAdN, bodyAdN, bodyBoost, trialSkin, trialUntil],
         'lpd': [soulPills, soulExp],
         if (daoLv > 0 || daoExp > 0) 'dao': [daoLv, daoExp, daoNotified],
+        if (gbDay.isNotEmpty) 'gb': [gbDay, gbRuns0, gbRuns1, gbTotal, gbBest, gbPaid, gbLastDay, gbLastTotal, gbRankDue],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
@@ -3418,6 +3428,18 @@ class HeroData {
       h.daoLv = math.max(0, (dao[0] as num).toInt());
       h.daoExp = math.max(0, (dao[1] as num).toInt());
       h.daoNotified = dao.length > 2 && dao[2] == true;
+    }
+    final gb = m['gb'];
+    if (gb is List && gb.length >= 9) {
+      h.gbDay = gb[0] as String;
+      h.gbRuns0 = math.max(0, (gb[1] as num).toInt());
+      h.gbRuns1 = math.max(0, (gb[2] as num).toInt());
+      h.gbTotal = math.max(0, (gb[3] as num).toInt());
+      h.gbBest = math.max(0, (gb[4] as num).toInt());
+      h.gbPaid = (gb[5] as num).toInt();
+      h.gbLastDay = gb[6] as String;
+      h.gbLastTotal = math.max(0, (gb[7] as num).toInt());
+      h.gbRankDue = gb[8] == true;
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
     final fat = m['fat'];

@@ -7,6 +7,7 @@ import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/divine.dart';
 import '../core/gems.dart';
+import '../core/gold_boss.dart';
 import '../core/gold_sets.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
@@ -22,6 +23,7 @@ import '../services/save.dart';
 import 'arena_screen.dart';
 import 'cloud_panel.dart';
 import 'endgame_screens.dart';
+import 'gold_boss_screen.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -58,7 +60,26 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     h.mvRollWeek();
     h.htRoll(vnDayKey());
     final beast = beastOfWeek(h.htWeek);
+    h.gbRollDay(vnDayKey());
+    final gb = goldBossOf();
+    final gbSession = goldBossSessionAt();
     final cards = <Widget>[
+      // 1.12.0: twice a day, at fixed hours.
+      _card(
+        title: 'Boss Hoàng Kim',
+        icon: Icons.workspace_premium,
+        lines: [
+          'Hôm nay: ${gb.name}',
+          gbSession >= 0
+              ? 'Đang xuất hiện! Lượt còn: ${h.gbRunsLeft}'
+              : 'Xuất hiện ${[for (var i = 0; i < goldBossSessions.length; i++) goldBossSessionLabel(i)].join(' và ')}',
+        ],
+        art: BossPreview(def: gb, size: 150),
+        button: h.goldBossOpen ? 'Vào Boss Hoàng Kim' : 'Mở ở cấp $goldBossOpenLevel',
+        enabled: h.goldBossOpen,
+        isNew: true,
+        onTap: () => _go(const GoldBossScreen()),
+      ),
       _card(
         title: 'Tháp Thử Luyện',
         icon: Icons.temple_buddhist,
@@ -142,7 +163,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         onTap: () => _go(const MaVucScreen()),
       ),
     ];
-    final shown = cards.sublist(_tab * 3, _tab * 3 + 3);
+    // Thường ngày has four cards (Boss Hoàng Kim first); the row slides.
+    final shown = _tab == 0 ? cards.sublist(0, 4) : cards.sublist(4, 7);
     Widget chip(int i, String label, {bool isNew = false}) => Padding(
           padding: const EdgeInsets.only(left: 6),
           child: GestureDetector(
@@ -173,15 +195,21 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         );
     return SubScreen(
       title: 'Thử thách',
-      actions: [chip(0, 'Thường ngày'), chip(1, 'Cao thủ', isNew: true)],
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < shown.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Expanded(child: shown[i]),
-          ],
-        ],
+      actions: [chip(0, 'Thường ngày'), chip(1, 'Cao thủ')],
+      child: LayoutBuilder(
+        builder: (_, box) {
+          final w = (box.maxWidth - 20) / 3;
+          return ListView(
+            scrollDirection: Axis.horizontal,
+            physics: shown.length > 3 ? null : const NeverScrollableScrollPhysics(),
+            children: [
+              for (var i = 0; i < shown.length; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                SizedBox(width: w, child: shown[i]),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

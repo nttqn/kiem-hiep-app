@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'core/activity.dart';
 import 'core/ngo_dao.dart';
+import 'core/gold_boss.dart';
+import 'ui/gold_boss_screen.dart';
 import 'core/chat.dart';
 import 'services/chat.dart';
 import 'ui/chat_screen.dart';
@@ -104,6 +106,14 @@ Future<void> main() async {
   World.debugTbdNear = q['tbdnear'] == '1';
   // slow=4 runs battles at quarter speed for smooth screen recordings.
   BattleGame.debugSpeed = 1 / (double.tryParse(q['slow'] ?? '') ?? 1);
+  // vnat=HHMM: today at that Vietnam time (Boss Hoàng Kim sessions).
+  final vnAt = int.tryParse(q['vnat'] ?? '');
+  if (vnAt != null) {
+    final v = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final t = DateTime.utc(v.year, v.month, v.day, vnAt ~/ 100, vnAt % 100).subtract(const Duration(hours: 7));
+    final start = DateTime.now().millisecondsSinceEpoch;
+    GameClock.deviceMs = () => t.millisecondsSinceEpoch + DateTime.now().millisecondsSinceEpoch - start;
+  }
   PlayScreen.debugHideHud = q['hud'] == '0';
   // clean=1 also drops damage numbers and monster bars (thumbnails).
   WorldRenderer.debugClean = q['clean'] == '1';
@@ -569,6 +579,7 @@ Future<void> main() async {
     'create' => const CreateScreen(slot: 0),
     'play' => PlayScreen.field(map),
     'wboss' => PlayScreen.dungeon(worldBossDef()),
+    'gboss' => PlayScreen.dungeon(goldBossDef()),
     'dungeon' => PlayScreen.dungeon(q['tf'] != null
         ? towerFloor(int.parse(q['tf']!))
         : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
@@ -589,6 +600,7 @@ Future<void> main() async {
     'ach' => const AchievementsScreen(),
     'pets' => const PetScreen(),
     'rebirth' => const RebirthScreen(),
+    'goldboss' => const GoldBossScreen(),
     'gems' => const CharacterScreen(tab: 3, forge: true),
     'gear' => const _GearSheet(),
     'outfits' => const _OutfitSheet(),

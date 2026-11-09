@@ -25,6 +25,7 @@ import 'realm.dart';
 import 'scenery.dart';
 import 'sects.dart';
 import 'stats.dart';
+import 'gold_boss.dart';
 import 'ngo_dao.dart';
 import 'tam_ma.dart';
 import 'ma_vuc.dart';
@@ -1216,7 +1217,9 @@ class World {
     if (finished) return;
     finished = true;
     finishTime = math.min(time, dungeon!.timeLimit);
-    rewardLines = hero.worldBossReward(bossDamage.round(), rng);
+    rewardLines = dungeon!.golden
+        ? hero.goldBossReward(bossDamage.round())
+        : hero.worldBossReward(bossDamage.round(), rng);
     events.add(GameEvent(EvKind.cleared, value: 0));
   }
 
