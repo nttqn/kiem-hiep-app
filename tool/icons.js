@@ -17,6 +17,8 @@ const sheets = {
   gems: ['gem_kim', 'gem_moc', 'gem_thuy', 'gem_hoa', 'gem_tho'],
   mats: ['mat_stone', 'mat_iron', 'mat_shard', 'mat_soul', 'mat_soulpill'],
   pills: ['pill_songboi', 'pill_tubao', 'pill_cuongluc', 'pill_kimcang', 'pill_taytuy'],
+  // Single icons.
+  pill_hoixuan: ['pill_hoixuan'],
 };
 
 async function cut(sheet, names) {
