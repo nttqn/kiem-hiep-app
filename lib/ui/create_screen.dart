@@ -81,11 +81,31 @@ class _CreateScreenState extends State<CreateScreen> {
                   flex: 4,
                   child: Column(
                     children: [
+                      // The sect's painting (1.11.2), with the in-battle
+                      // figure small in the corner so both are seen.
                       Expanded(
-                        child: Center(
-                          child: FittedBox(
-                            child: FigurePreview(hanh: _hanh, female: _female, scale: 3.4),
-                          ),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 220),
+                                child: Image.asset(
+                                  'assets/art/sect_${_hanh.name}_${_female ? 'f' : 'm'}.webp',
+                                  key: ValueKey('${_hanh.name}$_female'),
+                                  fit: BoxFit.contain,
+                                  filterQuality: FilterQuality.medium,
+                                  errorBuilder: (_, _, _) => Center(
+                                    child: FittedBox(child: FigurePreview(hanh: _hanh, female: _female, scale: 3.4)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 0,
+                              bottom: 0,
+                              child: FigurePreview(hanh: _hanh, female: _female, scale: 1.3),
+                            ),
+                          ],
                         ),
                       ),
                       Row(

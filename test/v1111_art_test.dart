@@ -6,7 +6,7 @@ import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/core/sects.dart';
-import 'package:kiem_hiep/ui/theme.dart' show itemIconPath;
+import 'package:kiem_hiep/ui/theme.dart' show itemIconPath, mapArtPath;
 import 'package:kiem_hiep/ui/world_boss_screen.dart' show bossArtIds;
 
 void main() {
@@ -34,6 +34,17 @@ void main() {
         }
       }
       expect(File('assets/art/icons/gem_${h.name}.webp').existsSync(), isTrue);
+    }
+  });
+
+  test('every sect has both paintings and every region its vignette', () {
+    for (final h in Hanh.values) {
+      for (final g in ['m', 'f']) {
+        expect(File('assets/art/sect_${h.name}_$g.webp').existsSync(), isTrue, reason: '${h.name}_$g');
+      }
+    }
+    for (final t in MapTheme.values) {
+      expect(File(mapArtPath(t.name)).existsSync(), isTrue, reason: t.name);
     }
   });
 }

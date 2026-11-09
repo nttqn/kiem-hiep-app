@@ -77,6 +77,7 @@ class Panel extends StatelessWidget {
     this.color,
     this.border = gold,
     this.radius = 10,
+    this.art,
   });
 
   final Widget child;
@@ -85,10 +86,16 @@ class Panel extends StatelessWidget {
   final Color border;
   final double radius;
 
+  /// A painted picture behind the content, showing through on the right
+  /// and fading into lacquer on the left where the text sits (1.11.2).
+  final String? art;
+
   @override
   Widget build(BuildContext context) {
+    final art = this.art;
     return Container(
-      padding: padding,
+      padding: art == null ? padding : EdgeInsets.zero,
+      clipBehavior: art == null ? Clip.none : Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: color != null
             ? null
@@ -102,10 +109,41 @@ class Panel extends StatelessWidget {
         border: Border.all(color: border.withValues(alpha: 0.8), width: 1.5),
         boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 3))],
       ),
-      child: child,
+      child: art == null
+          ? child
+          : Stack(
+              fit: StackFit.passthrough,
+              children: [
+                Positioned.fill(
+                  child: Image.asset(art,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                      filterQuality: FilterQuality.medium,
+                      errorBuilder: (_, _, _) => const SizedBox()),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          lacquer.withValues(alpha: 0.95),
+                          lacquer.withValues(alpha: 0.86),
+                          lacquer.withValues(alpha: 0.5),
+                        ],
+                        stops: const [0, 0.55, 1],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(padding: padding, child: child),
+              ],
+            ),
     );
   }
 }
+
+/// The painted vignette of a region (assets/art/map_{theme}.webp, 1.11.2).
+String mapArtPath(String theme) => 'assets/art/map_$theme.webp';
 
 /// A raised lacquer button that sinks when pressed.
 class LButton extends StatefulWidget {

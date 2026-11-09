@@ -93,6 +93,7 @@ class _NightmareViewState extends State<NightmareView> {
                   onTap: open ? () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d))) : null,
                   child: Panel(
                     border: stars == 0 && open ? const Color(0xFFE08AC8) : const Color(0xFF8A3A6A),
+                    art: mapArtPath(d.map.theme.name),
                     padding: const EdgeInsets.all(10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

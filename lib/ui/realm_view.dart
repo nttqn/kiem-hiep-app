@@ -123,6 +123,7 @@ class _RealmViewState extends State<RealmView> {
                   onTap: open ? () => _enter(i) : null,
                   child: Panel(
                     border: best ? const Color(0xFF8CE0C8) : const Color(0xFF3A7A6A),
+                    art: mapArtPath(r.map.theme.name),
                     padding: const EdgeInsets.all(10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

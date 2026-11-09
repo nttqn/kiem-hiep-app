@@ -233,13 +233,16 @@ class _ThemeSwatch extends StatelessWidget {
     };
     final c = colors[theme]!;
     return Container(
-      width: 54,
-      height: 54,
+      width: 58,
+      height: 58,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: c),
         border: Border.all(color: goldLight.withValues(alpha: 0.6)),
       ),
+      child: Image.asset(mapArtPath(theme.name),
+          fit: BoxFit.cover, filterQuality: FilterQuality.medium, errorBuilder: (_, _, _) => const SizedBox()),
     );
   }
 }
@@ -349,6 +352,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                           : null,
                       child: Panel(
                         border: quest ? goldLight : gold,
+                        art: mapArtPath(d.map.theme.name),
                         padding: const EdgeInsets.all(10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +361,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    n >= 0 ? 'Ải ${n + 1}: ${d.name}' : 'Đông Hải: ${d.name}',
+                                    n >= 0 ? 'Ải ${n + 1}: ${d.name}' : '${d.mapId == 'tayvuc' ? 'Tây Vực' : 'Đông Hải'}: ${d.name}',
                                     style: bold.copyWith(color: goldLight),
                                     overflow: TextOverflow.ellipsis,
                                   ),

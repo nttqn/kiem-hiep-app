@@ -18,6 +18,11 @@ async function bg(name) {
   await sharp(path.join(inDir, name + '.png')).resize({ width: 1600 }).webp({ quality: 80 }).toFile(path.join(out, name + '.webp'));
 }
 
+// Region vignettes for the map lists: 256 square, opaque.
+async function mapTile(name) {
+  await sharp(path.join(inDir, name + '.png')).resize(256, 256).webp({ quality: 82 }).toFile(path.join(out, name + '.webp'));
+}
+
 async function portrait(name, height) {
   const { data, info } = await sharp(path.join(inDir, name + '.png')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const lo = 110, hi = 235;
@@ -42,7 +47,8 @@ async function portrait(name, height) {
     const name = f.slice(0, -4);
     if (only && !only.split(',').includes(name)) continue;
     if (backgrounds.includes(name)) await bg(name);
-    else await portrait(name, companions.includes(name) ? 720 : 600);
+    else if (name.startsWith('map_')) await mapTile(name);
+    else await portrait(name, companions.includes(name) || name.startsWith('sect_') ? 720 : 600);
     console.log(name, fs.statSync(path.join(out, name + '.webp')).size);
   }
 })();
