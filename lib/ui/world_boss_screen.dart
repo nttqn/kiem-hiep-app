@@ -517,7 +517,8 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
 /// Bosses with a painted portrait in assets/art/{id}.webp (1.11.1).
 const bossArtIds = {
   'banditBoss', 'snakeKing', 'zombieKing', 'scorpionKing', 'yetiKing', 'kylin', 'demonLord', //
-  'whiteDragon', 'heavenDemon', 'seaDragon', 'tvKing', 'abyssLord', 'hhLord', 'fdDragon',
+  'whiteDragon', 'heavenDemon', 'seaDragon', 'tvKing', 'abyssLord', 'hhLord', 'fdDragon', //
+  'gbSpear', 'gbBandit', 'gbLady',
 };
 
 /// A boss's painted portrait, or a gently animated drawing of the monster

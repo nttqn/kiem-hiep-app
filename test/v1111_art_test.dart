@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/companions.dart';
 import 'package:kiem_hiep/core/content.dart';
+import 'package:kiem_hiep/core/gold_boss.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/core/mount_skins.dart';
@@ -21,7 +22,7 @@ void main() {
     for (final c in companions) {
       expect(File('assets/art/${c.id}.webp').existsSync(), isTrue, reason: c.id);
     }
-    final bosses = [for (final m in [...mobs, ...festMobs]) if (m.boss) m.id];
+    final bosses = [for (final m in [...mobs, ...festMobs, ...goldBossMobs]) if (m.boss) m.id];
     expect(bosses.where((id) => !bossArtIds.contains(id)), isEmpty);
   });
 
