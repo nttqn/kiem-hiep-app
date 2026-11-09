@@ -5,6 +5,7 @@ import 'package:kiem_hiep/core/companions.dart';
 import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/core/mount_skins.dart';
 import 'package:kiem_hiep/core/mounts.dart';
 import 'package:kiem_hiep/core/pets.dart';
 import 'package:kiem_hiep/core/sects.dart';
@@ -59,6 +60,9 @@ void main() {
     }
     for (final m in mounts) {
       expect(File('assets/art/mount_${m.id}.webp').existsSync(), isTrue, reason: m.id);
+    }
+    for (final s in mountSkins) {
+      expect(File('assets/art/mount_${s.id}.webp').existsSync(), isTrue, reason: s.id);
     }
     for (final p in pets) {
       expect(File('assets/art/pet_${p.id}.webp').existsSync(), isTrue, reason: p.id);
