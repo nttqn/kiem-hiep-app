@@ -85,10 +85,15 @@ extension MountSkins on HeroData {
 
   /// [m] as the hero has dressed it.
   MountDef dressed(MountDef m) {
+    final s = skinOn(m.id);
+    return s == null ? m : m.skinned(s.c1, s.c2, s.c3, s.aura);
+  }
+
+  /// The look mount [mountId] shows, if not its own.
+  MountSkin? skinOn(String mountId) {
     // A look on trial (an ad) wins over the one worn.
     final trial = trialUntil > 0 && trialSkin.isNotEmpty && trialUntil > GameClock.nowMs() ? skinById[trialSkin] : null;
-    final s = trial?.mount == m.id ? trial : skinById[mountSkin[m.id]];
-    return s == null ? m : m.skinned(s.c1, s.c2, s.c3, s.aura);
+    return trial?.mount == mountId ? trial : skinById[mountSkin[mountId]];
   }
 
   bool canGetSkin(MountSkin s) {

@@ -89,14 +89,14 @@ class _MountViewState extends State<MountView> {
                     rider: ridden ? lookOfHero(h) : null,
                     size: math.max(60, math.min(c.maxWidth, c.maxHeight)),
                   );
-                  // The painting (1.11.2) shows the mount's own colours, so
-                  // one in a skin keeps its drawn figure; the one ridden has
+                  // The painting (1.11.2) of the look it wears, the drawn
+                  // figure while that one is not painted; the one ridden has
                   // its rider small in the corner.
-                  if (owned && h.mountSkin[m.id] != null) return Center(child: chibi);
+                  final skin = owned ? h.skinOn(m.id) : null;
                   return Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.asset('assets/art/mount_${m.id}.webp',
+                      Image.asset(mountArtPath(m.id, skin?.id),
                           fit: BoxFit.contain,
                           filterQuality: FilterQuality.medium,
                           errorBuilder: (_, _, _) => Center(child: chibi)),
@@ -170,6 +170,9 @@ class _MountViewState extends State<MountView> {
   }
 }
 
+/// The painting of mount [id], or of its look [skin] (mount_{skin}.webp).
+String mountArtPath(String id, [String? skin]) => 'assets/art/mount_${skin ?? id}.webp';
+
 /// Ngoại hình: the looks a mount can wear.
 class MountSkinDialog extends StatefulWidget {
   const MountSkinDialog({super.key, required this.mount});
@@ -187,7 +190,7 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
     final m = widget.mount;
     final owned = h.ownsMount(m.id);
     final worn = h.mountSkin[m.id];
-    Widget card({required String name, required MountDef look, required bool on, required Widget action, String? note}) =>
+    Widget card({required String name, required MountDef look, required bool on, required Widget action, String? note, String? skinId}) =>
         SizedBox(
           width: 150,
           child: Padding(
@@ -199,7 +202,13 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                 children: [
                   Text(name, style: bold.copyWith(fontSize: 12.5, color: on ? goldLight : cream),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
-                  Expanded(child: ClipRect(child: Center(child: MountPreview(mount: look, size: look.look == 'sword' ? 82 : 110)))),
+                  Expanded(
+                    child: Image.asset(mountArtPath(m.id, skinId),
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                        errorBuilder: (_, _, _) => ClipRect(
+                            child: Center(child: MountPreview(mount: look, size: look.look == 'sword' ? 82 : 110)))),
+                  ),
                   if (note != null) Text(note, style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   action,
@@ -242,6 +251,7 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                     card(
                       name: s.name,
                       look: m.skinned(s.c1, s.c2, s.c3, s.aura),
+                      skinId: s.id,
                       on: worn == s.id,
                       note: h.ownsSkin(s.id) ? null : s.howTo,
                       action: h.ownsSkin(s.id)
