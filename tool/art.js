@@ -18,9 +18,12 @@ async function bg(name) {
   await sharp(path.join(inDir, name + '.png')).resize({ width: 1600 }).webp({ quality: 80 }).toFile(path.join(out, name + '.webp'));
 }
 
-// Region vignettes for the map lists: 256 square, opaque.
+// Region vignettes: a 256 square for the map lists, and a 1024x576 centre
+// crop (land_*) for the screen shown on entering it.
 async function mapTile(name) {
-  await sharp(path.join(inDir, name + '.png')).resize(256, 256).webp({ quality: 82 }).toFile(path.join(out, name + '.webp'));
+  const src = path.join(inDir, name + '.png');
+  await sharp(src).resize(256, 256).webp({ quality: 82 }).toFile(path.join(out, name + '.webp'));
+  await sharp(src).resize(1024, 576, { fit: 'cover' }).webp({ quality: 70 }).toFile(path.join(out, name.replace('map_', 'land_') + '.webp'));
 }
 
 async function portrait(name, height) {

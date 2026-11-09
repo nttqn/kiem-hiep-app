@@ -28,6 +28,7 @@ import 'backdrop.dart' show FigurePreview;
 import 'fishing_view.dart';
 import 'world_boss_screen.dart' show BossPreview, bossArtIds;
 import 'hud.dart';
+import 'land_splash.dart';
 import 'theme.dart';
 import 'auto_dialog.dart';
 
@@ -62,6 +63,9 @@ class _PlayScreenState extends State<PlayScreen> {
   double _bannerAt = -10;
   bool _paused = false;
   bool _fishing = false;
+
+  /// The land's painting is up (1.11.2); the fight waits behind it.
+  bool _splash = false;
   bool _dead = false;
   bool? _cleared;
   int _stars = 0;
@@ -97,7 +101,32 @@ class _PlayScreenState extends State<PlayScreen> {
     _autosave = Timer.periodic(const Duration(seconds: 20), (_) => SaveService.instance.save());
     game.hudTick.addListener(_pruneToasts);
     final name = widget.dungeon?.name ?? widget.map!.name;
-    _showBanner(name, goldLight);
+    _splash = !PlayScreen.debugHideHud &&
+        (d == null || !(d.isTower || d.isWorldBoss || d.isArena));
+    if (_splash) {
+      game.halted = true;
+    } else {
+      _showBanner(name, goldLight);
+    }
+  }
+
+  void _splashDone() {
+    setState(() => _splash = false);
+    game.halted = _paused || _fishing || _dead || _cleared != null;
+  }
+
+  Widget _splashView() {
+    final d = widget.dungeon;
+    return Positioned.fill(
+      child: LandSplash(
+        map: world.map,
+        title: d?.name ?? widget.map!.name,
+        subtitle: d == null
+            ? widget.map!.desc
+            : (d.name == d.map.name ? null : d.map.name),
+        onDone: _splashDone,
+      ),
+    );
   }
 
   /// A land's tune: Cửu U Ma Vực borrows Ma Giáo's, Đông Hải Vân Vụ's.
@@ -360,7 +389,7 @@ class _PlayScreenState extends State<PlayScreen> {
       ),
     );
     await SaveService.instance.save();
-    if (mounted) game.halted = _paused || _fishing || _dead || _cleared != null;
+    if (mounted) game.halted = _paused || _fishing || _dead || _cleared != null || _splash;
   }
 
   /// The battle ran slowly on this phone: Chế độ máy yếu goes on by itself,
@@ -379,14 +408,14 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _setPaused(bool v) {
     setState(() => _paused = v);
-    game.halted = v || _fishing || _dead || _cleared != null;
+    game.halted = v || _fishing || _dead || _cleared != null || _splash;
     if (v) SaveService.instance.save();
   }
 
   /// The pond's mini-game pauses the field around it.
   void _setFishing(bool v) {
     setState(() => _fishing = v);
-    game.halted = v || _paused || _dead || _cleared != null;
+    game.halted = v || _paused || _dead || _cleared != null || _splash;
     if (v) {
       world.input.attack = false;
       world.input.moveX = 0;
@@ -596,6 +625,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 if (_paused) _pauseOverlay(),
                 if (_dead) _deadOverlay(),
                 if (_cleared != null) _resultOverlay(),
+                if (_splash) _splashView(),
               ],
             );
           },

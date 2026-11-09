@@ -45,6 +45,7 @@ void main() {
     }
     for (final t in MapTheme.values) {
       expect(File(mapArtPath(t.name)).existsSync(), isTrue, reason: t.name);
+      expect(File('assets/art/land_${t.name}.webp').existsSync(), isTrue, reason: t.name);
     }
   });
 }
