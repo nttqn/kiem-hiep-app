@@ -835,11 +835,15 @@ class _ItemDialogState extends State<ItemDialog> {
       if (maxed)
         Text('Đã đạt ★$maxStar', style: small)
       else ...[
-        Text(
-          '${starStoneCost[it.star]} Tinh Thạch (có ${fmt(h.starStones)})'
-          '${starSoulCost[it.star] > 0 ? ' · ${starSoulCost[it.star]} Tinh Phách (có ${h.beastSouls})' : ''}'
-          ' · ${fmt(starGoldCost(it.star))} lượng',
-          style: small.copyWith(fontSize: 11),
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            MatCount(Mat.stone, '${starStoneCost[it.star]} (có ${fmt(h.starStones)})', style: small.copyWith(fontSize: 11), size: 16),
+            if (starSoulCost[it.star] > 0)
+              MatCount(Mat.soul, '${starSoulCost[it.star]} (có ${h.beastSouls})', style: small.copyWith(fontSize: 11), size: 16),
+            Text('${fmt(starGoldCost(it.star))} lượng', style: small.copyWith(fontSize: 11)),
+          ],
         ),
         Text('+${(starBasePct * 100).round()}% chỉ số gốc, ${starLines[it.slot]!.label.toLowerCase()} +${(starLines[it.slot]!.per * 100).toStringAsFixed(1)}%',
             style: small.copyWith(fontSize: 11, color: const Color(0xFFFFD34A))),

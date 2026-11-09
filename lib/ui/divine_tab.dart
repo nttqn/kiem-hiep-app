@@ -54,7 +54,7 @@ class _DivineTabState extends State<DivineTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.hardware, color: Color(0xFF9FD8FF), size: 18),
+                    const MatIcon(Mat.iron, size: 22),
                     const SizedBox(width: 4),
                     Text('${h.divineIron} Thần Thiết', style: bold.copyWith(color: const Color(0xFF9FD8FF))),
                   ],

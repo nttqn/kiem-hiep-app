@@ -697,3 +697,52 @@ const _tileTextShadow = [
   Shadow(color: Color(0xF0000000), offset: Offset(0.8, 0.8), blurRadius: 1.5),
   Shadow(color: Color(0xC0000000), offset: Offset(-0.6, -0.6), blurRadius: 1.5),
 ];
+
+/// Materials with a painted icon (assets/art/icons/mat_*.webp, 1.11.2).
+enum Mat { stone, iron, shard, soul, soulPill }
+
+/// A material's painted icon; a plain dot if the picture is missing.
+class MatIcon extends StatelessWidget {
+  const MatIcon(this.mat, {super.key, this.size = 20});
+  final Mat mat;
+  final double size;
+
+  static const _file = {
+    Mat.stone: 'mat_stone',
+    Mat.iron: 'mat_iron',
+    Mat.shard: 'mat_shard',
+    Mat.soul: 'mat_soul',
+    Mat.soulPill: 'mat_soulpill',
+  };
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+        'assets/art/icons/${_file[mat]}.webp',
+        width: size,
+        height: size,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => SizedBox.square(
+          dimension: size,
+          child: const Center(child: Icon(Icons.circle, size: 8, color: creamDim)),
+        ),
+      );
+}
+
+/// A material's icon and an amount beside it.
+class MatCount extends StatelessWidget {
+  const MatCount(this.mat, this.text, {super.key, this.style, this.size = 18});
+  final Mat mat;
+  final String text;
+  final TextStyle? style;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MatIcon(mat, size: size),
+          const SizedBox(width: 3),
+          Flexible(child: Text(text, style: style ?? bold, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        ],
+      );
+}

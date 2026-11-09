@@ -209,8 +209,10 @@ class _OffersViewState extends State<OffersView> {
           _line('$starPackStones Tinh Thạch'),
           _line('$starPackSouls Hung Thú Tinh Phách'),
           _line('Đủ nâng một món từ ★0 lên ★3, hoặc góp sao 4–5'),
-          Text('Có: ${fmt(h.starStones)} Tinh Thạch · ${h.beastSouls} Tinh Phách',
-              style: small.copyWith(fontSize: 10.5, color: creamDim)),
+          Wrap(spacing: 8, children: [
+            MatCount(Mat.stone, fmt(h.starStones), style: small.copyWith(fontSize: 11, color: cream), size: 16),
+            MatCount(Mat.soul, '${h.beastSouls}', style: small.copyWith(fontSize: 11, color: cream), size: 16),
+          ]),
           const Spacer(),
           _buy(skuStarPack, done: h.starPackThisWeek ? 'Đã mua tuần này' : null),
         ],

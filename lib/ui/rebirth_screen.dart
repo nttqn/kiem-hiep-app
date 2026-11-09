@@ -99,7 +99,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                           const SizedBox(height: 10),
                           if (done || h.nextRebirthPills > 0) ...[
                             // Past the last rebirth, EXP goes into Linh Phách Đơn.
-                            Text('Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF))),
+                            MatCount(Mat.soulPill, 'Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF)), size: 22),
                             const SizedBox(height: 4),
                             Bar(
                               value: h.expFull ? (h.soulExp / h.soulPillExp).clamp(0.0, 1.0) : 0,

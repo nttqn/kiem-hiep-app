@@ -108,7 +108,7 @@ class _GoldTabState extends State<GoldTab> {
             chip(1, 'Khai Quang'),
             chip(2, 'Hoàng Kim Các'),
             const Spacer(),
-            const Icon(Icons.auto_awesome, color: _gold, size: 16),
+            const MatIcon(Mat.shard, size: 20),
             const SizedBox(width: 3),
             Flexible(
               child: Text('${h.goldShards} mảnh',

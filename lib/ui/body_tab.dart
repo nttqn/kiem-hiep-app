@@ -75,8 +75,8 @@ class _BodyTabState extends State<BodyTab> {
                   alignment: WrapAlignment.center,
                   spacing: 10,
                   children: [
-                    Text('${h.divineIron} Thần Thiết', style: bold.copyWith(fontSize: 12, color: const Color(0xFF9FD8FF))),
-                    Text('${h.soulPills} Linh Phách Đơn', style: bold.copyWith(fontSize: 12, color: const Color(0xFFC8B8FF))),
+                    MatCount(Mat.iron, '${h.divineIron} Thần Thiết', style: bold.copyWith(fontSize: 12, color: const Color(0xFF9FD8FF))),
+                    MatCount(Mat.soulPill, '${h.soulPills} Linh Phách Đơn', style: bold.copyWith(fontSize: 12, color: const Color(0xFFC8B8FF))),
                   ],
                 ),
               ],
