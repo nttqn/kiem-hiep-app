@@ -281,9 +281,12 @@ class Friend {
 
 const int maxFriends = 30;
 
-/// Gifts taken a day, and what one gives.
+/// Gifts taken a day, and what one gives: about a Sư môn duty's gold,
+/// half again per rebirth as monsters' gold grows (rebirthGold), so ten a
+/// day are a small daily treat (41,600 at rebirth 6, level 99), not an
+/// income (was 300 × level × (rebirths + 1): 2 million a day).
 const int friendGiftsPerDay = 10;
-int friendGiftGold(int level, int rebirths) => 300 * level * (1 + rebirths);
+int friendGiftGold(int level, int rebirths) => ((50 + 10 * level) * (1 + rebirthGold * rebirths)).round();
 
 extension Friends on HeroData {
   bool isFriend(String row) => friends.any((f) => f.row == row);
