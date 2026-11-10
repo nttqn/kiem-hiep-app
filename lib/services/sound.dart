@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -69,6 +70,13 @@ class SoundService {
 
   final Map<String, AudioPool> _pools = {};
   final Map<String, _LowLatencyPool> _android = {};
+
+  /// Android (1.12.0): effects on our own SoundPool, played from a
+  /// background thread (MainActivity's Sfx.kt). audioplayers did each
+  /// effect's stop and play on the main thread, where SoundPool's lock made
+  /// it wait: the top ANRs in Play Console. Effects loaded this way.
+  static const _sfx = MethodChannel('kh/sfx');
+  final Set<String> _native = {};
   final Map<String, DateTime> _last = {};
   bool _battle = false;
   bool _foreground = true;
@@ -128,6 +136,14 @@ class SoundService {
       // If SoundPool fails, fall back to the MediaPlayer pool rather than
       // going silent.
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        try {
+          final uri = await FlameAudio.audioCache.load(sfxAsset(f)).timeout(const Duration(seconds: 5));
+          await _sfx.invokeMethod<void>('load', {'n': f, 'p': uri.toFilePath()});
+          _native.add(f);
+          continue;
+        } catch (e) {
+          debugPrint('Native SoundPool load failed for $f: $e');
+        }
         try {
           _android[f] = await _LowLatencyPool.create(sfxAsset(f), size)
               .timeout(const Duration(seconds: 5));
@@ -220,7 +236,7 @@ class SoundService {
     // Browsers refuse audio before the first tap; cues follow taps, so
     // this is where blocked music gets going.
     _applyMusic();
-    if (!sfxOn.value) return;
+    if (!sfxOn.value || !_foreground) return;
     final file = _cues[name] ?? name;
     final now = DateTime.now();
     final last = _last[file];
@@ -229,6 +245,10 @@ class SoundService {
     _last[file] = now;
     try {
       final v = volume * (_battle ? 0.9 : 1);
+      if (_native.contains(file)) {
+        _sfx.invokeMethod<void>('play', {'n': file, 'v': v}).catchError((Object _) {});
+        return;
+      }
       _pools[file]?.start(volume: v);
       _android[file]?.start(v);
     } catch (_) {}

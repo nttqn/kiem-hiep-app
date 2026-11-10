@@ -4,11 +4,29 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Display
 import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var sfx: Sfx? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         preferSixtyHz()
+    }
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        val s = Sfx()
+        sfx = s
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kh/sfx")
+            .setMethodCallHandler { call, result -> s.handle(call, result) }
+    }
+
+    override fun onDestroy() {
+        sfx?.release()
+        sfx = null
+        super.onDestroy()
     }
 
     /**
