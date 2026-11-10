@@ -8,6 +8,7 @@ import '../services/save.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import 'tien_screen.dart';
 
 /// Chuyển sinh: requirements, what is kept and reset, and the bonus ladder.
 class RebirthScreen extends StatefulWidget {
@@ -263,16 +264,37 @@ class _RebirthScreenState extends State<RebirthScreen> {
               ),
             ),
           ),
-          if (gate) ...[
+          if (lv > 0 || gate) ...[
             const SizedBox(height: 6),
-            Center(
-              child: LButton(
-                label: h.daoWaiting ? 'Độ kiếp' : 'Độ kiếp (chưa viên mãn)',
-                icon: Icons.bolt,
-                width: 260,
-                enabled: h.canKiep,
-                onTap: _kiep,
-              ),
+            Row(
+              children: [
+                if (gate) ...[
+                  Expanded(
+                    child: LButton(
+                      label: h.daoWaiting ? 'Độ kiếp' : 'Độ kiếp (chưa đủ)',
+                      icon: Icons.bolt,
+                      small: true,
+                      enabled: h.canKiep,
+                      onTap: _kiep,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                // Tiên khí (1.13.0): where Tiên Ngọc from the climb goes.
+                Expanded(
+                  child: LButton(
+                    label: 'Tiên khí · ${h.tienJade}',
+                    icon: Icons.diamond,
+                    small: true,
+                    color: const Color(0xFF2E8A7A),
+                    enabled: lv > 0,
+                    onTap: () async {
+                      await Navigator.of(context).push(fadeRoute(const TienScreen()));
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ],

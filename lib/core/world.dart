@@ -27,6 +27,7 @@ import 'sects.dart';
 import 'stats.dart';
 import 'gold_boss.dart';
 import 'ngo_dao.dart';
+import 'spar.dart';
 import 'tam_ma.dart';
 import 'ma_vuc.dart';
 import 'tang_bao.dart';
@@ -1272,6 +1273,8 @@ class World {
         ? hero.sectTrialResult(won)
         : d.isKiep
         ? hero.kiepResult(won)
+        : d.spar
+        ? hero.sparResult(won)
         : d.daiHoi
             ? hero.daiHoiResult(won)
             : d.isTamMa

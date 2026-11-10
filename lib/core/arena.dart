@@ -55,6 +55,7 @@ class ArenaRival {
     this.mount = '',
     this.mountLv = 1,
     this.skin = '',
+    this.look,
   });
 
   final String name;
@@ -73,6 +74,10 @@ class ArenaRival {
 
   /// The look the mount wears (mount_skins.dart id), '' for its own.
   final String skin;
+
+  /// Their looks and worn gear (a board row's `look`, 1.12.1+), null when
+  /// unknown: then they wear gear fitting their level.
+  final Map<String, dynamic>? look;
 
   MountDef? get mountDef {
     final m = mountById[mount];

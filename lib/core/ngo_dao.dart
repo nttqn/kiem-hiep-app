@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'arena.dart';
 import 'content.dart';
 import 'hero.dart';
+import 'hero_look.dart';
 import 'sects.dart';
 import 'tam_ma.dart';
 
@@ -59,6 +60,11 @@ bool daoAtGate(int lv) => lv > 0 && lv % daoLayers == 0 && lv ~/ daoLayers < dao
 /// Linh Phách Đơn for the Độ kiếp at tầng [lv].
 int kiepPills(int lv) => 50 * (lv ~/ daoLayers);
 
+/// Tiên Ngọc (1.13.0, for Tiên khí) for a won Độ kiếp into cảnh giới
+/// [stage], and for each new tầng.
+int kiepJade(int stage) => 5 * stage;
+const int daoLayerJade = 1;
+
 /// Bonus per tầng, and per cảnh giới entered past the first.
 const double daoHpAtk = 0.005;
 const double daoDef = 0.003;
@@ -110,6 +116,7 @@ extension NgoDao on HeroData {
       mount: m?.id ?? '',
       mountLv: m == null ? 1 : mountLevels[m.id] ?? 1,
       skin: m == null ? '' : mountSkin[m.id] ?? '',
+      look: lookRow(this),
     );
   }
 
@@ -135,11 +142,18 @@ extension NgoDao on HeroData {
     daoExp -= daoCost(daoLv);
     daoLv++;
     daoNotified = false;
+    final jade = kiepJade(kiepStage - 1);
+    tienJade += jade;
     final name = daoName(daoLv);
     notices.add(Notice('Độ kiếp thành công: $name!', color: daoColor(daoLv), big: true));
     recompute();
     gainDao(0);
-    return ['Bước vào $name', '-$pills Linh Phách Đơn', 'Sinh lực, Công lực +${(daoStageHpAtk * 100).round()}% thêm'];
+    return [
+      'Bước vào $name',
+      '-$pills Linh Phách Đơn',
+      '+$jade Tiên Ngọc',
+      'Sinh lực, Công lực +${(daoStageHpAtk * 100).round()}% thêm',
+    ];
   }
 
   /// Adds [amount] Đạo hạnh, climbing tầng until a gate or the bar runs
@@ -151,6 +165,7 @@ extension NgoDao on HeroData {
     while (!daoAtGate(daoLv) && daoExp >= daoCost(daoLv)) {
       daoExp -= daoCost(daoLv);
       daoLv++;
+      tienJade += daoLayerJade;
       up = true;
       notices.add(Notice('Ngộ Đạo: ${daoName(daoLv)}', color: daoColor(daoLv), big: true));
     }

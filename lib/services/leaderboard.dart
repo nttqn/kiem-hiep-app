@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/arena.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/hero_look.dart';
 import '../core/gold_boss.dart';
 import '../core/hung_thu.dart';
 import '../core/ma_vuc.dart';
@@ -14,6 +15,8 @@ import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
 import 'save.dart' show slotCount;
+
+export '../core/hero_look.dart' show lookRow, statRow;
 
 /// One row of the public leaderboard: a hero of a signed-in player.
 class LbEntry {
@@ -82,6 +85,24 @@ class LbEntry {
   /// tin" (1.12.0+); null on rows from older apps.
   final Map<String, dynamic>? look;
   final List<int>? st;
+
+  /// This hero as a duel challenger (Lôi đài, Tỉ thí), wearing what they
+  /// wear when the row has their looks.
+  ArenaRival toRival() => ArenaRival(
+        name: name,
+        hanh: Hanh.values[hanh],
+        level: level,
+        rebirths: rebirths,
+        power: power,
+        title: title,
+        female: look?['f'] as bool? ?? id.hashCode.isOdd,
+        // Until they update, a mount that fits their level (looks and
+        // speed only: its stat is already in their lực chiến).
+        mount: mount ?? botMount(level, rebirths, math.Random(id.hashCode)).$1,
+        mountLv: mount != null ? mountLv : 1 + level ~/ 6,
+        skin: skin,
+        look: look,
+      );
 
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
@@ -155,48 +176,6 @@ extension LbBoardField on LbBoard {
 /// The Cấp độ board's value (1.12.0): rebirths, then level, then Ngộ Đạo
 /// tầng, which only a sixth-rebirth level-99 hero has.
 int rankScore(int rebirths, int level, int dao) => (rebirths * 100 + level) * 1000 + dao.clamp(0, 999);
-
-/// What a board row carries of [h]'s looks and worn gear (1.12.0), for
-/// others to see in "Xem thông tin": per item slot, name, level, rarity,
-/// cường hóa, stars, Khai Quang, Hoàng Kim set and gems socketed.
-Map<String, Object> lookRow(HeroData h) => {
-      'f': h.female,
-      if (h.hideHat) 'hh': true,
-      if (h.costume.isNotEmpty) 'c': h.costume,
-      if (h.divine > 0) 'dv': h.divine,
-      'eq': [
-        for (final e in h.equip.entries)
-          {
-            's': e.key.index,
-            'n': e.value.name.length > 40 ? e.value.name.substring(0, 40) : e.value.name,
-            'l': e.value.level,
-            'r': e.value.rarity.index,
-            if (e.value.plus > 0) 'p': e.value.plus,
-            if (e.value.star > 0) 't': e.value.star,
-            if (e.value.glow > 0) 'g': e.value.glow,
-            if (e.value.set.isNotEmpty) 'set': e.value.set,
-            if (e.value.gems.any((g) => g != null)) 'gm': e.value.gems.where((g) => g != null).length,
-          },
-      ],
-      if (h.activePet.isNotEmpty) 'pet': h.activePet,
-      if (h.activePet.isNotEmpty) 'pl': h.petLevels[h.activePet] ?? 1,
-    };
-
-/// [h]'s main stats on a board row: HP, nội lực, attack, defence, then
-/// crit, crit damage, dodge and attack speed in thousandths.
-List<int> statRow(HeroData h) {
-  final s = h.stats;
-  return [
-    s.maxHp.round(),
-    s.maxMp.round(),
-    s.atk.round(),
-    s.def.round(),
-    (s.crit * 1000).round(),
-    (s.critDmg * 1000).round(),
-    (s.dodge * 1000).round(),
-    (s.aspd * 1000).round(),
-  ];
-}
 
 /// This hero's Lôi đài board value: 0 until they fight this season.
 int arenaBoardValue(HeroData h) =>
@@ -649,21 +628,7 @@ class Leaderboard extends ChangeNotifier {
     }
     final out = [
       for (final e in rows)
-        if (me == null || !e.id.startsWith('${me}_'))
-          ArenaRival(
-            name: e.name,
-            hanh: Hanh.values[e.hanh],
-            level: e.level,
-            rebirths: e.rebirths,
-            power: e.power,
-            title: e.title,
-            female: e.id.hashCode.isOdd,
-            // Until they update, a mount that fits their level (looks and
-            // speed only: its stat is already in their lực chiến).
-            mount: e.mount ?? botMount(e.level, e.rebirths, math.Random(e.id.hashCode)).$1,
-            mountLv: e.mount != null ? e.mountLv : 1 + e.level ~/ 6,
-            skin: e.skin,
-          ),
+        if (me == null || !e.id.startsWith('${me}_')) e.toRival(),
     ];
     if (dbg == null) _poolCache = (DateTime.now(), power, out);
     return out;

@@ -4,6 +4,7 @@ import 'clock.dart';
 import 'content.dart';
 import 'hanh.dart';
 import 'hero.dart';
+import 'ngo_dao.dart';
 import 'tam_ma.dart';
 import 'world_boss.dart';
 
@@ -203,6 +204,12 @@ extension GoldBoss on HeroData {
     goldShards += r.shards;
     divineIron += r.iron;
     final lines = ['Hạng $place Boss Hoàng Kim hôm qua:', '+${r.shards} Mảnh Hoàng Kim', '+${r.iron} Thần Thiết'];
+    // Tiên Ngọc (1.13.0) for the top ten, to those already in Ngộ Đạo.
+    final jade = place == 1 ? 3 : place <= 3 ? 2 : place <= 10 ? 1 : 0;
+    if (jade > 0 && daoOpen) {
+      tienJade += jade;
+      lines.add('+$jade Tiên Ngọc');
+    }
     if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
     return lines;
   }

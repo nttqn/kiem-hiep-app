@@ -79,6 +79,7 @@ class Item {
     this.star = 0,
     this.extraSockets = 0,
     this.glow = 0,
+    this.tien = 0,
     List<Gem?>? gems,
   }) : gems = List<Gem?>.generate(socketsFor(rarity) + extraSockets,
             (i) => gems != null && i < gems.length ? gems[i] : null);
@@ -108,14 +109,19 @@ class Item {
   /// Khai Quang level of a Hoàng Kim piece (1.9.0), 0..[maxGlow].
   int glow;
 
+  /// Tiên khí phẩm (1.13.0), 0..[maxTien]: forged by a hero in Ngộ Đạo.
+  int tien;
+
   bool get golden => set.isNotEmpty;
 
   /// What enhancement, stars and Khai Quang multiply the base stats by.
-  double get baseMul => (1 + 0.1 * plus) * (1 + starBasePct * star) * (1 + glowPct(glow));
+  double get baseMul =>
+      (1 + 0.1 * plus) * (1 + starBasePct * star) * (1 + glowPct(glow)) * (1 + tienBasePct * tien);
   int get color => golden ? goldItemColor : rarity.color;
   String get rarityLabel => golden ? 'Hoàng Kim' : rarity.label;
 
-  String get title => '${plus > 0 ? '$name +$plus' : name}${star > 0 ? ' ${'★' * star}' : ''}';
+  String get title =>
+      '${plus > 0 ? '$name +$plus' : name}${star > 0 ? ' ${'★' * star}' : ''}${tien > 0 ? ' · Tiên $tien' : ''}';
 
   /// Every stat this item gives right now, base scaled by enhancement and
   /// stars.
@@ -145,6 +151,7 @@ class Item {
         if (star > 0) 'a': star,
         if (extraSockets > 0) 'e': extraSockets,
         if (glow > 0) 'o': glow,
+        if (tien > 0) 'q': tien,
         'n': name,
         if (golden) 'k': set,
         if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
@@ -183,6 +190,7 @@ class Item {
       star: (m['a'] as int? ?? 0).clamp(0, maxStar),
       extraSockets: (m['e'] as int? ?? 0).clamp(0, 2),
       glow: (m['k'] is String ? (m['o'] as int? ?? 0) : 0).clamp(0, maxGlow),
+      tien: (m['q'] as int? ?? 0).clamp(0, maxTien),
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       set: m['k'] as String? ?? '',
@@ -193,6 +201,11 @@ class Item {
 }
 
 const int maxPlus = 10;
+
+/// Tiên khí (1.13.0): phẩm a worn piece can be forged to, and the base-stat
+/// gain of each (+45% at the ninth).
+const int maxTien = 9;
+const double tienBasePct = 0.05;
 
 /// Thăng Tinh (1.8.0): stars a +[maxPlus] item can rise, and the base-stat
 /// gain of each.

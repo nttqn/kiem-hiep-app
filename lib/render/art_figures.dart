@@ -8,6 +8,7 @@ import '../core/costumes.dart';
 import '../core/divine.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/hero_look.dart';
 import '../core/items.dart';
 import 'art_chibi.dart';
 import 'quality.dart';
@@ -901,13 +902,22 @@ HumanLook lookOfHero(HeroData h) => heroLook(h.hanh,
     gear: HeroGear.of(h.equip, hideHat: h.hideHat, divine: h.divine),
     costume: costumeById[h.costume]);
 
-/// A Lôi đài challenger's gear look: every piece fits their level.
-HeroGear rivalGear(ArenaRival r) {
-  final tier = (r.level ~/ 20).clamp(0, maxGearTier);
-  return HeroGear(weapon: tier, hat: tier, armor: tier, belt: tier, boots: tier, cape: r.rebirths > 0);
+/// A Lôi đài challenger's gear look: what they wear when their board row
+/// says (1.12.1+), else every piece fitting their level.
+HeroGear rivalGear(ArenaRival r) => lookGear(r.look, r.level, r.rebirths);
+
+/// Gear look from a board row's [look], or level-fitting gear without one.
+HeroGear lookGear(Map<String, dynamic>? look, int level, int rebirths) {
+  if (look != null) {
+    return HeroGear.of({for (final it in lookItems(look)) it.slot: it},
+        hideHat: look['hh'] == true, divine: (look['dv'] as num?)?.toInt() ?? 0);
+  }
+  final tier = (level ~/ 20).clamp(0, maxGearTier);
+  return HeroGear(weapon: tier, hat: tier, armor: tier, belt: tier, boots: tier, cape: rebirths > 0);
 }
 
-HumanLook rivalLook(ArenaRival r) => heroLook(r.hanh, female: r.female, gear: rivalGear(r));
+HumanLook rivalLook(ArenaRival r) =>
+    heroLook(r.hanh, female: r.female, gear: rivalGear(r), costume: costumeById[r.look?['c'] as String? ?? '']);
 
 /// A hiệp khách's gear look grows with hảo cảm: the weapon, belt, boots and
 /// a cape. No helmet or armour plates (1.11.0), so they stay the people of

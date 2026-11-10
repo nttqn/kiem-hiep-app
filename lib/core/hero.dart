@@ -542,6 +542,13 @@ class HeroData {
   String gbLastDay = '';
   int gbLastTotal = 0;
   bool gbRankDue = false;
+
+  /// Tiên Ngọc (1.13.0): what Tiên khí is forged with.
+  int tienJade = 0;
+
+  /// Tỉ thí (1.13.0): the day, duels in it, and duels won ever.
+  String sparDay = '';
+  int sparCount = 0, sparWins = 0;
   int daoExp = 0;
   bool daoNotified = false;
 
@@ -3127,6 +3134,8 @@ class HeroData {
         'lpd': [soulPills, soulExp],
         if (daoLv > 0 || daoExp > 0) 'dao': [daoLv, daoExp, daoNotified],
         if (gbDay.isNotEmpty) 'gb': [gbDay, gbRuns0, gbRuns1, gbTotal, gbBest, gbPaid, gbLastDay, gbLastTotal, gbRankDue],
+        if (sparDay.isNotEmpty) 'tt': [sparDay, sparCount, sparWins],
+        if (tienJade > 0) 'tk': [tienJade],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
@@ -3455,6 +3464,16 @@ class HeroData {
       h.gbLastDay = gb[6] as String;
       h.gbLastTotal = math.max(0, (gb[7] as num).toInt());
       h.gbRankDue = gb[8] == true;
+    }
+    final tk = m['tk'];
+    if (tk is List && tk.isNotEmpty && tk[0] is num) h.tienJade = math.max(0, (tk[0] as num).toInt());
+    final tt = m['tt'];
+    if (tt is List && tt.length >= 3) {
+      try {
+        h.sparDay = tt[0] as String;
+        h.sparCount = math.max(0, (tt[1] as num).toInt());
+        h.sparWins = math.max(0, (tt[2] as num).toInt());
+      } catch (_) {}
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
     final fat = m['fat'];

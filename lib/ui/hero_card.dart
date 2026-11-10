@@ -9,9 +9,15 @@ import '../core/mounts.dart';
 import '../core/ngo_dao.dart';
 import '../core/pets.dart';
 import '../core/sects.dart';
-import '../render/art_figures.dart' show HeroGear, maxGearTier;
+import '../core/hero_look.dart';
+import '../core/arena.dart' show arenaOpenLevel;
+import '../core/spar.dart';
+import '../core/world_boss.dart' show vnDayKey;
+import '../render/art_figures.dart' show lookGear;
+import '../services/save.dart';
 import '../services/leaderboard.dart';
 import 'backdrop.dart' show FigurePreview;
+import 'play_screen.dart';
 import 'theme.dart';
 
 /// Rows reported this session, so the menu says so instead of asking again.
@@ -52,7 +58,7 @@ Future<void> showLbHeroMenu(BuildContext context, LbEntry e, {bool mine = false}
   );
   if (!context.mounted) return;
   if (pick == 'view') {
-    await showHeroCard(context, e);
+    await showHeroCard(context, e, mine: mine);
   } else if (pick == 'report') {
     await _report(context, e);
   }
@@ -90,7 +96,7 @@ Future<void> _report(BuildContext context, LbEntry e) async {
 /// level, lực chiến, stats and worn items. A row without looks (a boss
 /// board's, or the main board's from an older app) is read fresh from the
 /// main board first.
-Future<void> showHeroCard(BuildContext context, LbEntry e) {
+Future<void> showHeroCard(BuildContext context, LbEntry e, {bool mine = false}) {
   return showDialog<void>(
     context: context,
     builder: (_) => Dialog(
@@ -98,14 +104,15 @@ Future<void> showHeroCard(BuildContext context, LbEntry e) {
       insetPadding: const EdgeInsets.all(12),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12), side: BorderSide(color: gold.withValues(alpha: 0.7))),
-      child: _HeroCard(entry: e),
+      child: _HeroCard(entry: e, mine: mine),
     ),
   );
 }
 
 class _HeroCard extends StatefulWidget {
-  const _HeroCard({required this.entry});
+  const _HeroCard({required this.entry, required this.mine});
   final LbEntry entry;
+  final bool mine;
 
   @override
   State<_HeroCard> createState() => _HeroCardState();
@@ -131,56 +138,15 @@ class _HeroCardState extends State<_HeroCard> {
     });
   }
 
-  /// Worn items rebuilt from the row (looks only: no stats on them).
-  List<Item> get _items {
-    final eq = _e.look?['eq'];
-    if (eq is! List) return const [];
-    final out = <Item>[];
-    for (final raw in eq) {
-      if (raw is! Map) continue;
-      try {
-        int n(String k, [int d = 0]) => (raw[k] as num?)?.toInt() ?? d;
-        out.add(Item(
-          slot: Slot.values[n('s').clamp(0, Slot.values.length - 1)],
-          level: n('l', 1),
-          rarity: Rarity.values[n('r').clamp(0, Rarity.values.length - 1)],
-          base: const {},
-          bonus: const {},
-          name: raw['n'] as String? ?? '',
-          plus: n('p'),
-          star: n('t'),
-          glow: n('g'),
-          set: raw['set'] as String? ?? '',
-        ));
-      } catch (_) {}
-    }
-    out.sort((a, b) => a.slot.index.compareTo(b.slot.index));
-    return out;
-  }
-
-  int _gems(Slot s) {
-    final eq = _e.look?['eq'];
-    if (eq is! List) return 0;
-    for (final raw in eq) {
-      if (raw is Map && (raw['s'] as num?)?.toInt() == s.index) return (raw['gm'] as num?)?.toInt() ?? 0;
-    }
-    return 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     final e = _e;
     final hn = Hanh.values[e.hanh];
     final look = e.look;
-    final items = _items;
+    final items = lookItems(look);
     final female = look?['f'] as bool? ?? e.id.hashCode.isOdd;
     final divine = (look?['dv'] as num?)?.toInt() ?? 0;
-    final gear = look != null
-        ? HeroGear.of({for (final it in items) it.slot: it}, hideHat: look['hh'] == true, divine: divine)
-        : () {
-            final tier = (e.level ~/ 20).clamp(0, maxGearTier);
-            return HeroGear(weapon: tier, hat: tier, armor: tier, belt: tier, boots: tier, cape: e.rebirths > 0);
-          }();
+    final gear = lookGear(look, e.level, e.rebirths);
     final costume = costumeById[look?['c'] as String? ?? ''];
     final screen = MediaQuery.sizeOf(context);
     return SizedBox(
@@ -329,12 +295,42 @@ class _HeroCardState extends State<_HeroCard> {
             ],
           ),
         ),
+        if (!widget.mine && SaveService.instance.active >= 0) _actions(),
       ],
     );
   }
 
+  /// Tỉ thí with this hero (and, 1.13.0, Kết bạn).
+  Widget _actions() {
+    final me = SaveService.instance.hero;
+    final day = vnDayKey();
+    final left = me.sparLeft(day);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: LButton(
+        label: !me.sparOpen ? 'Tỉ thí: mở ở cấp $arenaOpenLevel' : 'Tỉ thí ($left/$sparPerDay)',
+        icon: Icons.sports_kabaddi,
+        small: true,
+        color: seal,
+        enabled: me.sparOpen && left > 0 && !_loading,
+        onTap: _spar,
+      ),
+    );
+  }
+
+  Future<void> _spar() async {
+    final me = SaveService.instance.hero;
+    if (!me.sparStart(vnDayKey())) return;
+    await SaveService.instance.save();
+    if (!mounted) return;
+    final nav = Navigator.of(context);
+    nav.pop();
+    await nav.push(fadeRoute(PlayScreen.dungeon(sparDef(_e.toRival()))));
+    await SaveService.instance.save();
+  }
+
   void _showItem(Item it) {
-    final gems = _gems(it.slot);
+    final gems = lookGems(_e.look, it.slot);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(

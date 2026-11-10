@@ -147,9 +147,9 @@ class _PlayScreenState extends State<PlayScreen> {
     _introTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
     // Walking out of a duel concedes it (a khảo hạch or Độ kiếp can just be
-    // retried).
+    // retried; a Tỉ thí just ends, its turn spent).
     final d = widget.dungeon;
-    if (d != null && d.isArena && !d.trial && !d.isKiep && !world.finished) {
+    if (d != null && d.isArena && !d.trial && !d.isKiep && !d.spar && !world.finished) {
       if (d.isTamMa) {
         hero.tamMaResult(false, d.tamMa, math.Random());
       } else {
@@ -306,7 +306,7 @@ class _PlayScreenState extends State<PlayScreen> {
           Analytics.instance.log(d.golden ? 'gold_boss_run' : 'world_boss_run',
               {'damage': world.bossDamage.round(), 'level': hero.level});
         } else if (d != null && d.isArena) {
-          Analytics.instance.log(d.trial ? 'sect_trial' : d.isKiep ? 'do_kiep' : 'arena_fight', {'won': 1, 'level': hero.level, if (d.isKiep) 'stage': d.kiep});
+          Analytics.instance.log(d.trial ? 'sect_trial' : d.isKiep ? 'do_kiep' : d.spar ? 'spar' : 'arena_fight', {'won': 1, 'level': hero.level, if (d.isKiep) 'stage': d.kiep});
         } else if (d != null && d.isRealm) {
           Analytics.instance.log('realm_clear',
               {'id': d.id, 'stars': e.value.round(), 'explored': (world.explored * 100).round(), 'level': hero.level});
@@ -322,7 +322,7 @@ class _PlayScreenState extends State<PlayScreen> {
         _logRun(RunResult.lost);
         SaveService.instance.save();
         if (widget.dungeon?.isArena ?? false) {
-          Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : widget.dungeon!.isKiep ? 'do_kiep' : 'arena_fight',
+          Analytics.instance.log(widget.dungeon!.trial ? 'sect_trial' : widget.dungeon!.isKiep ? 'do_kiep' : widget.dungeon!.spar ? 'spar' : 'arena_fight',
               {'won': 0, 'level': hero.level, if (widget.dungeon!.isKiep) 'stage': widget.dungeon!.kiep});
         }
         if (widget.dungeon?.isRealm ?? false) {
@@ -1309,7 +1309,15 @@ class _PlayScreenState extends State<PlayScreen> {
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
               const SizedBox(height: 14),
               LButton(
-                  label: d.trial ? 'Về Sư môn' : d.isKiep ? 'Về Ngộ Đạo' : d.daiHoi ? 'Về Đại Hội' : 'Về Lôi đài',
+                  label: d.trial
+                      ? 'Về Sư môn'
+                      : d.isKiep
+                          ? 'Về Ngộ Đạo'
+                          : d.daiHoi
+                              ? 'Về Đại Hội'
+                              : d.spar
+                                  ? 'Quay lại'
+                                  : 'Về Lôi đài',
                   color: jade,
                   onTap: _leave),
             ],

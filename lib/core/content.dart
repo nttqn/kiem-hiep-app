@@ -494,6 +494,7 @@ class DungeonDef {
     this.rival,
     this.trial = false,
     this.daiHoi = false,
+    this.spar = false,
     this.nightmare = 0,
     this.affix = 0,
     this.realm = 0,
@@ -537,6 +538,9 @@ class DungeonDef {
 
   /// Võ Lâm Đại Hội: a bracket match (a Lôi đài duel, scored apart).
   final bool daiHoi;
+
+  /// Tỉ thí (1.13.0): a friendly duel picked from a board, no points.
+  final bool spar;
 
   /// Ải Ác Mộng number (1-based, 0 for none) and its ma khí (NmAffix index).
   final int nightmare;
