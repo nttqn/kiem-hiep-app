@@ -58,7 +58,9 @@ void main() {
       // ignore: avoid_print
       print('${hanh.name}: Đông Hải $seaKills kills $seaDeaths deaths · Ma Giáo $mgKills');
       expect(seaDeaths, lessThanOrEqualTo(2), reason: hanh.name);
-      expect(seaKills, greaterThan(mgKills * 0.6), reason: hanh.name);
+      // 0.55: Hỏa on Ma Giáo is an outlier (304 kills); 1.12.0's Nội lực costs
+      // took Hỏa's Đông Hải from 186 to 180.
+      expect(seaKills, greaterThan(mgKills * 0.55), reason: hanh.name);
       expect(seaKills, lessThan(mgKills * 1.6), reason: hanh.name);
     }
   });

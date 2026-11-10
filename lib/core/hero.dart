@@ -61,6 +61,18 @@ String _thousands(int v) {
 
 const int maxLevel = 99;
 
+/// Nội lực a skill costs, as a multiple of its listed cost, by hero level
+/// (1.12.0). Skill costs were fixed while the pool and its regen grew with
+/// level, so past level 30 nothing ever ran dry and Nội lực potions went
+/// unused (players' feedback; tool/mp_probe_test.dart: a top hero regained
+/// twice what casting every skill on cooldown spent). From level 20 the
+/// costs grow with level: x1.6 at 44, x3 at 99.
+double mpCostMul(int level) => 1 + math.max(0, level - 20) / 40;
+
+/// Share of the Nội lực pool regained a second in a fight (twice that out
+/// of one); was 2% before 1.12.0.
+const double mpRegenRate = 0.012;
+
 /// Linh Phách Đơn: EXP per pill, and pills per Thần Thiết at Kỳ Trân Các.
 const int soulPillExpCost = 1000000;
 const int soulPillsPerIron = 5;
@@ -787,7 +799,7 @@ class HeroData {
     st.aspd = math.min(2.0, 1 + a[1] * 0.004 + g(Stat.aspd) + b(Bonus.aspd));
     st.move = math.min(320, (165 + g(Stat.move)) * (1 + b(Bonus.move)));
     st.hpRegen = st.maxHp * (0.004 + b(Bonus.regen));
-    st.mpRegen = st.maxMp * 0.02 + a[3] * 0.05;
+    st.mpRegen = st.maxMp * mpRegenRate + a[3] * 0.05;
     st.skillDmg = b(Bonus.skillDmg);
     st.cdr = math.min(0.3, b(Bonus.cdr));
     st.dotPct = b(Bonus.dotPct);
@@ -802,6 +814,9 @@ class HeroData {
 
   /// Potential points a level brings in this life.
   int get levelPoints => pointsPerLevel + (rebirths >= lucChuyen ? lucChuyenPoints : 0);
+
+  /// Nội lực skill [s] at level [lv] costs this hero ([mpCostMul]).
+  double skillMp(SkillDef s, int lv) => s.mpAt(lv) * mpCostMul(level);
 
   /// Level 99 with the EXP bar filled: nothing more to gain.
   bool get expFull => level >= maxLevel && exp >= expNeedAt(maxLevel);

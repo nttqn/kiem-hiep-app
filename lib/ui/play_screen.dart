@@ -824,7 +824,7 @@ class _PlayScreenState extends State<PlayScreen> {
         unlockLevel: sk.unlock,
         cooldown: lv > 0 && cd > 0 ? (cd / (world.skills[idx].cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
         cdText: cd >= 0.1 ? cd.toStringAsFixed(cd < 1 ? 1 : 0) : null,
-        noMp: lv > 0 && world.player.mp < world.skills[idx].mpAt(lv),
+        noMp: lv > 0 && world.player.mp < hero.skillMp(world.skills[idx], lv),
         onTap: () => world.input.skills.add(idx),
       ),
     );
@@ -847,7 +847,7 @@ class _PlayScreenState extends State<PlayScreen> {
         unlockLevel: sk.unlock,
         cooldown: lv > 0 && cd > 0 ? (cd / (world.skills[idx].cooldown * (1 - hero.stats.cdr))).clamp(0, 1) : 0,
         cdText: cd >= 0.1 ? cd.toStringAsFixed(cd < 1 ? 1 : 0) : null,
-        noMp: lv > 0 && world.player.mp < world.skills[idx].mpAt(lv),
+        noMp: lv > 0 && world.player.mp < hero.skillMp(world.skills[idx], lv),
         onTap: () => world.input.skills.add(idx),
       ),
     );

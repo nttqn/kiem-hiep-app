@@ -521,7 +521,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
     if (s.isPassive) {
       return s.passive.entries.map((e) => '${_bonusName(e.key)} +${_pct(e.value * lv)}').join(' · ');
     }
-    final cost = 'Nội lực ${s.mpAt(lv).round()} · Hồi ${s.cooldown.toStringAsFixed(1)}s';
+    final cost = 'Nội lực ${h.skillMp(s, lv).round()} · Hồi ${s.cooldown.toStringAsFixed(1)}s';
     return switch (s.kind) {
       SkillKind.guard => 'Giảm ${_pct(math.min(0.7, p))} sát thương ${s.duration.round()}s · $cost',
       SkillKind.heal => 'Hồi ${_pct(p * 2)} sinh lực · $cost',

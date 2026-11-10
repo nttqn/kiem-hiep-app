@@ -2319,7 +2319,7 @@ class World {
     return !s.isPassive &&
         hero.skillLv[i] > 0 &&
         player.cd[i] <= 0 &&
-        player.mp >= s.mpAt(hero.skillLv[i]);
+        player.mp >= hero.skillMp(s, hero.skillLv[i]);
   }
 
   void _cast(int i) {
@@ -2327,7 +2327,7 @@ class World {
     final s = skills[i];
     final lv = hero.skillLv[i];
     final p = player;
-    p.mp -= s.mpAt(lv);
+    p.mp -= hero.skillMp(s, lv);
     p.cd[i] = s.cooldown * (1 - st.cdr);
     p.attackAnim = 1;
     final pw = s.powerAt(lv);

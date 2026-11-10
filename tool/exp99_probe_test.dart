@@ -19,6 +19,7 @@ void main() {
       h.hpPots = 999;
       h.mpPots = 999;
       final before = h.soulPills * soulPillExpCost + h.soulExp;
+      final pots = h.mpPots;
       final w = World.field(h, m, seed: 3)..auto = true;
       const mins = 10;
       var t = 0.0;
@@ -33,7 +34,7 @@ void main() {
       }
       final got = h.soulPills * soulPillExpCost + h.soulExp - before;
       // ignore: avoid_print
-      print('power ${h.power} ${m.id} lv${m.minLv}: ${(got * 60 / mins / 1e6).toStringAsFixed(1)}M/h deaths $deaths  need99 ${h.expNeedAt(99)}');
+      print('power ${h.power} ${m.id} lv${m.minLv}: ${(got * 60 / mins / 1e6).toStringAsFixed(1)}M/h deaths $deaths mpPots ${pots - h.mpPots} need99 ${h.expNeedAt(99)}');
     }
   }, timeout: const Timeout(Duration(minutes: 20)));
 }
