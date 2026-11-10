@@ -24,6 +24,7 @@ import 'arena_screen.dart';
 import 'cloud_panel.dart';
 import 'endgame_screens.dart';
 import 'gold_boss_screen.dart';
+import 'hero_card.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -473,7 +474,9 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
         itemBuilder: (_, i) {
           final e = _rows![i];
           final mine = me != null && e.id.startsWith('${me}_');
-          return Container(
+          return GestureDetector(
+            onTap: () => showLbHeroMenu(context, e, mine: mine),
+            child: Container(
             margin: const EdgeInsets.only(bottom: 3),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
@@ -494,6 +497,7 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
                 ),
                 Text(fmt(e.power), style: bold.copyWith(fontSize: 12, color: const Color(0xFFFF9A5A))),
               ],
+            ),
             ),
           );
         },

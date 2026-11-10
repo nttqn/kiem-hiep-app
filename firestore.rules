@@ -125,6 +125,14 @@ service cloud.firestore {
         && (!('rk' in request.resource.data)
             || request.resource.data.rk == request.resource.data.rank * 1000
                 + ('dao' in request.resource.data ? request.resource.data.dao : 0))
+        // Looks, worn gear and stats for "Xem thông tin" (1.12.0+).
+        && (!('look' in request.resource.data)
+            || (request.resource.data.look is map
+                && request.resource.data.look.keys().hasOnly(['f', 'hh', 'c', 'dv', 'eq', 'pet', 'pl'])
+                && (!('eq' in request.resource.data.look)
+                    || (request.resource.data.look.eq is list && request.resource.data.look.eq.size() <= 7))))
+        && (!('st' in request.resource.data)
+            || (request.resource.data.st is list && request.resource.data.st.size() <= 10))
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;

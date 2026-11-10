@@ -9,6 +9,7 @@ import '../core/world_boss.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'cloud_panel.dart';
+import 'hero_card.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -271,7 +272,9 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
         itemBuilder: (_, i) {
           final e = _rows![i];
           final mine = me != null && e.id.startsWith('${me}_');
-          return Container(
+          return GestureDetector(
+            onTap: () => showLbHeroMenu(context, e, mine: mine),
+            child: Container(
             margin: const EdgeInsets.only(bottom: 3),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
@@ -292,6 +295,7 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
                 ),
                 Text(fmt(e.power), style: bold.copyWith(fontSize: 12, color: const Color(0xFFFF9A5A))),
               ],
+            ),
             ),
           );
         },

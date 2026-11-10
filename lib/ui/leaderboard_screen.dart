@@ -11,6 +11,7 @@ import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'cloud_panel.dart';
 import 'endgame_screens.dart';
+import 'hero_card.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -228,44 +229,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         if (i == rows.length) return _footer();
         final mine = me != null && rows[i].id.startsWith('${me}_');
         return GestureDetector(
-          onTap: mine || me == null ? null : () => _report(rows[i]),
+          onTap: () => showLbHeroMenu(context, rows[i], mine: mine),
           child: _row(_start + i, rows[i], mine, key: i == mineAt ? _meKey : null),
         );
       },
     );
-  }
-
-  final Set<String> _reported = {};
-
-  /// Asks, then reports [e] as cheating.
-  Future<void> _report(LbEntry e) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: lacquer,
-        title: Text(e.name, style: titleStyle(18, color: cream)),
-        content: Text(
-          _reported.contains(e.id)
-              ? 'Bạn đã báo cáo nhân vật này.'
-              : 'Báo cáo nhân vật này gian lận (chỉ số vô lý, sửa dữ liệu…)? '
-                  'Nhà phát triển sẽ xem xét và gỡ khỏi bảng nếu đúng.',
-          style: body,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Đóng')),
-          if (!_reported.contains(e.id))
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Báo cáo gian lận')),
-        ],
-      ),
-    );
-    if (ok != true || !mounted) return;
-    final sent = await lb.report(e);
-    if (!mounted) return;
-    if (sent) _reported.add(e.id);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(sent ? 'Đã gửi báo cáo, cảm ơn bạn.' : 'Không gửi được (có thể bạn đã báo cáo rồi).'),
-      duration: const Duration(seconds: 2),
-    ));
   }
 
   Widget _footer() {
@@ -405,7 +373,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           Text(
               'Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp, điểm Lôi đài và số quái tuần. '
-              'Chạm vào người khác để báo cáo gian lận.',
+              'Chạm vào một nhân vật để xem thông tin hoặc báo cáo gian lận.',
               style: small.copyWith(fontSize: 10.5)),
         ],
       ),

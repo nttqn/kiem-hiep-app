@@ -37,6 +37,8 @@ class LbEntry {
     this.skin = '',
     this.dao = 0,
     int? rk,
+    this.look,
+    this.st,
   }) : rk = rk ?? (rebirths * 100 + level) * 1000;
 
   /// `{uid}_{slot}`.
@@ -76,6 +78,11 @@ class LbEntry {
   final int dao;
   final int rk;
 
+  /// Looks and worn gear ([lookRow]) and stats ([statRow]) for "Xem thông
+  /// tin" (1.12.0+); null on rows from older apps.
+  final Map<String, dynamic>? look;
+  final List<int>? st;
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -101,6 +108,8 @@ class LbEntry {
         skin: m['skin'] as String? ?? '',
         dao: (m['dao'] as num?)?.toInt() ?? 0,
         rk: (m['rk'] as num?)?.toInt(),
+        look: m['look'] is Map ? Map<String, dynamic>.from(m['look'] as Map) : null,
+        st: m['st'] is List ? [for (final v in m['st'] as List) (v as num).toInt()] : null,
       );
     } catch (_) {
       return null;
@@ -146,6 +155,48 @@ extension LbBoardField on LbBoard {
 /// The Cấp độ board's value (1.12.0): rebirths, then level, then Ngộ Đạo
 /// tầng, which only a sixth-rebirth level-99 hero has.
 int rankScore(int rebirths, int level, int dao) => (rebirths * 100 + level) * 1000 + dao.clamp(0, 999);
+
+/// What a board row carries of [h]'s looks and worn gear (1.12.0), for
+/// others to see in "Xem thông tin": per item slot, name, level, rarity,
+/// cường hóa, stars, Khai Quang, Hoàng Kim set and gems socketed.
+Map<String, Object> lookRow(HeroData h) => {
+      'f': h.female,
+      if (h.hideHat) 'hh': true,
+      if (h.costume.isNotEmpty) 'c': h.costume,
+      if (h.divine > 0) 'dv': h.divine,
+      'eq': [
+        for (final e in h.equip.entries)
+          {
+            's': e.key.index,
+            'n': e.value.name.length > 40 ? e.value.name.substring(0, 40) : e.value.name,
+            'l': e.value.level,
+            'r': e.value.rarity.index,
+            if (e.value.plus > 0) 'p': e.value.plus,
+            if (e.value.star > 0) 't': e.value.star,
+            if (e.value.glow > 0) 'g': e.value.glow,
+            if (e.value.set.isNotEmpty) 'set': e.value.set,
+            if (e.value.gems.any((g) => g != null)) 'gm': e.value.gems.where((g) => g != null).length,
+          },
+      ],
+      if (h.activePet.isNotEmpty) 'pet': h.activePet,
+      if (h.activePet.isNotEmpty) 'pl': h.petLevels[h.activePet] ?? 1,
+    };
+
+/// [h]'s main stats on a board row: HP, nội lực, attack, defence, then
+/// crit, crit damage, dodge and attack speed in thousandths.
+List<int> statRow(HeroData h) {
+  final s = h.stats;
+  return [
+    s.maxHp.round(),
+    s.maxMp.round(),
+    s.atk.round(),
+    s.def.round(),
+    (s.crit * 1000).round(),
+    (s.critDmg * 1000).round(),
+    (s.dodge * 1000).round(),
+    (s.aspd * 1000).round(),
+  ];
+}
 
 /// This hero's Lôi đài board value: 0 until they fight this season.
 int arenaBoardValue(HeroData h) =>
@@ -246,6 +297,7 @@ class Leaderboard extends ChangeNotifier {
       'mount': h.ridingMount?.id ?? '',
       'mountLv': h.mountLevels[h.activeMount] ?? 1,
       'skin': h.ridingMount == null ? '' : h.mountSkin[h.activeMount] ?? '',
+      'look': lookRow(h),
     };
     // Play time goes along for the rules' sanity check, but on its own
     // does not call for a write; nor do lực chiến creeping up by a little
@@ -279,6 +331,7 @@ class Leaderboard extends ChangeNotifier {
             ...row,
             'play': h.playSeconds.round(),
             'pts': h.potentialTotal,
+            'st': statRow(h),
             'updated': FieldValue.serverTimestamp(),
           }).timeout(
             const Duration(seconds: 8),
@@ -290,6 +343,27 @@ class Leaderboard extends ChangeNotifier {
       _topCache.clear(); // show this player's new numbers next time
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
+    }
+  }
+
+  /// Row [id] (`{uid}_{slot}`) of the main board read fresh, for "Xem
+  /// thông tin" from a board that does not carry looks (the boss boards).
+  /// Null when it is gone or can't be read.
+  Future<LbEntry?> profile(String id) async {
+    final dbg = debugEntries;
+    if (dbg != null) {
+      for (final e in dbg) {
+        if (e.id == id) return e;
+      }
+      return null;
+    }
+    try {
+      final d = await _col.doc(id).get().timeout(const Duration(seconds: 10));
+      final m = d.data();
+      return m == null ? null : LbEntry.fromDoc(d.id, m);
+    } catch (e) {
+      debugPrint('leaderboard profile failed: $e');
+      return null;
     }
   }
 
