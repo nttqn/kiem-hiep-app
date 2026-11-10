@@ -23,6 +23,7 @@ import '../game/battle_game.dart';
 import '../services/ads.dart';
 import '../services/perf.dart';
 import '../services/save.dart';
+import '../services/screen_awake.dart';
 import '../services/sound.dart';
 import '../core/sects.dart';
 import '../render/art_figures.dart' show rivalGear;
@@ -93,6 +94,7 @@ class _PlayScreenState extends State<PlayScreen> {
     game = BattleGame(
         world: world, onEvent: _onEvent, onSound: SoundService.instance.cue, onSlow: _onSlow, onIntro: _onIntro);
     SoundService.instance.setBattle(true);
+    ScreenAwake.hold();
     // Each map has its own tune; every dungeon shares the battle theme. A
     // bí cảnh plays its land's tune.
     final d = widget.dungeon;
@@ -142,6 +144,7 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   void dispose() {
+    ScreenAwake.release();
     HardwareKeyboard.instance.removeHandler(_onKey);
     _autosave?.cancel();
     _bannerTimer?.cancel();

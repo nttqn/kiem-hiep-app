@@ -12,5 +12,17 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    // Keep the screen on while fighting (1.13.0).
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "KhScreen") {
+      let channel = FlutterMethodChannel(name: "kh/screen", binaryMessenger: registrar.messenger())
+      channel.setMethodCallHandler { call, result in
+        if call.method == "keepOn" {
+          UIApplication.shared.isIdleTimerDisabled = (call.arguments as? Bool) ?? false
+          result(nil)
+        } else {
+          result(FlutterMethodNotImplemented)
+        }
+      }
+    }
   }
 }

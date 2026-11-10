@@ -3,6 +3,7 @@ package com.trungsmail.kiem_hiep
 import android.os.Build
 import android.os.Bundle
 import android.view.Display
+import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -21,6 +22,24 @@ class MainActivity : FlutterActivity() {
         sfx = s
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kh/sfx")
             .setMethodCallHandler { call, result -> s.handle(call, result) }
+        // Keep the screen on while fighting (1.13.0: a review said the
+        // phone dimmed and slept during auto-fight, which stops the game).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kh/screen")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "keepOn") {
+                    val on = call.arguments as? Boolean ?: false
+                    runOnUiThread {
+                        if (on) {
+                            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        } else {
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        }
+                    }
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
     }
 
     override fun onDestroy() {
