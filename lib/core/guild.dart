@@ -48,7 +48,9 @@ const int guildSignContrib = 20;
 /// [guildDonatesPerDay] a day.
 const int guildDonatesPerDay = 3;
 const int guildContribPerDonate = 30;
-int guildDonateGold(int level, int rebirths) => 2000 * level * (1 + rebirths);
+// About 166k at rebirth 6, level 99 (was 2000 × level × (rebirths + 1):
+// 1.39 million, 4 million a day for 90 cống hiến, which nobody would pay).
+int guildDonateGold(int level, int rebirths) => ((2000 + 400 * level) * (1 + rebirthGold * rebirths)).round();
 
 // ------------------------------------------------------------- Boss Bang
 
