@@ -153,6 +153,10 @@ class _CharacterScreenState extends State<CharacterScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
+                // The four stats scroll on a short phone; Tẩy điểm stays.
+                Expanded(
+                  child: ListView(
+                    children: [
                 for (var i = 0; i < 4; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -173,11 +177,16 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       ],
                     ),
                   ),
-                const Spacer(),
+                    ],
+                  ),
+                ),
                 Row(
                   children: [
-                    Text('Gợi ý phái: ${_buildHint()}', style: small),
-                    const Spacer(),
+                    Expanded(
+                      child: Text('Gợi ý phái: ${_buildHint()}',
+                          style: small, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 6),
                     LButton(
                       label: 'Tẩy điểm (${fmt(h.resetCost)})',
                       small: true,
@@ -605,10 +614,12 @@ class _CharacterScreenState extends State<CharacterScreen> {
               children: [
                 Row(
                   children: [
-                    Text('Hành trang ${h.bag.length}/$bagSize', style: bold),
-                    const Spacer(),
+                    Expanded(
+                      child: Text('Hành trang ${h.bag.length}/$bagSize',
+                          style: bold, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
                     LButton(
-                      label: 'Mặc đồ tốt nhất',
+                      label: 'Mặc tốt nhất',
                       small: true,
                       color: jade,
                       onTap: () {

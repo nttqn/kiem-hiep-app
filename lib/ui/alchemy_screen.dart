@@ -148,15 +148,14 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
                   children: [
                     for (var i = 0; i < p.herbs.length; i++)
                       if (p.herbs[i] > 0)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _herbDot(i, size: 11),
-                            const SizedBox(width: 3),
-                            Text('${herbNames[i]} ${h.herbs[i]}/${p.herbs[i]}',
-                                style: small.copyWith(
-                                    fontSize: 11, color: h.herbs[i] >= p.herbs[i] ? cream : const Color(0xFFFF8A7A))),
-                          ],
+                        // Wraps in a narrow column instead of overflowing.
+                        Text.rich(
+                          TextSpan(children: [
+                            WidgetSpan(alignment: PlaceholderAlignment.middle, child: _herbDot(i, size: 11)),
+                            TextSpan(text: ' ${herbNames[i]} ${h.herbs[i]}/${p.herbs[i]}'),
+                          ]),
+                          style: small.copyWith(
+                              fontSize: 11, color: h.herbs[i] >= p.herbs[i] ? cream : const Color(0xFFFF8A7A)),
                         ),
                     Text('${fmt(p.gold)} lượng',
                         style: small.copyWith(fontSize: 11, color: h.gold >= p.gold ? goldLight : const Color(0xFFFF8A7A))),

@@ -228,27 +228,64 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     required VoidCallback onTap,
     bool isNew = false,
   }) {
+    // On a short phone the card goes compact: smaller head, the lines and
+    // picture scroll, the button stays in sight (1.13.0: "Vào Boss Thế
+    // Giới" fell off the bottom).
+    return LayoutBuilder(builder: (_, box) {
+      final compact = box.maxHeight < 330;
+      final head = Row(
+        children: [
+          Icon(icon, color: goldLight, size: compact ? 26 : 40),
+          SizedBox(width: compact ? 6 : 10),
+          Flexible(
+              child: Text(title, style: titleStyle(compact ? 19 : 24, color: cream), overflow: TextOverflow.ellipsis)),
+          if (isNew) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(color: seal, borderRadius: BorderRadius.circular(6)),
+              child: Text('MỚI', style: bold.copyWith(fontSize: 11, color: Colors.white)),
+            ),
+          ],
+        ],
+      );
+      if (!compact) return _fullCard(head, lines, art, button, enabled, onTap);
+      return Panel(
+        border: goldLight,
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            head,
+            const SizedBox(height: 6),
+            Expanded(
+              child: ListView(
+                children: [
+                  for (final l in lines)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Text(l, style: body.copyWith(fontSize: 12.5)),
+                    ),
+                  SizedBox(height: 90, child: Center(child: FittedBox(child: art))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            LButton(label: button, color: jade, small: true, enabled: enabled, onTap: onTap),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _fullCard(Widget head, List<String> lines, Widget art, String button, bool enabled, VoidCallback onTap) {
     return Panel(
       border: goldLight,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: goldLight, size: 40),
-              const SizedBox(width: 10),
-              Flexible(child: Text(title, style: titleStyle(24, color: cream), overflow: TextOverflow.ellipsis)),
-              if (isNew) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                  decoration: BoxDecoration(color: seal, borderRadius: BorderRadius.circular(6)),
-                  child: Text('MỚI', style: bold.copyWith(fontSize: 11, color: Colors.white)),
-                ),
-              ],
-            ],
-          ),
+          head,
           const SizedBox(height: 10),
           for (final l in lines)
             Padding(

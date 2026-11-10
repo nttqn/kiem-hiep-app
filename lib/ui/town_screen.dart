@@ -557,13 +557,18 @@ class _TownScreenState extends State<TownScreen> {
             ),
           ],
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _chip(Icons.monetization_on, fmt(h.gold), goldLight),
-              _chip(Icons.local_drink, '${h.hpPots}', const Color(0xFFFF7A7A)),
-              _chip(Icons.local_drink, '${h.mpPots}', const Color(0xFF7AA8FF)),
-            ],
+          // Shrinks to fit a big purse on a narrow panel.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              children: [
+                _chip(Icons.monetization_on, fmt(h.gold), goldLight),
+                const SizedBox(width: 10),
+                _chip(Icons.local_drink, '${h.hpPots}', const Color(0xFFFF7A7A)),
+                const SizedBox(width: 10),
+                _chip(Icons.local_drink, '${h.mpPots}', const Color(0xFF7AA8FF)),
+              ],
+            ),
           ),
         ],
       ),

@@ -38,16 +38,20 @@ class _SectScreenState extends State<SectScreen> {
     h.sectRollDay(vnDayKey(), _rng);
     return SubScreen(
       title: 'Sư môn · ${h.sect.name}',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(width: 250, child: _rankPanel()),
-          const SizedBox(width: 8),
-          Expanded(child: _dutyPanel()),
-          const SizedBox(width: 8),
-          SizedBox(width: 250, child: _shopPanel()),
-        ],
-      ),
+      // Side panels narrow on a small phone so the duty keeps its room.
+      child: LayoutBuilder(builder: (_, box) {
+        final side = (box.maxWidth * 0.31).clamp(180.0, 250.0);
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: side, child: _rankPanel()),
+            const SizedBox(width: 8),
+            Expanded(child: _dutyPanel()),
+            const SizedBox(width: 8),
+            SizedBox(width: side, child: _shopPanel()),
+          ],
+        );
+      }),
     );
   }
 
@@ -59,9 +63,13 @@ class _SectScreenState extends State<SectScreen> {
     return Panel(
       padding: const EdgeInsets.all(10),
       border: hanhColor(h.hanh),
+      // The numbers scroll; Khảo hạch stays in sight on a short phone.
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Expanded(
+            child: ListView(
+              children: [
           Text('Chức vị', style: small),
           Text(sectRanks[h.sectRank].name, style: titleStyle(20)),
           const SizedBox(height: 4),
@@ -82,9 +90,17 @@ class _SectScreenState extends State<SectScreen> {
             const SizedBox(height: 4),
             Text('Lên ${next.name}: ${fmt(next.need)} cống hiến · cấp ${next.level}',
                 style: small.copyWith(fontSize: 11)),
-            const Spacer(),
+            const SizedBox(height: 6),
             Text('Khảo hạch: tỉ thí với ${sectExaminer(h.hanh, h.sectRank + 1)}',
                 style: small.copyWith(fontSize: 11, color: cream)),
+          ] else ...[
+            const SizedBox(height: 8),
+            Text('Đã là Chưởng môn của ${h.sect.name}.', style: bold.copyWith(color: goldLight)),
+          ],
+              ],
+            ),
+          ),
+          if (next != null) ...[
             const SizedBox(height: 4),
             LButton(
               label: 'Khảo hạch',
@@ -93,9 +109,6 @@ class _SectScreenState extends State<SectScreen> {
               enabled: h.sectCanTrial,
               onTap: _trial,
             ),
-          ] else ...[
-            const Spacer(),
-            Text('Đã là Chưởng môn của ${h.sect.name}.', style: bold.copyWith(color: goldLight)),
           ],
         ],
       ),
@@ -128,18 +141,26 @@ class _SectScreenState extends State<SectScreen> {
               Text('Hôm nay ${h.sectDone}/$sectDutiesPerDay', style: bold.copyWith(fontSize: 13)),
             ],
           ),
-          const SizedBox(height: 4),
-          Text('Mỗi ngày $sectDutiesPerDay việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.',
-              style: small.copyWith(fontSize: 11)),
-          const SizedBox(height: 10),
-          if (d == null)
+          if (d == null) ...[
+            const SizedBox(height: 4),
+            Text('Mỗi ngày $sectDutiesPerDay việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.',
+                style: small.copyWith(fontSize: 11)),
             Expanded(
               child: Center(
                 child: Text('Hôm nay đã xong hết việc. Mai quay lại nhé!',
                     style: body.copyWith(color: creamDim), textAlign: TextAlign.center),
               ),
-            )
-          else ...[
+            ),
+          ] else ...[
+            // The duty scrolls; Phục mệnh / Đi ngay stay in sight on a short
+            // phone (1.13.0: Phục mệnh fell off the bottom).
+            Expanded(
+              child: ListView(
+                children: [
+            const SizedBox(height: 4),
+            Text('Mỗi ngày $sectDutiesPerDay việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.',
+                style: small.copyWith(fontSize: 11)),
+            const SizedBox(height: 8),
             Panel(
               padding: const EdgeInsets.all(10),
               border: d.done ? const Color(0xFF8CE07A) : gold,
@@ -169,7 +190,10 @@ class _SectScreenState extends State<SectScreen> {
               '${fmt(dutyGold(h.level) * (dutyContribution(h.sectDone) > 25 ? 2 : 1))} lượng và kinh nghiệm',
               style: small.copyWith(color: cream),
             ),
-            const Spacer(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
             Row(
               children: [
                 if (d.done)

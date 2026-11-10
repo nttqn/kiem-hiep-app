@@ -136,8 +136,12 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
       return Panel(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Scrolls on a short phone; Ghi danh stays in sight.
+            Expanded(
+              child: ListView(
+                children: [
             Text('Đại hội tuần này', style: titleStyle(22)),
             const SizedBox(height: 6),
             Text(
@@ -151,7 +155,10 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
             Text('Thua một trận được đấu lại một lần (xem quảng cáo). Vô địch nhận danh hiệu « $daiHoiTitle » '
                 'và lên bảng xếp hạng Minh Chủ.',
                 style: small.copyWith(color: goldLight)),
-            const Spacer(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
             Center(
               child: LButton(
                 label: _busy ? 'Đang tìm đối thủ…' : 'Ghi danh',

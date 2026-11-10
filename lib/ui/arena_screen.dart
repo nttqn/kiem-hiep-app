@@ -295,9 +295,14 @@ class _ArenaScreenState extends State<ArenaScreen> {
     final salary = h.arenaSalaryReady(_day);
     return Panel(
       padding: const EdgeInsets.all(10),
+      // The standing scrolls; the fights and buttons stay in sight on a short
+      // phone (1.13.0: "Bổng lộc hôm nay" fell off the bottom).
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Expanded(
+            child: ListView(
+              children: [
           Text(tier.name, style: titleStyle(22, color: Color(tier.color)), textAlign: TextAlign.center),
           Text('${h.arenaPoints} điểm', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           if (next != null)
@@ -313,10 +318,14 @@ class _ArenaScreenState extends State<ArenaScreen> {
             color: const Color(0xFF5A3A7A),
             onTap: _seasonInfo,
           ),
-          const Spacer(),
-          Text('Lượt đấu còn: ${h.arenaFightsLeft}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+          const SizedBox(height: 4),
           Text('Mỗi trận ${arenaTime.round()} giây, tối đa $arenaPotions bình máu.',
               style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text('Lượt đấu còn: ${h.arenaFightsLeft}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           if (h.arenaAds < arenaAdFights) ...[
             const SizedBox(height: 6),
             ValueListenableBuilder<bool>(
@@ -424,17 +433,27 @@ class _ArenaScreenState extends State<ArenaScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center),
-            Text('Cấp ${r.level}${r.rebirths > 0 ? ' · Chuyển sinh ${r.rebirths}' : ''}',
-                style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
+            Text('${r.rebirths > 0 ? 'CS${r.rebirths} · ' : ''}Cấp ${r.level}',
+                style: small.copyWith(fontSize: 10.5),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center),
             Expanded(
               child: FittedBox(
                 child: FigurePreview(
                     hanh: r.hanh, female: r.female, scale: 1.6, gear: rivalGear(r), rebirths: r.rebirths, mount: r.mountDef),
               ),
             ),
-            Text('Lực chiến ${fmt(r.power)}', style: small.copyWith(fontSize: 11, color: goldLight), textAlign: TextAlign.center),
-            Text(r.bot ? '$label · cao thủ giang hồ' : '$label · người chơi',
-                style: small.copyWith(fontSize: 10.5, color: colr), textAlign: TextAlign.center),
+            Text('LC ${fmt(r.power)}',
+                style: small.copyWith(fontSize: 11, color: goldLight),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center),
+            Text(r.bot ? '$label · giang hồ' : '$label · người chơi',
+                style: small.copyWith(fontSize: 10.5, color: colr),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center),
             const SizedBox(height: 4),
             LButton(
               label: left > 0 ? 'Đấu' : 'Hết lượt',

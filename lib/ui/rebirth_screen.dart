@@ -161,18 +161,25 @@ class _RebirthScreenState extends State<RebirthScreen> {
                   Text('Thưởng cộng dồn', style: titleStyle(18)),
                   const SizedBox(height: 6),
                   _row(['Lần', 'Sinh lực', 'Công lực', 'Phòng thủ', 'Kinh nghiệm'], header: true),
-                  for (var n = 1; n <= maxRebirths; n++)
-                    _row([
-                      '$n',
-                      _pct(rebirthHpAtk * n),
-                      _pct(rebirthHpAtk * n),
-                      _pct(rebirthDef * n),
-                      _pct(rebirthExp * n),
-                    ], done: n <= h.rebirths, next: n == h.rebirths + 1),
-                  const Spacer(),
-                  Text(
-                    'Trang bị đang mặc vẫn dùng được sau khi chuyển sinh, nên lần sau lên cấp nhanh hơn nhiều.',
-                    style: small.copyWith(fontSize: 11.5),
+                  // Scrolls on a short phone.
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        for (var n = 1; n <= maxRebirths; n++)
+                          _row([
+                            '$n',
+                            _pct(rebirthHpAtk * n),
+                            _pct(rebirthHpAtk * n),
+                            _pct(rebirthDef * n),
+                            _pct(rebirthExp * n),
+                          ], done: n <= h.rebirths, next: n == h.rebirths + 1),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Trang bị đang mặc vẫn dùng được sau khi chuyển sinh, nên lần sau lên cấp nhanh hơn nhiều.',
+                          style: small.copyWith(fontSize: 11.5),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
