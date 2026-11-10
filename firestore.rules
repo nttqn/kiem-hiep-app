@@ -135,7 +135,9 @@ service cloud.firestore {
             || (request.resource.data.st is list && request.resource.data.st.size() <= 10))
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      // A row that is not there is fine to delete (1.13.0: hiding deleted
+      // every slot and day, and each missing one counted as a rules error).
+      allow delete: if request.auth != null && (resource == null || resource.data.uid == request.auth.uid);
     }
 
     // Banned accounts, written by hand in the console. The app reads the
@@ -212,7 +214,9 @@ service cloud.firestore {
             || request.resource.data.dmg <= 4122 * request.resource.data.level
                 * request.resource.data.level * request.resource.data.level)
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      // A row that is not there is fine to delete (1.13.0: hiding deleted
+      // every slot and day, and each missing one counted as a rules error).
+      allow delete: if request.auth != null && (resource == null || resource.data.uid == request.auth.uid);
     }
 
     match /worldboss/{day}/hits/{id} {
@@ -261,7 +265,9 @@ service cloud.firestore {
                             + request.resource.data.level * 5
                             + request.resource.data.rebirths * 40 + 190))))
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      // A row that is not there is fine to delete (1.13.0: hiding deleted
+      // every slot and day, and each missing one counted as a rules error).
+      allow delete: if request.auth != null && (resource == null || resource.data.uid == request.auth.uid);
     }
 
     // ------------------------------------------------ Bang hội (1.13.0)

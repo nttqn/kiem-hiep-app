@@ -189,6 +189,11 @@ class Leaderboard extends ChangeNotifier {
 
   bool hidden = false;
 
+  /// Why this hero's row could not be written last time, for the board to
+  /// say (1.13.0: a failed write used to go unseen and players found their
+  /// name gone with no reason). Null once a write goes through.
+  String? submitError;
+
   /// Rows to show instead of Firestore (dev build screenshots).
   List<LbEntry>? debugEntries;
 
@@ -320,9 +325,33 @@ class Leaderboard extends ChangeNotifier {
       _sentHunt[id] = h.huntBoardValue;
       _sentAt[id] = now;
       _topCache.clear(); // show this player's new numbers next time
+      if (submitError != null) {
+        submitError = null;
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('leaderboard submit failed: $e');
+      submitError = submitErrorText(e);
+      notifyListeners();
     }
+  }
+
+  /// What a player is told when their row was not written.
+  static String submitErrorText(Object e) {
+    if (e is FirebaseException) {
+      switch (e.code) {
+        case 'permission-denied':
+          return 'Máy chủ không nhận số liệu của nhân vật này nên chưa lên bảng. '
+              'Hãy cập nhật game bản mới nhất; nếu vẫn vậy, báo cho nhà phát triển.';
+        case 'unauthenticated':
+          return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lên bảng.';
+        case 'unavailable':
+        case 'deadline-exceeded':
+          return 'Mạng yếu, chưa gửi được lên bảng. Thử lại sau.';
+      }
+      return 'Chưa gửi được lên bảng (${e.code}). Thử lại sau.';
+    }
+    return 'Mạng yếu, chưa gửi được lên bảng. Thử lại sau.';
   }
 
   /// Row [id] (`{uid}_{slot}`) of the main board read fresh, for "Xem
@@ -480,16 +509,29 @@ class Leaderboard extends ChangeNotifier {
     if (uid == null) return;
     for (var i = 0; i < slotCount; i++) {
       if (slot != null && i != slot) continue;
-      try {
-        await _col.doc('${uid}_$i').delete();
-        await _boss(vnDayKey()).doc('${uid}_$i').delete();
-        await _boss(vnDayKey(), golden: true).doc('${uid}_$i').delete();
-      } catch (_) {}
+      final id = '${uid}_$i';
+      // Forget what was sent, so the row goes up again in full once the
+      // player is back (1.13.0: after un-hiding, an unchanged hero was taken
+      // for already on the board and never written again).
+      _sent.remove(id);
+      _sentPower.remove(id);
+      _sentHunt.remove(id);
+      _sentAt.remove(id);
+      _bossSent.removeWhere((k, _) => k.endsWith('/$id'));
+      // Each on its own: a row that is not there must not keep the next
+      // one from going.
+      for (final doc in [_col.doc(id), _boss(vnDayKey()).doc(id), _boss(vnDayKey(), golden: true).doc(id)]) {
+        try {
+          await doc.delete();
+        } catch (_) {}
+      }
     }
+    _topCache.clear();
   }
 
   Future<void> setHidden(bool v) async {
     hidden = v;
+    submitError = null;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();

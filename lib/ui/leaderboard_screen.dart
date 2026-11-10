@@ -349,6 +349,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         : 'Hạ một con quái tuần này để lên bảng')
                     : (_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place'),
                 style: titleStyle(_offBoard ? 14 : 17, color: goldLight)),
+          if (lb.available && lb.hidden)
+            Text('Bạn đang ẩn khỏi bảng: tên không hiện ở bảng nào, kể cả Boss. '
+                'Tắt « Ẩn tôi khỏi bảng » bên dưới để hiện lại.',
+                style: small.copyWith(color: hpRed, fontWeight: FontWeight.w700)),
+          if (lb.available && !lb.hidden && lb.submitError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(lb.submitError!, style: small.copyWith(color: hpRed, fontWeight: FontWeight.w700)),
+            ),
           if (_board == LbBoard.hunt)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -378,6 +387,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   activeThumbColor: goldLight,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   onChanged: (v) async {
+                    // Hiding takes the player off every board at once; a
+                    // stray tap did that to players who never knew why
+                    // (1.13.0), so it asks first.
+                    if (v && !await _confirmHide()) return;
                     await lb.setHidden(v);
                     _load();
                   },
@@ -387,6 +400,30 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ],
       ),
     );
+  }
+
+  Future<bool> _confirmHide() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lacquer,
+        scrollable: true,
+        title: Text('Ẩn khỏi bảng xếp hạng?', style: titleStyle(20)),
+        content: Text(
+          'Tên của bạn sẽ bị gỡ khỏi mọi bảng (Lực chiến, Cấp độ, Lôi đài, Săn quái, Boss Thế Giới, '
+          'Boss Hoàng Kim…) và không được xếp hạng nhận thưởng tuần cho tới khi bạn tắt lại.',
+          style: body,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ẩn', style: TextStyle(color: hpRed, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
   }
 
   Widget _stat(String k, String v) => Padding(
