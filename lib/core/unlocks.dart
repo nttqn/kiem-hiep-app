@@ -1,4 +1,5 @@
 import 'alchemy.dart';
+import 'guild.dart' show guildOpenLevel;
 import 'sect_duty.dart';
 import 'tower.dart';
 
@@ -27,6 +28,7 @@ const townFeatures = <TownFeature>[
   TownFeature('alchemy', 'Luyện đan', alchemyOpenLevel),
   TownFeature('manor', 'Trang viên', 12),
   TownFeature('challenge', 'Thử thách', towerOpenLevel),
+  TownFeature('guild', 'Bang hội', guildOpenLevel),
 ];
 
 final Map<String, TownFeature> townFeatureById = {for (final f in townFeatures) f.id: f};

@@ -12,6 +12,7 @@ import '../core/sects.dart';
 import '../core/hero_look.dart';
 import '../core/arena.dart' show arenaOpenLevel;
 import '../core/spar.dart';
+import '../core/guild.dart' show Friends, maxFriends;
 import '../core/world_boss.dart' show vnDayKey;
 import '../render/art_figures.dart' show lookGear;
 import '../services/save.dart';
@@ -305,15 +306,36 @@ class _HeroCardState extends State<_HeroCard> {
     final me = SaveService.instance.hero;
     final day = vnDayKey();
     final left = me.sparLeft(day);
+    final friend = me.isFriend(_e.id);
     return Padding(
       padding: const EdgeInsets.only(top: 4),
-      child: LButton(
-        label: !me.sparOpen ? 'Tỉ thí: mở ở cấp $arenaOpenLevel' : 'Tỉ thí ($left/$sparPerDay)',
-        icon: Icons.sports_kabaddi,
-        small: true,
-        color: seal,
-        enabled: me.sparOpen && left > 0 && !_loading,
-        onTap: _spar,
+      child: Row(
+        children: [
+          Expanded(
+            child: LButton(
+              label: !me.sparOpen ? 'Tỉ thí: cấp $arenaOpenLevel' : 'Tỉ thí $left/$sparPerDay',
+              small: true,
+              color: seal,
+              enabled: me.sparOpen && left > 0 && !_loading,
+              onTap: _spar,
+            ),
+          ),
+          const SizedBox(width: 4),
+          // Hảo hữu (1.13.0).
+          Expanded(
+            child: LButton(
+              label: friend ? 'Bỏ bạn' : 'Kết bạn',
+              small: true,
+              color: jade,
+              enabled: friend || me.friends.length < maxFriends,
+              onTap: () {
+                friend ? me.removeFriend(_e.id) : me.addFriend(_e.id, _e.name, _e.hanh);
+                SaveService.instance.save();
+                setState(() {});
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -29,6 +29,7 @@ import 'character_screen.dart';
 import 'chat_screen.dart';
 import 'fest_screen.dart';
 import 'gold_boss_screen.dart';
+import 'guild_screen.dart';
 import 'leaderboard_screen.dart';
 import 'world_boss_screen.dart';
 import 'pet_screen.dart';
@@ -683,6 +684,7 @@ class _TownScreenState extends State<TownScreen> {
       tile('manor', Icons.villa, () => _go(const ManorScreen()), badge: _manorReady()),
       tile('companions', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
       tile('rank', Icons.leaderboard, () => _go(const LeaderboardScreen())),
+      tile('guild', Icons.shield, () => _go(const GuildScreen())),
       tile('alchemy', Icons.science, () => _go(const AlchemyScreen())),
       tile('activity', Icons.local_fire_department, () => _go(const ActivityScreen()), badge: activityClaimable(h)),
       tile('sect', Icons.temple_buddhist, () => _go(const SectScreen()), badge: _sectBadge()),

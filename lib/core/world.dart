@@ -28,6 +28,7 @@ import 'stats.dart';
 import 'gold_boss.dart';
 import 'ngo_dao.dart';
 import 'spar.dart';
+import 'guild.dart';
 import 'tam_ma.dart';
 import 'ma_vuc.dart';
 import 'tang_bao.dart';
@@ -1220,7 +1221,9 @@ class World {
     finishTime = math.min(time, dungeon!.timeLimit);
     rewardLines = dungeon!.golden
         ? hero.goldBossReward(bossDamage.round())
-        : hero.worldBossReward(bossDamage.round(), rng);
+        : dungeon!.guild
+            ? hero.guildBossReward(bossDamage.round())
+            : hero.worldBossReward(bossDamage.round(), rng);
     events.add(GameEvent(EvKind.cleared, value: 0));
   }
 

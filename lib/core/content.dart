@@ -501,6 +501,7 @@ class DungeonDef {
     this.tamMa = 0,
     this.kiep = 0,
     this.golden = false,
+    this.guild = false,
     this.tmAffixes = const [],
     this.maVuc = 0,
     this.affixes = const [],
@@ -564,6 +565,9 @@ class DungeonDef {
 
   /// Boss Hoàng Kim (1.12.0): a [worldBoss] run scored on its own board.
   final bool golden;
+
+  /// Boss Bang (1.13.0): a [worldBoss] run for the bang's week.
+  final bool guild;
 
   /// Ma Vực floor (1.8.0, 0 for none): an endless weekly climb whose
   /// monsters carry [affixes] (NmAffix indices) all at once.

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../core/content.dart';
 import '../core/gold_boss.dart';
+import '../core/guild.dart';
 import '../core/newbie.dart';
 import '../core/realm.dart';
 import '../core/stats.dart';
@@ -302,8 +303,8 @@ class _PlayScreenState extends State<PlayScreen> {
         SaveService.instance.save();
         final d = widget.dungeon;
         if (d != null && d.isWorldBoss) {
-          Leaderboard.instance.submitBoss(SaveService.instance.active, hero, golden: d.golden);
-          Analytics.instance.log(d.golden ? 'gold_boss_run' : 'world_boss_run',
+          if (!d.guild) Leaderboard.instance.submitBoss(SaveService.instance.active, hero, golden: d.golden);
+          Analytics.instance.log(d.guild ? 'guild_boss_run' : d.golden ? 'gold_boss_run' : 'world_boss_run',
               {'damage': world.bossDamage.round(), 'level': hero.level});
         } else if (d != null && d.isArena) {
           Analytics.instance.log(d.trial ? 'sect_trial' : d.isKiep ? 'do_kiep' : d.spar ? 'spar' : 'arena_fight', {'won': 1, 'level': hero.level, if (d.isKiep) 'stage': d.kiep});
@@ -1233,7 +1234,12 @@ class _PlayScreenState extends State<PlayScreen> {
   Widget _bossResult() {
     final day = vnDayKey();
     final golden = widget.dungeon!.golden;
-    final left = golden ? hero.gbRunsLeft : hero.wbRunsLeft;
+    final guild = widget.dungeon!.guild;
+    final left = guild
+        ? hero.guildBossLeft(day)
+        : golden
+            ? hero.gbRunsLeft
+            : hero.wbRunsLeft;
     return _dim(
       Panel(
         padding: const EdgeInsets.all(18),
@@ -1248,7 +1254,9 @@ class _PlayScreenState extends State<PlayScreen> {
               Text('sát thương lượt này', style: small),
               const SizedBox(height: 8),
               Text(
-                  golden
+                  guild
+                      ? 'Tổng tuần này: ${fmt(hero.gBossDmg)}'
+                      : golden
                       ? 'Tổng hôm nay: ${fmt(hero.gbTotal)} · Cao nhất: ${fmt(hero.gbBest)}'
                       : 'Tổng hôm nay: ${fmt(hero.wbTotal)} · Cao nhất: ${fmt(hero.wbBest)}',
                   style: bold.copyWith(color: cream)),
@@ -1274,10 +1282,20 @@ class _PlayScreenState extends State<PlayScreen> {
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
-                      if (!(golden ? hero.gbStartRun(day) : hero.wbStartRun(day))) return;
+                      if (!(guild
+                          ? hero.guildBossStart(day)
+                          : golden
+                              ? hero.gbStartRun(day)
+                              : hero.wbStartRun(day))) {
+                        return;
+                      }
                       SaveService.instance.save();
-                      Navigator.of(context)
-                          .pushReplacement(fadeRoute(PlayScreen.dungeon(golden ? goldBossDef() : worldBossDef())));
+                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(
+                          guild
+                              ? guildBossDef(day)
+                              : golden
+                                  ? goldBossDef()
+                                  : worldBossDef())));
                     },
                   ),
                 ],

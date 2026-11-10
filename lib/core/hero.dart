@@ -22,6 +22,7 @@ import 'mail.dart';
 import 'newbie.dart';
 import 'ngo_dao.dart';
 import 'gems.dart';
+import 'guild.dart';
 import 'hanh.dart';
 import 'items.dart';
 import 'live_event.dart';
@@ -542,6 +543,27 @@ class HeroData {
   String gbLastDay = '';
   int gbLastTotal = 0;
   bool gbRankDue = false;
+
+  /// Bang hội (1.13.0): the bang (Firestore id, '' for none), its name,
+  /// this hero's role and the bang's level as last read; cống hiến given
+  /// to it and the xu Bang to spend; bangs applied to, waiting.
+  String guildId = '', guildName = '';
+  int guildRole = 0, guildLv = 0, guildContrib = 0, guildCoins = 0;
+  final List<String> guildApplied = [];
+
+  /// The day's Điểm danh, Quyên góp and Boss Bang runs; the week's Boss
+  /// Bang damage and chests taken (bits); the week's shop buys.
+  String gDay = '';
+  bool gSigned = false;
+  int gDonated = 0, gBossRuns = 0, gBossWeek = 0, gBossDmg = 0, gBossClaimed = 0, gShopWeek = 0;
+  final Map<String, int> gShopBought = {};
+
+  /// Hảo hữu (1.13.0): friends; the day, friends sent a gift in it, and
+  /// gifts taken in it.
+  final List<Friend> friends = [];
+  String friendDay = '';
+  final Set<String> friendSent = {};
+  int friendTaken = 0;
 
   /// Tiên Ngọc (1.13.0): what Tiên khí is forged with.
   int tienJade = 0;
@@ -1697,7 +1719,9 @@ class HeroData {
   /// not stack: together they took a new hero to the fifth rebirth in one
   /// weekend), times the day's [fatigueMul].
   double get expMul =>
-      math.max(buffLeft('songboi') > 0 ? expPillMul : 1.0, EventBoost(vnDayKey()).exp) * fatigueMul(fatigueSec);
+      math.max(buffLeft('songboi') > 0 ? expPillMul : 1.0, EventBoost(vnDayKey()).exp) *
+      fatigueMul(fatigueSec) *
+      (1 + guildPerk);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {
@@ -1721,7 +1745,7 @@ class HeroData {
   }
   /// Monster gold: Tụ Bảo Đan and today's event.
   /// Monster gold: the better of Tụ Bảo Đan and today's event, as for EXP.
-  double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold);
+  double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold) * (1 + guildPerk);
 
   /// Counts buff time down while playing; true when one ran out.
   bool tickBuffs(double dt) {
@@ -3136,6 +3160,11 @@ class HeroData {
         if (gbDay.isNotEmpty) 'gb': [gbDay, gbRuns0, gbRuns1, gbTotal, gbBest, gbPaid, gbLastDay, gbLastTotal, gbRankDue],
         if (sparDay.isNotEmpty) 'tt': [sparDay, sparCount, sparWins],
         if (tienJade > 0) 'tk': [tienJade],
+        if (guildId.isNotEmpty || guildCoins > 0 || gDay.isNotEmpty || guildApplied.isNotEmpty)
+          'gd': [guildId, guildName, guildRole, guildLv, guildContrib, guildCoins, guildApplied, gDay, gSigned, gDonated,
+              gBossRuns, gBossWeek, gBossDmg, gBossClaimed, gShopWeek, gShopBought],
+        if (friends.isNotEmpty || friendDay.isNotEmpty)
+          'fr': [[for (final f in friends) f.toJson()], friendDay, friendSent.toList(), friendTaken],
         'mail': mailClaimed.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
@@ -3464,6 +3493,36 @@ class HeroData {
       h.gbLastDay = gb[6] as String;
       h.gbLastTotal = math.max(0, (gb[7] as num).toInt());
       h.gbRankDue = gb[8] == true;
+    }
+    final gd = m['gd'];
+    if (gd is List && gd.length >= 16) {
+      try {
+        h.guildId = gd[0] as String;
+        h.guildName = gd[1] as String;
+        h.guildRole = (gd[2] as num).toInt().clamp(0, 2);
+        h.guildLv = (gd[3] as num).toInt().clamp(0, 99);
+        h.guildContrib = math.max(0, (gd[4] as num).toInt());
+        h.guildCoins = math.max(0, (gd[5] as num).toInt());
+        h.guildApplied.addAll([for (final v in gd[6] as List) '$v']);
+        h.gDay = gd[7] as String;
+        h.gSigned = gd[8] == true;
+        h.gDonated = (gd[9] as num).toInt();
+        h.gBossRuns = (gd[10] as num).toInt();
+        h.gBossWeek = (gd[11] as num).toInt();
+        h.gBossDmg = math.max(0, (gd[12] as num).toInt());
+        h.gBossClaimed = (gd[13] as num).toInt();
+        h.gShopWeek = (gd[14] as num).toInt();
+        (gd[15] as Map).forEach((k, v) => h.gShopBought['$k'] = (v as num).toInt());
+      } catch (_) {}
+    }
+    final fr = m['fr'];
+    if (fr is List && fr.length >= 4) {
+      try {
+        h.friends.addAll([for (final o in fr[0] as List) ?Friend.fromJson(o)]);
+        h.friendDay = fr[1] as String;
+        h.friendSent.addAll([for (final v in fr[2] as List) '$v']);
+        h.friendTaken = (fr[3] as num).toInt();
+      } catch (_) {}
     }
     final tk = m['tk'];
     if (tk is List && tk.isNotEmpty && tk[0] is num) h.tienJade = math.max(0, (tk[0] as num).toInt());

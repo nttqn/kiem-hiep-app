@@ -263,5 +263,148 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
+
+    // ------------------------------------------------ Bang hội (1.13.0)
+
+    // The board rows ({uid}_{slot}) of the signed-in player.
+    function myRows() {
+      return [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3', request.auth.uid + '_4'];
+    }
+
+    // Keeps bang names unique: guildNames/{name lowercased} = {gid, uid}.
+    match /guildNames/{key} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['gid', 'uid'])
+        && getAfter(/databases/$(database)/documents/guilds/$(request.resource.data.gid)).data.leader == request.auth.uid
+        && getAfter(/databases/$(database)/documents/guilds/$(request.resource.data.gid)).data.name.lower() == key;
+      allow delete: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+            || get(/databases/$(database)/documents/guilds/$(resource.data.gid)).data.leader == request.auth.uid);
+    }
+
+    match /guilds/{gid} {
+      function guildAfter() {
+        return getAfter(/databases/$(database)/documents/guilds/$(gid)).data;
+      }
+      function guildNow() {
+        return get(/databases/$(database)/documents/guilds/$(gid)).data;
+      }
+      function isLeader() {
+        return request.auth != null && guildNow().leader == request.auth.uid;
+      }
+      function isOfficer() {
+        return request.auth != null
+          && (guildNow().leader == request.auth.uid || request.auth.uid in guildNow().officers);
+      }
+      // A member row: who they are, their cống hiến and Boss Bang week
+      // (damage no more than three Boss Thế Giới day caps).
+      function goodMember(d) {
+        return d.uid is string
+          && d.name is string && d.name.size() > 0 && d.name.size() <= 24
+          && d.hanh is int && d.hanh >= 0 && d.hanh <= 4
+          && d.level is int && d.level >= 1 && d.level <= 99
+          && d.rebirths is int && d.rebirths >= 0 && d.rebirths <= 6
+          && d.power is int && d.power >= 0 && d.power <= 50000000
+          && d.role is int && d.role >= 0 && d.role <= 2
+          && d.contrib is int && d.contrib >= 0 && d.contrib <= 100000000
+          && d.bw is int && d.bd is int && d.bd >= 0 && d.bd <= 6000000000 * (d.rebirths + 1)
+          && d.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'rebirths', 'power', 'role', 'contrib', 'bw', 'bd', 'at']);
+      }
+
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.leader == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 16
+        && request.resource.data.notice is string && request.resource.data.notice.size() <= 120
+        && request.resource.data.officers == []
+        && request.resource.data.pts == 0
+        && existsAfter(/databases/$(database)/documents/guildNames/$(request.resource.data.name.lower()))
+        && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
+      allow update: if request.auth != null
+        && request.resource.data.name == resource.data.name
+        && request.resource.data.notice is string && request.resource.data.notice.size() <= 120
+        && request.resource.data.pts is int && request.resource.data.pts >= 0 && request.resource.data.pts <= 4000000000
+        && (
+          // Bang chủ: settings, Phó bang, handing over.
+          resource.data.leader == request.auth.uid
+          // Phó bang: settings only.
+          || (request.auth.uid in resource.data.officers
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notice', 'open', 'minLv']))
+          // Any member: the sums shown in the list of bangs.
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pts', 'n', 'by'])
+              && request.resource.data.by in myRows()
+              && get(/databases/$(database)/documents/guilds/$(gid)/members/$(request.resource.data.by)).data.uid == request.auth.uid)
+        );
+      allow delete: if request.auth != null && resource.data.leader == request.auth.uid;
+
+      match /members/{row} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && goodMember(request.resource.data)
+          && (
+            // The Bang chủ's own row as the bang is made.
+            (row in myRows() && request.resource.data.uid == request.auth.uid
+                && request.resource.data.role == 2 && guildAfter().leader == request.auth.uid)
+            // Joining a bang that takes anyone of its level.
+            || (row in myRows() && request.resource.data.uid == request.auth.uid
+                && request.resource.data.role == 0 && guildAfter().open == true
+                && request.resource.data.level + request.resource.data.rebirths * 100 >= guildAfter().minLv)
+            // Let in from an application by the Bang chủ or a Phó bang.
+            || (request.resource.data.role == 0 && isOfficer()
+                && exists(/databases/$(database)/documents/guilds/$(gid)/apps/$(row)))
+          );
+        allow update: if request.auth != null
+          && goodMember(request.resource.data)
+          && request.resource.data.uid == resource.data.uid
+          && (
+            // Their own row: numbers, not the role.
+            (resource.data.uid == request.auth.uid && request.resource.data.role == resource.data.role)
+            // The Bang chủ: roles only.
+            || (isLeader() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']))
+          );
+        // Leaving, or put out: members by a Phó bang, anyone by the Bang chủ.
+        allow delete: if request.auth != null
+          && (resource.data.uid == request.auth.uid
+              || (isOfficer() && (resource.data.role == 0 || isLeader())));
+      }
+
+      match /apps/{row} {
+        allow read: if request.auth != null;
+        allow create, update: if request.auth != null
+          && row in myRows()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.name is string && request.resource.data.name.size() <= 24;
+        allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isOfficer());
+      }
+
+      // Kênh Bang: members write, as themselves.
+      match /chat/{msg} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.row in myRows()
+          && get(/databases/$(database)/documents/guilds/$(gid)/members/$(request.resource.data.row)).data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 120
+          && request.resource.data.name is string && request.resource.data.name.size() <= 24
+          && request.resource.data.keys().hasOnly(['row', 'uid', 'name', 'text', 'at'])
+          && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
+        allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isOfficer());
+      }
+    }
+
+    // Hảo hữu (1.13.0): a friend's gift of the day, gifts/{toRow}/in/{fromRow}.
+    match /gifts/{to}/in/{from} {
+      allow read, delete: if request.auth != null && to in myRows();
+      allow create, update: if request.auth != null
+        && from in myRows()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'day', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.day is string && request.resource.data.day.size() == 8;
+    }
   }
 }
