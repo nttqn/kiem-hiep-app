@@ -320,9 +320,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _mePanel() {
     return Panel(
       padding: const EdgeInsets.all(10),
+      // The numbers scroll; "Vị trí của tôi" and the hide switch stay in
+      // sight on a short phone (1.13.0: the switch fell off the bottom).
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Expanded(
+            child: ListView(
+              children: [
           Text(h.name, style: titleStyle(18, color: cream), overflow: TextOverflow.ellipsis),
           Text('${h.sect.name} · Cấp ${h.level}', style: small.copyWith(color: hanhColor(h.hanh))),
           const SizedBox(height: 8),
@@ -352,11 +357,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   'hạng 1 thêm danh hiệu « Săn Quái Vương ».',
                   style: small.copyWith(fontSize: 10.5, color: goldLight)),
             ),
+                const SizedBox(height: 6),
+                Text(
+                    'Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp, điểm Lôi đài và số quái tuần. '
+                    'Chạm vào một nhân vật để xem thông tin hoặc báo cáo gian lận.',
+                    style: small.copyWith(fontSize: 10.5)),
+              ],
+            ),
+          ),
           if (_place != null && _rows != null && !_around) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             LButton(label: 'Vị trí của tôi', icon: Icons.my_location, small: true, color: jade, onTap: _showMe),
           ],
-          const Spacer(),
           if (lb.available)
             Row(
               children: [
@@ -364,6 +376,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 Switch(
                   value: lb.hidden,
                   activeThumbColor: goldLight,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   onChanged: (v) async {
                     await lb.setHidden(v);
                     _load();
@@ -371,10 +384,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               ],
             ),
-          Text(
-              'Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp, điểm Lôi đài và số quái tuần. '
-              'Chạm vào một nhân vật để xem thông tin hoặc báo cáo gian lận.',
-              style: small.copyWith(fontSize: 10.5)),
         ],
       ),
     );
@@ -385,7 +394,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         child: Row(
           children: [
             Expanded(child: Text(k, style: body.copyWith(fontSize: 13))),
-            Text(v, style: bold.copyWith(fontSize: 14, color: cream)),
+            Flexible(
+              flex: 2,
+              child: Text(v,
+                  style: bold.copyWith(fontSize: 14, color: cream),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right),
+            ),
           ],
         ),
       );
