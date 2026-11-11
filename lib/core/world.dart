@@ -1868,7 +1868,8 @@ class World {
             color: 0xFFB8C8F0, big: true));
       }
     }
-    hero.tickFatigue(dt);
+    // Only time on the maps tires (1.13.0): monster EXP is what it cuts.
+    if (mode == WorldMode.field) hero.tickFatigue(dt);
     if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
     if (mode == WorldMode.field) {

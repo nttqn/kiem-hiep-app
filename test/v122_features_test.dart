@@ -11,6 +11,7 @@ import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/mail.dart';
 import 'package:kiem_hiep/core/nightmare.dart';
 import 'package:kiem_hiep/core/sects.dart';
+import 'package:kiem_hiep/core/world.dart';
 
 HeroData reborn() {
   final h = HeroData(name: 'T', hanh: Hanh.kim);
@@ -169,20 +170,22 @@ void main() {
   });
 
   group('Mệt mỏi', () {
-    test('monster EXP tapers after 4 and 6 hours, with a notice each step', () {
+    test('monster EXP tapers after 6 and 9 hours (1.13.0), with a notice each step', () {
+      expect(fatigueStart, 6 * 3600);
+      expect(fatigueHeavy, 9 * 3600);
       final h = HeroData(name: 'T', hanh: Hanh.moc)..fatigueRoll('20261101');
       expect(h.expMul, 1);
       h.tickFatigue(fatigueStart - 1);
       expect(h.expMul, 1);
       expect(h.notices, isEmpty);
       h.tickFatigue(2);
-      expect(h.expMul, 0.5);
-      expect(h.notices.single.text, contains('50%'));
+      expect(h.expMul, 0.7);
+      expect(h.notices.single.text, contains('70%'));
       h.tickFatigue(fatigueHeavy - fatigueStart);
-      expect(h.expMul, 0.2);
+      expect(h.expMul, 0.4);
       expect(h.notices.length, 2);
       h.buffs['songboi'] = 60;
-      expect(h.expMul, closeTo(0.2 * 2, 1e-9), reason: 'Song Bội Đan still doubles');
+      expect(h.expMul, closeTo(0.4 * 2, 1e-9), reason: 'Song Bội Đan still doubles');
     });
 
     test('a new day starts fresh; the count is saved', () {
@@ -190,11 +193,26 @@ void main() {
       h.tickFatigue(fatigueHeavy + 10);
       final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
       expect(back.fatigueDay, '20261101');
-      expect(back.expMul, 0.2);
+      expect(back.expMul, 0.4);
       back.fatigueRoll('20261101');
-      expect(back.expMul, 0.2, reason: 'same day');
+      expect(back.expMul, 0.4, reason: 'same day');
       back.fatigueRoll('20261102');
       expect(back.expMul, 1);
+    });
+
+    test('only time on the maps tires, not dungeons or bosses (1.13.0)', () {
+      final h = HeroData(name: 'T', hanh: Hanh.moc)..level = 20;
+      h.recompute();
+      final d = World.dungeon(h, dungeonById['a1']!, seed: 7);
+      for (var i = 0; i < 300; i++) {
+        d.update(0.1);
+      }
+      expect(h.fatigueSec, 0);
+      final f = World.field(h, maps.first, seed: 3);
+      for (var i = 0; i < 300; i++) {
+        f.update(0.1);
+      }
+      expect(h.fatigueSec, closeTo(30, 0.5));
     });
   });
 
