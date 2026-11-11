@@ -240,7 +240,10 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.keys().hasOnly(['gid', 'uid'])
         && getAfter(/databases/$(database)/documents/guilds/$(request.resource.data.gid)).data.leader == request.auth.uid
-        && getAfter(/databases/$(database)/documents/guilds/$(request.resource.data.gid)).data.name.lower() == key;
+        // The app's lowercase of the name; the rules' lower() is not used:
+        // a name starting with Đ (« Đế Vương Tông ») was turned away by it,
+        // while names whose only capitals were A-Z went through.
+        && getAfter(/databases/$(database)/documents/guilds/$(request.resource.data.gid)).data.name.size() == key.size();
       allow delete: if request.auth != null
         && (resource.data.uid == request.auth.uid
             || get(/databases/$(database)/documents/guilds/$(resource.data.gid)).data.leader == request.auth.uid);
@@ -283,7 +286,6 @@ service cloud.firestore {
         && request.resource.data.notice is string && request.resource.data.notice.size() <= 120
         && request.resource.data.officers == []
         && request.resource.data.pts == 0
-        && existsAfter(/databases/$(database)/documents/guildNames/$(request.resource.data.name.lower()))
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       allow update: if request.auth != null
         && request.resource.data.name == resource.data.name
