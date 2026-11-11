@@ -177,6 +177,30 @@ class GuildService extends ChangeNotifier {
 
   static String nameKey(String name) => name.trim().toLowerCase();
 
+  /// Why [name] cannot be a bang's name, or null. Its lowercase form is a
+  /// document id (guildNames/{key}), which cannot hold "/" nor be "." or
+  /// "..", nor start and end with "__" (1.13.1: such a name failed as
+  /// "thử lại sau").
+  static String? badName(String name) {
+    final k = nameKey(name);
+    if (k.contains('/')) return 'Tên bang không được có dấu /';
+    if (k == '.' || k == '..' || (k.startsWith('__') && k.endsWith('__'))) return 'Tên bang này không dùng được';
+    return null;
+  }
+
+  /// What a player is told when making a bang failed.
+  static String createErrorText(Object e) {
+    if (e is FirebaseException) {
+      return switch (e.code) {
+        'permission-denied' =>
+          'Máy chủ không nhận bang này. Thử một tên khác chỉ có chữ, số và khoảng trắng; nếu vẫn bị, hãy báo cho nhà phát triển.',
+        'unavailable' || 'deadline-exceeded' => 'Mạng yếu, chưa lập được bang. Thử lại sau.',
+        _ => 'Không lập được bang (${e.code}). Thử lại sau.',
+      };
+    }
+    return 'Mạng yếu, chưa lập được bang. Thử lại sau.';
+  }
+
   // ------------------------------------------------------------ reads
 
   Future<GuildInfo?> guild(String id) async {
@@ -232,7 +256,13 @@ class GuildService extends ChangeNotifier {
     final u = uid, row = myRow;
     if (u == null || row == null) return (null, 'Cần đăng nhập');
     name = name.trim();
-    if (await find(name) != null) return (null, 'Tên bang đã có người dùng');
+    final bad = badName(name);
+    if (bad != null) return (null, bad);
+    try {
+      if (await find(name) != null) return (null, 'Tên bang đã có người dùng');
+    } catch (e) {
+      return (null, createErrorText(e));
+    }
     final me = GuildMember.of(row, u, h, roleLeader);
     if (debug) {
       final id = 'g${_dGuilds.length + 1}';
@@ -261,7 +291,7 @@ class GuildService extends ChangeNotifier {
       return (g.id, null);
     } catch (e) {
       debugPrint('guild create failed: $e');
-      return (null, 'Không lập được bang, thử lại sau');
+      return (null, createErrorText(e));
     }
   }
 
