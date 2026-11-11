@@ -48,6 +48,7 @@ void main() {
     'Đại Hội': () => const DaiHoiScreen(),
     'Chuyển sinh': () => const RebirthScreen(),
     'Thuộc tính': () => const CharacterScreen(tab: 0),
+    'Kỹ năng + Kinh mạch': () => const CharacterScreen(tab: 1),
     'Hành trang': () => const CharacterScreen(tab: 2),
     'Luyện đan': () => const AlchemyScreen(),
   };
@@ -62,6 +63,7 @@ void main() {
             ..rebirths = cs
             ..gold = 123456789;
           if (cs == 6) h.daoLv = 10;
+          h.meridianPts[1] = 400; // Tẩy kinh mạch shown, Chí mạng at its cap
           h.recompute();
           SaveService.instance.slots[0] = h;
           SaveService.instance.active = 0;

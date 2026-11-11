@@ -304,10 +304,22 @@ class _CharacterScreenState extends State<CharacterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Kinh mạch', style: titleStyle(18)),
+          Row(
+            children: [
+              Expanded(child: Text('Kinh mạch', style: titleStyle(18))),
+              LButton(
+                label: 'Tẩy (${fmt(h.meridianResetCost)})',
+                small: true,
+                color: const Color(0xFF5A4A3A),
+                enabled: h.gold >= h.meridianResetCost && h.meridianPts.any((v) => v > 0),
+                onTap: _resetMeridians,
+              ),
+            ],
+          ),
           Text(
             open
-                ? 'Dồn điểm kỹ năng dư vào kinh mạch. Càng nhiều điểm, mỗi điểm càng ít tác dụng.'
+                ? 'Dồn điểm kỹ năng dư vào kinh mạch. Càng nhiều điểm, mỗi điểm càng ít tác dụng. '
+                    'Trần: Chí mạng ${(critCap * 100).round()}%, Tốc đánh ${(aspdCap * 100).round()}%.'
                 : 'Mở ở cấp $meridianLevel. Dùng điểm kỹ năng dư sau khi đã nâng đủ kỹ năng.',
             style: small.copyWith(fontSize: 11),
           ),
@@ -322,6 +334,31 @@ class _CharacterScreenState extends State<CharacterScreen> {
         ],
       ),
     );
+  }
+
+  /// Whether the stat [b] feeds is already at its cap.
+  bool _capped(Bonus b) => switch (b) {
+        Bonus.crit => h.stats.crit >= critCap,
+        Bonus.aspd => h.stats.aspd >= aspdCap,
+        _ => false,
+      };
+
+  Future<void> _resetMeridians() async {
+    final n = h.meridianPts.fold<int>(0, (a, b) => a + b);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        backgroundColor: lacquer,
+        title: Text('Tẩy kinh mạch?', style: titleStyle(18)),
+        content: Text('Trả lại $n điểm kỹ năng từ kinh mạch để dồn lại, tốn ${fmt(h.meridianResetCost)} lượng.', style: body),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tẩy')),
+        ],
+      ),
+    );
+    if (ok == true && h.resetMeridians()) _changed();
   }
 
   Widget _meridianRow(int i, bool open) {
@@ -350,6 +387,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
               children: [
                 Text('${m.name} · $n điểm', style: bold.copyWith(fontSize: 12.5, color: open ? cream : creamDim)),
                 Text(m.text(n), style: small.copyWith(fontSize: 11, color: hanhColor(m.hanh))),
+                if (_capped(m.bonus))
+                  Text('Đã chạm trần, thêm điểm vô ích', style: small.copyWith(fontSize: 10.5, color: hpRed)),
               ],
             ),
           ),

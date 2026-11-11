@@ -826,10 +826,10 @@ class HeroData {
     }
     st.atk = raw * (1 + b(Bonus.atkPct));
     st.def = (2 + 1.5 * l + a[2] * 0.5 + g(Stat.def)) * (1 + b(Bonus.defPct));
-    st.crit = math.min(0.6, 0.05 + a[1] * 0.0025 + g(Stat.crit) + b(Bonus.crit));
+    st.crit = math.min(critCap, 0.05 + a[1] * 0.0025 + g(Stat.crit) + b(Bonus.crit));
     st.critDmg = 1.5 + critDmgSoftCap(g(Stat.critDmg) + b(Bonus.critDmg));
     st.dodge = math.min(0.35, a[1] * 0.0015 + g(Stat.dodge) + b(Bonus.dodge));
-    st.aspd = math.min(2.0, 1 + a[1] * 0.004 + g(Stat.aspd) + b(Bonus.aspd));
+    st.aspd = math.min(aspdCap, 1 + a[1] * 0.004 + g(Stat.aspd) + b(Bonus.aspd));
     st.move = math.min(320, (165 + g(Stat.move)) * (1 + b(Bonus.move)));
     st.hpRegen = st.maxHp * (0.004 + b(Bonus.regen));
     st.mpRegen = st.maxMp * mpRegenRate + a[3] * 0.05;
@@ -993,6 +993,23 @@ class HeroData {
   bool get meridiansOpen => level >= meridianLevel || rebirths > 0;
 
   bool canTrainMeridian() => skillPoints > 0 && meridiansOpen;
+
+  /// Tẩy kinh mạch (1.13.3): every kinh mạch point back as a skill point,
+  /// for gold. A new player who put points where a cap already stood had
+  /// no way back but a new hero.
+  int get meridianResetCost => (level + rebirths * 100) * 500;
+
+  bool resetMeridians() {
+    final n = meridianPts.fold<int>(0, (a, b) => a + b);
+    if (n <= 0 || gold < meridianResetCost) return false;
+    gold -= meridianResetCost;
+    skillPoints += n;
+    for (var i = 0; i < meridianPts.length; i++) {
+      meridianPts[i] = 0;
+    }
+    recompute();
+    return true;
+  }
 
   bool trainMeridian(int i, [int n = 1]) {
     n = math.min(n, skillPoints);

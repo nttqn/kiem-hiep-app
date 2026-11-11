@@ -23,6 +23,10 @@ class MeridianDef {
 /// Points where a channel gives half of its straight-line value.
 const double meridianSoftCap = 50;
 
+/// The caps the channels feed into (Stats in hero.dart), shown with them
+/// (1.13.3): a player could not tell when Chí mạng or Tốc đánh was full.
+const double critCap = 0.6, aspdCap = 2.0;
+
 /// Hero level that opens the channels (any rebirth opens them too).
 const int meridianLevel = 60;
 
