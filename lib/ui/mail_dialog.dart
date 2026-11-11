@@ -25,6 +25,18 @@ class _MailDialogState extends State<_MailDialog> {
   final _rng = math.Random();
   final _got = <String, List<String>>{};
 
+  @override
+  void initState() {
+    super.initState();
+    // Tiên Ngọc from a mail an older app took as read (1.13.2).
+    final h = SaveService.instance.hero;
+    for (final m in MailService.instance.mails) {
+      final lines = h.mailJadeOwed([m]);
+      if (lines.isNotEmpty) _got[m.id] = lines;
+    }
+    if (_got.isNotEmpty) SaveService.instance.save();
+  }
+
   void _claim(MailDef m) {
     final h = SaveService.instance.hero;
     final lines = h.claimMail(m, vnDayKey(), _rng);

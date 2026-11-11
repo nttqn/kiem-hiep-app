@@ -577,6 +577,10 @@ class HeroData {
   /// Hòm thư gifts this hero has taken (mail ids).
   final Set<String> mailClaimed = {};
 
+  /// Mails whose Tiên Ngọc this hero got (1.13.2). A 1.13.0/1.13.1 app
+  /// took a Tiên Ngọc mail as read without it; [mailJadeOwed] pays it.
+  final Set<String> mailJade = {};
+
   // Mệt mỏi: the Vietnam day and seconds fought in it.
   String fatigueDay = '';
   double fatigueSec = 0;
@@ -3047,6 +3051,19 @@ class HeroData {
   bool canClaimMail(MailDef m, String day) =>
       !mailClaimed.contains(m.id) && m.openOn(day) && (rebirths > 0 || level >= m.minLevel);
 
+  /// Tiên Ngọc of [mails] taken before this app knew of it, paid now once;
+  /// the lines say what came in.
+  List<String> mailJadeOwed(Iterable<MailDef> mails) {
+    final out = <String>[];
+    for (final m in mails) {
+      if (m.jade > 0 && mailClaimed.contains(m.id) && mailJade.add(m.id)) {
+        tienJade += m.jade;
+        out.add('+${m.jade} Tiên Ngọc (${m.title})');
+      }
+    }
+    return out;
+  }
+
   /// Takes [m]'s gifts; the lines say what came in.
   List<String> claimMail(MailDef m, String day, math.Random rng) {
     if (!canClaimMail(m, day)) return const [];
@@ -3057,6 +3074,7 @@ class HeroData {
     hpPots += m.hpPots;
     mpPots += m.mpPots;
     tienJade += m.jade;
+    if (m.jade > 0) mailJade.add(m.id);
     if (m.card > 0) addCardDays(day, m.card);
     final lines = [
       if (m.card > 0) '+${m.card} ngày Nguyệt thẻ',
@@ -3168,6 +3186,7 @@ class HeroData {
         if (friends.isNotEmpty || friendDay.isNotEmpty)
           'fr': [[for (final f in friends) f.toJson()], friendDay, friendSent.toList(), friendTaken],
         'mail': mailClaimed.toList(),
+        if (mailJade.isNotEmpty) 'mj': mailJade.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
         'ren': [renamedAt, oldNames],
@@ -3537,6 +3556,7 @@ class HeroData {
       } catch (_) {}
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
+    h.mailJade.addAll([for (final v in m['mj'] as List? ?? const []) '$v']);
     final fat = m['fat'];
     if (fat is List && fat.length == 2) {
       h.fatigueDay = fat[0] as String;

@@ -177,6 +177,21 @@ void main() {
       final lines = h.claimMail(m, '20261111', math.Random(1));
       expect(h.tienJade, 2);
       expect(lines, ['+2 Tiên Ngọc']);
+      expect(h.mailJadeOwed([m]), isEmpty, reason: 'already paid');
+    });
+
+    test('a Tiên Ngọc mail an older app took as read pays once (1.13.2)', () {
+      final m = MailDef.fromMap('bu', {'title': 'Bù Tiên Ngọc', 'jade': 18})!;
+      // 1.13.1 knew no jade: only the id was kept.
+      final h = HeroData(name: 'T', hanh: Hanh.thuy)..mailClaimed.add('bu');
+      final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
+      expect(back.mailJadeOwed([m]), ['+18 Tiên Ngọc (Bù Tiên Ngọc)']);
+      expect(back.tienJade, 18);
+      final again = HeroData.fromJson(jsonDecode(jsonEncode(back.toJson())) as Map<String, dynamic>);
+      expect(again.mailJadeOwed([m]), isEmpty, reason: 'saved as paid');
+      expect(again.tienJade, 18);
+      // Not taken at all: claimed the normal way, not paid early.
+      expect(HeroData(name: 'U', hanh: Hanh.kim).mailJadeOwed([m]), isEmpty);
     });
   });
 
