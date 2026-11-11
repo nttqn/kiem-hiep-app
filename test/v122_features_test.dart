@@ -167,6 +167,17 @@ void main() {
       h.rebirths = 1;
       expect(h.canClaimMail(high, '20261102'), isTrue, reason: 'any rebirth counts');
     });
+
+    test('Tiên Ngọc can be given back by mail (1.13.1), capped', () {
+      final m = MailDef.fromMap('j', {'title': 'Trả Tiên Ngọc', 'jade': 2, 'uid': 'abc'})!;
+      expect(m.jade, 2);
+      expect(m.rewards, ['2 Tiên Ngọc']);
+      expect(MailDef.fromMap('j2', {'jade': 99999})!.jade, 200);
+      final h = HeroData(name: 'T', hanh: Hanh.thuy);
+      final lines = h.claimMail(m, '20261111', math.Random(1));
+      expect(h.tienJade, 2);
+      expect(lines, ['+2 Tiên Ngọc']);
+    });
   });
 
   group('Mệt mỏi', () {

@@ -9,7 +9,8 @@ import 'gems.dart' show maxRewardGemTier;
 /// `until` (Vietnam days, `20261101` style, `until` inclusive); `minLevel`
 /// (needs this level or any rebirth); and the rewards `gold`, `shards`
 /// (Mảnh Hoàng Kim), `iron` (Thần Thiết), `gems` with `gemTier`, `pages`
-/// (bí kíp pages, once bí kíp is open), `hpPots`, `mpPots`.
+/// (bí kíp pages, once bí kíp is open), `hpPots`, `mpPots`, `jade` (Tiên
+/// Ngọc, 1.13.1).
 class MailDef {
   const MailDef({
     required this.id,
@@ -26,12 +27,13 @@ class MailDef {
     this.pages = 0,
     this.hpPots = 0,
     this.mpPots = 0,
+    this.jade = 0,
     this.uid = '',
     this.card = 0,
   });
 
   final String id, title, body, from, until;
-  final int minLevel, gold, shards, iron, gems, gemTier, pages, hpPots, mpPots;
+  final int minLevel, gold, shards, iron, gems, gemTier, pages, hpPots, mpPots, jade;
 
   /// Only for this account (its Firebase uid, the part of a leaderboard row
   /// id before "_"); empty for everyone. Days of Nguyệt thẻ given (1.8.0).
@@ -51,6 +53,7 @@ class MailDef {
         if (pages > 0) '$pages trang bí kíp',
         if (hpPots > 0) '$hpPots bình máu',
         if (mpPots > 0) '$mpPots bình nội lực',
+        if (jade > 0) '$jade Tiên Ngọc',
         if (card > 0) '$card ngày Nguyệt thẻ',
       ];
 
@@ -86,6 +89,7 @@ class MailDef {
       pages: n('pages', 50),
       hpPots: n('hpPots', 999),
       mpPots: n('mpPots', 999),
+      jade: n('jade', 200),
       uid: m['uid'] is String ? (m['uid'] as String).trim() : '',
       card: n('card', 90),
     );

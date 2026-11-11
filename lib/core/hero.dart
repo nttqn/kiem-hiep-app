@@ -3056,6 +3056,7 @@ class HeroData {
     divineIron += m.iron;
     hpPots += m.hpPots;
     mpPots += m.mpPots;
+    tienJade += m.jade;
     if (m.card > 0) addCardDays(day, m.card);
     final lines = [
       if (m.card > 0) '+${m.card} ngày Nguyệt thẻ',
@@ -3064,6 +3065,7 @@ class HeroData {
       if (m.iron > 0) '+${m.iron} Thần Thiết',
       if (m.hpPots > 0) '+${m.hpPots} bình máu',
       if (m.mpPots > 0) '+${m.mpPots} bình nội lực',
+      if (m.jade > 0) '+${m.jade} Tiên Ngọc',
     ];
     for (var i = 0; i < m.gems; i++) {
       final g = Gem(Hanh.values[rng.nextInt(5)], m.gemTier);
