@@ -342,7 +342,7 @@ class Leaderboard extends ChangeNotifier {
       switch (e.code) {
         case 'permission-denied':
           return 'Máy chủ không nhận số liệu của nhân vật này nên chưa lên bảng. '
-              'Hãy cập nhật game bản mới nhất; nếu vẫn vậy, báo cho nhà phát triển.';
+              'Nếu bạn chơi bình thường mà vẫn gặp, hãy báo cho nhà phát triển.';
         case 'unauthenticated':
           return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lên bảng.';
         case 'unavailable':
