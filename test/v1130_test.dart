@@ -107,6 +107,7 @@ void main() {
       h.daoExp = daoCost(daoLayers);
       h.soulPills = 1000;
       h.tienJade = 0;
+      h.tienBackfilled = true; // the tầng were set by hand here, not climbed before 1.13.0
       h.kiepResult(true);
       expect(h.daoLv, daoLayers + 1);
       expect(h.tienJade, kiepJade(1));

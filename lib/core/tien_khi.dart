@@ -26,7 +26,44 @@ String? tienBlock(HeroData h, Item it) {
   return null;
 }
 
+/// Tiên Ngọc a hero gets from Ngộ Đạo alone on the way to tầng [lv]: one
+/// a tầng, [kiepJade] for each Độ kiếp into a new cảnh giới.
+int daoJadeTotal(int lv) {
+  var n = 0;
+  for (var l = 1; l <= lv; l++) {
+    n += daoAtGate(l - 1) ? kiepJade(daoStageOf(l)) : daoLayerJade;
+  }
+  return n;
+}
+
+/// Tiên Ngọc spent on the phẩm of [items].
+int tienJadeSunk(Iterable<Item> items) {
+  var n = 0;
+  for (final it in items) {
+    for (var p = 0; p < it.tien; p++) {
+      n += tienJadeCost[p];
+    }
+  }
+  return n;
+}
+
 extension TienKhi on HeroData {
+  /// Once (1.13.3): Ngộ Đạo reached before Tiên Ngọc existed (1.13.0) paid
+  /// none. What the hero has had (in hand plus forged into its gear) is
+  /// topped up to what its tầng would have paid; Tiên Ngọc from anywhere
+  /// else counts too, so nobody ends up with more than a hero who climbed
+  /// after 1.13.0. The amount paid, or 0.
+  int backfillDaoJade() {
+    if (tienBackfilled) return 0;
+    tienBackfilled = true;
+    final had = tienJade + tienJadeSunk([...equip.values, ...bag]);
+    final owed = daoJadeTotal(daoLv) - had;
+    if (owed <= 0) return 0;
+    tienJade += owed;
+    notices.add(Notice('Bù $owed Tiên Ngọc cho các tầng Ngộ Đạo đã đạt trước bản Tiên khí', color: 0xFF8CE0C8, big: true));
+    return owed;
+  }
+
   /// Forges [it] one phẩm up; false (nothing spent) when [tienBlock]ed.
   bool tienForge(Item it) {
     if (tienBlock(this, it) != null) return false;

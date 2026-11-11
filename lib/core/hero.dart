@@ -21,6 +21,7 @@ import 'luan_hoi.dart';
 import 'mail.dart';
 import 'newbie.dart';
 import 'ngo_dao.dart';
+import 'tien_khi.dart';
 import 'gems.dart';
 import 'guild.dart';
 import 'hanh.dart';
@@ -567,6 +568,10 @@ class HeroData {
 
   /// Tiên Ngọc (1.13.0): what Tiên khí is forged with.
   int tienJade = 0;
+
+  /// The Tiên Ngọc owed for Ngộ Đạo reached before 1.13.0 was paid
+  /// ([backfillDaoJade], 1.13.3).
+  bool tienBackfilled = false;
 
   /// Tỉ thí (1.13.0): the day, duels in it, and duels won ever.
   String sparDay = '';
@@ -3196,7 +3201,7 @@ class HeroData {
         if (daoLv > 0 || daoExp > 0) 'dao': [daoLv, daoExp, daoNotified],
         if (gbDay.isNotEmpty) 'gb': [gbDay, gbRuns0, gbRuns1, gbTotal, gbBest, gbPaid, gbLastDay, gbLastTotal, gbRankDue],
         if (sparDay.isNotEmpty) 'tt': [sparDay, sparCount, sparWins],
-        if (tienJade > 0) 'tk': [tienJade],
+        if (tienJade > 0 || (tienBackfilled && daoLv > 0)) 'tk': [tienJade, if (tienBackfilled) 1],
         if (guildId.isNotEmpty || guildCoins > 0 || gDay.isNotEmpty || guildApplied.isNotEmpty)
           'gd': [guildId, guildName, guildRole, guildLv, guildContrib, guildCoins, guildApplied, gDay, gSigned, gDonated,
               gBossRuns, gBossWeek, gBossDmg, gBossClaimed, gShopWeek, gShopBought],
@@ -3564,6 +3569,7 @@ class HeroData {
     }
     final tk = m['tk'];
     if (tk is List && tk.isNotEmpty && tk[0] is num) h.tienJade = math.max(0, (tk[0] as num).toInt());
+    h.tienBackfilled = tk is List && tk.length > 1 && tk[1] == 1;
     final tt = m['tt'];
     if (tt is List && tt.length >= 3) {
       try {
@@ -3710,6 +3716,7 @@ class HeroData {
       h.spent.fillRange(0, 4, 0);
       h.freePoints = h.maxPotential;
     }
+    h.backfillDaoJade();
     h.recompute();
     return h;
   }
