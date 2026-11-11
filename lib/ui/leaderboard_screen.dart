@@ -133,6 +133,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     try {
       final (above, rest) = await lb.around(_board, _mine(_board));
       if (!mounted || req != _req) return;
+      // The place is counted from this hero's own numbers; when their row
+      // is not on the board (not written, or refused) the rows there are
+      // other people's, so say so rather than pass one off as theirs.
+      final row = '${lb.myUid}_${SaveService.instance.active}';
+      final onBoard = lb.debugEntries != null || [...above, ...rest].any((e) => e.id == row);
+      if (!onBoard) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(lb.submitError ??
+              'Nhân vật của bạn chưa có trên bảng; #$place là hạng tính theo số liệu của bạn. '
+                  'Mở lại bảng sau ít phút để gửi lại.'),
+        ));
+      }
       setState(() {
         _rows = [...above, ...rest];
         _start = place - above.length;
