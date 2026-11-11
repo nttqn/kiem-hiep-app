@@ -16,122 +16,79 @@ service cloud.firestore {
       function vnMs() {
         return request.time.toMillis() + 25200000 + 3600000 - 1792972800000;
       }
-      function weekNow() {
-        return math.floor(vnMs() / 604800000) + 1;
-      }
-      function seasonNow() {
-        return math.floor(vnMs() / 1209600000) + 1;
+
+      // A row's values ([d] = request.resource.data, [wk] = this week, [sn]
+      // = this season). 1.13.0: written against short names, the week and
+      // season worked out once: spelled out as request.resource.data.x and
+      // weekNow() at every use, a top hero's full row plus the new look and
+      // st ran past Firestore's 1,000-expression limit per request and was
+      // denied, while small heroes went through.
+      function goodRow(d, wk, sn) {
+        return d.name is string && d.name.size() > 0 && d.name.size() <= 24
+          && d.title is string && d.title.size() <= 40
+          && d.hanh is int && d.hanh >= 0 && d.hanh <= 4
+          && d.level is int && d.level >= 1 && d.level <= 99
+          && d.rebirths is int && d.rebirths >= 0 && d.rebirths <= 6
+          && d.rank == d.rebirths * 100 + d.level
+          && d.power is int && d.power >= 0 && d.power <= 50000000
+          // No hero has more lực chiến than this for their level and rebirths.
+          && d.power <= 20000 * (d.rank + 10)
+          && d.tower is int && d.tower >= 0 && d.tower <= 5000
+          // Lôi đài season * 100000 + points (1.0.10+; older apps omit it),
+          // and the last finished season's score, for its rank reward (1.2.5+).
+          && (!('arenaS' in d)
+              || (d.arenaS is int && d.arenaS >= 0 && d.arenaS < (sn + 1) * 100000))
+          && (!('arenaLast' in d)
+              || (d.arenaLast is int && d.arenaLast >= 0 && d.arenaLast < (sn + 1) * 100000))
+          // Săn quái tuần (1.2.6+): week * 1000000 + kills (up to 999,999 a
+          // week since 1.8.3, was 300,000); and the last finished week's, for
+          // its rank reward.
+          && (!('wk' in d) || (d.wk is int && d.wk >= 0 && d.wk < (wk + 1) * 1000000))
+          && (!('wkLast' in d) || (d.wkLast is int && d.wkLast >= 0 && d.wkLast < (wk + 1) * 1000000))
+          // The mount ridden (1.4.0+), shown on Lôi đài copies, and its look (1.7.0+).
+          && (!('mount' in d) || (d.mount is string && d.mount.size() <= 20))
+          && (!('skin' in d) || (d.skin is string && d.skin.size() <= 24))
+          && (!('mountLv' in d) || (d.mountLv is int && d.mountLv >= 1 && d.mountLv <= 200))
+          // Võ Lâm Đại Hội titles (1.4.0+): at most one a week.
+          && (!('dhC' in d) || (d.dhC is int && d.dhC >= 0 && d.dhC <= wk))
+          // 1.8.0: Tâm Ma best floor; Ma Vực week * 1000 + floor; Hung Thú
+          // week * 10000 + difficulty (1-3) * 1000 + speed. None from a week
+          // still to come.
+          && (!('tm' in d) || (d.tm is int && d.tm >= 0 && d.tm <= 1000))
+          && (!('mv' in d) || (d.mv is int && d.mv >= 0 && d.mv < (wk + 1) * 1000))
+          && (!('ht' in d)
+              || (d.ht is int && d.ht >= 0 && d.ht % 10000 < 4000 && d.ht < (wk + 1) * 10000))
+          // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
+          // rebirth and a minute per level. The fastest real hero seen (a
+          // non-stop auto-fight farmer) took about 4.5 hours per rebirth.
+          && (!('play' in d) || (d.play is int && d.play >= d.rebirths * 7200 + d.level * 60))
+          // Potential points (1.2.4+): no more than the game hands out, as in
+          // HeroData.maxPotential (5 a level, 40 a rebirth, 90 from pills, 100
+          // slack, and 5 more a level in the sixth life, 1.6.0+).
+          && (!('pts' in d)
+              || (d.pts is int
+                  && d.pts <= (d.level - 1) * 5 + d.rebirths * 40 + 190
+                      + (d.rebirths >= 6 ? d.level * 5 : 0)))
+          // Ngộ Đạo tầng (1.12.0+): only in the sixth life at level 99, and
+          // at least ten minutes of play a tầng past that.
+          && (!('dao' in d)
+              || (d.dao is int && d.dao >= 0 && d.dao <= 999
+                  && (d.dao == 0 || d.rank == 699)
+                  && (!('play' in d) || d.play >= 49140 + d.dao * 600)))
+          // The Cấp độ board's value (1.12.0+): rank * 1000 + Ngộ Đạo tầng.
+          && (!('rk' in d) || d.rk == d.rank * 1000 + ('dao' in d ? d.dao : 0))
+          // Looks, worn gear and stats for "Xem thông tin" (1.12.0+), by size.
+          && (!('look' in d) || (d.look is map && d.look.size() <= 7))
+          && (!('st' in d) || (d.st is list && d.st.size() <= 10));
       }
 
       allow read: if true;
       allow create, update: if request.auth != null
         && id in [request.auth.uid + '_0', request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3', request.auth.uid + '_4']
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 24
-        && request.resource.data.title is string
-        && request.resource.data.title.size() <= 40
-        && request.resource.data.hanh is int
-        && request.resource.data.hanh >= 0 && request.resource.data.hanh <= 4
-        && request.resource.data.level is int
-        && request.resource.data.level >= 1 && request.resource.data.level <= 99
-        && request.resource.data.rebirths is int
-        && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 6
-        && request.resource.data.rank == request.resource.data.rebirths * 100 + request.resource.data.level
-        && request.resource.data.power is int
-        && request.resource.data.power >= 0 && request.resource.data.power <= 50000000
-        // No hero has more lực chiến than this for their level and rebirths.
-        && request.resource.data.power <= 20000 * (request.resource.data.rank + 10)
-        && request.resource.data.tower is int
-        && request.resource.data.tower >= 0 && request.resource.data.tower <= 5000
-        // Lôi đài season * 100000 + points (1.0.10+; older apps omit it).
-        && (!('arenaS' in request.resource.data)
-            || (request.resource.data.arenaS is int
-                && request.resource.data.arenaS >= 0 && request.resource.data.arenaS <= 100000000
-                && request.resource.data.arenaS < (seasonNow() + 1) * 100000))
-        // The last finished season's score, for its rank reward (1.2.5+).
-        && (!('arenaLast' in request.resource.data)
-            || (request.resource.data.arenaLast is int
-                && request.resource.data.arenaLast >= 0 && request.resource.data.arenaLast <= 100000000
-                && request.resource.data.arenaLast < (seasonNow() + 1) * 100000))
-        // Săn quái tuần (1.2.6+): week * 1000000 + kills (up to 999,999 a
-        // week since 1.8.3, was 300,000); and the last finished week's, for
-        // its rank reward.
-        && (!('wk' in request.resource.data)
-            || (request.resource.data.wk is int
-                && request.resource.data.wk >= 0 && request.resource.data.wk <= 1000000000
-                && request.resource.data.wk < (weekNow() + 1) * 1000000))
-        && (!('wkLast' in request.resource.data)
-            || (request.resource.data.wkLast is int
-                && request.resource.data.wkLast >= 0 && request.resource.data.wkLast <= 1000000000
-                && request.resource.data.wkLast < (weekNow() + 1) * 1000000))
-        // The mount ridden (1.4.0+), shown on Lôi đài copies.
-        && (!('mount' in request.resource.data)
-            || (request.resource.data.mount is string && request.resource.data.mount.size() <= 20))
-        // Its look (1.7.0+).
-        && (!('skin' in request.resource.data)
-            || (request.resource.data.skin is string && request.resource.data.skin.size() <= 24))
-        && (!('mountLv' in request.resource.data)
-            || (request.resource.data.mountLv is int
-                && request.resource.data.mountLv >= 1 && request.resource.data.mountLv <= 200))
-        // Võ Lâm Đại Hội titles (1.4.0+): at most one a week.
-        && (!('dhC' in request.resource.data)
-            || (request.resource.data.dhC is int
-                && request.resource.data.dhC >= 0
-                && request.resource.data.dhC <= weekNow()))
-        // 1.8.0: Tâm Ma best floor; Ma Vực week * 1000 + floor; Hung Thú
-        // week * 10000 + difficulty (1-3) * 1000 + speed. None from a week
-        // still to come.
-        && (!('tm' in request.resource.data)
-            || (request.resource.data.tm is int
-                && request.resource.data.tm >= 0 && request.resource.data.tm <= 1000))
-        && (!('mv' in request.resource.data)
-            || (request.resource.data.mv is int
-                && request.resource.data.mv >= 0
-                && request.resource.data.mv < (weekNow() + 1) * 1000))
-        && (!('ht' in request.resource.data)
-            || (request.resource.data.ht is int
-                && request.resource.data.ht >= 0
-                && request.resource.data.ht % 10000 < 4000
-                && request.resource.data.ht < (weekNow() + 1) * 10000))
-        // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
-        // rebirth and a minute per level. The fastest real hero seen (a
-        // non-stop auto-fight farmer) took about 4.5 hours per rebirth.
-        && (!('play' in request.resource.data)
-            || (request.resource.data.play is int
-                && request.resource.data.play >= request.resource.data.rebirths * 7200
-                    + request.resource.data.level * 60))
-        // Potential points (1.2.4+): no more than the game hands out, as in
-        // HeroData.maxPotential (5 a level, 40 a rebirth, 90 from pills, 100
-        // slack, and 5 more a level in the sixth life, 1.6.0+).
-        && (!('pts' in request.resource.data)
-            || (request.resource.data.pts is int
-                && (request.resource.data.pts <= (request.resource.data.level - 1) * 5
-                        + request.resource.data.rebirths * 40 + 190
-                    || (request.resource.data.rebirths >= 6
-                        && request.resource.data.pts <= (request.resource.data.level - 1) * 5
-                            + request.resource.data.level * 5
-                            + request.resource.data.rebirths * 40 + 190))))
-        // Ngộ Đạo tầng (1.12.0+): only in the sixth life at level 99, and
-        // at least ten minutes of play a tầng past that.
-        && (!('dao' in request.resource.data)
-            || (request.resource.data.dao is int
-                && request.resource.data.dao >= 0 && request.resource.data.dao <= 999
-                && (request.resource.data.dao == 0 || request.resource.data.rank == 699)
-                && (!('play' in request.resource.data)
-                    || request.resource.data.play >= 6 * 7200 + 99 * 60 + request.resource.data.dao * 600)))
-        // The Cấp độ board's value (1.12.0+): rank * 1000 + Ngộ Đạo tầng.
-        && (!('rk' in request.resource.data)
-            || request.resource.data.rk == request.resource.data.rank * 1000
-                + ('dao' in request.resource.data ? request.resource.data.dao : 0))
-        // Looks, worn gear and stats for "Xem thông tin" (1.12.0+).
-        && (!('look' in request.resource.data)
-            // Size only (1.13.0): with the key list and the gear list
-            // checked inside it, the live server turned every 1.13.0 row away.
-            || (request.resource.data.look is map && request.resource.data.look.size() <= 7))
-        && (!('st' in request.resource.data)
-            || (request.resource.data.st is list && request.resource.data.st.size() <= 10))
+        && goodRow(request.resource.data,
+            math.floor(vnMs() / 604800000) + 1,
+            math.floor(vnMs() / 1209600000) + 1)
         // Muted by hand in the console: lbBans/{uid} (any fields).
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
       // A row that is not there is fine to delete (1.13.0: hiding deleted
