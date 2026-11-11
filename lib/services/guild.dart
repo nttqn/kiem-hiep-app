@@ -248,6 +248,26 @@ class GuildService extends ChangeNotifier {
     return GuildMember.fromDoc(d.id, d.data());
   }
 
+  /// The bang this hero leads per the server, when its save has none
+  /// (1.13.1: played on two devices, the one without the bang on its save
+  /// showed "Chưa vào bang" to the Bang chủ).
+  Future<(GuildInfo, GuildMember)?> ledByMe() async {
+    final u = uid, row = myRow;
+    if (u == null || row == null) return null;
+    final List<GuildInfo> led;
+    if (debug) {
+      led = [for (final g in _dGuilds.values) if (g.leader == u) g];
+    } else {
+      final snap = await _guilds.where('leader', isEqualTo: u).limit(5).get().timeout(_t);
+      led = [for (final d in snap.docs) ?GuildInfo.fromDoc(d.id, d.data())];
+    }
+    for (final g in led) {
+      final m = await member(g.id, row);
+      if (m != null) return (g, m);
+    }
+    return null;
+  }
+
   // ------------------------------------------------------------ membership
 
   /// Makes bang [name] with this hero as Bang chủ; its id, or an error
@@ -301,6 +321,10 @@ class GuildService extends ChangeNotifier {
     final u = uid, row = myRow;
     if (u == null || row == null) return false;
     final me = GuildMember.of(row, u, h, roleMember);
+    // Already in it (1.13.1): a save from another device, or one older than
+    // the joining, has no bang on it; writing the row again as a plain
+    // member was refused (a Bang chủ cannot demote themselves).
+    if (await member(g.id, row) != null) return true;
     if (g.open && h.level + h.rebirths * 100 >= g.minLv) {
       if (debug) {
         (_dMembers[g.id] ??= {})[row] = me;

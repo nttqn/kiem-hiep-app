@@ -140,6 +140,13 @@ class _GuildTabState extends State<_GuildTab> {
           }
         }
       }
+      if (!h.inGuild) {
+        final led = await gs.ledByMe();
+        if (led != null) {
+          final (g, m) = led;
+          h.joinGuild(g.id, g.name, m.role, g.level);
+        }
+      }
       if (h.inGuild) {
         final g = await gs.guild(h.guildId);
         final me = g == null ? null : await gs.member(h.guildId, row);
@@ -151,6 +158,14 @@ class _GuildTabState extends State<_GuildTab> {
           var members = await gs.members(g.id);
           h.guildRole = me.role;
           h.guildName = g.name;
+          // A save behind the server (another device, or the bang put back
+          // on this one) must not write its smaller numbers over the row.
+          if (me.contrib > h.guildContrib) h.guildContrib = me.contrib;
+          if (me.bw == h.gBossWeek && me.bd > h.gBossDmg) h.gBossDmg = me.bd;
+          if (me.bw > h.gBossWeek) {
+            h.gBossWeek = me.bw;
+            h.gBossDmg = me.bd;
+          }
           // This hero's newest numbers in the sums.
           members = [for (final m in members) m.row == row ? GuildMember.of(row, me.uid, h, me.role) : m];
           h.guildLv = guildLevelOf(members.fold<int>(0, (a, m) => a + m.contrib));

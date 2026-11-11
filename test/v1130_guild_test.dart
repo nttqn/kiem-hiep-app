@@ -138,12 +138,16 @@ void main() {
 
   group('screens', () {
     late HeroData h;
+    var player = 0;
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       h = _hero();
       SaveService.instance.slots[0] = h;
       SaveService.instance.active = 0;
       GuildService.instance.debug = true;
+      // A new player each test: bangs made in one are not theirs (1.13.1
+      // puts a Bang chủ's bang back on a save without it).
+      GuildService.instance.debugUid = 'me${player++}';
       Leaderboard.instance.debugEntries = [
         const LbEntry(id: 'f_0', name: 'Bạn Hiền', hanh: 2, level: 88, rebirths: 3, power: 900000, tower: 50),
       ];
@@ -188,6 +192,24 @@ void main() {
         await tester.tap(find.textContaining('Điểm danh').first);
         await tester.pump(const Duration(milliseconds: 300));
         expect(h.gSigned, isTrue);
+      });
+
+      testWidgets('a Bang chủ on a save without the bang gets it back $tag (1.13.1)', (tester) async {
+        final gs = GuildService.instance;
+        final (id, _) = await gs.create(h, 'Đế Vương $tag');
+        // On the server: their cống hiến so far.
+        await gs.pushMine(id!, h..guildContrib = 5000, roleLeader);
+        // This device's save is older: no bang on it.
+        h.leaveGuild();
+        await at(tester, s, const GuildScreen());
+        expect(tester.takeException(), isNull);
+        expect(h.guildId, id);
+        expect(h.guildRole, roleLeader);
+        expect(h.guildContrib, 5000, reason: 'the server row is not lowered');
+        expect(find.text('Chưa vào bang'), findsNothing);
+        // Tapping Vào on one's own bang does not write a member row over it.
+        expect(await gs.join((await gs.guild(id))!, h), isTrue);
+        expect((await gs.member(id, gs.myRow!))!.role, roleLeader);
       });
 
       testWidgets('Hảo hữu fits $tag', (tester) async {
