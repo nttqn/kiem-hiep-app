@@ -127,10 +127,9 @@ service cloud.firestore {
                 + ('dao' in request.resource.data ? request.resource.data.dao : 0))
         // Looks, worn gear and stats for "Xem thông tin" (1.12.0+).
         && (!('look' in request.resource.data)
-            || (request.resource.data.look is map
-                && request.resource.data.look.keys().hasOnly(['f', 'hh', 'c', 'dv', 'eq', 'pet', 'pl'])
-                && (!('eq' in request.resource.data.look)
-                    || (request.resource.data.look.eq is list && request.resource.data.look.eq.size() <= 7))))
+            // Size only (1.13.0): with the key list and the gear list
+            // checked inside it, the live server turned every 1.13.0 row away.
+            || (request.resource.data.look is map && request.resource.data.look.size() <= 7))
         && (!('st' in request.resource.data)
             || (request.resource.data.st is list && request.resource.data.st.size() <= 10))
         // Muted by hand in the console: lbBans/{uid} (any fields).
