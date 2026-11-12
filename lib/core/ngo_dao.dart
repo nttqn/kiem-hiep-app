@@ -60,6 +60,16 @@ bool daoAtGate(int lv) => lv > 0 && lv % daoLayers == 0 && lv ~/ daoLayers < dao
 /// Linh Phách Đơn for the Độ kiếp at tầng [lv].
 int kiepPills(int lv) => 50 * (lv ~/ daoLayers);
 
+/// Linh Phách Đơn every Độ kiếp still ahead of tầng [lv] asks for, up to
+/// the last cảnh giới (1.13.3: top heroes took their pile for spare).
+int kiepPillsAhead(int lv) {
+  var n = 0;
+  for (var k = math.max(1, (lv + daoLayers - 1) ~/ daoLayers); k < daoStages.length; k++) {
+    n += kiepPills(k * daoLayers);
+  }
+  return n;
+}
+
 /// Tiên Ngọc (1.13.0, for Tiên khí) for a won Độ kiếp into cảnh giới
 /// [stage], and for each new tầng.
 int kiepJade(int stage) => 5 * stage;

@@ -49,6 +49,7 @@ void main() {
     'Chuyển sinh': () => const RebirthScreen(),
     'Thuộc tính': () => const CharacterScreen(tab: 0),
     'Kỹ năng + Kinh mạch': () => const CharacterScreen(tab: 1),
+    'Thần binh': () => const CharacterScreen(tab: 7),
     'Hành trang': () => const CharacterScreen(tab: 2),
     'Luyện đan': () => const AlchemyScreen(),
   };
@@ -64,6 +65,7 @@ void main() {
             ..gold = 123456789;
           if (cs == 6) h.daoLv = 10;
           h.meridianPts[1] = 400; // Tẩy kinh mạch shown, Chí mạng at its cap
+          if (cs == 6) h.divine = 23; // Tiên binh rows
           h.recompute();
           SaveService.instance.slots[0] = h;
           SaveService.instance.active = 0;

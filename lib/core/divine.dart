@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'sects.dart';
 
 /// Thần binh: after the first rebirth the hero awakens their weapon slot
@@ -14,9 +16,20 @@ const int divineOpenRebirths = 1;
 const int divineTier2From = 10;
 const int divineTier2Rebirths = 4;
 
+/// Tiên binh (1.13.3): past [divineMax] the weapon goes on without end for
+/// heroes of the sixth rebirth, [divineTienStat] attack and HP a level, a
+/// sink for the Thần Thiết and gold top heroes piled up with nothing left
+/// to spend them on. [divineTop] only bounds an edited save.
+const int divineTienRebirths = 6;
+const int divineTop = 999;
+const double divineTienStat = 0.01;
+
 /// Thần Thiết to go from level `i` to `i + 1`.
 const divineIronCost = [8, 12, 16, 22, 30, 40, 52, 66, 82, 100, 100, 110, 120, 135, 150, 165, 180, 200, 220, 250];
-int divineGoldCost(int lv) => 40000 * (lv + 1);
+int divineGoldCost(int lv) => lv < divineMax ? 40000 * (lv + 1) : 300000 * (lv - divineMax + 1);
+
+/// Thần Thiết from level [lv] to the next, Tiên binh included.
+int divineIronAt(int lv) => lv < divineMax ? divineIronCost[lv] : 250 + 25 * (lv - divineMax);
 
 /// Attack and HP per level.
 const double divineStatPerLv = 0.025;
@@ -37,11 +50,12 @@ const int divineStrikeLevel = 5;
 const double divineStrikeChance = 0.12;
 const double divineStrikeCd = 1.5;
 const double divineStrikeRadius = 120;
-double divineStrikePower(int lv) => 1.0 + 0.15 * (lv - divineStrikeLevel);
+double divineStrikePower(int lv) => 1.0 + 0.15 * (math.min(lv, divineMax) - divineStrikeLevel);
 
 Map<Bonus, double> divineBonuses(int lv) {
   if (lv <= 0) return const {};
-  final out = <Bonus, double>{Bonus.atkPct: divineStatPerLv * lv, Bonus.hpPct: divineStatPerLv * lv};
+  final base = divineStatPerLv * math.min(lv, divineMax) + divineTienStat * math.max(0, lv - divineMax);
+  final out = <Bonus, double>{Bonus.atkPct: base, Bonus.hpPct: base};
   divineMarks.forEach((at, b) {
     if (lv >= at) out[b.$1] = (out[b.$1] ?? 0) + b.$2;
   });
@@ -72,6 +86,7 @@ int divineColor(int lv) => switch (lv) {
 
 /// What reaching level [lv] adds, for the UI.
 String divineLevelText(int lv) {
+  if (lv > divineMax) return '+${(divineTienStat * 100).toStringAsFixed(1)}% công, sinh lực';
   final parts = ['+${(divineStatPerLv * 100).toStringAsFixed(1)}% công, sinh lực'];
   if (lv == divineStrikeLevel) parts.add('mở Thần Binh Giáng Thế');
   if (lv > divineStrikeLevel) parts.add('Giáng Thế mạnh hơn');

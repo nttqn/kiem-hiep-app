@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/divine.dart';
@@ -48,7 +50,12 @@ class _DivineTabState extends State<DivineTab> {
             child: Column(
               children: [
                 Expanded(child: FittedBox(child: FigurePreview.of(h, scale: 2))),
-                Text(lv > 0 ? '${divineStage(lv)} · tầng $lv/$divineMax' : 'Chưa thức tỉnh',
+                Text(
+                    lv <= 0
+                        ? 'Chưa thức tỉnh'
+                        : lv < divineMax
+                            ? '${divineStage(lv)} · tầng $lv/$divineMax'
+                            : '${divineStage(lv)} · tầng $lv',
                     style: titleStyle(17, color: c)),
                 const SizedBox(height: 4),
                 Row(
@@ -86,7 +93,9 @@ class _DivineTabState extends State<DivineTab> {
 
   Widget _panel() {
     final lv = h.divine;
-    final maxed = lv >= divineMax;
+    final maxed = lv >= divineTop;
+    // Tiên binh rows: those reached and the next few.
+    final last = math.max(divineMax + 3, lv + 3);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -108,6 +117,12 @@ class _DivineTabState extends State<DivineTab> {
                   ),
                 _levelRow(i, lv),
               ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
+                child: Text('Tiên binh · không giới hạn, mở ở Chuyển sinh $divineTienRebirths',
+                    style: bold.copyWith(fontSize: 12, color: goldLight)),
+              ),
+              for (var i = divineMax + 1; i <= last; i++) _levelRow(i, lv),
             ],
           ),
         ),
@@ -120,7 +135,9 @@ class _DivineTabState extends State<DivineTab> {
                     ? 'Đã đạt Tiên binh, tầng cao nhất.'
                     : h.divineTier2Locked
                         ? 'Tầng ${lv + 1} trở lên mở ở Chuyển sinh $divineTier2Rebirths.'
-                        : 'Tầng ${lv + 1}: ${divineIronCost[lv]} Thần Thiết · ${fmt(divineGoldCost(lv))} lượng',
+                        : h.divineTienLocked
+                            ? 'Tiên binh mở ở Chuyển sinh $divineTienRebirths.'
+                            : 'Tầng ${lv + 1}: ${divineIronAt(lv)} Thần Thiết · ${fmt(divineGoldCost(lv))} lượng',
                 style: bold.copyWith(fontSize: 13, color: maxed ? goldLight : cream),
               ),
             ),

@@ -115,6 +115,8 @@ class _RebirthScreenState extends State<RebirthScreen> {
                             _line(done
                                 ? 'Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn.'
                                 : 'Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn. Cần ${h.nextRebirthPills} viên để chuyển sinh lần ${h.rebirths + 1}.'),
+                            if (done && kiepPillsAhead(h.daoLv) > 0)
+                              _line('Để dành cho Độ kiếp: còn cần ${fmt(kiepPillsAhead(h.daoLv))} viên để tới ${daoStages.last.name}.'),
                             _line('Đổi $soulPillsPerIron viên lấy 1 Thần Thiết ở Kỳ Trân Các.'),
                           ],
                           if (!done) ...[

@@ -2798,17 +2798,21 @@ class HeroData {
   /// At the end of the first ten levels before the fourth rebirth.
   bool get divineTier2Locked => divine >= divineTier2From && rebirths < divineTier2Rebirths;
 
+  /// At the end of Thần binh before the sixth rebirth (Tiên binh, 1.13.3).
+  bool get divineTienLocked => divine >= divineMax && rebirths < divineTienRebirths;
+
   bool get canDivine =>
       divineOpen &&
-      divine < divineMax &&
+      divine < divineTop &&
       !divineTier2Locked &&
-      divineIron >= divineIronCost[divine] &&
+      !divineTienLocked &&
+      divineIron >= divineIronAt(divine) &&
       gold >= divineGoldCost(divine);
 
   /// Awakens the weapon one level; it always succeeds.
   bool upgradeDivine() {
     if (!canDivine) return false;
-    divineIron -= divineIronCost[divine];
+    divineIron -= divineIronAt(divine);
     gold -= divineGoldCost(divine);
     divine++;
     recompute();
@@ -3426,7 +3430,7 @@ class HeroData {
     h.records = HeroRecords.fromJson(m['rec']);
     final tb = m['tb'];
     if (tb is List && tb.length == 2) {
-      h.divine = (tb[0] as int).clamp(0, divineMax);
+      h.divine = (tb[0] as int).clamp(0, divineTop);
       h.divineIron = math.max(0, tb[1] as int);
     }
     final pay = m['pay'];
