@@ -141,7 +141,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         lines: [
           'Tuần này: ${beast.name} · Lượt còn: ${h.htTriesLeft}',
           'Boss tuần 3 độ khó, phải né vùng đỏ và hạ trong 3 phút.',
-          'Rơi Hung Thú Tinh Phách cho sao 4 và 5.',
+          'Thưởng Hung Thú Tinh Phách để Thăng Tinh trang bị lên 4★ và 5★.',
         ],
         art: BossPreview(def: mobById[beast.base]!, size: 150),
         button: h.beastOpen ? 'Săn Hung Thú' : 'Mở ở chuyển sinh $beastOpenRebirths',
