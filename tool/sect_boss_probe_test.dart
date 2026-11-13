@@ -131,7 +131,7 @@ void main() {
         final h0 = endHero(hanh, school: ManualKind.wide, branch: 0);
         final row = <String>[];
         // Shadows at 0.5x..8x the hero's power.
-        for (final mul in [0.5, 1.0, 2.0, 4.0, 8.0]) {
+        for (final mul in [1.0, 1.25, 1.5, 2.0]) {
           var wins = 0;
           for (final seed in [1, 2, 3]) {
             if (tmRun(endHero(hanh, school: ManualKind.wide, branch: 0), mul, seed).$1) wins++;

@@ -2832,6 +2832,8 @@ class World {
     var dmg = st.atk * mult * (skill ? 1 + st.skillDmg : 1);
     if (realmBuffs.contains(RealmBuff.power)) dmg *= 1.25;
     dmg *= hanhFactor(as ?? hero.hanh, m.def.hanh);
+    // The hero's own hits on a boss (Kim Cang Tự phá giáp, 1.13.3).
+    if (as == null && m.def.boss && m.rival == null) dmg *= 1 + hero.sect.bossDmg;
     final crit = rng.nextDouble() < st.crit;
     if (crit) dmg *= st.critDmg;
     dmg *= 1 - mitigation(m.defense, hero.level);

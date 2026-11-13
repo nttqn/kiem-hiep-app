@@ -200,6 +200,7 @@ class SectDef {
     required this.weaponName,
     required this.skills,
     required this.autoBuild,
+    this.bossDmg = 0,
   });
 
   final Hanh hanh;
@@ -227,6 +228,11 @@ class SectDef {
 
   /// Share of free points the "tự cộng" button gives str, dex, vit, ene.
   final List<int> autoBuild;
+
+  /// Extra damage of the hero's own hits on boss monsters (not on Lôi đài
+  /// rivals or Tâm Ma), 1.13.3: Kim Cang Tự's ngạnh công phá giáp, so the
+  /// tank sect is not left far behind on Boss Thế Giới and Boss Hoàng Kim.
+  final double bossDmg;
 }
 
 const sects = <SectDef>[
@@ -235,9 +241,10 @@ const sects = <SectDef>[
     name: 'Kim Cang Tự',
     tagline: 'Côn pháp cương mãnh, thân như đồng thép',
     desc: 'Tăng nhân luyện côn và ngạnh công. Máu trâu, phòng thủ cao, '
-        'càn quét quái vây quanh. Dễ chơi nhất cho người mới.',
+        'càn quét quái vây quanh, ngạnh công phá giáp boss. Dễ chơi nhất cho người mới.',
     role: 'Cận chiến · Đỡ đòn',
     difficulty: 1,
+    bossDmg: 0.5,
     base: [12, 5, 11, 4],
     atkWeights: [2.0, 0.4, 0, 0.3],
     hpMul: 1.2,
@@ -292,7 +299,7 @@ const sects = <SectDef>[
       SkillDef(
         id: 'kim4',
         name: 'Kim Cương Bất Hoại',
-        desc: 'Nội tại: tăng sinh lực và phòng thủ.',
+        desc: 'Nội tại: tăng sinh lực và phòng thủ. Thiên phú môn phái: +50% sát thương lên boss.',
         kind: SkillKind.passive,
         unlock: 15,
         passive: {Bonus.hpPct: 0.04, Bonus.defPct: 0.03},
@@ -725,8 +732,8 @@ const sects = <SectDef>[
         unlock: 1,
         cooldown: 2.4,
         mp: 6,
-        power: 1.6,
-        powerPerLv: 0.13,
+        power: 1.9,
+        powerPerLv: 0.155,
         range: 330,
         pierce: true,
         radius: 34,
@@ -753,8 +760,8 @@ const sects = <SectDef>[
         unlock: 10,
         cooldown: 8,
         mp: 18,
-        power: 2.2,
-        powerPerLv: 0.18,
+        power: 2.6,
+        powerPerLv: 0.21,
         range: 330,
         radius: 70,
         count: 6,
@@ -778,8 +785,8 @@ const sects = <SectDef>[
         unlock: 25,
         cooldown: 14,
         mp: 30,
-        power: 0.85,
-        powerPerLv: 0.07,
+        power: 1.0,
+        powerPerLv: 0.083,
         radius: 150,
         duration: 6,
         ticks: 15,
@@ -801,8 +808,8 @@ const sects = <SectDef>[
         unlock: 60,
         cooldown: 24,
         mp: 65,
-        power: 1.4,
-        powerPerLv: 0.12,
+        power: 1.65,
+        powerPerLv: 0.14,
         radius: 230,
         duration: 8,
         ticks: 20,
