@@ -40,11 +40,11 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(width: 210, child: _herbs()),
+          SizedBox(width: 190, child: _herbs()),
           const SizedBox(width: 8),
           Expanded(child: _recipes()),
           const SizedBox(width: 8),
-          SizedBox(width: 250, child: _pills()),
+          SizedBox(width: 262, child: _pills()),
         ],
       ),
     );
@@ -218,7 +218,7 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
               Text('${p.name}: còn ${(h.buffLeft(p.id) / 60).ceil()} phút',
                   style: small.copyWith(fontSize: 11.5, color: Color(p.color), fontWeight: FontWeight.w700)),
           ],
-          Text('Thời gian bùa lợi chỉ trôi khi đang chơi. '
+          Text('Thời gian bùa lợi chỉ trôi khi đang chơi, cộng dồn tối đa ${maxBuffMinutes ~/ 60} giờ. '
               'Tẩy Tủy Đan đã dùng: ${h.potentialPills}/$maxPotentialPills',
               style: small.copyWith(fontSize: 10.5)),
           const SizedBox(height: 6),
@@ -227,36 +227,66 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
                 ? Center(child: Text('Chưa có đan dược nào.', style: small))
                 : ListView(
                     children: [
-                      for (final p in owned)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            children: [
-                              _pillIcon(p, size: 24),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text('${p.name} x${h.pills[p.id]}', style: bold.copyWith(fontSize: 13)),
-                              ),
-                              LButton(
-                                label: 'Dùng',
-                                small: true,
-                                color: seal,
-                                enabled: h.canUsePill(p),
-                                onTap: () {
-                                  if (!h.usePill(p)) return;
-                                  SoundService.instance.cue('potion');
-                                  _changed(switch (p.kind) {
-                                    PillKind.buff => '${p.name}: ${p.desc}',
-                                    PillKind.potions => '+10 Kim Sang Dược, +10 Ngưng Thần Đan',
-                                    PillKind.potential => '+$potentialPerPill điểm tiềm năng!',
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
+                      for (final p in owned) _pillRow(p),
                     ],
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// One owned pill: name, then Uống đầy (buffs) and Dùng under it.
+  Widget _pillRow(PillDef p) {
+    final use = LButton(
+      label: 'Dùng',
+      small: true,
+      color: seal,
+      enabled: h.canUsePill(p),
+      onTap: () {
+        if (!h.usePill(p)) return;
+        SoundService.instance.cue('potion');
+        _changed(switch (p.kind) {
+          PillKind.buff => '${p.name}: ${p.desc}',
+          PillKind.potions => '+10 Kim Sang Dược, +10 Ngưng Thần Đan',
+          PillKind.potential => '+$potentialPerPill điểm tiềm năng!',
+        });
+      },
+    );
+    final name = Row(
+      children: [
+        _pillIcon(p, size: 24),
+        const SizedBox(width: 8),
+        Expanded(child: Text('${p.name} x${h.pills[p.id]}', style: bold.copyWith(fontSize: 13))),
+        if (p.kind != PillKind.buff) use,
+      ],
+    );
+    if (p.kind != PillKind.buff) return Padding(padding: const EdgeInsets.only(bottom: 6), child: name);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          name,
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              LButton(
+                label: 'Uống đầy',
+                small: true,
+                color: jade,
+                enabled: h.canUsePill(p),
+                onTap: () {
+                  final n = h.fillPill(p);
+                  if (n == 0) return;
+                  SoundService.instance.cue('potion');
+                  _changed('${p.name} x$n: còn ${(h.buffLeft(p.id) / 60).ceil()} phút');
+                },
+              ),
+              const SizedBox(width: 6),
+              use,
+            ],
           ),
         ],
       ),

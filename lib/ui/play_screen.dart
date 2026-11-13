@@ -34,6 +34,7 @@ import 'hud.dart';
 import 'land_splash.dart';
 import 'theme.dart';
 import 'auto_dialog.dart';
+import 'chat_screen.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen.field(MapDef this.map, {super.key}) : dungeon = null;
@@ -44,6 +45,9 @@ class PlayScreen extends StatefulWidget {
 
   /// Dev build only: battle without the HUD, for thumbnails.
   static bool debugHideHud = false;
+
+  /// Dev build: open with Kênh Thế Giới showing.
+  static bool debugChat = false;
 
   @override
   State<PlayScreen> createState() => _PlayScreenState();
@@ -66,6 +70,24 @@ class _PlayScreenState extends State<PlayScreen> {
   double _bannerAt = -10;
   bool _paused = false;
   bool _fishing = false;
+
+  /// Kênh Thế Giới open over the fight (1.13.3); the fight goes on, and
+  /// keys go to the text box, not the hero.
+  late bool _chat = PlayScreen.debugChat;
+
+  bool get _chatAllowed => !(widget.dungeon?.isArena ?? false);
+
+  void _setChat(bool v) {
+    if (v) {
+      _keys.clear();
+      world.input.attack = false;
+      world.input.moveX = 0;
+      world.input.moveY = 0;
+    } else {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+    setState(() => _chat = v);
+  }
 
   /// The land's painting is up (1.11.2); the fight waits behind it.
   bool _splash = false;
@@ -489,6 +511,10 @@ class _PlayScreenState extends State<PlayScreen> {
 
   bool _onKey(KeyEvent e) {
     if (!mounted) return false;
+    if (_chat) {
+      if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.escape) _setChat(false);
+      return false;
+    }
     final k = e.logicalKey;
     final down = e is KeyDownEvent || e is KeyRepeatEvent;
     if (e is KeyDownEvent) {
@@ -589,6 +615,10 @@ class _PlayScreenState extends State<PlayScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (_chat) {
+          _setChat(false);
+          return;
+        }
         if (_dead || _cleared != null) return;
         if (_fishing) {
           _setFishing(false);
@@ -598,6 +628,8 @@ class _PlayScreenState extends State<PlayScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.black,
+        // The chat's keyboard must not shrink the battlefield.
+        resizeToAvoidBottomInset: false,
         body: LayoutBuilder(
           builder: (context, box) {
             final size = box.biggest;
@@ -630,6 +662,14 @@ class _PlayScreenState extends State<PlayScreen> {
                 if (_intro != null) _introView(_intro!),
                 if (_fishing && !_paused)
                   _dim(FishingPanel(mapId: world.map.id, onClose: () => _setFishing(false))),
+                if (_chat && !_paused && !_dead && _cleared == null)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    bottom: 8 + MediaQuery.viewInsetsOf(context).bottom,
+                    width: math.min(440, size.width * 0.52),
+                    child: SafeArea(left: false, child: ChatScreen(embedded: true, onClose: () => _setChat(false))),
+                  ),
                 if (_paused) _pauseOverlay(),
                 if (_dead) _deadOverlay(),
                 if (_cleared != null) _resultOverlay(),
@@ -687,6 +727,10 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_chatAllowed) ...[
+                RoundIcon(icon: Icons.forum_outlined, onTap: () => _setChat(!_chat)),
+                const SizedBox(width: 6),
+              ],
               Column(
                 children: [
                   RoundIcon(icon: Icons.pause, onTap: () => _setPaused(true)),

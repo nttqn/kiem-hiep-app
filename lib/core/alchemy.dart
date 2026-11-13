@@ -48,7 +48,9 @@ class PillDef {
 }
 
 /// Buff pills stack their time up to this many minutes.
-const int maxBuffMinutes = 120;
+/// 1.13.3: 6 hours (was 2), a day's full-EXP fighting before Mệt mỏi, so
+/// players left on auto do not run dry (a player's request).
+const int maxBuffMinutes = 360;
 
 /// Tẩy Tủy Đan: potential points each, and how many a hero may ever eat.
 const int potentialPerPill = 3;

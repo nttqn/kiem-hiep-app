@@ -15,7 +15,12 @@ import 'theme.dart';
 /// Kênh Thế Giới: the last hundred messages of every player, one message
 /// per ten minutes each.
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  const ChatScreen({super.key, this.embedded = false, this.onClose});
+
+  /// 1.13.3: a side panel over the battle (PlayScreen), so players can chat
+  /// while the fight goes on; [onClose] hides it.
+  final bool embedded;
+  final VoidCallback? onClose;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -141,6 +146,34 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.embedded) {
+      return Panel(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.forum, color: goldLight, size: 20),
+                const SizedBox(width: 6),
+                Expanded(child: Text('Kênh Thế Giới', style: titleStyle(16, color: cream))),
+                if (chat.wait > Duration.zero)
+                  Text('Gửi sau ${chatWaitLabel(chat.wait)}', style: small.copyWith(fontSize: 11, color: goldLight)),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Đóng',
+                  onPressed: widget.onClose,
+                  icon: const Icon(Icons.close, color: cream),
+                ),
+              ],
+            ),
+            Expanded(child: _list()),
+            const SizedBox(height: 6),
+            _inputRow(),
+          ],
+        ),
+      );
+    }
     return SubScreen(
       title: 'Kênh Thế Giới',
       child: Row(

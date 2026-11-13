@@ -1724,6 +1724,15 @@ class HeroData {
     };
   }
 
+  /// Takes buff pill [p] until its time is full or none are left; how many.
+  int fillPill(PillDef p) {
+    var n = 0;
+    while (p.kind == PillKind.buff && usePill(p)) {
+      n++;
+    }
+    return n;
+  }
+
   bool usePill(PillDef p) {
     if (!canUsePill(p)) return false;
     pills[p.id] = pills[p.id]! - 1;

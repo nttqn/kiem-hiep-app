@@ -115,6 +115,7 @@ Future<void> main() async {
     GameClock.deviceMs = () => t.millisecondsSinceEpoch + DateTime.now().millisecondsSinceEpoch - start;
   }
   PlayScreen.debugHideHud = q['hud'] == '0';
+  PlayScreen.debugChat = q['chatopen'] == '1';
   // clean=1 also drops damage numbers and monster bars (thumbnails).
   WorldRenderer.debugClean = q['clean'] == '1';
   BattleGame.debugLogSfx = q['sfx'] == '1';

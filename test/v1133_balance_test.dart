@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kiem_hiep/core/alchemy.dart';
 import 'package:kiem_hiep/core/gems.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
@@ -13,6 +14,7 @@ import 'package:kiem_hiep/core/world.dart';
 
 void main() {
   ledgerTests();
+  pillTests();
   test('one volley on one target: the first missile in full, the rest a share', () {
     expect(volleyShare(1), 1);
     expect(volleyShare(2), volleyExtraShare);
@@ -78,5 +80,17 @@ void ledgerTests() {
       // Seven such pieces with five Thiên each (the 2026-11-13 save): 77.
       expect(7 * (6 + 5), greaterThan(soulCeiling(3)));
     });
+  });
+}
+
+void pillTests() {
+  test('Uống đầy takes buff pills up to six hours and stops', () {
+    final h = HeroData(name: 'P', hanh: Hanh.kim)..level = 30;
+    final p = pillById['songboi']!;
+    h.pills[p.id] = 25;
+    expect(h.fillPill(p), maxBuffMinutes ~/ p.minutes);
+    expect(h.buffLeft(p.id), maxBuffMinutes * 60);
+    expect(h.pills[p.id], 25 - 18);
+    expect(h.fillPill(p), 0);
   });
 }
