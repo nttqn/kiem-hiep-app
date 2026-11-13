@@ -10,7 +10,9 @@ import '../core/hero.dart';
 import '../core/hero_look.dart';
 import '../core/gold_boss.dart';
 import '../core/hung_thu.dart';
+import '../core/ledger.dart';
 import '../core/ma_vuc.dart';
+import '../core/star_up.dart' show starSoulCost;
 import '../core/tam_ma.dart';
 import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
@@ -43,7 +45,12 @@ class LbEntry {
     int? rk,
     this.look,
     this.st,
+    this.ts = 0,
   }) : rk = rk ?? (rebirths * 100 + level) * 1000;
+
+  /// Hung Thú Tinh Phách locked in worn gear ([soulsInvested], 1.13.3);
+  /// from the worn stars alone on rows of older apps.
+  final int ts;
 
   /// `{uid}_{slot}`.
   final String id;
@@ -105,6 +112,20 @@ class LbEntry {
         look: look,
       );
 
+  /// Tinh Phách behind the ★4 and ★5 of the worn gear in a row's looks.
+  static int _starSouls(Object? look) {
+    final eq = look is Map ? look['eq'] : null;
+    if (eq is! List) return 0;
+    var n = 0;
+    for (final e in eq) {
+      final t = e is Map ? (e['t'] as num?)?.toInt() ?? 0 : 0;
+      for (var s = 0; s < t && s < starSoulCost.length; s++) {
+        n += starSoulCost[s];
+      }
+    }
+    return n;
+  }
+
   /// Rebirths outrank levels: 1 rebirth at level 10 beats level 99.
   int get rank => rebirths * 100 + level;
 
@@ -132,6 +153,7 @@ class LbEntry {
         rk: (m['rk'] as num?)?.toInt(),
         look: m['look'] is Map ? Map<String, dynamic>.from(m['look'] as Map) : null,
         st: m['st'] is List ? [for (final v in m['st'] as List) (v as num).toInt()] : null,
+        ts: (m['ts'] as num?)?.toInt() ?? _starSouls(m['look']),
       );
     } catch (_) {
       return null;
@@ -279,6 +301,7 @@ class Leaderboard extends ChangeNotifier {
       // A floor out of reach of this lực chiến would make the rules refuse
       // the whole row (see tamMaPlausible).
       if (h.tmBest > 0 && tamMaPlausible(h.tmBest, h.power)) 'tm': h.tmBest,
+      'ts': soulsInvested(h.equip.values),
       if (h.maVucBoardValue > 0) 'mv': h.maVucBoardValue,
       if (h.beastBoardValue > 0) 'ht': h.beastBoardValue,
       'mount': h.ridingMount?.id ?? '',
@@ -649,8 +672,15 @@ class Leaderboard extends ChangeNotifier {
 
   /// Rows a hero could really have earned: on the Tâm Ma board, no floor
   /// whose shadow is far past the row's lực chiến (see [tamMaPlausible]).
-  static List<LbEntry> _plausible(LbBoard board, List<LbEntry> rows) =>
-      board == LbBoard.tamMa ? [for (final e in rows) if (tamMaPlausible(e.tm, e.power)) e] : rows;
+  /// No row whose gear holds more Tinh Phách than the game has paid out
+  /// (an edited save, 1.13.3, see [soulCeiling]).
+  static List<LbEntry> _plausible(LbBoard board, List<LbEntry> rows) {
+    final cap = soulCeiling(huntWeekOf(vnDayKey()));
+    return [
+      for (final e in rows)
+        if (e.ts <= cap && (board != LbBoard.tamMa || tamMaPlausible(e.tm, e.power))) e,
+    ];
+  }
 
   /// Other players' heroes with power near [power], as Lôi đài challengers.
   /// Needs Firebase but not a sign-in (the board is public).
@@ -674,7 +704,7 @@ class Leaderboard extends ChangeNotifier {
           .limit(40)
           .get()
           .timeout(const Duration(seconds: 10));
-      rows = [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())];
+      rows = _plausible(LbBoard.power, [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]);
     }
     final out = [
       for (final e in rows)

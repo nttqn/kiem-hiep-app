@@ -44,6 +44,7 @@ import 'tang_bao.dart';
 import 'tower.dart';
 import 'treasure.dart';
 import 'week_goals.dart';
+import 'ledger.dart';
 import 'weekly_hunt.dart';
 import 'world_boss.dart';
 import 'sects.dart';
@@ -3721,8 +3722,19 @@ class HeroData {
       h.freePoints = h.maxPotential;
     }
     h.backfillDaoJade();
+    h.clampEdited();
     h.recompute();
     return h;
+  }
+
+  /// Endgame currencies past what the game could have paid by now (an
+  /// edited save, 1.13.3) are cut down to the ceiling; gear already raised
+  /// with them stays.
+  void clampEdited([String? day]) {
+    final wk = huntWeekOf(day ?? vnDayKey());
+    starStones = math.min(starStones, stoneCeiling(wk, tmBest));
+    beastSouls = math.min(beastSouls, soulCeiling(wk));
+    tienJade = math.min(tienJade, jadeCeiling(wk, daoLv));
   }
 
   /// Potential points spent and unspent; sent with leaderboard rows so the

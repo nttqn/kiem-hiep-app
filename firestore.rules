@@ -57,6 +57,9 @@ service cloud.firestore {
           // 1.13.3: no shadow past 8x the row's lực chiến (tamMaPlausible).
           && (!('tm' in d) || (d.tm is int && d.tm >= 0 && d.tm <= 1000
               && (d.tm <= 1 || 400000 * math.pow(1.05, d.tm - 1) <= d.power * 8)))
+          // 1.13.3: Tinh Phách in worn gear, no more than the game has paid
+          // out by this week (soulCeiling in lib/core/ledger.dart).
+          && (!('ts' in d) || (d.ts is int && d.ts >= 0 && d.ts <= 15 + 14 * (wk - 1)))
           && (!('mv' in d) || (d.mv is int && d.mv >= 0 && d.mv < (wk + 1) * 1000))
           && (!('ht' in d)
               || (d.ht is int && d.ht >= 0 && d.ht % 10000 < 4000 && d.ht < (wk + 1) * 10000))
