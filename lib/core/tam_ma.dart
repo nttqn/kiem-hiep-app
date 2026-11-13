@@ -25,6 +25,14 @@ const double tamMaGrowth = 1.05;
 
 int tamMaPower(int floor) => (tamMaBase * math.pow(tamMaGrowth, floor - 1) / 1000).round() * 1000;
 
+/// The strongest shadow, against the hero's own lực chiến, that a board row
+/// may claim to have beaten (1.13.3). Real top climbers stand near 1.7x
+/// (2.8M on floor 52, 4M on 59); a 600k row on floor 104 (61M, 100x) was
+/// an edited save. The same check is in firestore.rules.
+const double tamMaMaxRatio = 8;
+
+bool tamMaPlausible(int floor, int power) => floor <= 1 || tamMaBase * math.pow(tamMaGrowth, floor - 1) <= power * tamMaMaxRatio;
+
 enum TmAffix { regen, thorns, guard, rage, iron }
 
 class TmAffixDef {

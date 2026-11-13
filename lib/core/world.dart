@@ -50,6 +50,15 @@ const double autoBackRest = 1.0;
 const double dotSkillShare = 0.5;
 const double dotCritShare = 0.5;
 
+/// A fan or ring of missiles from one cast (1.13.3): the first to hit a
+/// target lands in full, every later one of that cast on the same target
+/// for this share. A big boss stood inside used to take all 20+ needles of
+/// Bạo Vũ Lê Hoa at once; crowds still take one each.
+const double volleyExtraShare = 0.25;
+
+/// The share of the [n]th hit (1-based) of one volley on one target.
+double volleyShare(int n) => n <= 1 ? 1 : (World.debugVolleyShare ?? volleyExtraShare);
+
 class Dot {
   Dot(this.kind, this.perTick, this.until, this.next);
   final Status kind;
@@ -180,6 +189,7 @@ class Proj {
     this.skill = false,
     this.knock = 0,
     this.hanh,
+    this.volley,
   });
 
   final bool fromHero;
@@ -200,6 +210,10 @@ class Proj {
   final double statusPower, statusTime;
   final bool skill;
   final double knock;
+
+  /// Hits so far per target (mob uid, -1 the hero) of the cast this missile
+  /// flew out with, shared by its whole volley (see [volleyExtraShare]).
+  final Map<int, int>? volley;
   final Set<int> hit = {};
   bool dead = false;
   double get angle => math.atan2(vy, vx);
@@ -443,6 +457,9 @@ class World {
   // Thống kê of this battle: damage dealt, the biggest hit, and the
   // seconds spent actually fighting (a hit landed in the last 1.5 s).
   double dmgDealt = 0, bestHit = 0, combatTime = 0;
+
+  /// Of [dmgDealt], what poison and burn ticks did (balance probes).
+  double dotDealt = 0;
   double _lastHitAt = -10;
   int _kills0 = 0, _gold0 = 0, _level0 = 0;
 
@@ -477,6 +494,9 @@ class World {
   /// Dev build: force the sky.
   static Weather? debugWeather;
   static bool? debugNight;
+
+  /// Balance probes: overrides [volleyExtraShare].
+  static double? debugVolleyShare;
 
   bool get _outdoors => mode == WorldMode.field || (dungeon?.isRealm ?? false);
 
@@ -822,6 +842,7 @@ class World {
         hitAround(c.x, c.y, k.radius, pw * math.min(4, k.ticks) * 0.5);
       case SkillKind.projectile || SkillKind.radial:
         final n = math.max(1, k.count);
+        final volley = <int, int>{};
         for (var j = 0; j < n; j++) {
           final a = k.kind == SkillKind.radial
               ? ang + math.pi * 2 * j / n
@@ -832,7 +853,8 @@ class World {
               statusPower: k.statusPower,
               statusTime: k.statusTime,
               skill: true,
-              knock: k.knock);
+              knock: k.knock,
+              volley: volley);
         }
       case SkillKind.ground:
         zones.add(zone(t.x, t.y, k.delay, k.ticks));
@@ -877,7 +899,8 @@ class World {
       double statusPower = 0,
       double statusTime = 0,
       bool skill = false,
-      double knock = 0}) {
+      double knock = 0,
+      Map<int, int>? volley}) {
     projs.add(Proj(
       fromHero: true,
       x: c.x + math.cos(ang) * 20,
@@ -895,6 +918,7 @@ class World {
       skill: skill,
       knock: knock,
       hanh: c.def.hanh,
+      volley: volley,
     ));
   }
 
@@ -2299,7 +2323,8 @@ class World {
       double statusPower = 0,
       double statusTime = 0,
       bool skill = false,
-      double knock = 0}) {
+      double knock = 0,
+      Map<int, int>? volley}) {
     final p = player;
     projs.add(Proj(
       fromHero: true,
@@ -2317,6 +2342,7 @@ class World {
       statusTime: statusTime,
       skill: skill,
       knock: knock,
+      volley: volley,
     ));
   }
 
@@ -2362,6 +2388,7 @@ class World {
           }
         }
       case SkillKind.projectile:
+        final volley = <int, int>{};
         for (var k = 0; k < s.count; k++) {
           final a = s.count == 1
               ? ang
@@ -2372,9 +2399,11 @@ class World {
               statusPower: s.statusPower,
               statusTime: s.statusTime,
               skill: true,
-              knock: s.knock);
+              knock: s.knock,
+              volley: volley);
         }
       case SkillKind.radial:
+        final volley = <int, int>{};
         for (var k = 0; k < s.count; k++) {
           final a = ang + math.pi * 2 * k / s.count;
           _fire(a, 560, s.range, 16, s.fx, pw,
@@ -2382,7 +2411,8 @@ class World {
               status: s.status,
               statusPower: s.statusPower,
               statusTime: s.statusTime,
-              skill: true);
+              skill: true,
+              volley: volley);
         }
       case SkillKind.ground:
         double gx, gy;
@@ -3151,9 +3181,11 @@ class World {
           // A tick can crit at the hero's chance, for half the crit bonus.
           final crit = rng.nextDouble() < st.crit;
           final mul = crit ? 1 + (st.critDmg - 1) * dotCritShare : 1.0;
+          final before = dmgDealt;
           _damageMob(m, d.perTick * mul * (1 - mitigation(m.defense, hero.level)),
               crit ? 0xFFFFE08A : (d.kind == Status.poison ? 0xFF9CF06A : 0xFFFF9A4A),
               small: true);
+          dotDealt += dmgDealt - before;
         }
       }
     }
@@ -3343,6 +3375,7 @@ class World {
         if (d < s.radius + heroRadius) _hitHeroBySkill(dmg * hits, r, s);
       case SkillKind.projectile || SkillKind.radial:
         final n = math.max(1, s.count);
+        final volley = <int, int>{};
         for (var k = 0; k < n; k++) {
           final a = s.kind == SkillKind.radial
               ? ang + math.pi * 2 * k / n
@@ -3361,6 +3394,7 @@ class World {
             statusPower: s.statusPower,
             statusTime: s.statusTime,
             hanh: r.hanh,
+            volley: volley,
           ));
         }
       case SkillKind.ground:
@@ -3463,7 +3497,9 @@ class World {
           if (!m.alive || pr.hit.contains(m.uid)) continue;
           if (_d2(m.x, m.y, pr.x, cy) < _sq(m.radius + pr.radius)) {
             pr.hit.add(m.uid);
-            _hitMob(m, pr.power,
+            final v = pr.volley;
+            final n = v == null ? 1 : (v[m.uid] = (v[m.uid] ?? 0) + 1);
+            _hitMob(m, pr.power * volleyShare(n),
                 skill: pr.skill,
                 status: pr.status,
                 statusPower: pr.statusPower,
@@ -3481,7 +3517,9 @@ class World {
           _d2(player.x, player.y, pr.x, cy) <
               _sq(heroRadius + pr.radius)) {
         pr.dead = true;
-        _hurtHero(pr.power, pr.hanh ?? _hanhOfFx(pr.fx));
+        final v = pr.volley;
+        final n = v == null ? 1 : (v[-1] = (v[-1] ?? 0) + 1);
+        _hurtHero(pr.power * volleyShare(n), pr.hanh ?? _hanhOfFx(pr.fx));
         _statusHero(pr.status, pr.statusPower, pr.statusTime);
         fx.add(Fx('spark_${pr.fx}', pr.x, pr.y, life: 0.25));
       }

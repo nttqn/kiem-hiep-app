@@ -11,6 +11,7 @@ import '../core/hero_look.dart';
 import '../core/gold_boss.dart';
 import '../core/hung_thu.dart';
 import '../core/ma_vuc.dart';
+import '../core/tam_ma.dart';
 import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
@@ -275,7 +276,9 @@ class Leaderboard extends ChangeNotifier {
       'wk': h.huntBoardValue,
       if (h.huntLastScore > 0) 'wkLast': h.huntLastScore,
       if (h.dhChamps > 0) 'dhC': h.dhChamps,
-      if (h.tmBest > 0) 'tm': h.tmBest,
+      // A floor out of reach of this lực chiến would make the rules refuse
+      // the whole row (see tamMaPlausible).
+      if (h.tmBest > 0 && tamMaPlausible(h.tmBest, h.power)) 'tm': h.tmBest,
       if (h.maVucBoardValue > 0) 'mv': h.maVucBoardValue,
       if (h.beastBoardValue > 0) 'ht': h.beastBoardValue,
       'mount': h.ridingMount?.id ?? '',
@@ -606,7 +609,7 @@ class Leaderboard extends ChangeNotifier {
     final bans = await _bans();
     final snap = await q.limit(limit).get().timeout(const Duration(seconds: 15));
     final page = LbPage(
-      [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())],
+      _plausible(board, [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]),
       snap.docs.length == limit ? snap.docs.last : null,
     );
     if (after == null) _topCache[key] = (DateTime.now(), page);
@@ -639,10 +642,15 @@ class Leaderboard extends ChangeNotifier {
           const Duration(seconds: 15),
         );
     return (
-      [for (final d in up.docs.reversed) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())],
-      [for (final d in down.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())],
+      _plausible(board, [for (final d in up.docs.reversed) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]),
+      _plausible(board, [for (final d in down.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]),
     );
   }
+
+  /// Rows a hero could really have earned: on the Tâm Ma board, no floor
+  /// whose shadow is far past the row's lực chiến (see [tamMaPlausible]).
+  static List<LbEntry> _plausible(LbBoard board, List<LbEntry> rows) =>
+      board == LbBoard.tamMa ? [for (final e in rows) if (tamMaPlausible(e.tm, e.power)) e] : rows;
 
   /// Other players' heroes with power near [power], as Lôi đài challengers.
   /// Needs Firebase but not a sign-in (the board is public).

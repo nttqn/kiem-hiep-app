@@ -54,7 +54,9 @@ service cloud.firestore {
           // 1.8.0: Tâm Ma best floor; Ma Vực week * 1000 + floor; Hung Thú
           // week * 10000 + difficulty (1-3) * 1000 + speed. None from a week
           // still to come.
-          && (!('tm' in d) || (d.tm is int && d.tm >= 0 && d.tm <= 1000))
+          // 1.13.3: no shadow past 8x the row's lực chiến (tamMaPlausible).
+          && (!('tm' in d) || (d.tm is int && d.tm >= 0 && d.tm <= 1000
+              && (d.tm <= 1 || 400000 * math.pow(1.05, d.tm - 1) <= d.power * 8)))
           && (!('mv' in d) || (d.mv is int && d.mv >= 0 && d.mv < (wk + 1) * 1000))
           && (!('ht' in d)
               || (d.ht is int && d.ht >= 0 && d.ht % 10000 < 4000 && d.ht < (wk + 1) * 10000))
