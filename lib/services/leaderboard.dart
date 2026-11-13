@@ -298,8 +298,8 @@ class Leaderboard extends ChangeNotifier {
       'wk': h.huntBoardValue,
       if (h.huntLastScore > 0) 'wkLast': h.huntLastScore,
       if (h.dhChamps > 0) 'dhC': h.dhChamps,
-      // A floor out of reach of this lực chiến would make the rules refuse
-      // the whole row (see tamMaPlausible).
+      // A floor out of reach of this lực chiến is not sent (see
+      // tamMaPlausible); the board hides such rows from older apps.
       if (h.tmBest > 0 && tamMaPlausible(h.tmBest, h.power)) 'tm': h.tmBest,
       'ts': soulsInvested(h.equip.values),
       if (h.maVucBoardValue > 0) 'mv': h.maVucBoardValue,
