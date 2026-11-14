@@ -123,6 +123,22 @@ class LbEntry {
         look: look,
       );
 
+  /// The worn gear as one string (1.14.0): every piece's slot, name, level,
+  /// rarity, +, star, khai quang, set and gems, with the hệ, Minh Chủ titles
+  /// and souls invested. A copied save played on beside its original
+  /// ("Băng Tuyết" next to MrTuan, 2026-11-14) soon differs in seconds
+  /// played but not in this. Null with fewer than six pieces shown.
+  String? get gearMark {
+    final eq = look?['eq'];
+    if (eq is! List) return null;
+    final parts = [
+      for (final e in eq)
+        if (e is Map) [for (final k in const ['s', 'n', 'l', 'r', 'p', 't', 'g', 'set', 'gm']) '${e[k]}'].join(','),
+    ]..sort();
+    if (parts.length < 6) return null;
+    return 'g$hanh|$dhC|$ts|${parts.join(';')}';
+  }
+
   /// Tinh Phách behind the ★4 and ★5 of the worn gear in a row's looks.
   static int _starSouls(Object? look) {
     final eq = look is Map ? look['eq'] : null;
@@ -714,6 +730,7 @@ class Leaderboard extends ChangeNotifier {
       final keys = [
         if (e.hs != 0) 'h${e.hs}',
         if (e.play >= dupePlaySeconds) 'p${e.hanh}|${e.play}',
+        ?e.gearMark,
       ];
       if (keys.any(seen.contains)) continue;
       seen.addAll(keys);

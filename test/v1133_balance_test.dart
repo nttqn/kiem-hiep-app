@@ -147,4 +147,31 @@ void dedupeTests() {
     expect(heroTag(123456789), isNot(123456789));
     expect(heroTag(0x7fffffff), inInclusiveRange(1, 0x7fffffff));
   });
+
+  test('a copy played on beside its original is told by its worn gear (1.14.0)', () {
+    // The rows of 2026-11-14: same seven pieces, seconds played apart.
+    const eq = [
+      ['0', 'Triều Âm Kiếm', 5, 5], ['2', 'Triều Âm Chiến Bào', 3, 2], ['3', 'Triều Âm Yêu Đái', 3, 1],
+      ['4', 'Triều Âm Hài', 3, 1], ['6', 'Triều Âm Giới Chỉ', 5, 4], ['5', 'Triều Âm Ngọc Bội', 4, 4],
+      ['1', 'Triều Âm Mão', 3, 1],
+    ];
+    Map<String, dynamic> look({bool other = false, bool reorder = false}) => {
+          'eq': [
+            for (final e in reorder ? eq.reversed : eq)
+              {'s': e[0], 'n': e[1], 'l': 99, 'r': 4, 'p': 10, 't': other && e[0] == '0' ? 4 : e[2], 'g': e[3], 'set': 'thuy'},
+          ],
+        };
+    LbEntry row(String id, int play, int power, Map<String, dynamic>? lk, {int hs = 0, int dhC = 2}) => LbEntry(
+        id: id, name: id, hanh: 2, level: 99, rebirths: 6, power: power, tower: 0, play: play, hs: hs,
+        dhC: dhC, ts: 20, look: lk);
+    final rows = [
+      row('ngVHVq_4', 408694, 6521391, look(reorder: true), hs: 1466035699), // Băng Tuyết
+      row('WM4Gs5_1', 413986, 6375977, look()), // MrTuan, an older app: no hs
+      row('a_0', 400000, 6000000, look(other: true)), // one star less on the sword
+      row('b_0', 400001, 5900000, look(), dhC: 0), // other titles
+      row('c_0', 400002, 5800000, null), // no looks (old app)
+      row('d_0', 400003, 5700000, null),
+    ];
+    expect([for (final e in Leaderboard.dedupe(rows)) e.id], ['ngVHVq_4', 'a_0', 'b_0', 'c_0', 'd_0']);
+  });
 }
