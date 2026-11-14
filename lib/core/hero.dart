@@ -105,8 +105,16 @@ const double dodgeCap = 0.35;
 /// Share of uy lực độc/thiêu that lực chiến counts (1.13.4).
 const double powerDotWeight = 0.1;
 const double overCritToCritDmg = 0.5;
-const double overDodgeToHp = 1.0;
 const double overAspdToAtk = 0.1;
+
+/// Né tránh over [dodgeCap] as extra HP (1.13.6): rising, then levelling
+/// off at +[overDodgeHpMax], half of it at [overDodgeHpHalf] over. 1.13.5
+/// gave 1% HP per 1% over with no end, and a thân pháp build (some 1,265
+/// points, dodge near 200%) tripled its HP: 142k on the board.
+const double overDodgeHpMax = 0.4;
+const double overDodgeHpHalf = 0.8;
+
+double overDodgeHp(double over) => over <= 0 ? 0 : overDodgeHpMax * over / (over + overDodgeHpHalf);
 
 double critDmgSoftCap(double extra) => extra <= critSoftFull ? extra : critSoftFull + (extra - critSoftFull) * critSoftRate;
 
@@ -855,7 +863,7 @@ class HeroData {
     st.overCrit = math.max(0, critRaw - critCap);
     st.overDodge = math.max(0, dodgeRaw - dodgeCap);
     st.overAspd = math.max(0, aspdRaw - aspdCap);
-    st.maxHp *= 1 + st.overDodge * overDodgeToHp;
+    st.maxHp *= 1 + overDodgeHp(st.overDodge);
     st.atk = raw * (1 + b(Bonus.atkPct) + st.overAspd * overAspdToAtk);
     st.def = (2 + 1.5 * l + a[2] * 0.5 + g(Stat.def)) * (1 + b(Bonus.defPct));
     st.crit = math.min(critCap, critRaw);

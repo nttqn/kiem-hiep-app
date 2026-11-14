@@ -244,7 +244,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       if (st.overCrit > 0)
                         _stat('Chí mạng dư → ST chí mạng', '+${(st.overCrit * overCritToCritDmg * 100).round()}%'),
                       if (st.overDodge > 0)
-                        _stat('Né tránh dư → Sinh lực', '+${(st.overDodge * overDodgeToHp * 100).round()}%'),
+                        _stat('Né tránh dư → Sinh lực', '+${(overDodgeHp(st.overDodge) * 100).round()}%'),
                       if (st.overAspd > 0)
                         _stat('Tốc đánh dư → Công lực', '+${(st.overAspd * overAspdToAtk * 100).round()}%'),
                       _stat('Tốc chạy', fmt(st.move)),

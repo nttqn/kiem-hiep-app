@@ -115,8 +115,17 @@ void overflowTests() {
     expect(s.overDodge, greaterThan(0));
     expect(s.overAspd, greaterThan(0));
     expect(s.critDmg, closeTo(cd0 + s.overCrit * overCritToCritDmg, 1e-9));
-    expect(s.maxHp, closeTo(hp0 * (1 + s.overDodge * overDodgeToHp), 1e-6));
+    expect(s.maxHp, closeTo(hp0 * (1 + overDodgeHp(s.overDodge)), 1e-6));
     expect(s.atk, greaterThan(atk0));
+  });
+
+  test('dodge past the cap adds HP that levels off (1.13.6)', () {
+    expect(overDodgeHp(0), 0);
+    expect(overDodgeHp(-0.1), 0);
+    expect(overDodgeHp(overDodgeHpHalf), closeTo(overDodgeHpMax / 2, 1e-9));
+    // The 1.265-point thân pháp build of 2026-11-14: about 1.6 over, was +160%.
+    expect(overDodgeHp(1.6), lessThan(0.3));
+    expect(overDodgeHp(100), lessThan(overDodgeHpMax));
   });
 }
 
