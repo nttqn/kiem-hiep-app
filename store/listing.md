@@ -56,6 +56,18 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.14.0, ≤ 500 ký tự)
+1.14.0 – Trợ chiến & Truyền thừa
+• Trợ chiến: gặp ải khó, mời Hảo hữu, đồng môn bang hoặc cao thủ trên bảng xếp hạng vào đánh cùng (3 lượt mỗi ngày). Người được mời nhận Hiệp nghĩa: lượng và danh hiệu.
+• Tự đi nhiệm vụ: khi bật tự đánh, nhân vật tự vào ải và đổi bản đồ theo nhiệm vụ chính, bấm "Ở lại" để dừng.
+• Truyền thừa: tài khoản có nhân vật cấp 60 trở lên thì các nhân vật khác được thêm tới 100% EXP và nhận quà khởi đầu.
+
+## What's new (1.14.0, en-US)
+1.14.0 – Allies & Legacy
+• Call an ally: stuck on a dungeon? Bring in a friend, a guildmate or a top player from the leaderboard to fight beside you (3 calls a day). Allies earn Chivalry points: gold and titles.
+• Auto quest: with auto-fight on, your hero now heads into the quest dungeon or the next map by itself; tap "Stay" to keep farming.
+• Legacy: once one hero reaches level 60, your other heroes get up to 100% more EXP and a starter gift.
+
 ## Có gì mới (bản 1.6.0, ≤ 500 ký tự)
 1.6.0 – Lục chuyển & U Minh Huyết Hải
 • Chuyển sinh lần 6: cần 60 Linh Phách Đơn, mỗi cấp cần nhiều kinh nghiệm hơn nhưng được 10 điểm tiềm năng.
