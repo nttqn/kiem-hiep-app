@@ -370,5 +370,20 @@ service cloud.firestore {
         && request.resource.data.name is string && request.resource.data.name.size() <= 24
         && request.resource.data.day is string && request.resource.data.day.size() == 8;
     }
+
+    // Trợ chiến (1.14.0): Hiệp nghĩa owed to a hero called into a fight,
+    // helps/{toRow}/in/{fromRow}; n counts up (once a day per caller) until
+    // the helper takes and deletes it.
+    match /helps/{to}/in/{from} {
+      allow read, delete: if request.auth != null && to in myRows();
+      allow create, update: if request.auth != null
+        && from in myRows()
+        && !(to in myRows())
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'day', 'n', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.day is string && request.resource.data.day.size() == 8
+        && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 60;
+    }
   }
 }

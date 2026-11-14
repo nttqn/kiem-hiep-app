@@ -26,6 +26,7 @@ import 'gems.dart';
 import 'guild.dart';
 import 'hanh.dart';
 import 'items.dart';
+import 'legacy.dart';
 import 'live_event.dart';
 import 'lore.dart';
 import 'manor.dart';
@@ -592,6 +593,19 @@ class HeroData {
   final Set<String> friendSent = {};
   int friendTaken = 0;
 
+  /// Trợ chiến (1.14.0): the day, rows called in it to help, and the
+  /// Hiệp nghĩa this hero earned ever by being called by others.
+  String helpDay = '';
+  final List<String> helpUsed = [];
+  int hnTotal = 0;
+
+  /// Truyền thừa (1.14.0): the gift from a stronger hero of the same
+  /// account was taken; the bonus itself is worked out on opening the town
+  /// from the other slots ([legacyExp], not saved) and who it comes from.
+  bool legacyTaken = false;
+  double legacyExp = 0;
+  String legacyFrom = '';
+
   /// Tiên Ngọc (1.13.0): what Tiên khí is forged with.
   int tienJade = 0;
 
@@ -620,7 +634,7 @@ class HeroData {
   // knocked out, and the steps already sent (see funnel.dart).
   String bornDay = '';
   int deaths = 0;
-  final Set<String> funnel = {};
+  final Set<String> funnel = {funnelVersion};
 
   // Tân thủ thất nhật: gifts taken and the Vietnam day of the last one.
   int newbieClaimed = 0;
@@ -1791,7 +1805,8 @@ class HeroData {
   double get expMul =>
       math.max(buffLeft('songboi') > 0 ? expPillMul : 1.0, EventBoost(vnDayKey()).exp) *
       fatigueMul(fatigueSec) *
-      (1 + guildPerk);
+      (1 + guildPerk) *
+      (1 + legacyExp);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {
@@ -1815,7 +1830,8 @@ class HeroData {
   }
   /// Monster gold: Tụ Bảo Đan and today's event.
   /// Monster gold: the better of Tụ Bảo Đan and today's event, as for EXP.
-  double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold) * (1 + guildPerk);
+  double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold) * (1 + guildPerk) *
+      (1 + legacyExp * legacyGoldShare);
 
   /// Counts buff time down while playing; true when one ran out.
   bool tickBuffs(double dt) {
@@ -3257,6 +3273,8 @@ class HeroData {
               gBossRuns, gBossWeek, gBossDmg, gBossClaimed, gShopWeek, gShopBought],
         if (friends.isNotEmpty || friendDay.isNotEmpty)
           'fr': [[for (final f in friends) f.toJson()], friendDay, friendSent.toList(), friendTaken],
+        if (helpDay.isNotEmpty || hnTotal > 0) 'hn': [helpDay, helpUsed, hnTotal],
+        if (legacyTaken) 'lg': 1,
         'mail': mailClaimed.toList(),
         if (mailJade.isNotEmpty) 'mj': mailJade.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
@@ -3617,6 +3635,15 @@ class HeroData {
         h.friendTaken = (fr[3] as num).toInt();
       } catch (_) {}
     }
+    final hn = m['hn'];
+    if (hn is List && hn.length >= 3) {
+      try {
+        h.helpDay = hn[0] as String;
+        h.helpUsed.addAll([for (final v in hn[1] as List) '$v']);
+        h.hnTotal = math.max(0, (hn[2] as num).toInt());
+      } catch (_) {}
+    }
+    h.legacyTaken = m['lg'] == 1;
     final tk = m['tk'];
     if (tk is List && tk.isNotEmpty && tk[0] is num) h.tienJade = math.max(0, (tk[0] as num).toInt());
     h.tienBackfilled = tk is List && tk.length > 1 && tk[1] == 1;
@@ -3646,12 +3673,17 @@ class HeroData {
     if (fun is List && fun.length == 3) {
       h.bornDay = fun[0] as String;
       h.deaths = math.max(0, fun[1] as int);
-      h.funnel.addAll([for (final v in fun[2] as List) '$v']);
+      final sent = [for (final v in fun[2] as List) '$v'];
+      h.funnel
+        ..clear()
+        ..addAll(sent);
+      if (!sent.contains(funnelVersion)) h.funnel.addAll(funnelDue(h, ''));
     } else {
       // A hero from before the funnel: count what it already did as sent,
       // so it does not flood the steps of new players.
       h.funnel.addAll(funnelDue(h, ''));
     }
+    h.funnel.add(funnelVersion);
     final newbie = m['newbie'];
     if (newbie is List && newbie.length == 2) {
       h.newbieClaimed = (newbie[0] as int).clamp(0, newbieDays);

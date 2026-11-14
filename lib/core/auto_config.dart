@@ -45,10 +45,19 @@ class AutoConfig {
   bool points = false;
   bool gear = false;
 
-  bool get isDefault =>
-      target == AutoTarget.quest && skillsOff.isEmpty && hpPot == 0.42 && mpPot == 0.22 && loot && saveUltimate;
+  /// Tự đi nhiệm vụ (1.14.0): while the autopilot fights, head for the ải
+  /// or field the story quest needs after a short countdown the player can
+  /// cancel, and go on to the next one after clearing a quest ải. On for
+  /// every hero, old ones too; the funnel showed autopilot players stalling
+  /// at dungeon quests.
+  bool questGo = true;
 
-  List<Object> toJson() => [target.index, skillsOff.toList(), hpPot, mpPot, loot, saveUltimate, points, gear];
+  bool get isDefault =>
+      target == AutoTarget.quest && skillsOff.isEmpty && hpPot == 0.42 && mpPot == 0.22 && loot && saveUltimate &&
+      questGo;
+
+  List<Object> toJson() =>
+      [target.index, skillsOff.toList(), hpPot, mpPot, loot, saveUltimate, points, gear, questGo];
 
   static AutoConfig fromJson(Object? raw) {
     final c = AutoConfig();
@@ -66,6 +75,7 @@ class AutoConfig {
     // Saved before 1.5.0: those two did not exist, and the hero was built by hand.
     c.points = raw.length > 7 && raw[6] == true;
     c.gear = raw.length > 7 && raw[7] == true;
+    c.questGo = raw.length <= 8 || raw[8] != false;
     return c;
   }
 }

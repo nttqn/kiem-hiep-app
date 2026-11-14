@@ -3,8 +3,13 @@ import 'hero.dart';
 /// The new-player funnel: steps every hero passes, sent to analytics once
 /// each (`f_lv10`, `f_q20`, `f_day1`…), so the Events list counts how many
 /// heroes reached each one and shows where players stop.
-const funnelLevels = [3, 5, 10, 15, 20, 30, 40, 50, 60, 80, 99];
-const funnelQuests = [3, 10, 20, 30, 40, 56];
+const funnelLevels = [3, 5, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 99];
+const funnelQuests = [3, 5, 10, 15, 20, 25, 30, 40, 56];
+
+/// Kept in [HeroData.funnel] once a save has met the 1.14.0 step list
+/// (12/25/35/45, quests 5/15/25 added): a hero from before gets the new
+/// steps it already passed marked as sent, so they count new progress only.
+const funnelVersion = 'f_v2';
 
 /// Days after creation the hero was played again on.
 const funnelDays = [1, 2, 3, 7];

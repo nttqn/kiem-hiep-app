@@ -571,6 +571,14 @@ Future<void> main() async {
     h.refreshDaily(todayKey());
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
+    // legacy=<cs>: a level-99 hero with that many rebirths in slot 1
+    // (Truyền thừa, 1.14.0).
+    final lg = int.tryParse(q['legacy'] ?? '');
+    if (lg != null) {
+      SaveService.instance.slots[1] = HeroData(name: 'Lão Kiếm Khách', hanh: Hanh.thuy)
+        ..level = 99
+        ..rebirths = lg;
+    }
     SaveService.instance.autoFight = q['auto'] != '0';
     final away = int.tryParse(q['away'] ?? '');
     if (away != null) SaveService.instance.pendingAway = Duration(minutes: away);
@@ -583,7 +591,9 @@ Future<void> main() async {
     'gboss' => PlayScreen.dungeon(goldBossDef()),
     'dungeon' => PlayScreen.dungeon(q['tf'] != null
         ? towerFloor(int.parse(q['tf']!))
-        : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first),
+        : dungeonById[q['d'] ?? 'a1'] ?? dungeons.first,
+        // helper=1: Trợ chiến opens as the fight starts (with lb=1).
+        callHelper: q['helper'] == '1'),
     'rank' => const LeaderboardScreen(),
     'chat' => const ChatScreen(),
     'challenge' => ChallengeScreen(tab: int.tryParse(q['tab'] ?? '') ?? 0),

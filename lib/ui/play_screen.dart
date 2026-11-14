@@ -8,12 +8,15 @@ import 'package:flutter/services.dart';
 import '../core/content.dart';
 import '../core/gold_boss.dart';
 import '../core/guild.dart';
+import '../core/helper.dart';
 import '../core/newbie.dart';
+import '../core/quest_go.dart';
 import '../core/realm.dart';
 import '../core/stats.dart';
 import '../core/tower.dart';
 import '../core/world_boss.dart';
 import '../services/analytics.dart';
+import '../services/guild.dart';
 import '../services/leaderboard.dart';
 import '../core/hero.dart';
 import '../core/ma_vuc.dart';
@@ -35,13 +38,19 @@ import 'land_splash.dart';
 import 'theme.dart';
 import 'auto_dialog.dart';
 import 'chat_screen.dart';
+import 'helper_picker.dart';
 
 class PlayScreen extends StatefulWidget {
-  const PlayScreen.field(MapDef this.map, {super.key}) : dungeon = null;
-  const PlayScreen.dungeon(DungeonDef this.dungeon, {super.key}) : map = null;
+  const PlayScreen.field(MapDef this.map, {super.key})
+      : dungeon = null,
+        callHelper = false;
+  const PlayScreen.dungeon(DungeonDef this.dungeon, {super.key, this.callHelper = false}) : map = null;
 
   final MapDef? map;
   final DungeonDef? dungeon;
+
+  /// Open Trợ chiến as the fight starts (a retry after a loss, 1.14.0).
+  final bool callHelper;
 
   /// Dev build only: battle without the HUD, for thumbnails.
   static bool debugHideHud = false;
@@ -126,6 +135,11 @@ class _PlayScreenState extends State<PlayScreen> {
     HardwareKeyboard.instance.addHandler(_onKey);
     _autosave = Timer.periodic(const Duration(seconds: 20), (_) => SaveService.instance.save());
     game.hudTick.addListener(_pruneToasts);
+    game.hudTick.addListener(_questTick);
+    _questDungeon = d != null &&
+        !hero.mainLocked &&
+        hero.currentMain?.type == QuestType.dungeon &&
+        hero.currentMain?.target == d.id;
     final name = widget.dungeon?.name ?? widget.map!.name;
     _splash = !PlayScreen.debugHideHud &&
         (d == null || !(d.isTower || d.isWorldBoss || d.isArena));
@@ -139,6 +153,47 @@ class _PlayScreenState extends State<PlayScreen> {
   void _splashDone() {
     setState(() => _splash = false);
     game.halted = _paused || _fishing || _dead || _cleared != null;
+    if (widget.callHelper) Future.microtask(_pickHelper);
+  }
+
+  // ------------------------------------------------------------ Trợ chiến
+
+  bool _picking = false;
+
+  bool get _helperHere => widget.dungeon != null && helperAllowed(widget.dungeon!);
+
+  /// Shows who may be called in, the fight held meanwhile.
+  Future<void> _pickHelper() async {
+    if (_picking || !mounted || !world.canCallHelper) return;
+    final day = vnDayKey();
+    if (hero.helpsLeft(day) <= 0) {
+      _toast('Hết lượt mời trợ chiến hôm nay', const Color(0xFFFF8A7A));
+      return;
+    }
+    _picking = true;
+    game.halted = true;
+    _keys.clear();
+    world.input
+      ..attack = false
+      ..moveX = 0
+      ..moveY = 0;
+    final p = await showHelperPicker(context, hero);
+    _picking = false;
+    if (!mounted) return;
+    if (p != null && world.canCallHelper && hero.canCallHelper(p.entry.id, day)) {
+      world.callHelper(p.entry.toRival(), helperMul(p.entry.power, hero.power));
+      hero.useHelper(p.entry.id, day);
+      GuildService.instance.sendHelp(hero, p.entry.id, day);
+      Analytics.instance.log('helper_call', {
+        'src': p.source.name,
+        'd': widget.dungeon!.id,
+        'level': hero.level,
+        'mul': (helperMul(p.entry.power, hero.power) * 10).round(),
+      });
+      SaveService.instance.save();
+    }
+    setState(() {});
+    game.halted = _paused || _fishing || _dead || _cleared != null || _splash;
   }
 
   Widget _splashView() {
@@ -172,6 +227,7 @@ class _PlayScreenState extends State<PlayScreen> {
     _bannerTimer?.cancel();
     _introTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
+    game.hudTick.removeListener(_questTick);
     // Walking out of a duel concedes it (a khảo hạch or Độ kiếp can just be
     // retried; a Tỉ thí just ends, its turn spent).
     final d = widget.dungeon;
@@ -272,6 +328,114 @@ class _PlayScreenState extends State<PlayScreen> {
   void _logRun(RunResult r) {
     _logged = true;
     _records = hero.logRun(world.runSummary(r), world.combatTime);
+  }
+
+  // ------------------------------------------------------------ quest go
+
+  /// Seconds the autopilot waits before heading off for the story quest.
+  static const _goDelay = 6.0;
+
+  /// This run is the story quest's ải: after a clear, the next stop.
+  bool _questDungeon = false;
+
+  /// The stop the countdown runs for, when it fires (on [_now]), and the
+  /// stop the player chose to stay away from for this visit.
+  String? _goId;
+  double? _goAt;
+  String? _goStay;
+
+  /// The story quest's next stop seen from here: on a plain field (not in a
+  /// bí cảnh), or after a quest ải was cleared.
+  QuestGo? get _questGo {
+    final d = widget.dungeon;
+    if (d == null) return world.realm == null ? questGo(hero, hereMap: world.map.id) : null;
+    if (_questDungeon && _cleared == true) return questGo(hero);
+    return null;
+  }
+
+  bool get _autoGo => world.auto && hero.autoCfg.questGo;
+
+  /// Runs the countdown on every HUD tick: held while anything is open,
+  /// restarted when the stop changes, off when the player said stay.
+  void _questTick() {
+    if (_going || !mounted) return;
+    final g = _questGo;
+    final blocked =
+        _paused || _fishing || _dead || _chat || _splash || _adBusy || _picking || (_cleared == null && game.halted);
+    if (g == null || !_autoGo || g.id == _goStay || blocked) {
+      if (_goAt != null || (g == null && _goId != null)) {
+        setState(() {
+          _goAt = null;
+          if (g == null) _goId = null;
+        });
+      }
+      return;
+    }
+    if (g.id != _goId || _goAt == null) {
+      setState(() {
+        _goId = g.id;
+        _goAt = _now + (_cleared == true ? _goDelay + 2 : _goDelay);
+      });
+      return;
+    }
+    if (_now >= _goAt!) {
+      _goTo(g, auto: true);
+    } else if (_cleared != null) {
+      // The result panel is not rebuilt by the HUD tick.
+      final left = (_goAt! - _now).ceil();
+      if (left != _goLeft) setState(() => _goLeft = left);
+    }
+  }
+
+  int _goLeft = 0;
+
+  bool _going = false;
+
+  void _goTo(QuestGo g, {bool auto = false}) {
+    if (_going) return;
+    _going = true;
+    _goAt = null;
+    _goId = null;
+    Analytics.instance.log('quest_go',
+        {'to': g.id, 'auto': auto ? 1 : 0, 'q': hero.mainQuest, 'level': hero.level});
+    SaveService.instance.save();
+    Navigator.of(context).pushReplacement(fadeRoute(
+        g.dungeon != null ? PlayScreen.dungeon(g.dungeon!) : PlayScreen.field(g.map!)));
+  }
+
+  /// Under the quest tracker: the way to the next stop, with the countdown
+  /// and a "stay" while the autopilot is about to leave.
+  Widget _questGoView(QuestGo g) {
+    final left = _goAt == null ? null : math.max(0, (_goAt! - _now).ceil());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LButton(
+              label: left == null ? g.label : '${g.label} ($left)',
+              icon: g.dungeon != null ? Icons.fort : Icons.directions_walk,
+              small: true,
+              color: const Color(0xFF8A5A10),
+              onTap: () => _goTo(g),
+            ),
+            if (left != null) ...[
+              const SizedBox(width: 6),
+              LButton(label: 'Ở lại', small: true, onTap: () => setState(() {
+                    _goStay = g.id;
+                    _goAt = null;
+                  })),
+            ],
+          ],
+        ),
+        if (left != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('Tự đánh sẽ đi làm nhiệm vụ', style: small.copyWith(fontSize: 10.5, color: creamDim)),
+          ),
+      ],
+    );
   }
 
   void _pruneToasts() {
@@ -690,7 +854,29 @@ class _PlayScreenState extends State<PlayScreen> {
         Positioned(
             left: 8,
             top: 80,
-            child: world.realm != null ? RealmTracker(world: world) : QuestTracker(hero: hero)),
+            child: world.realm != null
+                ? RealmTracker(world: world)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      QuestTracker(hero: hero),
+                      if (_questGo case final g? when widget.dungeon == null) ...[
+                        const SizedBox(height: 4),
+                        _questGoView(g),
+                      ],
+                      if (_helperHere && world.canCallHelper && !_dead && _cleared == null) ...[
+                        const SizedBox(height: 4),
+                        LButton(
+                          label: 'Trợ chiến (${hero.helpsLeft(vnDayKey())})',
+                          icon: Icons.group_add,
+                          small: true,
+                          color: const Color(0xFF2E6A8A),
+                          enabled: hero.helpsLeft(vnDayKey()) > 0,
+                          onTap: _pickHelper,
+                        ),
+                      ],
+                    ],
+                  )),
         Positioned(
           left: 0,
           right: 0,
@@ -1176,8 +1362,45 @@ class _PlayScreenState extends State<PlayScreen> {
                   })
                 else if (_doubled)
                   Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
-              ] else
+              ] else ...[
                 Text('Hãy luyện thêm cấp, nâng trang bị rồi quay lại.', style: body),
+                // 1.14.0: stuck at an ải, call a stronger player in.
+                if (_helperHere && hero.helpsLeft(vnDayKey()) > 0) ...[
+                  const SizedBox(height: 10),
+                  LButton(
+                    label: 'Đánh lại cùng trợ chiến',
+                    icon: Icons.group_add,
+                    width: 280,
+                    color: const Color(0xFF2E6A8A),
+                    onTap: () {
+                      if (_now - _resultAt < 1) return;
+                      SaveService.instance.save();
+                      Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(d, callHelper: true)));
+                    },
+                  ),
+                ],
+              ],
+              if (_questGo case final g? when ok) ...[
+                const SizedBox(height: 10),
+                LButton(
+                  label: 'Tiếp nhiệm vụ: ${g.label}${_goAt != null ? ' ($_goLeft)' : ''}',
+                  icon: Icons.auto_stories,
+                  width: 320,
+                  color: const Color(0xFF8A5A10),
+                  onTap: () {
+                    if (_now - _resultAt < 1) return;
+                    _goTo(g);
+                  },
+                ),
+                if (_goAt != null)
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _goStay = g.id;
+                      _goAt = null;
+                    }),
+                    child: Text('Không tự đi', style: small.copyWith(color: creamDim)),
+                  ),
+              ],
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

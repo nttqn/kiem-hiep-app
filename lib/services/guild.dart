@@ -582,4 +582,70 @@ class GuildService extends ChangeNotifier {
     }
     await _db.collection('gifts').doc(row).collection('in').doc(from).delete().timeout(_t);
   }
+
+  // ------------------------------------------------------------ Trợ chiến
+
+  /// In-memory `helps` for tests: to row → from row → times.
+  final Map<String, Map<String, int>> dHelps = {};
+
+  /// Tells row [to] that [h] called them into a fight: one Hiệp nghĩa,
+  /// counted up in `helps/{to}/in/{fromRow}` until they take it (1.14.0).
+  /// Needs a sign-in; false when it could not be written.
+  Future<bool> sendHelp(HeroData h, String to, String day) async {
+    final u = uid, row = myRow;
+    // Never one of this account's own heroes.
+    if (u == null || row == null || to.startsWith('${u}_')) return false;
+    if (debug) {
+      final m = dHelps[to] ??= {};
+      m[row] = (m[row] ?? 0) + 1;
+      return true;
+    }
+    try {
+      await _db.collection('helps').doc(to).collection('in').doc(row).set({
+        'uid': u,
+        'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
+        'hanh': h.hanh.index,
+        'level': h.level,
+        'day': day,
+        'n': FieldValue.increment(1),
+        'at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(_t);
+      return true;
+    } catch (e) {
+      debugPrint('help failed: $e');
+      return false;
+    }
+  }
+
+  /// Takes every Hiệp nghĩa waiting for this hero: (times, names of those
+  /// who called), the docs removed. (0, []) when none or offline.
+  Future<(int, List<String>)> takeHelps() async {
+    final row = myRow;
+    if (row == null) return (0, const <String>[]);
+    if (debug) {
+      final m = dHelps.remove(row) ?? {};
+      return (m.values.fold<int>(0, (a, b) => a + b), m.keys.toList());
+    }
+    try {
+      final col = _db.collection('helps').doc(row).collection('in');
+      final snap = await col.limit(50).get().timeout(_t);
+      if (snap.docs.isEmpty) return (0, const <String>[]);
+      var n = 0;
+      final names = <String>[];
+      final batch = _db.batch();
+      for (final d in snap.docs) {
+        // Each caller calls a hero at most once a day; a doc left a long
+        // time still counts no more than a month of calls.
+        n += ((d.data()['n'] as num?)?.toInt() ?? 1).clamp(1, 31);
+        names.add(d.data()['name'] as String? ?? '?');
+        batch.delete(d.reference);
+      }
+      // Paid only once they are gone, so nothing is paid twice.
+      await batch.commit().timeout(_t);
+      return (n, names);
+    } catch (e) {
+      debugPrint('helps read failed: $e');
+      return (0, const <String>[]);
+    }
+  }
 }

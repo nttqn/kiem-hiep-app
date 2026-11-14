@@ -275,7 +275,8 @@ void main() {
       final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
       expect(back.bornDay, '20261101');
       expect(back.deaths, 3);
-      expect(back.funnel, {'f_lv3'});
+      // Plus the 1.14.0 step-list mark.
+      expect(back.funnel, {'f_lv3', funnelVersion});
     });
   });
 

@@ -754,6 +754,35 @@ class Leaderboard extends ChangeNotifier {
     return out;
   }
 
+  /// Trợ chiến (1.14.0): other players' heroes at least about as strong as
+  /// [power] (up to four times), weakest first; wider when that is thin.
+  /// Needs Firebase but not a sign-in.
+  Future<List<LbEntry>> helperPool(int power) async {
+    final dbg = debugEntries;
+    final me = myUid;
+    bool mine(LbEntry e) => me != null && e.id.startsWith('${me}_');
+    if (dbg != null) return [for (final e in dbg) if (!mine(e) && e.power >= power * 0.9) e];
+    if (!_cloud.available) return const [];
+    final c = _helperCache;
+    if (c != null && DateTime.now().difference(c.$1) < _poolFresh && (power - c.$2).abs() <= c.$2 * 0.1) return c.$3;
+    final bans = await _bans();
+    Future<List<LbEntry>> read(int? upper, int limit) async {
+      Query<Map<String, dynamic>> q = _col.where('power', isGreaterThanOrEqualTo: (power * 0.9).round());
+      if (upper != null) q = q.where('power', isLessThanOrEqualTo: upper);
+      final snap = await q.orderBy('power').limit(limit).get().timeout(const Duration(seconds: 10));
+      return _plausible(LbBoard.power, [
+        for (final d in snap.docs)
+          if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data()),
+      ]).where((e) => !mine(e)).toList();
+    }
+    var rows = await read(power * 4, 30);
+    if (rows.length < 3) rows = await read(null, 20);
+    _helperCache = (DateTime.now(), power, rows);
+    return rows;
+  }
+
+  (DateTime, int, List<LbEntry>)? _helperCache;
+
   /// 1-based place a value of [value] would hold on [board].
   Future<int?> placeOf(LbBoard board, int value) async {
     final dbg = debugEntries;

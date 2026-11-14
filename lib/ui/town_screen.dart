@@ -10,12 +10,16 @@ import '../core/fatigue.dart';
 import '../core/festival.dart';
 import '../core/gold_boss.dart';
 import '../core/guide.dart';
+import '../core/helper.dart';
+import '../core/legacy.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
 import '../core/hero.dart';
 import '../core/week_goals.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
+import '../services/analytics.dart';
+import '../services/guild.dart';
 import '../services/leaderboard.dart';
 import '../services/mail.dart';
 import '../services/notify.dart';
@@ -66,6 +70,7 @@ class _TownScreenState extends State<TownScreen> {
   void initState() {
     super.initState();
     h.refreshDaily(todayKey());
+    applyLegacy(h, SaveService.instance.slots, SaveService.instance.active);
     SaveService.instance.save();
     // Play screens replace the list that opened them, so refresh on saves.
     SaveService.instance.addListener(_refresh);
@@ -83,9 +88,12 @@ class _TownScreenState extends State<TownScreen> {
       // Lời mở đầu, then straight into the first fight (the guide stays in
       // Cài đặt for later).
       final go = await showPrologue(context, h);
+      await _legacyGift();
       if (go && mounted) _goQuest();
       return;
     }
+    await _legacyGift();
+    await _hiepNghia();
     if (away != null) {
       final r = offlineReward(h, away);
       if (r != null && mounted) await showOfflineDialog(context, h, r);
@@ -112,6 +120,63 @@ class _TownScreenState extends State<TownScreen> {
     // Ask for notifications once the player has stuck around a little.
     if (h.level >= 5 || h.rebirths > 0) await NotifyService.instance.askOnce();
     if (mounted) setState(() {});
+  }
+
+  Future<void> _gotDialog(String title, String lead, List<String> lines) async {
+    if (!mounted || lines.isEmpty) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        backgroundColor: lacquer,
+        title: Text(title, style: titleStyle(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(lead, style: body),
+            const SizedBox(height: 6),
+            for (final l in lines) Text('• $l', style: bold.copyWith(color: goldLight)),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+      ),
+    );
+  }
+
+  /// Truyền thừa (1.14.0): a young hero's one-time gift from the account's
+  /// strongest other hero.
+  Future<void> _legacyGift() async {
+    if (!legacyGiftReady(h)) return;
+    final src = legacySource(SaveService.instance.slots, SaveService.instance.active);
+    if (src == null) return;
+    final lines = takeLegacyGift(h, src);
+    await SaveService.instance.save();
+    Analytics.instance.log('legacy_gift', {'from_cs': src.rebirths, 'bonus': (h.legacyExp * 100).round()});
+    await _gotDialog(
+      'Truyền thừa',
+      '${src.name} truyền lại kinh nghiệm giang hồ cho ${h.name}: nhận thêm '
+          '${(h.legacyExp * 100).round()}% EXP quái cho tới khi theo kịp ${src.name}.',
+      lines,
+    );
+  }
+
+  /// Hiệp nghĩa (1.14.0): times other players called this hero into a
+  /// fight since the last look, paid once. At most every few minutes.
+  static final Map<int, DateTime> _hnLooked = {};
+
+  Future<void> _hiepNghia() async {
+    final slot = SaveService.instance.active;
+    final last = _hnLooked[slot];
+    if (last != null && DateTime.now().difference(last) < const Duration(minutes: 5)) return;
+    if (GuildService.instance.myRow == null) return;
+    _hnLooked[slot] = DateTime.now();
+    final (n, names) = await GuildService.instance.takeHelps();
+    if (n <= 0 || !mounted) return;
+    final lines = h.takeHiepNghia(n);
+    await SaveService.instance.save();
+    final who = names.length <= 3 ? names.join(', ') : '${names.take(3).join(', ')} và ${names.length - 3} người khác';
+    await _gotDialog('Hiệp nghĩa', '$who đã mời ${h.name} trợ chiến.', lines);
   }
 
   /// Last week's Săn quái place and its reward, once the board can be
@@ -530,6 +595,14 @@ class _TownScreenState extends State<TownScreen> {
                   ? 'Mệt mỏi: EXP quái ${(fatigueMul(h.fatigueSec) * 100).round()}%'
                   : 'Đã luyện ${fatigueLabel(h.fatigueSec)} hôm nay',
               style: small.copyWith(fontSize: 11, color: const Color(0xFFF0C060)),
+            ),
+          // Truyền thừa (1.14.0) from a stronger hero of this account.
+          if (h.legacyExp > 0)
+            Text(
+              'Truyền thừa: +${(h.legacyExp * 100).round()}% EXP quái (từ ${h.legacyFrom})',
+              style: small.copyWith(fontSize: 11, color: const Color(0xFF9FE0C0)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           const SizedBox(height: 6),
           if (h.daoOpen && h.expFull)

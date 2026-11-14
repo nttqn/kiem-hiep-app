@@ -12,6 +12,7 @@ import 'fishing.dart';
 import 'gems.dart';
 import 'gold_sets.dart';
 import 'hanh.dart';
+import 'helper.dart';
 import 'hero.dart';
 import 'hung_thu.dart';
 import 'items.dart';
@@ -107,10 +108,27 @@ class PetActor {
 /// The hiệp khách along with the hero: monsters ignore them; they pick the
 /// hero's fights and use their sect's skills.
 class CompanionActor {
-  CompanionActor(this.def, this.bond, this.x, this.y)
-      : skillCd = List.filled(def.sect.skills.length, 0);
-  final CompanionDef def;
+  CompanionActor(CompanionDef this.def, this.bond, this.x, this.y)
+      : ally = null,
+        mul = 1,
+        skillCd = List.filled(def.sect.skills.length, 0);
+
+  /// Trợ chiến (1.14.0): another player's hero called in, hitting at [mul]
+  /// ([helperMul]) of a full-hảo-cảm companion.
+  CompanionActor.ally(ArenaRival this.ally, this.mul, this.x, this.y)
+      : def = null,
+        bond = 10,
+        skillCd = List.filled(sectOf(ally.hanh).skills.length, 0);
+  final CompanionDef? def;
+  final ArenaRival? ally;
+  final double mul;
   final int bond;
+
+  SectDef get sect => def?.sect ?? sectOf(ally!.hanh);
+  Hanh get hanh => def?.hanh ?? ally!.hanh;
+  String get name => def?.name ?? ally!.name;
+  double get hitMul => ally != null ? helperHit * mul : companionHit(bond);
+  double get skillMul => ally != null ? helperSkill * mul : companionSkillMul(bond);
   double x, y;
   double face = 1;
   double walk = 0;
@@ -697,11 +715,33 @@ class World {
         : CompanionActor(def, hero.companionBonds[def.id] ?? 1, player.x - 34, player.y - 34);
   }
 
-  void _updateCompanion(double dt) {
-    final c = companion;
-    if (c == null) return;
+  /// Trợ chiến (1.14.0): another player's hero called into this ải.
+  CompanionActor? helper;
+
+  /// Whether an ally may be called in here now.
+  bool get canCallHelper => dungeon != null && helperAllowed(dungeon!) && helper == null && !finished && player.alive;
+
+  /// Brings [r] in beside the hero, hitting at [mul] ([helperMul]).
+  void callHelper(ArenaRival r, double mul) {
+    if (!canCallHelper) return;
     final p = player;
-    final s = c.def.sect;
+    final c = CompanionActor.ally(r, mul, p.x + 30 * p.face, p.y + 30);
+    helper = c;
+    fx.add(Fx('spark_mob_${r.hanh.name}', c.x, c.y - 20, life: 0.6));
+    _sfx('levelup');
+    events.add(GameEvent(EvKind.notice, text: '${r.name} đến trợ chiến!', color: r.hanh.color, big: true));
+  }
+
+  void _updateCompanion(double dt) {
+    final c = companion, hp = helper;
+    if (c != null) _updateAlly(c, dt, -34);
+    if (hp != null) _updateAlly(hp, dt, 30);
+  }
+
+  /// Moves and fights for one ally; [dy] keeps them apart beside the hero.
+  void _updateAlly(CompanionActor c, double dt, double dy) {
+    final p = player;
+    final s = c.sect;
     final melee = s.basic == BasicKind.melee;
     if (c.attackAnim > 0) c.attackAnim = math.max(0, c.attackAnim - dt * 3);
     c.cd -= dt;
@@ -720,7 +760,7 @@ class World {
     }
     if (!p.alive) t = null;
     // Walk into reach of the target, else keep beside the hero.
-    var tx = p.x - 34 * p.face, ty = p.y - 34;
+    var tx = p.x - 34 * p.face, ty = p.y + dy;
     var stop = 10.0;
     if (t != null) {
       tx = t.x;
@@ -730,7 +770,7 @@ class World {
     final d = _dist(c.x, c.y, tx, ty);
     if (_dist(c.x, c.y, p.x, p.y) > 650) {
       c.x = p.x - 34 * p.face;
-      c.y = p.y - 34;
+      c.y = p.y + dy;
       c.moving = false;
     } else if (d > stop) {
       final sp = math.min(d - stop, math.max(st.move, 200.0) * 1.1 * dt);
@@ -752,12 +792,12 @@ class World {
     c.cd = companionHitCd;
     c.attackAnim = 1;
     final ang = math.atan2(t.y - c.y, t.x - c.x);
-    final pw = companionHit(c.bond);
+    final pw = c.hitMul;
     if (melee) {
       fx.add(Fx(s.basicFx, c.x, c.y, life: 0.22, angle: ang, radius: s.basicRange + 10, spread: 1.6));
       for (final m in mobs) {
         if (m.alive && _inArcFrom(c.x, c.y, m, ang, s.basicRange + m.radius, 1.6)) {
-          _hitMob(m, pw, as: c.def.hanh);
+          _hitMob(m, pw, as: c.hanh);
         }
       }
     } else {
@@ -768,7 +808,7 @@ class World {
   /// Casts one of [c]'s ready skills at [t] (some help the hero instead);
   /// false when none suits right now.
   bool _companionSkill(CompanionActor c, Mob t, double dist) {
-    final s = c.def.sect;
+    final s = c.sect;
     final p = player;
     final hp = p.hp / p.maxHp;
     final hurt = time - p.lastHurt < 3;
@@ -790,14 +830,17 @@ class World {
     final i = ready.firstWhere((k) => s.skills[k].ultimate, orElse: () => ready[rng.nextInt(ready.length)]);
     final k = s.skills[i];
     final lv = (hero.level ~/ 8).clamp(1, maxSkillLevel);
-    final pw = k.powerAt(lv) * companionSkillMul(c.bond);
-    final h = c.def.hanh;
+    // Heals and guards stay at a companion's strength: a much stronger
+    // ally must not make the hero unkillable.
+    final support = k.kind == SkillKind.heal || k.kind == SkillKind.guard || k.kind == SkillKind.shield;
+    final pw = k.powerAt(lv) * (support ? companionSkillMul(c.bond) : c.skillMul);
+    final h = c.hanh;
     c.skillCd[i] = time + k.cooldown * companionSkillCd;
     c.next = time + 1.4 + rng.nextDouble();
     c.attackAnim = 1;
     final ang = math.atan2(t.y - c.y, t.x - c.x);
     _sfx(k.fx);
-    if (k.ultimate) events.add(GameEvent(EvKind.notice, text: '${c.def.name}: ${k.name}!', color: h.color));
+    if (k.ultimate) events.add(GameEvent(EvKind.notice, text: '${c.name}: ${k.name}!', color: h.color));
     void hit(Mob m, double power) => _hitMob(m, power,
         skill: true,
         status: k.status,
@@ -917,7 +960,7 @@ class World {
       statusTime: statusTime,
       skill: skill,
       knock: knock,
-      hanh: c.def.hanh,
+      hanh: c.hanh,
       volley: volley,
     ));
   }

@@ -76,6 +76,7 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
                       () => set(() => c.saveUltimate = !c.saveUltimate)),
                   chip('Tự cộng điểm, học chiêu khi lên cấp', c.points, () => set(() => c.points = !c.points)),
                   chip('Tự mặc đồ tốt hơn khi nhặt', c.gear, () => set(() => c.gear = !c.gear)),
+                  chip('Tự đi nhiệm vụ (vào ải, đổi bản đồ)', c.questGo, () => set(() => c.questGo = !c.questGo)),
                 ]),
               ],
             ),

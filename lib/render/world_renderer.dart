@@ -195,6 +195,8 @@ class WorldRenderer {
     if (pt != null) items.add(_Drawable(pt.y, pet: true));
     final comp = w.companion;
     if (comp != null) items.add(_Drawable(comp.y, companion: true));
+    final help = w.helper;
+    if (help != null) items.add(_Drawable(help.y, helper: true));
     items.sort((a, b) => a.y.compareTo(b.y));
     for (final it in items) {
       if (it.prop != null) {
@@ -207,6 +209,8 @@ class WorldRenderer {
         _drawPet(c, pt!, t);
       } else if (it.companion) {
         _drawCompanion(c, comp!, t);
+      } else if (it.helper) {
+        _drawCompanion(c, help!, t);
       } else {
         _drawHero(c, w, t);
       }
@@ -585,25 +589,33 @@ class WorldRenderer {
 
   void _drawCompanion(Canvas c, CompanionActor a, double t) {
     final d = a.def;
+    final ally = a.ally;
     c.save();
     c.translate(a.x, a.y);
     drawShadow(c, 15);
     // A ring in their phase colour and their name mark them as a friend.
     c.drawOval(Rect.fromCenter(center: Offset.zero, width: 38, height: 13),
         Paint()
-          ..color = Color(d.hanh.color).withValues(alpha: 0.45)
+          ..color = Color(a.hanh.color).withValues(alpha: ally != null ? 0.75 : 0.45)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5);
+          ..strokeWidth = ally != null ? 2.2 : 1.5);
+    if (ally != null) drawRebirthAura(c, ally.rebirths, t);
+    final mount = ally?.mountDef;
     if (!debugClean) {
-      final tp = _label(d.name, 0xFFB8F0C8, 10.5);
-      tp.paint(c, Offset(-tp.width / 2, -86));
+      // A called-in player's name in gold, above any mount.
+      final tp = _label(a.name, ally != null ? 0xFFFFE08A : 0xFFB8F0C8, 10.5);
+      tp.paint(c, Offset(-tp.width / 2, -86 - (mount != null ? mountSeatOf(mount) : 0)));
     }
     c.scale(a.face, 1);
-    drawChibi(c, companionLook(d, a.bond),
+    if (mount != null) {
+      drawMount(c, mount, walk: a.walk, moving: a.moving, t: t);
+      c.translate(0, -mountSeatOf(mount));
+    }
+    drawChibi(c, ally != null ? rivalLook(ally) : companionLook(d!, a.bond),
         walk: a.walk,
-        moving: a.moving,
+        moving: a.moving && mount == null,
         attack: a.attackAnim,
-        cast: d.sect.basic == BasicKind.ranged,
+        cast: a.sect.basic == BasicKind.ranged,
         t: t + 1.3);
     c.restore();
   }
@@ -628,7 +640,9 @@ class WorldRenderer {
 }
 
 class _Drawable {
-  _Drawable(this.y, {this.prop, this.poi, this.mob, this.hero = false, this.pet = false, this.companion = false});
+  _Drawable(this.y,
+      {this.prop, this.poi, this.mob, this.hero = false, this.pet = false, this.companion = false, this.helper = false});
+  final bool helper;
   final double y;
   final Prop? prop;
   final Poi? poi;
