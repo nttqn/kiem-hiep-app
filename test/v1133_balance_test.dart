@@ -131,15 +131,20 @@ void overflowTests() {
 
 void dedupeTests() {
   test('one save copied onto several accounts shows once on the boards', () {
-    LbEntry row(String id, String name, int play, int power) =>
-        LbEntry(id: id, name: name, hanh: 2, level: 99, rebirths: 6, power: power, tower: 0, play: play);
+    LbEntry row(String id, String name, int play, int power, {int hs = 0, int hanh = 2}) =>
+        LbEntry(id: id, name: name, hanh: hanh, level: 99, rebirths: 6, power: power, tower: 0, play: play, hs: hs);
     final rows = [
-      row('n6A4la_4', 'MrTuan', 407289, 6522960),
-      row('WM4Gs5_1', 'MrTuan', 407289, 6402813),
-      row('x_0', 'MrTuan', 120000, 6000000), // another MrTuan
+      row('LzTmSX_4', 'Băng Thiên', 407289, 6522960, hs: 77), // renamed, unplayed copy
+      row('WM4Gs5_1', 'MrTuan', 407634, 6402813, hs: 77), // the original, played on
+      row('n6A4la_4', 'MrTuan', 407289, 6300000), // an older app's copy
+      row('x_0', 'MrTuan', 120000, 6000000, hs: 5), // another MrTuan
+      row('w_0', 'Khác', 407289, 5900000, hanh: 3), // same seconds, other hệ
       row('y_0', 'Moi', 1200, 100), // new heroes may share the seconds
       row('z_0', 'Moi', 1200, 90),
     ];
-    expect([for (final e in Leaderboard.dedupe(rows)) e.id], ['n6A4la_4', 'x_0', 'y_0', 'z_0']);
+    expect([for (final e in Leaderboard.dedupe(rows)) e.id], ['LzTmSX_4', 'x_0', 'w_0', 'y_0', 'z_0']);
+    expect(heroTag(0), 0);
+    expect(heroTag(123456789), isNot(123456789));
+    expect(heroTag(0x7fffffff), inInclusiveRange(1, 0x7fffffff));
   });
 }

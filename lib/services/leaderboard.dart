@@ -19,7 +19,7 @@ import '../core/world_boss.dart';
 import 'cloud.dart';
 import 'save.dart' show slotCount;
 
-export '../core/hero_look.dart' show lookRow, statRow;
+export '../core/hero_look.dart' show heroTag, lookRow, statRow;
 
 /// One row of the public leaderboard: a hero of a signed-in player.
 class LbEntry {
@@ -47,6 +47,7 @@ class LbEntry {
     this.st,
     this.ts = 0,
     this.play = 0,
+    this.hs = 0,
   }) : rk = rk ?? (rebirths * 100 + level) * 1000;
 
   /// Hung Thú Tinh Phách locked in worn gear ([soulsInvested], 1.13.3);
@@ -56,6 +57,11 @@ class LbEntry {
   /// Seconds played; with the name, what gives away one save copied onto
   /// several accounts ([Leaderboard.dedupe], 1.13.6).
   final int play;
+
+  /// The hero's own mark ([heroTag] of [HeroData.seed], set when the hero
+  /// was made): a copied save keeps it under any account and any name
+  /// (1.13.6). 0 on rows of older apps.
+  final int hs;
 
   /// `{uid}_{slot}`.
   final String id;
@@ -160,6 +166,7 @@ class LbEntry {
         st: m['st'] is List ? [for (final v in m['st'] as List) (v as num).toInt()] : null,
         ts: (m['ts'] as num?)?.toInt() ?? _starSouls(m['look']),
         play: (m['play'] as num?)?.toInt() ?? 0,
+        hs: (m['hs'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return null;
@@ -346,6 +353,7 @@ class Leaderboard extends ChangeNotifier {
           .set({
             ...row,
             'play': h.playSeconds.round(),
+            'hs': heroTag(h.seed),
             'pts': h.potentialTotal,
             'st': statRow(h),
             'updated': FieldValue.serverTimestamp(),
@@ -688,21 +696,30 @@ class Leaderboard extends ChangeNotifier {
     ]);
   }
 
-  /// Play time from which two rows with the same name and the same
-  /// seconds played can only be one save.
+  /// Play time from which two rows of one hệ with the same seconds played
+  /// can only be one save.
   static const int dupePlaySeconds = 3600;
 
   /// One hero per save (1.13.6): "Chuyển sang tài khoản này" copies the
   /// heroes into the new account while the old one keeps its rows, so one
-  /// save stood on the boards two or three times (MrTuan, 2026-11-14).
-  /// Rows with the same name and the same seconds played after an hour
-  /// are one save; the first (the board's best) stays.
+  /// save stood on the boards three times (MrTuan, 2026-11-14), the last
+  /// copy renamed and left unplayed while the first played on. Rows are
+  /// one save when they carry the same hero mark ([LbEntry.hs]), or, from
+  /// older apps, the same hệ and seconds played past an hour (any name);
+  /// the first (the board's best) stays.
   static List<LbEntry> dedupe(List<LbEntry> rows) {
     final seen = <String>{};
-    return [
-      for (final e in rows)
-        if (e.play < dupePlaySeconds || seen.add('${e.name}|${e.play}')) e,
-    ];
+    final out = <LbEntry>[];
+    for (final e in rows) {
+      final keys = [
+        if (e.hs != 0) 'h${e.hs}',
+        if (e.play >= dupePlaySeconds) 'p${e.hanh}|${e.play}',
+      ];
+      if (keys.any(seen.contains)) continue;
+      seen.addAll(keys);
+      out.add(e);
+    }
+    return out;
   }
 
   /// Other players' heroes with power near [power], as Lôi đài challengers.

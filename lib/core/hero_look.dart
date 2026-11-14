@@ -83,3 +83,8 @@ int lookGems(Map<String, dynamic>? look, Slot slot) {
   }
   return 0;
 }
+
+/// A hero's mark on the boards (1.13.6): [HeroData.seed], set when the
+/// hero was made and kept by every copy of the save, mixed so the seed
+/// itself (it drives the hero's own rolls) is not shown. 0 for no seed.
+int heroTag(int seed) => seed == 0 ? 0 : (((seed ^ 0x2545F491) & 0x7fffffff) * 31 + 7) & 0x7fffffff;
