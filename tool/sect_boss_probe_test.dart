@@ -111,6 +111,19 @@ void main() {
     final vs = double.tryParse(const String.fromEnvironment('VS'));
     if (vs != null) World.debugVolleyShare = vs;
     void log(String s) => print(s); // ignore: avoid_print
+    if (_mode == 'stats') {
+      String f(double v) => v.toStringAsFixed(2);
+      for (final hanh in Hanh.values) {
+        final h = endHero(hanh, school: ManualKind.power, branch: 0);
+        final s = h.stats;
+        final atkEff = s.atk * (1 + s.crit * (s.critDmg - 1)) * s.aspd * (1 + s.skillDmg * 0.6);
+        final tough = s.maxHp * (1 + s.dodge) * 0.4 + s.def * 3;
+        log('${hanh.name} power ${h.power} = atkEff*4 ${(atkEff * 4).round()} + tough ${tough.round()} | '
+            'atk ${s.atk.round()} crit ${f(s.crit)} cd ${f(s.critDmg)} aspd ${f(s.aspd)} skill ${f(s.skillDmg)} '
+            'dot ${f(s.dotPct)} hp ${s.maxHp.round()} def ${s.def.round()} dodge ${f(s.dodge)} | over crit ${f(s.overCrit)} dodge ${f(s.overDodge)} aspd ${f(s.overAspd)}');
+      }
+      return;
+    }
     if (_mode == 'wb') {
       for (final hanh in Hanh.values) {
         final row = <String>[];

@@ -240,10 +240,18 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       _stat('ST chí mạng', '${(st.critDmg * 100).round()}%'),
                       _stat('Né tránh', '${(st.dodge * 100).toStringAsFixed(1)}%'),
                       _stat('Tốc đánh', '${(st.aspd * 100).round()}%'),
+                      // 1.13.4: what is past a cap is turned, not lost.
+                      if (st.overCrit > 0)
+                        _stat('Chí mạng dư → ST chí mạng', '+${(st.overCrit * overCritToCritDmg * 100).round()}%'),
+                      if (st.overDodge > 0)
+                        _stat('Né tránh dư → Sinh lực', '+${(st.overDodge * overDodgeToHp * 100).round()}%'),
+                      if (st.overAspd > 0)
+                        _stat('Tốc đánh dư → Công lực', '+${(st.overAspd * overAspdToAtk * 100).round()}%'),
                       _stat('Tốc chạy', fmt(st.move)),
                       _stat('Hồi sinh lực', '${st.hpRegen.toStringAsFixed(1)}/giây'),
                       if (st.skillDmg > 0) _stat('Uy lực kỹ năng', '+${(st.skillDmg * 100).round()}%'),
                       if (st.cdr > 0) _stat('Giảm hồi chiêu', '${(st.cdr * 100).round()}%'),
+                      if (st.dotPct > 0) _stat('Uy lực độc/thiêu', '+${(st.dotPct * 100).round()}%'),
                     ],
                   ),
                 ),
@@ -276,8 +284,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
           children: [
-            Text(k, style: body.copyWith(color: creamDim)),
-            const Spacer(),
+            Expanded(child: Text(k, style: body.copyWith(color: creamDim))),
+            const SizedBox(width: 6),
             Text(v, style: bold),
           ],
         ),
@@ -319,7 +327,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
           Text(
             open
                 ? 'Dồn điểm kỹ năng dư vào kinh mạch. Càng nhiều điểm, mỗi điểm càng ít tác dụng. '
-                    'Trần: Chí mạng ${(critCap * 100).round()}%, Tốc đánh ${(aspdCap * 100).round()}%.'
+                    'Trần: Chí mạng ${(critCap * 100).round()}%, Tốc đánh ${(aspdCap * 100).round()}%; '
+                    'phần dư đổi thành ST chí mạng và công lực.'
                 : 'Mở ở cấp $meridianLevel. Dùng điểm kỹ năng dư sau khi đã nâng đủ kỹ năng.',
             style: small.copyWith(fontSize: 11),
           ),
@@ -388,7 +397,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 Text('${m.name} · $n điểm', style: bold.copyWith(fontSize: 12.5, color: open ? cream : creamDim)),
                 Text(m.text(n), style: small.copyWith(fontSize: 11, color: hanhColor(m.hanh))),
                 if (_capped(m.bonus))
-                  Text('Đã chạm trần, thêm điểm vô ích', style: small.copyWith(fontSize: 10.5, color: hpRed)),
+                  Text('Đã chạm trần, phần dư đổi sang chỉ số khác (ít hơn)',
+                      style: small.copyWith(fontSize: 10.5, color: goldLight)),
               ],
             ),
           ),

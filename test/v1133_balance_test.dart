@@ -7,6 +7,7 @@ import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/core/ledger.dart';
+import 'package:kiem_hiep/core/meridians.dart';
 import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/core/tam_ma.dart';
 import 'package:kiem_hiep/core/weekly_hunt.dart';
@@ -15,6 +16,7 @@ import 'package:kiem_hiep/core/world.dart';
 void main() {
   ledgerTests();
   pillTests();
+  overflowTests();
   test('one volley on one target: the first missile in full, the rest a share', () {
     expect(volleyShare(1), 1);
     expect(volleyShare(2), volleyExtraShare);
@@ -92,5 +94,26 @@ void pillTests() {
     expect(h.buffLeft(p.id), maxBuffMinutes * 60);
     expect(h.pills[p.id], 25 - 18);
     expect(h.fillPill(p), 0);
+  });
+}
+
+void overflowTests() {
+  test('chí mạng, né tránh, tốc đánh past their caps turn into other stats', () {
+    final h = HeroData(name: 'O', hanh: Hanh.moc)..level = 99;
+    h.recompute();
+    final cd0 = h.stats.critDmg, hp0 = h.stats.maxHp, atk0 = h.stats.atk;
+    // A pile of thân pháp: crit, dodge and speed all far past the caps.
+    h.spent[1] = 1000;
+    h.recompute();
+    final s = h.stats;
+    expect(s.crit, critCap);
+    expect(s.dodge, dodgeCap);
+    expect(s.aspd, aspdCap);
+    expect(s.overCrit, greaterThan(0));
+    expect(s.overDodge, greaterThan(0));
+    expect(s.overAspd, greaterThan(0));
+    expect(s.critDmg, closeTo(cd0 + s.overCrit * overCritToCritDmg, 1e-9));
+    expect(s.maxHp, closeTo(hp0 * (1 + s.overDodge * overDodgeToHp), 1e-6));
+    expect(s.atk, greaterThan(atk0));
   });
 }

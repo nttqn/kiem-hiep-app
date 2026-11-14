@@ -95,6 +95,19 @@ const int maxRebirths = 6;
 const double critSoftFull = 8;
 const double critSoftRate = 0.5;
 
+/// 1.13.4: points past a cap are no longer lost. Each 1% chí mạng over
+/// [critCap] gives [overCritToCritDmg]% crit damage, each 1% né tránh over
+/// [dodgeCap] that many % HP, each 1% tốc đánh over [aspdCap] that many %
+/// attack. Bách Độc Môn (thân pháp: crit, dodge and speed from every point)
+/// had the most thrown away, so the same gear gave it the lowest lực chiến.
+const double dodgeCap = 0.35;
+
+/// Share of uy lực độc/thiêu that lực chiến counts (1.13.4).
+const double powerDotWeight = 0.1;
+const double overCritToCritDmg = 0.5;
+const double overDodgeToHp = 1.0;
+const double overAspdToAtk = 0.1;
+
 double critDmgSoftCap(double extra) => extra <= critSoftFull ? extra : critSoftFull + (extra - critSoftFull) * critSoftRate;
 
 /// Lục chuyển (1.6.0): the sixth life needs [lucChuyenExpNeed] times the
@@ -151,6 +164,10 @@ double expLevelFactor(int heroLevel, int mobLevel) {
 class Stats {
   double maxHp = 0, maxMp = 0, atk = 0, def = 0;
   double crit = 0, critDmg = 0, dodge = 0, aspd = 1, move = 0;
+
+  /// What chí mạng, né tránh and tốc đánh have past their caps (shown on
+  /// the character sheet; already turned into crit damage, HP and attack).
+  double overCrit = 0, overDodge = 0, overAspd = 0;
   double hpRegen = 0, mpRegen = 0, skillDmg = 0, cdr = 0, dotPct = 0;
   List<int> attrs = [0, 0, 0, 0];
 }
@@ -830,12 +847,21 @@ class HeroData {
     for (var i = 0; i < 4; i++) {
       raw += a[i] * sect.atkWeights[i];
     }
-    st.atk = raw * (1 + b(Bonus.atkPct));
+    // Chí mạng, né tránh and tốc đánh past their caps turn into crit
+    // damage, HP and attack (1.13.4, see [overCritToCritDmg]).
+    final critRaw = 0.05 + a[1] * 0.0025 + g(Stat.crit) + b(Bonus.crit);
+    final dodgeRaw = a[1] * 0.0015 + g(Stat.dodge) + b(Bonus.dodge);
+    final aspdRaw = 1 + a[1] * 0.004 + g(Stat.aspd) + b(Bonus.aspd);
+    st.overCrit = math.max(0, critRaw - critCap);
+    st.overDodge = math.max(0, dodgeRaw - dodgeCap);
+    st.overAspd = math.max(0, aspdRaw - aspdCap);
+    st.maxHp *= 1 + st.overDodge * overDodgeToHp;
+    st.atk = raw * (1 + b(Bonus.atkPct) + st.overAspd * overAspdToAtk);
     st.def = (2 + 1.5 * l + a[2] * 0.5 + g(Stat.def)) * (1 + b(Bonus.defPct));
-    st.crit = math.min(critCap, 0.05 + a[1] * 0.0025 + g(Stat.crit) + b(Bonus.crit));
-    st.critDmg = 1.5 + critDmgSoftCap(g(Stat.critDmg) + b(Bonus.critDmg));
-    st.dodge = math.min(0.35, a[1] * 0.0015 + g(Stat.dodge) + b(Bonus.dodge));
-    st.aspd = math.min(aspdCap, 1 + a[1] * 0.004 + g(Stat.aspd) + b(Bonus.aspd));
+    st.crit = math.min(critCap, critRaw);
+    st.critDmg = 1.5 + critDmgSoftCap(g(Stat.critDmg) + b(Bonus.critDmg) + st.overCrit * overCritToCritDmg);
+    st.dodge = math.min(dodgeCap, dodgeRaw);
+    st.aspd = math.min(aspdCap, aspdRaw);
     st.move = math.min(320, (165 + g(Stat.move)) * (1 + b(Bonus.move)));
     st.hpRegen = st.maxHp * (0.004 + b(Bonus.regen));
     st.mpRegen = st.maxMp * mpRegenRate + a[3] * 0.05;
@@ -2076,7 +2102,9 @@ class HeroData {
   /// toughness and trained skills.
   int get power {
     final s = stats;
-    final atkEff = s.atk * (1 + s.crit * (s.critDmg - 1)) * s.aspd * (1 + s.skillDmg * 0.6);
+    // 1.13.4: uy lực độc/thiêu counts a little too (Bách Độc Môn's own
+    // stat was left out entirely).
+    final atkEff = s.atk * (1 + s.crit * (s.critDmg - 1)) * s.aspd * (1 + s.skillDmg * 0.6) * (1 + s.dotPct * powerDotWeight);
     final tough = s.maxHp * (1 + s.dodge) * 0.4 + s.def * 3;
     final skills = skillLv.fold<int>(0, (a, b) => a + b);
     return (atkEff * 4 + tough + skills * 20).round();
