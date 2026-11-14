@@ -46,11 +46,16 @@ class LbEntry {
     this.look,
     this.st,
     this.ts = 0,
+    this.play = 0,
   }) : rk = rk ?? (rebirths * 100 + level) * 1000;
 
   /// Hung Thú Tinh Phách locked in worn gear ([soulsInvested], 1.13.3);
   /// from the worn stars alone on rows of older apps.
   final int ts;
+
+  /// Seconds played; with the name, what gives away one save copied onto
+  /// several accounts ([Leaderboard.dedupe], 1.13.6).
+  final int play;
 
   /// `{uid}_{slot}`.
   final String id;
@@ -154,6 +159,7 @@ class LbEntry {
         look: m['look'] is Map ? Map<String, dynamic>.from(m['look'] as Map) : null,
         st: m['st'] is List ? [for (final v in m['st'] as List) (v as num).toInt()] : null,
         ts: (m['ts'] as num?)?.toInt() ?? _starSouls(m['look']),
+        play: (m['play'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return null;
@@ -676,9 +682,26 @@ class Leaderboard extends ChangeNotifier {
   /// (an edited save, 1.13.3, see [soulCeiling]).
   static List<LbEntry> _plausible(LbBoard board, List<LbEntry> rows) {
     final cap = soulCeiling(huntWeekOf(vnDayKey()));
-    return [
+    return dedupe([
       for (final e in rows)
         if (e.ts <= cap && (board != LbBoard.tamMa || tamMaPlausible(e.tm, e.power))) e,
+    ]);
+  }
+
+  /// Play time from which two rows with the same name and the same
+  /// seconds played can only be one save.
+  static const int dupePlaySeconds = 3600;
+
+  /// One hero per save (1.13.6): "Chuyển sang tài khoản này" copies the
+  /// heroes into the new account while the old one keeps its rows, so one
+  /// save stood on the boards two or three times (MrTuan, 2026-11-14).
+  /// Rows with the same name and the same seconds played after an hour
+  /// are one save; the first (the board's best) stays.
+  static List<LbEntry> dedupe(List<LbEntry> rows) {
+    final seen = <String>{};
+    return [
+      for (final e in rows)
+        if (e.play < dupePlaySeconds || seen.add('${e.name}|${e.play}')) e,
     ];
   }
 

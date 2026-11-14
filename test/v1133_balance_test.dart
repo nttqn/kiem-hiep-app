@@ -12,11 +12,13 @@ import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/core/tam_ma.dart';
 import 'package:kiem_hiep/core/weekly_hunt.dart';
 import 'package:kiem_hiep/core/world.dart';
+import 'package:kiem_hiep/services/leaderboard.dart';
 
 void main() {
   ledgerTests();
   pillTests();
   overflowTests();
+  dedupeTests();
   test('one volley on one target: the first missile in full, the rest a share', () {
     expect(volleyShare(1), 1);
     expect(volleyShare(2), volleyExtraShare);
@@ -115,5 +117,20 @@ void overflowTests() {
     expect(s.critDmg, closeTo(cd0 + s.overCrit * overCritToCritDmg, 1e-9));
     expect(s.maxHp, closeTo(hp0 * (1 + s.overDodge * overDodgeToHp), 1e-6));
     expect(s.atk, greaterThan(atk0));
+  });
+}
+
+void dedupeTests() {
+  test('one save copied onto several accounts shows once on the boards', () {
+    LbEntry row(String id, String name, int play, int power) =>
+        LbEntry(id: id, name: name, hanh: 2, level: 99, rebirths: 6, power: power, tower: 0, play: play);
+    final rows = [
+      row('n6A4la_4', 'MrTuan', 407289, 6522960),
+      row('WM4Gs5_1', 'MrTuan', 407289, 6402813),
+      row('x_0', 'MrTuan', 120000, 6000000), // another MrTuan
+      row('y_0', 'Moi', 1200, 100), // new heroes may share the seconds
+      row('z_0', 'Moi', 1200, 90),
+    ];
+    expect([for (final e in Leaderboard.dedupe(rows)) e.id], ['n6A4la_4', 'x_0', 'y_0', 'z_0']);
   });
 }
