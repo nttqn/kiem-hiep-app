@@ -1153,11 +1153,17 @@ class HeroData {
 
   /// Selling never loses gems: they go back to the gem bag.
   void sell(Item it) {
-    if (!bag.remove(it)) return;
+    if (it.locked || !bag.remove(it)) return;
     gold += it.sellPrice;
     for (final g in it.gems) {
       if (g != null) addGem(g);
     }
+  }
+
+  /// [it] from the bag is wearable now and beats what is worn in its slot.
+  bool betterThanWorn(Item it) {
+    final worn = equip[it.slot];
+    return it.level <= level && (worn == null || it.score > worn.score);
   }
 
   /// Equips every bag item that scores higher than what is worn.
@@ -2027,6 +2033,7 @@ class HeroData {
   Item? reforgeGold(Item it) {
     if (!canReforgeGold(it)) return null;
     final out = reforgedGold(it, level);
+    out.locked = it.locked;
     if (equip[it.slot] == it) {
       equip[it.slot] = out;
     } else {

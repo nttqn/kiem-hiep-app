@@ -648,16 +648,35 @@ class _ItemDialogState extends State<ItemDialog> {
                         },
                       ),
                     const SizedBox(height: 6),
-                    if (!isWorn)
-                      LButton(
-                        label: 'Bán ${fmt(it.sellPrice)}',
-                        small: true,
-                        color: const Color(0xFF5A4A3A),
-                        onTap: () {
-                          h.sell(it);
-                          Navigator.pop(context);
-                        },
-                      ),
+                    // Khóa (1.15.0): a locked piece cannot be sold in any way.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: isWorn
+                              ? Text(it.locked ? 'Đã khóa' : 'Khóa để không bán nhầm',
+                                  style: small.copyWith(fontSize: 11))
+                              : LButton(
+                                  label: it.locked ? 'Đã khóa' : 'Bán ${fmt(it.sellPrice)}',
+                                  small: true,
+                                  color: const Color(0xFF5A4A3A),
+                                  enabled: !it.locked,
+                                  onTap: () {
+                                    h.sell(it);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                        ),
+                        IconButton(
+                          tooltip: it.locked ? 'Mở khóa' : 'Khóa',
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => setState(() {
+                            it.locked = !it.locked;
+                            SaveService.instance.save();
+                          }),
+                          icon: Icon(it.locked ? Icons.lock : Icons.lock_open, color: goldLight, size: 20),
+                        ),
+                      ],
+                    ),
                     const Spacer(),
                     if (it.golden && it.level < h.level) ...[
                       LButton(

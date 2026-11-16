@@ -339,7 +339,7 @@ class Drop {
   bool taken = false;
 }
 
-enum EvKind { notice, heroDied, wave, cleared, failed, boss, loot, shake, merchant }
+enum EvKind { notice, heroDied, wave, cleared, failed, boss, loot, shake, merchant, bagFull }
 
 /// What the renderer's particles show: a hit landing, a critical one, a
 /// monster falling, a boss falling.
@@ -480,6 +480,9 @@ class World {
   double dotDealt = 0;
   double _lastHitAt = -10;
   int _kills0 = 0, _gold0 = 0, _level0 = 0;
+
+  /// The full-bag notice was given this battle (1.15.0).
+  bool _bagFullTold = false;
 
   /// One tap on the attack button: keep fighting the nearest monsters, as
   /// if it were held, until the joystick moves or none is left in reach.
@@ -3667,7 +3670,14 @@ class World {
     }
     final it = d.item;
     if (it != null) {
+      // Told once a battle: a piece auto-sell would have kept went for gold.
+      final full = hero.bag.length >= bagSize && (it.rarity.index > hero.autoSellUpTo || it.golden);
       final kept = hero.addItem(it);
+      if (full && !_bagFullTold) {
+        _bagFullTold = true;
+        events.add(GameEvent(EvKind.bagFull,
+            text: 'Túi đồ đầy! Đồ nhặt thêm sẽ tự bán. Bấm ba lô để dọn túi.', color: 0xFFFF8A7A));
+      }
       events.add(GameEvent(EvKind.loot,
           text: kept
               ? 'Nhặt được ${it.name} [${it.rarityLabel}]'

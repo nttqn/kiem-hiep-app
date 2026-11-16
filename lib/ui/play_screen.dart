@@ -485,6 +485,8 @@ class _PlayScreenState extends State<PlayScreen> {
         SaveService.instance.save();
       case EvKind.loot:
         _toast(e.text, Color(e.color));
+      case EvKind.bagFull:
+        _showBanner(e.text, Color(e.color));
       case EvKind.wave || EvKind.boss:
         SoundService.instance.cue('gong');
         _showBanner(e.text, Color(e.color));
@@ -942,7 +944,13 @@ class _PlayScreenState extends State<PlayScreen> {
                 RoundIcon(icon: Icons.forum_outlined, onTap: () => _setChat(!_chat)),
                 const SizedBox(width: 6),
               ],
-              RoundIcon(icon: Icons.backpack_outlined, onTap: _openBag),
+              Badge(
+                // Full: pickups are being sold, worth a look.
+                isLabelVisible: hero.bag.length >= bagSize,
+                label: const Text('Đầy'),
+                backgroundColor: seal,
+                child: RoundIcon(icon: Icons.backpack_outlined, onTap: _openBag),
+              ),
               const SizedBox(width: 6),
               Column(
                 children: [

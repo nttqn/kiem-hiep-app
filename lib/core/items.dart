@@ -80,6 +80,7 @@ class Item {
     this.extraSockets = 0,
     this.glow = 0,
     this.tien = 0,
+    this.locked = false,
     List<Gem?>? gems,
   }) : gems = List<Gem?>.generate(socketsFor(rarity) + extraSockets,
             (i) => gems != null && i < gems.length ? gems[i] : null);
@@ -111,6 +112,9 @@ class Item {
 
   /// Tiên khí phẩm (1.13.0), 0..[maxTien]: forged by a hero in Ngộ Đạo.
   int tien;
+
+  /// Khóa (1.15.0): never sold, by hand, in bulk or by a full bag.
+  bool locked;
 
   bool get golden => set.isNotEmpty;
 
@@ -152,6 +156,7 @@ class Item {
         if (extraSockets > 0) 'e': extraSockets,
         if (glow > 0) 'o': glow,
         if (tien > 0) 'q': tien,
+        if (locked) 'z': 1,
         'n': name,
         if (golden) 'k': set,
         if (gems.any((g) => g != null)) 'g': [for (final g in gems) g?.key],
@@ -191,6 +196,7 @@ class Item {
       extraSockets: (m['e'] as int? ?? 0).clamp(0, 2),
       glow: (m['k'] is String ? (m['o'] as int? ?? 0) : 0).clamp(0, maxGlow),
       tien: (m['q'] as int? ?? 0).clamp(0, maxTien),
+      locked: m['z'] == 1,
       gems: [for (final g in (m['g'] as List? ?? const [])) Gem.parse(g)],
       name: m['n'] as String,
       set: m['k'] as String? ?? '',

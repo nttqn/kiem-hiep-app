@@ -76,7 +76,33 @@ class _GearBagViewState extends State<GearBagView> {
         _ => 'đến Quý (vàng)',
       };
 
-  bool _bulkSells(Item it) => it.rarity.index <= _sellUpTo && !it.golden;
+  bool _bulkSells(Item it) => it.rarity.index <= _sellUpTo && !it.golden && !it.locked;
+
+  /// The grid's slot filter (null for all) and order.
+  Slot? _slot;
+  int _sort = 0;
+  static const _sorts = ['Phẩm chất', 'Cấp', 'Lực chiến'];
+
+  int _compare(Item a, Item b) {
+    if (a.golden != b.golden) return a.golden ? -1 : 1;
+    int by(int k) => switch (k) {
+          0 => b.rarity.index.compareTo(a.rarity.index),
+          1 => b.level.compareTo(a.level),
+          _ => b.score.compareTo(a.score),
+        };
+    final first = by(_sort);
+    return first != 0 ? first : by(_sort == 0 ? 1 : 0);
+  }
+
+  Widget _drop<T>(T value, List<(T, String)> items, ValueChanged<T> onChanged) => DropdownButton<T>(
+        value: value,
+        isDense: true,
+        dropdownColor: lacquer,
+        underline: const SizedBox.shrink(),
+        style: small.copyWith(color: goldLight),
+        items: [for (final (v, l) in items) DropdownMenuItem(value: v, child: Text(l))],
+        onChanged: (v) => onChanged(v as T),
+      );
 
   /// Sells the bag's gear up to [_sellUpTo]; asks first past Thường, since
   /// a Quý piece can still beat what is worn.
@@ -110,12 +136,10 @@ class _GearBagViewState extends State<GearBagView> {
 
   @override
   Widget build(BuildContext context) {
-    final bag = List<Item>.of(h.bag)
-      ..sort((a, b) {
-        if (a.golden != b.golden) return a.golden ? -1 : 1;
-        final r = b.rarity.index.compareTo(a.rarity.index);
-        return r != 0 ? r : b.level.compareTo(a.level);
-      });
+    final bag = [
+      for (final it in h.bag)
+        if (_slot == null || it.slot == _slot) it,
+    ]..sort(_compare);
     final full = h.bag.length >= bagSize;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -157,7 +181,7 @@ class _GearBagViewState extends State<GearBagView> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Hành trang ${h.bag.length}/$bagSize',
+                      child: Text('Hành trang ${h.bag.length}/$bagSize${full ? ' · Đầy' : ''}',
                           style: bold.copyWith(color: full ? const Color(0xFFFF8A7A) : null),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
@@ -180,38 +204,44 @@ class _GearBagViewState extends State<GearBagView> {
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Text('Tự bán khi nhặt: ', style: small),
-                    DropdownButton<int>(
-                      value: h.autoSellUpTo,
-                      isDense: true,
-                      dropdownColor: lacquer,
-                      underline: const SizedBox.shrink(),
-                      style: small.copyWith(color: goldLight),
-                      items: [
-                        for (var r = -1; r <= Rarity.rare.index; r++)
-                          DropdownMenuItem(value: r, child: Text(r < 0 ? 'Không' : _sellLabel(r))),
-                      ],
-                      onChanged: (v) {
-                        h.autoSellUpTo = v ?? -1;
-                        _changed();
-                      },
-                    ),
-                    if (full) ...[
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text('Đầy: đồ nhặt thêm sẽ tự bán.',
-                            style: small.copyWith(fontSize: 11, color: const Color(0xFFFF8A7A)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
+                // Slides sideways when a narrow phone cannot fit all three.
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Text('Tự bán: ', style: small),
+                      _drop<int>(
+                        h.autoSellUpTo,
+                        [for (var r = -1; r <= Rarity.rare.index; r++) (r, r < 0 ? 'Không' : _sellLabel(r))],
+                        (v) {
+                          h.autoSellUpTo = v;
+                          _changed();
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _drop<Slot?>(
+                        _slot,
+                        [(null, 'Mọi vị trí'), for (final s in Slot.values) (s, s.label)],
+                        (v) => setState(() => _slot = v),
+                      ),
+                      const SizedBox(width: 12),
+                      Text('Xếp: ', style: small),
+                      _drop<int>(
+                        _sort,
+                        [for (var i = 0; i < _sorts.length; i++) (i, _sorts[i])],
+                        (v) => setState(() => _sort = v),
                       ),
                     ],
-                  ],
+                  ),
                 ),
                 Expanded(
                   child: bag.isEmpty
-                      ? Center(child: Text('Hành trang trống. Ra ngoài luyện công để nhặt đồ!', style: small))
+                      ? Center(
+                          child: Text(
+                              h.bag.isEmpty
+                                  ? 'Hành trang trống. Ra ngoài luyện công để nhặt đồ!'
+                                  : 'Không có món nào ở vị trí này.',
+                              style: small))
                       : GridView.builder(
                           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                             maxCrossAxisExtent: 60,
@@ -219,7 +249,7 @@ class _GearBagViewState extends State<GearBagView> {
                             mainAxisSpacing: 6,
                           ),
                           itemCount: bag.length,
-                          itemBuilder: (_, i) => ItemTile(item: bag[i], onTap: () => _open(bag[i])),
+                          itemBuilder: (_, i) => _bagTile(bag[i]),
                         ),
                 ),
               ],
@@ -229,6 +259,30 @@ class _GearBagViewState extends State<GearBagView> {
       ],
     );
   }
+
+  /// A bag piece, with a green arrow when it beats what is worn and a
+  /// padlock when locked.
+  Widget _bagTile(Item it) => Stack(
+        children: [
+          Positioned.fill(child: ItemTile(item: it, onTap: () => _open(it))),
+          if (h.betterThanWorn(it))
+            const Positioned(
+              left: 1,
+              top: 1,
+              child: IgnorePointer(
+                child: Icon(Icons.arrow_upward, size: 16, color: Color(0xFF5CE07A), shadows: [Shadow(blurRadius: 3)]),
+              ),
+            ),
+          if (it.locked)
+            const Positioned(
+              right: 1,
+              top: 1,
+              child: IgnorePointer(
+                child: Icon(Icons.lock, size: 13, color: goldLight, shadows: [Shadow(blurRadius: 3)]),
+              ),
+            ),
+        ],
+      );
 
   Widget _slotTile(Slot s) {
     final it = h.equip[s];
