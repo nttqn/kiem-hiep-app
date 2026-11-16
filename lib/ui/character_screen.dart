@@ -13,7 +13,7 @@ import '../core/manuals.dart';
 import '../core/sects.dart';
 import '../core/star_up.dart';
 import '../services/save.dart';
-import 'backdrop.dart';
+import 'bag_screen.dart';
 import 'body_tab.dart';
 import 'branch_dialog.dart';
 import 'divine_tab.dart';
@@ -44,52 +44,16 @@ class _CharacterScreenState extends State<CharacterScreen> {
     setState(() {});
   }
 
-  /// The bag's sell button goes as far as auto-sell does, Thường at least.
-  int get _sellUpTo => math.max(0, h.autoSellUpTo);
-
-  static String _sellLabel(int r) => switch (r) {
-        0 => 'đồ Thường',
-        1 => 'đến Tinh xảo (xanh)',
-        _ => 'đến Quý (vàng)',
-      };
-
-  bool _bulkSells(Item it) => it.rarity.index <= _sellUpTo && !it.golden;
-
-  /// Sells the bag's gear up to [_sellUpTo]; asks first past Thường, since
-  /// a Quý piece can still beat what is worn.
-  Future<void> _bulkSell() async {
-    final list = h.bag.where(_bulkSells).toList();
-    if (list.isEmpty) return;
-    if (_sellUpTo > 0) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: lacquer,
-          content: Text('Bán ${list.length} món ${_sellLabel(_sellUpTo)}? Đồ Hoàng Kim được giữ lại.', style: body),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Bán')),
-          ],
-        ),
-      );
-      if (ok != true) return;
-    }
-    for (final it in list) {
-      h.sell(it);
-    }
-    _changed();
-  }
-
   @override
   Widget build(BuildContext context) {
     const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh', 'Luyện thể'];
     return SubScreen(
       title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
       actions: [
-        for (final i in widget.forge ? const [2, 3, 4, 6, 7] : [0, 1, 2, 3, 5, if (h.rebirths > 0) 8])
+        for (final i in widget.forge ? const [2, 3, 4, 6, 7] : [0, 1, 3, 5, if (h.rebirths > 0) 8])
           Padding(
             padding: const EdgeInsets.only(left: 6),
-            child: _TabChip(
+            child: TabChip(
               label: names[i],
               on: _tab == i,
               badge: switch (i) {
@@ -105,7 +69,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
       child: switch (_tab) {
         0 => _attrs(),
         1 => _skills(),
-        2 => _bag(),
+        2 => GearBagView(forge: widget.forge, onChanged: () => setState(() {})),
         3 => GemTab(onChanged: () => setState(() {}), openItem: _itemDialog),
         5 => WardrobeTab(onChanged: () => setState(() {})),
         6 => GoldTab(onChanged: () => setState(() {})),
@@ -609,136 +573,6 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   // ---------------------------------------------------------- bag
 
-  Widget _bag() {
-    final bag = List<Item>.of(h.bag)
-      ..sort((a, b) {
-        if (a.golden != b.golden) return a.golden ? -1 : 1;
-        final r = b.rarity.index.compareTo(a.rarity.index);
-        return r != 0 ? r : b.level.compareTo(a.level);
-      });
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: 250,
-          child: Panel(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              children: [
-                Text(widget.forge ? 'Chọn món để cường hóa' : 'Đang trang bị', style: small),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          for (final s in [Slot.hat, Slot.armor, Slot.belt, Slot.boots]) _slotTile(s),
-                        ],
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          child: FigurePreview.of(h, scale: 1.4),
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          for (final s in [Slot.weapon, Slot.amulet, Slot.ring]) _slotTile(s),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Panel(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text('Hành trang ${h.bag.length}/$bagSize',
-                          style: bold, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                    LButton(
-                      label: 'Mặc tốt nhất',
-                      small: true,
-                      color: jade,
-                      onTap: () {
-                        h.autoEquip();
-                        _changed();
-                      },
-                    ),
-                    const SizedBox(width: 6),
-                    LButton(
-                      label: 'Bán ${_sellLabel(_sellUpTo)}',
-                      small: true,
-                      enabled: h.bag.any(_bulkSells),
-                      onTap: () => _bulkSell(),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text('Tự bán khi nhặt: ', style: small),
-                    DropdownButton<int>(
-                      value: h.autoSellUpTo,
-                      isDense: true,
-                      dropdownColor: lacquer,
-                      underline: const SizedBox.shrink(),
-                      style: small.copyWith(color: goldLight),
-                      items: [
-                        for (var r = -1; r <= Rarity.rare.index; r++)
-                          DropdownMenuItem(value: r, child: Text(r < 0 ? 'Không' : _sellLabel(r))),
-                      ],
-                      onChanged: (v) {
-                        h.autoSellUpTo = v ?? -1;
-                        _changed();
-                      },
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: bag.isEmpty
-                      ? Center(child: Text('Hành trang trống. Ra ngoài luyện công để nhặt đồ!', style: small))
-                      : GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 60,
-                            crossAxisSpacing: 6,
-                            mainAxisSpacing: 6,
-                          ),
-                          itemCount: bag.length,
-                          itemBuilder: (_, i) => ItemTile(
-                            item: bag[i],
-                            onTap: () => _itemDialog(bag[i]),
-                          ),
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _slotTile(Slot s) {
-    final it = h.equip[s];
-    return ItemTile(
-      item: it,
-      slot: s,
-      size: 48,
-      onTap: it == null ? null : () => _itemDialog(it),
-    );
-  }
-
   Future<void> _itemDialog(Item it) async {
     await showDialog<void>(
       context: context,
@@ -990,8 +824,8 @@ class _ItemDialogState extends State<ItemDialog> {
   }
 }
 
-class _TabChip extends StatelessWidget {
-  const _TabChip({required this.label, required this.on, required this.onTap, this.badge = 0});
+class TabChip extends StatelessWidget {
+  const TabChip({super.key, required this.label, required this.on, required this.onTap, this.badge = 0});
   final String label;
   final bool on;
   final VoidCallback onTap;

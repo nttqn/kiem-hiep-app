@@ -141,7 +141,9 @@ const double rebirthGold = 0.5;
 Map<Bonus, double> rebirthBonuses(int n) => n <= 0
     ? const {}
     : {Bonus.hpPct: rebirthHpAtk * n, Bonus.atkPct: rebirthHpAtk * n, Bonus.defPct: rebirthDef * n};
-const int bagSize = 60;
+/// Gear slots in the bag (1.15.0: 120, was 60; materials sit in Túi đồ
+/// → Vật phẩm and take none).
+const int bagSize = 120;
 
 // ---------------------------------------------------------------- balance
 

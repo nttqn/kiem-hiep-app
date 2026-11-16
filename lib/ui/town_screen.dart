@@ -28,6 +28,7 @@ import '../services/save.dart';
 import 'activity_screen.dart';
 import 'alchemy_screen.dart';
 import 'backdrop.dart';
+import 'bag_screen.dart';
 import '../core/rewards.dart';
 import 'character_screen.dart';
 import 'chat_screen.dart';
@@ -509,6 +510,17 @@ class _TownScreenState extends State<TownScreen> {
                             Expanded(
                               child: Text('Thành Lạc An',
                                   style: titleStyle(24), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                            IconButton(
+                              tooltip: 'Túi đồ',
+                              onPressed: () => _go(const BagScreen()),
+                              icon: Badge(
+                                // Nearly full: pickups would start selling themselves.
+                                isLabelVisible: h.bag.length >= bagSize - 10,
+                                label: Text(h.bag.length >= bagSize ? 'Đầy' : '${h.bag.length}'),
+                                backgroundColor: seal,
+                                child: const Icon(Icons.backpack_outlined, color: goldLight),
+                              ),
                             ),
                             IconButton(
                               tooltip: 'Nên làm gì tiếp',

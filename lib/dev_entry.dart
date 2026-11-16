@@ -8,6 +8,7 @@ import 'core/gold_boss.dart';
 import 'ui/gold_boss_screen.dart';
 import 'core/chat.dart';
 import 'services/chat.dart';
+import 'ui/bag_screen.dart';
 import 'ui/chat_screen.dart';
 import 'core/alchemy.dart';
 import 'core/arena.dart';
@@ -602,7 +603,8 @@ Future<void> main() async {
     'refine' => const CharacterScreen(tab: 4, forge: true),
     'char' => const CharacterScreen(tab: 0),
     'skills' => const CharacterScreen(tab: 1),
-    'bag' => const CharacterScreen(tab: 2),
+    'bag' => const BagScreen(),
+    'items' => const BagScreen(tab: 1),
     'shop' => const ShopScreen(),
     'quests' => const QuestScreen(),
     'bounty' => const QuestScreen(tab: 1),

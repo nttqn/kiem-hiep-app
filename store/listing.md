@@ -56,6 +56,18 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.15.0, ≤ 500 ký tự)
+1.15.0 – Túi đồ
+• Túi đồ mới: icon ba lô ở Thành và ngay trong trận (trận tạm dừng khi mở).
+• Tab Vật phẩm gom đan dược, thảo dược, ngọc, Mảnh Hoàng Kim, Linh Phách Đơn, Thần Thiết, Tinh Thạch, Tinh Phách, Tiên Ngọc... Bấm vào để xem công dụng và cách kiếm; dùng đan dược ngay tại đây.
+• Hành trang tăng từ 60 lên 120 ô; vật phẩm không chiếm ô.
+
+## What's new (1.15.0, en-US)
+1.15.0 – Inventory
+• New inventory: a backpack icon in town and in battle (the fight pauses while it is open).
+• Items tab gathers pills, herbs, gems, Gold Shards, Soul Pills, Divine Iron, Star Stones, Beast Souls, Immortal Jade and more. Tap one to see what it does and where to get it; take pills right there.
+• Gear bag raised from 60 to 120 slots; items take no slots.
+
 ## Có gì mới (bản 1.14.0, ≤ 500 ký tự)
 1.14.0 – Trợ chiến & Truyền thừa
 • Trợ chiến: gặp ải khó, mời Hảo hữu, đồng môn bang hoặc cao thủ trên bảng xếp hạng vào đánh cùng (3 lượt mỗi ngày). Người được mời nhận Hiệp nghĩa: lượng và danh hiệu.

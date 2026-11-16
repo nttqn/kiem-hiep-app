@@ -8,6 +8,7 @@ import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/services/save.dart';
 import 'package:kiem_hiep/ui/alchemy_screen.dart';
 import 'package:kiem_hiep/ui/arena_screen.dart';
+import 'package:kiem_hiep/ui/bag_screen.dart';
 import 'package:kiem_hiep/ui/character_screen.dart';
 import 'package:kiem_hiep/ui/dai_hoi_screen.dart';
 import 'package:kiem_hiep/ui/rebirth_screen.dart';
@@ -50,7 +51,9 @@ void main() {
     'Thuộc tính': () => const CharacterScreen(tab: 0),
     'Kỹ năng + Kinh mạch': () => const CharacterScreen(tab: 1),
     'Thần binh': () => const CharacterScreen(tab: 7),
-    'Hành trang': () => const CharacterScreen(tab: 2),
+    'Túi đồ · Trang bị': () => const BagScreen(),
+    'Túi đồ · Vật phẩm': () => const BagScreen(tab: 1),
+    'Thợ rèn · Hành trang': () => const CharacterScreen(tab: 2, forge: true),
     'Luyện đan': () => const AlchemyScreen(),
   };
 
@@ -66,6 +69,13 @@ void main() {
           if (cs == 6) h.daoLv = 10;
           h.meridianPts[1] = 400; // Tẩy kinh mạch shown, Chí mạng at its cap
           if (cs == 6) h.divine = 23; // Tiên binh rows
+          // Túi đồ: big counts, a buff pill and a gem in the Vật phẩm grid.
+          h
+            ..goldShards = 12345
+            ..soulPills = 7
+            ..arenaCoins = 25000000
+            ..pills['songboi'] = 3
+            ..gemBag['2:4'] = 2;
           h.recompute();
           SaveService.instance.slots[0] = h;
           SaveService.instance.active = 0;

@@ -31,6 +31,7 @@ import '../services/sound.dart';
 import '../core/sects.dart';
 import '../render/art_figures.dart' show rivalGear;
 import 'backdrop.dart' show FigurePreview;
+import 'bag_screen.dart';
 import 'fishing_view.dart';
 import 'world_boss_screen.dart' show BossPreview, bossArtIds;
 import 'hud.dart';
@@ -78,6 +79,9 @@ class _PlayScreenState extends State<PlayScreen> {
   Color _bannerColor = goldLight;
   double _bannerAt = -10;
   bool _paused = false;
+
+  /// Túi đồ is open over the battle, which waits for it.
+  bool _bagOpen = false;
   bool _fishing = false;
 
   /// Kênh Thế Giới open over the fight (1.13.3); the fight goes on, and
@@ -361,7 +365,7 @@ class _PlayScreenState extends State<PlayScreen> {
     if (_going || !mounted) return;
     final g = _questGo;
     final blocked =
-        _paused || _fishing || _dead || _chat || _splash || _adBusy || _picking || (_cleared == null && game.halted);
+        _paused || _bagOpen || _fishing || _dead || _chat || _splash || _adBusy || _picking || (_cleared == null && game.halted);
     if (g == null || !_autoGo || g.id == _goStay || blocked) {
       if (_goAt != null || (g == null && _goId != null)) {
         setState(() {
@@ -606,6 +610,26 @@ class _PlayScreenState extends State<PlayScreen> {
     if (v) SaveService.instance.save();
   }
 
+  /// Túi đồ over the battle: the fight waits, held keys and the stick are
+  /// let go, and gear put on there counts as soon as it closes.
+  Future<void> _openBag() async {
+    if (_bagOpen || _dead || _cleared != null || _paused || _fishing || _splash) return;
+    setState(() => _bagOpen = true);
+    game.halted = true;
+    _keys.clear();
+    _joyBase = null;
+    world.input
+      ..attack = false
+      ..moveX = 0
+      ..moveY = 0;
+    await Navigator.of(context).push(fadeRoute(const BagScreen(inBattle: true)));
+    hero.recompute();
+    await SaveService.instance.save();
+    if (!mounted) return;
+    setState(() => _bagOpen = false);
+    game.halted = _paused || _fishing || _dead || _cleared != null || _splash;
+  }
+
   /// The pond's mini-game pauses the field around it.
   void _setFishing(bool v) {
     setState(() => _fishing = v);
@@ -674,7 +698,7 @@ class _PlayScreenState extends State<PlayScreen> {
   // ------------------------------------------------------------ input
 
   bool _onKey(KeyEvent e) {
-    if (!mounted) return false;
+    if (!mounted || _bagOpen) return false;
     if (_chat) {
       if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.escape) _setChat(false);
       return false;
@@ -686,6 +710,7 @@ class _PlayScreenState extends State<PlayScreen> {
       if (k == LogicalKeyboardKey.escape || k == LogicalKeyboardKey.keyP) {
         if (!_dead && _cleared == null) _setPaused(!_paused);
       }
+      if (k == LogicalKeyboardKey.keyB) _openBag();
       const skillKeys = [
         [LogicalKeyboardKey.digit1, LogicalKeyboardKey.keyU],
         [LogicalKeyboardKey.digit2, LogicalKeyboardKey.keyI],
@@ -917,6 +942,8 @@ class _PlayScreenState extends State<PlayScreen> {
                 RoundIcon(icon: Icons.forum_outlined, onTap: () => _setChat(!_chat)),
                 const SizedBox(width: 6),
               ],
+              RoundIcon(icon: Icons.backpack_outlined, onTap: _openBag),
+              const SizedBox(width: 6),
               Column(
                 children: [
                   RoundIcon(icon: Icons.pause, onTap: () => _setPaused(true)),
