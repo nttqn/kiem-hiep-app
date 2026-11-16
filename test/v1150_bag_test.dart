@@ -46,9 +46,9 @@ void main() {
     expect(ids.intersection({'iron', 'stone', 'soul', 'jade', 'soulpill', 'shard'}), isEmpty);
   });
 
-  test('the bag holds 120 pieces of gear', () {
+  test('the bag holds 60 pieces of gear', () {
     final h = HeroData(name: 'B', hanh: Hanh.hoa);
-    expect(bagSize, 120);
+    expect(bagSize, 60);
     expect(h.bag.length < bagSize, isTrue);
   });
 }
