@@ -24,6 +24,7 @@ import 'ngo_dao.dart';
 import 'tien_khi.dart';
 import 'gems.dart';
 import 'guild.dart';
+import 'guild_war.dart';
 import 'hanh.dart';
 import 'items.dart';
 import 'legacy.dart';
@@ -604,6 +605,24 @@ class HeroData {
   /// account was taken; the bonus itself is worked out on opening the town
   /// from the other slots ([legacyExp], not saved) and who it comes from.
   bool legacyTaken = false;
+
+  /// Bang chiến (1.16.0, guild_war.dart): the day, Chiến lệnh used and rows
+  /// fought in it; the week, its Chiến công and the bang they count for;
+  /// last week's, waiting to be paid by the bang's place; wins ever.
+  String gwDay = '';
+  int gwCount = 0;
+  final Set<String> gwHit = {};
+  int gwWeek = 0, gwPts = 0;
+  String gwGid = '';
+  int gwLastWeek = 0, gwLastPts = 0;
+  String gwLastGid = '';
+  bool gwRankDue = false;
+  int gwWins = 0;
+
+  /// Quà nạp đầu (1.16.0, premium.dart): anything bought for this hero, and
+  /// the gift for it taken.
+  bool paidFlag = false;
+  bool firstPayTaken = false;
   double legacyExp = 0;
   String legacyFrom = '';
 
@@ -1368,7 +1387,7 @@ class HeroData {
         CostumeSource.abyss => abyssBossKills >= c.need,
         CostumeSource.week => weekChest,
         CostumeSource.bloodSea => bloodSeaBossKills >= c.need,
-        CostumeSource.worldBoss || CostumeSource.gold || CostumeSource.pass || CostumeSource.fest => false,
+        CostumeSource.worldBoss || CostumeSource.gold || CostumeSource.pass || CostumeSource.fest || CostumeSource.firstPay => false,
       };
 
   /// Grants every outfit whose goal is met; [quiet] skips the notices (when
@@ -3283,6 +3302,8 @@ class HeroData {
           'fr': [[for (final f in friends) f.toJson()], friendDay, friendSent.toList(), friendTaken],
         if (helpDay.isNotEmpty || hnTotal > 0) 'hn': [helpDay, helpUsed, hnTotal],
         if (legacyTaken) 'lg': 1,
+        if (gwDay.isNotEmpty || gwRankDue) 'gw': warToJson(),
+        if (paidFlag || firstPayTaken) 'fp': [paidFlag ? 1 : 0, firstPayTaken ? 1 : 0],
         'mail': mailClaimed.toList(),
         if (mailJade.isNotEmpty) 'mj': mailJade.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
@@ -3652,6 +3673,12 @@ class HeroData {
       } catch (_) {}
     }
     h.legacyTaken = m['lg'] == 1;
+    h.warFromJson(m['gw']);
+    final fp = m['fp'];
+    if (fp is List && fp.length >= 2) {
+      h.paidFlag = fp[0] == 1;
+      h.firstPayTaken = fp[1] == 1;
+    }
     final tk = m['tk'];
     if (tk is List && tk.isNotEmpty && tk[0] is num) h.tienJade = math.max(0, (tk[0] as num).toInt());
     h.tienBackfilled = tk is List && tk.length > 1 && tk[1] == 1;

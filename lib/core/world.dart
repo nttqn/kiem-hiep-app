@@ -28,6 +28,7 @@ import 'sects.dart';
 import 'stats.dart';
 import 'gold_boss.dart';
 import 'ngo_dao.dart';
+import 'guild_war.dart';
 import 'spar.dart';
 import 'guild.dart';
 import 'tam_ma.dart';
@@ -1346,6 +1347,8 @@ class World {
         ? hero.sectTrialResult(won)
         : d.isKiep
         ? hero.kiepResult(won)
+        : d.war
+        ? hero.warResult(won, d.rival!)
         : d.spar
         ? hero.sparResult(won)
         : d.daiHoi

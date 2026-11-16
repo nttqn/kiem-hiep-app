@@ -56,6 +56,16 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.16.0, ≤ 500 ký tự)
+1.16.0 – Bang chiến
+• Bang chiến: mỗi ngày 3 Chiến lệnh, khiêu chiến cao thủ của bang khác. Thắng người mạnh hơn được nhiều Chiến công hơn. Bảng xếp hạng bang theo tuần; hết tuần mọi người tham chiến nhận xu Bang, Thần Thiết, Tiên Ngọc theo hạng của bang, hạng 1 nhận danh hiệu « Thiên Hạ Đệ Nhất Bang ».
+• Quà nạp đầu: mua bất kỳ gói nào trong Ưu đãi để nhận thêm ngoại trang Kim Lân Chiến Bào, danh hiệu và nhiều quà. Ai đã từng mua cũng được nhận.
+
+## What's new (1.16.0, en-US)
+1.16.0 – Guild Wars
+• Guild Wars: 3 war tokens a day to challenge the heroes of other guilds. Beating stronger foes earns more war merit. Guilds are ranked weekly; at week's end everyone who fought gets guild coins, Divine Iron and Jade by their guild's place, and the top guild earns a title.
+• First-purchase gift: buy any pack in Offers to also get the Golden Scale outfit, a title and more. Past buyers can claim it too.
+
 ## Có gì mới (bản 1.15.0, ≤ 500 ký tự)
 1.15.0 – Túi đồ
 • Túi đồ mới: icon ba lô ở Thành và ngay trong trận (trận tạm dừng khi mở).

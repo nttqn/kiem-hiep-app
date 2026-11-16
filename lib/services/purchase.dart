@@ -233,6 +233,7 @@ class PurchaseService {
       default:
         return '';
     }
+    h.paidFlag = true;
     SaveService.instance.save();
     // Remembered in the cloud, so another phone's older save cannot lose it.
     CloudSave.instance.recordGrant(

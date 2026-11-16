@@ -4,7 +4,7 @@ import 'sect_duty.dart';
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass, fest }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass, fest, firstPay }
 
 class CostumeDef {
   const CostumeDef({
@@ -47,6 +47,7 @@ class CostumeDef {
         CostumeSource.bloodSea => 'Hạ Huyết Hải Ma Đế $need lần (U Minh Huyết Hải)',
         CostumeSource.pass => 'Lệnh Bài: bậc 30 nhánh Hào Kiệt (mùa ${need + 1}, ${need + 4}, ${need + 7}…)',
         CostumeSource.fest => 'Đổi ở cửa hàng lễ hội',
+        CostumeSource.firstPay => 'Quà nạp đầu (mua bất kỳ gói nào trong Ưu đãi)',
       };
 }
 
@@ -181,6 +182,13 @@ const costumes = <CostumeDef>[
     source: CostumeSource.fest, need: 0,
     robe: 0xFFF4F8FC, trim: 0xFFC8342A, pants: 0xFF8A1A1A, cape: 0xFFE8F0F8, glow: 0xFFFFB0B0,
     aura: 0xFFFFFFFF, armor: 3,
+  ),
+  // Quà nạp đầu (premium.dart, 1.16.0).
+  CostumeDef(
+    id: 'np_kimlan', name: 'Kim Lân Chiến Bào', desc: 'Hắc giáp vảy vàng, áo choàng kim tuyến của nghĩa sĩ góp sức cho giang hồ.',
+    source: CostumeSource.firstPay, need: 0,
+    robe: 0xFF1C1A22, trim: 0xFFFFD34A, pants: 0xFF0E0C12, cape: 0xFFB8862A, glow: 0xFFFFE07A,
+    aura: 0xFFFFD34A, armor: 4,
   ),
 ];
 

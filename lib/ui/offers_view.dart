@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/costumes.dart';
 import '../core/hero.dart';
 import '../core/premium.dart';
 import '../core/world_boss.dart';
@@ -77,7 +78,7 @@ class _OffersViewState extends State<OffersView> {
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final card in [_monthCard(), _goldPack(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
+            for (final card in [_firstPay(), _monthCard(), _goldPack(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
           ],
         );
       },
@@ -161,6 +162,48 @@ class _OffersViewState extends State<OffersView> {
         ],
         _buy(skuMonthCard),
         if (active) Text('Mua thêm để gia hạn $monthCardDays ngày.', style: small.copyWith(fontSize: 10), textAlign: TextAlign.center),
+      ],
+    );
+  }
+
+  /// Quà nạp đầu (1.16.0): a gift for the first purchase of any kind.
+  Widget _firstPay() {
+    final adFree = AdsService.instance.adFree.value;
+    final ready = h.firstPayReady(adFree);
+    final costume = costumeById[firstPayCostume]!;
+    return _box(
+      title: 'Quà nạp đầu',
+      color: const Color(0xFFFFB04A),
+      icon: Icons.redeem,
+      children: [
+        // The list scrolls and the button stays put on short phones.
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              Text('Mua bất kỳ gói nào cho ${h.name}, nhận thêm:', style: small.copyWith(fontSize: 11.5)),
+              const SizedBox(height: 4),
+              _line('Ngoại trang ${costume.name}'),
+              _line('Danh hiệu « $firstPayTitle »'),
+              _line('${fmt(firstPayGold(h.level, h.rebirths))} lượng'),
+              _line('$firstPayIron Thần Thiết, $firstPayPills Linh Phách Đơn'),
+              _line('$firstPayShards mảnh Hoàng Kim, $firstPayGems ngọc bậc ${firstPayGemTier(h.level)}'),
+              _line('$firstPayHpPots Kim Sang Dược'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        LButton(
+          label: h.firstPayTaken ? 'Đã nhận' : ready ? 'Nhận quà' : 'Chưa mua gói nào',
+          icon: h.firstPayTaken ? Icons.check : Icons.redeem,
+          small: true,
+          color: jade,
+          enabled: ready,
+          onTap: () {
+            Analytics.instance.log('first_pay_claim');
+            _say('Quà nạp đầu', h.takeFirstPay(adFree));
+          },
+        ),
       ],
     );
   }

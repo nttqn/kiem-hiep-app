@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'body_train.dart';
+import 'costumes.dart';
 import 'festival.dart';
 import 'gems.dart';
 import 'hanh.dart';
@@ -69,6 +70,19 @@ String dayPlus(String day, int n) {
 
 const starterGift = NewbieGift(gold: 100000, hpPots: 50, mpPots: 30, item: Rarity.epic, mount: 'bachma', gems: 3, gemTier: 2);
 
+// ------------------------------------------------------------ Quà nạp đầu
+
+/// Quà nạp đầu (1.16.0): once a hero has had anything bought for it (or
+/// the account dropped ads), a gift beside the purchase itself.
+const String firstPayCostume = 'np_kimlan';
+const String firstPayTitle = 'Nghĩa Sĩ Giang Hồ';
+const int firstPayIron = 10, firstPayPills = 20, firstPayShards = 10, firstPayGems = 5, firstPayHpPots = 50;
+
+/// Gold in it: a Hòm Ngân Lượng's worth.
+int firstPayGold(int level, int rebirths) => goldPackFor(level, rebirths);
+
+int firstPayGemTier(int level) => math.min(maxDropTier, 2 + level ~/ 20);
+
 // ------------------------------------------------------------ ad rewards
 
 /// Rương quảng cáo: five a day, each a little richer, the fifth the best.
@@ -127,6 +141,8 @@ extension Premium on HeroData {
   void mergePaid(HeroData other) {
     if (other.cardUntil.compareTo(cardUntil) > 0) cardUntil = other.cardUntil;
     starterBought = starterBought || other.starterBought;
+    paidFlag = paidFlag || other.paidFlag;
+    firstPayTaken = firstPayTaken || other.firstPayTaken;
     if (other.passPaidSeason > passPaidSeason) passPaidSeason = other.passPaidSeason;
   }
 
@@ -151,6 +167,39 @@ extension Premium on HeroData {
         return 'Khôi phục Gói tân thủ: ${grantStarter().join(', ')}';
     }
     return null;
+  }
+
+  // -------------------------------------------------------- Quà nạp đầu
+
+  /// Anything bought for this hero; before 1.16.0 there was no [paidFlag],
+  /// so what purchases left on the save counts too.
+  bool get paidAny =>
+      paidFlag || starterBought || passPaidSeason > 0 || cardUntil.isNotEmpty || festPack || stPackWeek > 0;
+
+  /// The gift is waiting; [adFree] is the account's Gói bỏ quảng cáo.
+  bool firstPayReady(bool adFree) => !firstPayTaken && (paidAny || adFree);
+
+  List<String> takeFirstPay(bool adFree) {
+    if (!firstPayReady(adFree)) return const [];
+    firstPayTaken = true;
+    final lines = <String>[];
+    if (ownedCostumes.add(firstPayCostume)) lines.add('Ngoại trang ${costumeById[firstPayCostume]!.name}');
+    if (seasonTitles.add(firstPayTitle)) lines.add('Danh hiệu « $firstPayTitle »');
+    final g = firstPayGold(level, rebirths);
+    gold += g;
+    lines.add('+$g lượng');
+    divineIron += firstPayIron;
+    soulPills += firstPayPills;
+    goldShards += firstPayShards;
+    hpPots += firstPayHpPots;
+    lines.addAll(['+$firstPayIron Thần Thiết', '+$firstPayPills Linh Phách Đơn', '+$firstPayShards mảnh Hoàng Kim', '+$firstPayHpPots Kim Sang Dược']);
+    final rng = math.Random();
+    final tier = firstPayGemTier(level);
+    for (var i = 0; i < firstPayGems; i++) {
+      addGem(Gem(Hanh.values[rng.nextInt(5)], tier));
+    }
+    lines.add('$firstPayGems ngọc bậc $tier');
+    return lines;
   }
 
   // -------------------------------------------------------- Gói Thăng Tinh

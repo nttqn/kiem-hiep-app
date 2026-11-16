@@ -257,6 +257,12 @@ class CloudSave extends ChangeNotifier {
         var changed = false;
         for (final g in grants) {
           if (!g.fits(h, i)) continue;
+          // Any purchase counts for Quà nạp đầu (1.16.0), also those made
+          // before it existed (a Hòm Ngân Lượng leaves nothing on the save).
+          if (!h.paidFlag) {
+            h.paidFlag = true;
+            changed = true;
+          }
           final line = h.reapplyGrant(g);
           if (line != null) {
             restoredGrants.add('${h.name}: $line');

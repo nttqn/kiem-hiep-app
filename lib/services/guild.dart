@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/guild.dart';
+import '../core/guild_war.dart';
 import '../core/hero.dart';
 import 'leaderboard.dart';
 import 'save.dart';
@@ -67,6 +68,8 @@ class GuildMember {
     this.contrib = 0,
     this.bw = 0,
     this.bd = 0,
+    this.ww = 0,
+    this.wp = 0,
   });
 
   final String row, uid, name;
@@ -74,6 +77,13 @@ class GuildMember {
 
   /// Boss Bang week and damage in it.
   final int bw, bd;
+
+  /// Bang chiến week and Chiến công in it (1.16.0; written apart, see
+  /// [GuildService.pushWar], so older rules never see them in a row).
+  final int ww, wp;
+
+  /// Chiến công that counts in week [week].
+  int warIn(int week) => ww == week ? wp : 0;
 
   static GuildMember? fromDoc(String row, Map<String, dynamic>? m) {
     if (m == null) return null;
@@ -90,6 +100,8 @@ class GuildMember {
         contrib: (m['contrib'] as num?)?.toInt() ?? 0,
         bw: (m['bw'] as num?)?.toInt() ?? 0,
         bd: (m['bd'] as num?)?.toInt() ?? 0,
+        ww: (m['ww'] as num?)?.toInt() ?? 0,
+        wp: (m['wp'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return null;
@@ -646,6 +658,84 @@ class GuildService extends ChangeNotifier {
     } catch (e) {
       debugPrint('helps read failed: $e');
       return (0, const <String>[]);
+    }
+  }
+
+  // ------------------------------------------------------------ Bang chiến
+
+  /// In-memory `guildWar` for tests: week → gid → row.
+  final Map<int, Map<String, WarRow>> dWar = {};
+
+  /// Writes this hero's Chiến công to their member row, then the bang's sum
+  /// for the week to `guildWar/{week}/g/{gid}` (1.16.0). [all] are the
+  /// members as just read. False when it could not be written.
+  Future<bool> pushWar(GuildInfo g, HeroData h, List<GuildMember> all) async {
+    final u = uid, row = myRow;
+    if (u == null || row == null) return false;
+    final week = h.gwWeek;
+    final mine = h.warPtsFor(g.id);
+    final sum = all.fold<int>(0, (a, m) => a + (m.row == row ? mine : m.warIn(week)));
+    final n = all.isEmpty ? 1 : all.length;
+    if (debug) {
+      final ms = _dMembers[g.id];
+      final me = ms?[row];
+      if (me != null) {
+        ms![row] = GuildMember.fromDoc(row, {...me.toMap(), 'ww': week, 'wp': mine})!;
+      }
+      if (sum > 0) (dWar[week] ??= {})[g.id] = WarRow(g.id, g.name, sum, n);
+      return true;
+    }
+    try {
+      final ref = _guilds.doc(g.id);
+      await ref.collection('members').doc(row).update({'ww': week, 'wp': mine}).timeout(_t);
+      if (sum > 0) {
+        await _db.collection('guildWar').doc('$week').collection('g').doc(g.id).set({
+          'name': g.name,
+          'wp': sum,
+          'n': n,
+          'by': row,
+          'at': FieldValue.serverTimestamp(),
+        }).timeout(_t);
+      }
+      return true;
+    } catch (e) {
+      debugPrint('war push failed: $e');
+      return false;
+    }
+  }
+
+  /// Week [week]'s board: the bangs with the most Chiến công first,
+  /// impossible rows left out.
+  Future<List<WarRow>> warBoard(int week, {int limit = 50}) async {
+    final List<WarRow> rows;
+    if (debug) {
+      rows = [...?dWar[week]?.values]..sort((a, b) => b.pts.compareTo(a.pts));
+    } else {
+      final snap = await _db
+          .collection('guildWar')
+          .doc('$week')
+          .collection('g')
+          .orderBy('wp', descending: true)
+          .limit(limit + 10)
+          .get()
+          .timeout(_t);
+      rows = [for (final d in snap.docs) ?WarRow.fromDoc(d.id, d.data())];
+    }
+    return rows.where((r) => warPlausible(r.pts, r.n)).take(limit).toList();
+  }
+}
+
+/// A bang on the Bang chiến board (`guildWar/{week}/g/{gid}`).
+class WarRow {
+  const WarRow(this.gid, this.name, this.pts, this.n);
+  final String gid, name;
+  final int pts, n;
+
+  static WarRow? fromDoc(String id, Map<String, dynamic> m) {
+    try {
+      return WarRow(id, m['name'] as String, (m['wp'] as num).toInt(), (m['n'] as num?)?.toInt() ?? 1);
+    } catch (_) {
+      return null;
     }
   }
 }

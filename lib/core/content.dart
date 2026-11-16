@@ -495,6 +495,7 @@ class DungeonDef {
     this.trial = false,
     this.daiHoi = false,
     this.spar = false,
+    this.war = false,
     this.nightmare = 0,
     this.affix = 0,
     this.realm = 0,
@@ -542,6 +543,9 @@ class DungeonDef {
 
   /// Tỉ thí (1.13.0): a friendly duel picked from a board, no points.
   final bool spar;
+
+  /// Bang chiến (1.16.0): a duel with another bang's hero, for Chiến công.
+  final bool war;
 
   /// Ải Ác Mộng number (1-based, 0 for none) and its ma khí (NmAffix index).
   final int nightmare;

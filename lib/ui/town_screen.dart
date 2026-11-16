@@ -14,6 +14,8 @@ import '../core/helper.dart';
 import '../core/legacy.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
+import '../core/guild.dart';
+import '../core/guild_war.dart';
 import '../core/hero.dart';
 import '../core/week_goals.dart';
 import '../core/world_boss.dart';
@@ -701,7 +703,9 @@ class _TownScreenState extends State<TownScreen> {
   /// Ưu đãi: Nguyệt thẻ to claim, or today's ad chests not yet touched.
   int _offersBadge() {
     final d = vnDayKey();
-    return (h.canClaimCard(d) ? 1 : 0) + (h.level >= 5 && h.adChestsLeft(d) == adChestMax ? 1 : 0);
+    return (h.canClaimCard(d) ? 1 : 0) +
+        (h.level >= 5 && h.adChestsLeft(d) == adChestMax ? 1 : 0) +
+        (h.firstPayReady(AdsService.instance.adFree.value) ? 1 : 0);
   }
 
   /// Boss Thế Giới runs still free today, for the Thử thách badge.
@@ -774,7 +778,8 @@ class _TownScreenState extends State<TownScreen> {
       tile('manor', Icons.villa, () => _go(const ManorScreen()), badge: _manorReady()),
       tile('companions', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
       tile('rank', Icons.leaderboard, () => _go(const LeaderboardScreen())),
-      tile('guild', Icons.shield, () => _go(const GuildScreen())),
+      tile('guild', Icons.shield, () => _go(const GuildScreen()),
+          badge: h.inGuild ? h.warLeft(vnDayKey()) + (h.gwRankDue ? 1 : 0) : 0),
       tile('alchemy', Icons.science, () => _go(const AlchemyScreen())),
       tile('activity', Icons.local_fire_department, () => _go(const ActivityScreen()), badge: activityClaimable(h)),
       tile('sect', Icons.temple_buddhist, () => _go(const SectScreen()), badge: _sectBadge()),

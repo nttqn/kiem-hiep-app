@@ -11,6 +11,7 @@ import '../services/guild.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'cloud_panel.dart';
+import 'guild_war_view.dart';
 import 'hero_card.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
@@ -94,7 +95,7 @@ class _GuildTabState extends State<_GuildTab> {
   List<GuildMember> _apps = const [];
   List<GuildInfo>? _list;
 
-  /// 0: Tổng quan, 1: Thành viên, 2: Cửa hàng, 3: Kênh Bang.
+  /// 0: Tổng quan, 1: Thành viên, 2: Cửa hàng, 3: Kênh Bang, 4: Bang chiến.
   int _view = 0;
   String? _msg;
 
@@ -216,6 +217,7 @@ class _GuildTabState extends State<_GuildTab> {
                 Row(
                   children: [
                     _chip(0, 'Tổng quan'),
+                    _chip(4, 'Bang chiến'),
                     _chip(1, 'Thành viên${_apps.isNotEmpty ? ' (${_apps.length})' : ''}'),
                     _chip(2, 'Cửa hàng'),
                     _chip(3, 'Kênh Bang'),
@@ -227,10 +229,18 @@ class _GuildTabState extends State<_GuildTab> {
                     1 => _membersView(g),
                     2 => _shopView(),
                     3 => _ChatView(gid: g.id),
+                    4 => GuildWarView(
+                        guild: g,
+                        members: _members,
+                        onChanged: () {
+                          unawaited(gs.pushMine(g.id, h, h.guildRole));
+                          if (mounted) setState(() {});
+                        },
+                      ),
                     _ => _overview(g),
                   },
                 ),
-                if (_msg != null && _view != 3)
+                if (_msg != null && _view != 3 && _view != 4)
                   Text(_msg!, style: small.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),

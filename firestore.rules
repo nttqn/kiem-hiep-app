@@ -275,7 +275,9 @@ service cloud.firestore {
           && d.role is int && d.role >= 0 && d.role <= 2
           && d.contrib is int && d.contrib >= 0 && d.contrib <= 100000000
           && d.bw is int && d.bd is int && d.bd >= 0 && d.bd <= 6000000000 * (d.rebirths + 1)
-          && d.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'rebirths', 'power', 'role', 'contrib', 'bw', 'bd', 'at']);
+          // Bang chiến (1.16.0): week and Chiến công (3 a day, 20 at most each).
+          && (!('wp' in d) || (d.wp is int && d.wp >= 0 && d.wp <= 420 && d.ww is int))
+          && d.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'rebirths', 'power', 'role', 'contrib', 'bw', 'bd', 'ww', 'wp', 'at']);
       }
 
       allow read: if true;
@@ -358,6 +360,24 @@ service cloud.firestore {
           && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
         allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isOfficer());
       }
+    }
+
+    // Bang chiến (1.16.0): a bang's Chiến công in a week,
+    // guildWar/{week}/g/{gid}, written by one of its members while that week
+    // runs (Vietnam weeks from Monday 2026-10-26, week 1), at most 420 a member.
+    match /guildWar/{week}/g/{gid} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['name', 'wp', 'n', 'by', 'at'])
+        && request.resource.data.by in myRows()
+        && get(/databases/$(database)/documents/guilds/$(gid)/members/$(request.resource.data.by)).data.uid == request.auth.uid
+        && request.resource.data.name == get(/databases/$(database)/documents/guilds/$(gid)).data.name
+        && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 60
+        && request.resource.data.wp is int && request.resource.data.wp >= 0
+        && request.resource.data.wp <= request.resource.data.n * 420
+        && request.time.toMillis() >= 1792947600000 + (int(week) - 1) * 604800000 - 3600000
+        && request.time.toMillis() < 1792947600000 + int(week) * 604800000 + 7200000
+        && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
     }
 
     // Hảo hữu (1.13.0): a friend's gift of the day, gifts/{toRow}/in/{fromRow}.
