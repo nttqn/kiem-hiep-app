@@ -134,7 +134,7 @@ class PurchaseService {
   /// re-delivers any purchase left unfinished. The line to show.
   Future<String> restoreNow() async {
     if (!_supported) return 'Chỉ khôi phục được trên điện thoại.';
-    if (!available) return 'Không kết nối được cửa hàng. Kiểm tra mạng và tài khoản Google Play rồi thử lại.';
+    if (!available) return 'Không kết nối được cửa hàng. Kiểm tra mạng và tài khoản cửa hàng rồi thử lại.';
     try {
       // Unfinished consumables come back through the stream; ids already
       // given are skipped there.

@@ -170,8 +170,9 @@ class _CloudPanel extends StatelessWidget {
               children: [
                 if (!signedIn) ...[
                   Text(
+                    // No other platform named: App Store 2.3.10 (1.16.2).
                     'Đăng nhập để cất nhân vật lên mây. Cài lại game hay đổi điện thoại '
-                    '(kể cả giữa Android và iPhone) vẫn giữ nguyên tiến độ.',
+                    'vẫn giữ nguyên tiến độ.',
                     style: body.copyWith(height: 1.4),
                   ),
                   const SizedBox(height: 14),
