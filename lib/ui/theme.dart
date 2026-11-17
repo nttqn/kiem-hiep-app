@@ -153,6 +153,7 @@ class LButton extends StatefulWidget {
     required this.onTap,
     this.color = seal,
     this.icon,
+    this.leading,
     this.small = false,
     this.width,
     this.enabled = true,
@@ -162,6 +163,9 @@ class LButton extends StatefulWidget {
   final VoidCallback? onTap;
   final Color color;
   final IconData? icon;
+
+  /// A picture in place of [icon] (1.16.2: the painted Tàng Bảo Đồ).
+  final Widget? leading;
   final bool small;
   final double? width;
   final bool enabled;
@@ -210,8 +214,8 @@ class _LButtonState extends State<LButton> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (widget.icon != null) ...[
-              Icon(widget.icon, size: widget.small ? 16 : 20, color: on ? cream : Colors.white38),
+            if (widget.leading != null || widget.icon != null) ...[
+              widget.leading ?? Icon(widget.icon, size: widget.small ? 16 : 20, color: on ? cream : Colors.white38),
               const SizedBox(width: 6),
             ],
             Flexible(

@@ -972,7 +972,7 @@ class _PlayScreenState extends State<PlayScreen> {
             top: 118,
             child: LButton(
               label: 'Tàng Bảo Đồ (${hero.tbdMaps})',
-              icon: Icons.map,
+              leading: const MatIcon(Mat.map, size: 26),
               small: true,
               color: const Color(0xFF8A5A10),
               onTap: () {
