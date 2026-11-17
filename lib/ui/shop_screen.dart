@@ -178,16 +178,7 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget _potRow(String name, String what, Color c, int have, bool hp) {
     return Row(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: c,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: goldLight),
-          ),
-          child: const Icon(Icons.local_drink, color: Colors.white),
-        ),
+        MatIcon(hp ? Mat.hp : Mat.mp, size: 44),
         const SizedBox(width: 8),
         Expanded(
           child: Column(

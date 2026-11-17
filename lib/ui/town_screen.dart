@@ -651,9 +651,9 @@ class _TownScreenState extends State<TownScreen> {
               children: [
                 _chip(Icons.monetization_on, fmt(h.gold), goldLight),
                 const SizedBox(width: 10),
-                _chip(Icons.local_drink, '${h.hpPots}', const Color(0xFFFF7A7A)),
+                _matChip(Mat.hp, '${h.hpPots}'),
                 const SizedBox(width: 10),
-                _chip(Icons.local_drink, '${h.mpPots}', const Color(0xFF7AA8FF)),
+                _matChip(Mat.mp, '${h.mpPots}'),
               ],
             ),
           ),
@@ -661,6 +661,14 @@ class _TownScreenState extends State<TownScreen> {
       ),
     );
   }
+
+  Widget _matChip(Mat m, String v) => Row(
+        children: [
+          MatIcon(m, size: 18),
+          const SizedBox(width: 2),
+          Text(v, style: bold.copyWith(fontSize: 13)),
+        ],
+      );
 
   Widget _chip(IconData i, String v, Color c) => Row(
         children: [

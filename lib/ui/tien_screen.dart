@@ -70,7 +70,7 @@ class _TienScreenState extends State<TienScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.diamond, color: _jadeTint, size: 22),
+              const MatIcon(Mat.jade, size: 26),
               const SizedBox(width: 6),
               Expanded(child: Text('${h.tienJade} Tiên Ngọc', style: titleStyle(18, color: _jadeTint))),
             ],

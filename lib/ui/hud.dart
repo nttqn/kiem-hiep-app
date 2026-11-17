@@ -687,8 +687,11 @@ class SkillButton extends StatelessWidget {
 }
 
 class PotionButton extends StatelessWidget {
-  const PotionButton({super.key, required this.count, required this.color, required this.ready, required this.onTap});
+  const PotionButton({super.key, required this.count, required this.color, required this.ready, required this.onTap, this.mat});
   final int count;
+
+  /// The painted bottle (1.16.2); a glyph in [color] without one.
+  final Mat? mat;
   final Color color;
   final bool ready;
   final VoidCallback onTap;
@@ -710,7 +713,7 @@ class PotionButton extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Icon(Icons.local_drink, color: color, size: 24),
+              if (mat != null) MatIcon(mat!, size: 34) else Icon(Icons.local_drink, color: color, size: 24),
               Positioned(
                 bottom: 2,
                 right: 4,

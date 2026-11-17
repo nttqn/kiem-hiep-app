@@ -216,7 +216,7 @@ class _ManorScreenState extends State<ManorScreen> {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
                     children: [
-                      Icon(Icons.spa, color: Color(herbColors[c.tier]), size: 22),
+                      MatIcon(herbMat(c.tier), size: 26),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(

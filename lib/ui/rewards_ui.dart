@@ -210,7 +210,11 @@ class _GiftTile extends StatelessWidget {
             Stack(
               alignment: Alignment.center,
               children: [
-                Icon(icon, color: c, size: 28),
+                switch (gift.kind) {
+                  GiftKind.hpPots => const MatIcon(Mat.hp, size: 30),
+                  GiftKind.mpPots => const MatIcon(Mat.mp, size: 30),
+                  _ => Icon(icon, color: c, size: 28),
+                },
                 if (taken) const Icon(Icons.check_circle, color: Color(0xFF8CE07A), size: 18),
               ],
             ),

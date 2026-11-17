@@ -1050,6 +1050,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   child: PotionButton(
                     count: hero.hpPots,
                     color: const Color(0xFFE84B4A),
+                    mat: Mat.hp,
                     ready: world.player.potCd <= 0,
                     onTap: () => world.input.hpPot = true,
                   ),
@@ -1060,6 +1061,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   child: PotionButton(
                     count: hero.mpPots,
                     color: const Color(0xFF4A7AE8),
+                    mat: Mat.mp,
                     ready: world.player.potCd <= 0,
                     onTap: () => world.input.mpPot = true,
                   ),

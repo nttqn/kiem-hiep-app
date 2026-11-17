@@ -771,8 +771,12 @@ const _tileTextShadow = [
   Shadow(color: Color(0xC0000000), offset: Offset(-0.6, -0.6), blurRadius: 1.5),
 ];
 
-/// Materials with a painted icon (assets/art/icons/mat_*.webp, 1.11.2).
-enum Mat { stone, iron, shard, soul, soulPill }
+/// Materials with a painted icon (assets/art/icons/mat_*.webp, 1.11.2;
+/// potions, Tiên Ngọc, Tàng Bảo Đồ and the five herbs since 1.16.2).
+enum Mat { stone, iron, shard, soul, soulPill, hp, mp, jade, map, herb1, herb2, herb3, herb4, herb5 }
+
+/// Herb [tier] (0-4) as a [Mat].
+Mat herbMat(int tier) => Mat.values[Mat.herb1.index + tier.clamp(0, 4)];
 
 /// A material's painted icon; a plain dot if the picture is missing.
 class MatIcon extends StatelessWidget {
@@ -786,6 +790,15 @@ class MatIcon extends StatelessWidget {
     Mat.shard: 'mat_shard',
     Mat.soul: 'mat_soul',
     Mat.soulPill: 'mat_soulpill',
+    Mat.hp: 'item_hp',
+    Mat.mp: 'item_mp',
+    Mat.jade: 'item_tienngoc',
+    Mat.map: 'item_tbd',
+    Mat.herb1: 'herb_1',
+    Mat.herb2: 'herb_2',
+    Mat.herb3: 'herb_3',
+    Mat.herb4: 'herb_4',
+    Mat.herb5: 'herb_5',
   };
 
   @override

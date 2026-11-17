@@ -90,15 +90,8 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
     );
   }
 
-  Widget _herbDot(int tier, {double size = 16}) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Color(herbColors[tier]),
-          shape: BoxShape.circle,
-          border: Border.all(color: lacquerDeep, width: 1.5),
-        ),
-      );
+  /// The herb's painted icon (1.16.2), a little larger than the dot it replaced.
+  Widget _herbDot(int tier, {double size = 16}) => MatIcon(herbMat(tier), size: size + 6);
 
   Widget _recipes() {
     final open = h.alchemyOpen;

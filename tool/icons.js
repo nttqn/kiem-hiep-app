@@ -19,6 +19,8 @@ const sheets = {
   pills: ['pill_songboi', 'pill_tubao', 'pill_cuongluc', 'pill_kimcang', 'pill_taytuy'],
   // Single icons.
   pill_hoixuan: ['pill_hoixuan'],
+  consumables: ['item_hp', 'item_mp', 'item_tienngoc', 'item_tbd'],
+  herbs: ['herb_1', 'herb_2', 'herb_3', 'herb_4', 'herb_5'],
   skills_kim: ['sk_kim1', 'sk_kim2', 'sk_kim3', 'sk_kim4', 'sk_kim5', 'sk_kim6', 'sk_kim7'],
   skills_moc: ['sk_moc1', 'sk_moc2', 'sk_moc3', 'sk_moc4', 'sk_moc5', 'sk_moc6', 'sk_moc7'],
   skills_thuy: ['sk_thuy1', 'sk_thuy2', 'sk_thuy3', 'sk_thuy4', 'sk_thuy5', 'sk_thuy6', 'sk_thuy7'],
@@ -209,7 +211,10 @@ async function cut(sheet, names) {
 
 (async () => {
   const rows = [];
+  // ONLY=a,b cuts just those sheets.
+  const only = (process.env.ONLY || '').split(',').filter(Boolean);
   for (const [sheet, names] of Object.entries(sheets)) {
+    if (only.length && !only.includes(sheet)) continue;
     if (!fs.existsSync(path.join(inDir, sheet + '.png'))) { console.log('missing', sheet); continue; }
     rows.push(await cut(sheet, names));
     console.log(sheet, 'ok');
