@@ -50,3 +50,11 @@ int? daysBetween(String from, String to) {
   if (a == null || b == null) return null;
   return b.difference(a).inDays;
 }
+
+/// Funnel steps this phone already sent (1.16.2): one per device, not per
+/// hero, so a second hero or a re-made one does not count a new player
+/// twice. A phone that never kept the set starts from its heroes' steps.
+Set<String> seedDeviceFunnel(Iterable<HeroData?> heroes) => {
+      for (final h in heroes)
+        if (h != null) ...h.funnel.where((s) => s.startsWith('f_') && s != funnelVersion),
+    };

@@ -81,6 +81,28 @@ Future<void> showPurchaseHistory(BuildContext context) async {
   );
 }
 
+/// Khôi phục giao dịch (1.16.2): asks the store again; a small wait
+/// dialog, then the answer.
+Future<void> showRestorePurchases(BuildContext context) async {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator(color: gold)),
+  );
+  final text = await PurchaseService.instance.restoreNow();
+  if (!context.mounted) return;
+  Navigator.of(context).pop();
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: lacquer,
+      title: Text('Khôi phục giao dịch', style: titleStyle(20)),
+      content: SizedBox(width: 420, child: Text(text, style: body)),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+    ),
+  );
+}
+
 Future<void> showSettings(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -157,6 +179,15 @@ Future<void> showSettings(BuildContext context) {
                 onTap: () {
                   Navigator.pop(ctx);
                   showPurchaseHistory(context);
+                },
+              ),
+              _Link(
+                icon: Icons.restore,
+                label: 'Khôi phục giao dịch',
+                value: 'Bỏ quảng cáo',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  showRestorePurchases(context);
                 },
               ),
               const Divider(color: gold, height: 12),

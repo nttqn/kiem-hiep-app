@@ -1,10 +1,12 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/funnel.dart';
 import '../core/hero.dart';
 import '../core/world_boss.dart' show vnDayKey;
+import 'save.dart';
 
 /// Firebase Analytics: where players get to and where they stop. No user ID
 /// is set, so events stay tied to an app-instance ID only. Everything is a
@@ -30,6 +32,32 @@ class Analytics {
     }
   }
 
+  static const _sentKey = 'funnel_sent';
+  Set<String>? _sent;
+  bool _loading = false;
+
+  Future<void> _loadSent() async {
+    if (_loading) return;
+    _loading = true;
+    try {
+      final p = await SharedPreferences.getInstance();
+      final list = p.getStringList(_sentKey);
+      if (list != null) {
+        _sent = list.toSet();
+      } else {
+        final s = seedDeviceFunnel(SaveService.instance.slots);
+        _sent = s;
+        await p.setStringList(_sentKey, s.toList());
+      }
+    } catch (_) {
+      _loading = false; // tried again on a later save
+    }
+  }
+
+  void _saveSent(Set<String> s) {
+    SharedPreferences.getInstance().then((p) => p.setStringList(_sentKey, s.toList())).catchError((_) => false);
+  }
+
   /// Last progress seen per save slot: level, rebirths, tower, main quest.
   final Map<int, List<int>> _seen = {};
 
@@ -42,9 +70,21 @@ class Analytics {
     // New-player funnel: each step once per hero (kept in the save), with
     // the play time it took; also on the first save of a session, so a
     // "came back on day N" step is sent when they open the game.
-    for (final step in funnelDue(h, vnDayKey())) {
-      h.funnel.add(step);
-      log(step, {'min': h.playSeconds ~/ 60, 'sect': sect});
+    // Sent once per phone (1.16.2); until the phone's set is read, steps
+    // wait in the save for the next one.
+    final sent = _sent;
+    if (sent == null) {
+      _loadSent();
+    } else {
+      var grew = false;
+      for (final step in funnelDue(h, vnDayKey())) {
+        h.funnel.add(step);
+        if (sent.add(step)) {
+          grew = true;
+          log(step, {'min': h.playSeconds ~/ 60, 'sect': sect});
+        }
+      }
+      if (grew) _saveSent(sent);
     }
     if (was == null) return;
     if (now[1] > was[1]) {

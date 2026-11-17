@@ -7,6 +7,7 @@ import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app_version.dart';
 import '../core/festival.dart';
 import '../core/premium.dart';
 import '../core/pass_extras.dart';
@@ -113,12 +114,57 @@ class PurchaseService {
 
   /// False for an Android purchase whose signature is not Google's: a
   /// faked one. iOS purchases come from StoreKit and pass.
-  static bool genuine(PurchaseDetails p) {
-    if (p is! GooglePlayPurchaseDetails) return true;
+  static bool genuine(PurchaseDetails p) => rejectReason(p) == null;
+
+  /// Why [p] is refused (1.16.2, sent with `iap_bad`): 'nosig' (no
+  /// signature at all), 'sku' (signed data names another product), 'sig'
+  /// (signature is not Google's); null when it is fine.
+  static String? rejectReason(PurchaseDetails p) {
+    if (p is! GooglePlayPurchaseDetails) return null;
     final v = _verifier;
-    if (v == null) return true;
+    if (v == null) return null;
     final w = p.billingClientPurchase;
-    return w.products.contains(p.productID) && v.verify(w.originalJson, w.signature);
+    if (w.signature.trim().isEmpty) return 'nosig';
+    if (!w.products.contains(p.productID)) return 'sku';
+    return v.verify(w.originalJson, w.signature) ? null : 'sig';
+  }
+
+  /// Settings → Khôi phục giao dịch (1.16.2): asks the store again, gives
+  /// back Gói bỏ quảng cáo when this Play account genuinely owns it, and
+  /// re-delivers any purchase left unfinished. The line to show.
+  Future<String> restoreNow() async {
+    if (!_supported) return 'Chỉ khôi phục được trên điện thoại.';
+    if (!available) return 'Không kết nối được cửa hàng. Kiểm tra mạng và tài khoản Google Play rồi thử lại.';
+    try {
+      // Unfinished consumables come back through the stream; ids already
+      // given are skipped there.
+      await InAppPurchase.instance.restorePurchases();
+    } catch (e) {
+      debugPrint('restore: $e');
+    }
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return 'Đã gửi yêu cầu khôi phục tới App Store.';
+    }
+    try {
+      final add = InAppPurchase.instance.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+      final r = await add.queryPastPurchases();
+      if (r.error != null) return 'Google Play chưa trả lời. Thử lại sau ít phút.';
+      final owns = r.pastPurchases.any((p) =>
+          p.productID == skuNoAds &&
+          p.billingClientPurchase.purchaseState == PurchaseStateWrapper.purchased &&
+          genuine(p));
+      Analytics.instance.log('iap_restore', {'noads': owns ? 1 : 0, 'v': appVersion});
+      if (owns) {
+        AdsService.instance.setAdFree(true);
+        changed.value++;
+        return 'Đã khôi phục Gói bỏ quảng cáo.';
+      }
+      return 'Tài khoản Google Play đang dùng trên máy này chưa mua Gói bỏ quảng cáo. '
+          'Nếu bạn mua bằng tài khoản khác, hãy chuyển sang tài khoản đó trong Play Store rồi thử lại. '
+          'Các gói khác đã vào nhân vật ngay lúc mua (xem Lịch sử nạp).';
+    } catch (e) {
+      return 'Không khôi phục được: $e';
+    }
   }
 
   /// Turns Gói bỏ quảng cáo off on a phone whose Play account does not own
@@ -184,10 +230,11 @@ class PurchaseService {
           busy.value = false;
         case PurchaseStatus.purchased || PurchaseStatus.restored:
           busy.value = false;
-          if (genuine(p)) {
+          final why = rejectReason(p);
+          if (why == null) {
             await _deliver(p);
           } else {
-            Analytics.instance.log('iap_bad', {'sku': p.productID});
+            Analytics.instance.log('iap_bad', {'sku': p.productID, 'why': why, 'v': appVersion});
             message.value = 'Giao dịch không hợp lệ: Google Play không xác nhận giao dịch này.';
           }
       }
@@ -208,7 +255,7 @@ class PurchaseService {
       AdsService.instance.setAdFree(true);
       if (p.status == PurchaseStatus.purchased) {
         message.value = 'Đã bỏ quảng cáo! Phần thưởng quảng cáo nay nhận ngay, không cần xem.';
-        Analytics.instance.log('iap_done', {'sku': p.productID});
+        Analytics.instance.log('iap_done', {'sku': p.productID, 'v': appVersion});
         await _addLog(p.productID, p.purchaseID ?? '', 'Cả tài khoản');
       }
       return;
@@ -216,7 +263,7 @@ class PurchaseService {
     final id = p.purchaseID ?? base64Encode(utf8.encode(p.verificationData.serverVerificationData)).substring(0, 40);
     if (_done.contains(id)) return;
     _done.add(id);
-    Analytics.instance.log('iap_done', {'sku': p.productID});
+    Analytics.instance.log('iap_done', {'sku': p.productID, 'v': appVersion});
     final save = SaveService.instance;
     if (save.active >= 0 && save.slots[save.active] != null) {
       message.value = grant(p.productID, id: id);
