@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/festival.dart';
@@ -12,6 +14,7 @@ import '../core/world_boss.dart';
 import 'ads.dart';
 import 'analytics.dart';
 import 'cloud.dart';
+import 'play_verify.dart';
 import 'save.dart';
 
 /// One line of the purchase history.
@@ -46,9 +49,10 @@ class PurchaseLog {
 /// are consumables for the hero playing when bought; Gói bỏ quảng cáo is
 /// a non-consumable for the store account, restored on every start.
 ///
-/// No server checks the receipts: the game is offline and a cheater can
-/// already edit their own save. Every delivery is remembered by purchase
-/// id so a replayed one is never granted twice.
+/// No server checks the receipts, but since 1.16.1 every Android purchase's
+/// Play signature is checked on the phone ([PlayVerifier]): faked ones are
+/// refused. Every delivery is remembered by purchase id so a replayed one
+/// is never granted twice.
 class PurchaseService {
   PurchaseService._();
   static final PurchaseService instance = PurchaseService._();
@@ -97,8 +101,47 @@ class PurchaseService {
       changed.value++;
       // Brings back Gói bỏ quảng cáo after a reinstall or on a new phone.
       await iap.restorePurchases();
+      await _recheckAdFree();
     } catch (e) {
       debugPrint('iap off: $e');
+    }
+  }
+
+  /// Play's signing key, or null when none is compiled in (then nothing is
+  /// rejected, as before 1.16.1).
+  static final PlayVerifier? _verifier = PlayVerifier.fromBase64(playLicenseKey);
+
+  /// False for an Android purchase whose signature is not Google's: a
+  /// faked one. iOS purchases come from StoreKit and pass.
+  static bool genuine(PurchaseDetails p) {
+    if (p is! GooglePlayPurchaseDetails) return true;
+    final v = _verifier;
+    if (v == null) return true;
+    final w = p.billingClientPurchase;
+    return w.products.contains(p.productID) && v.verify(w.originalJson, w.signature);
+  }
+
+  /// Turns Gói bỏ quảng cáo off on a phone whose Play account does not own
+  /// a genuinely signed one (1.16.1): it was unlocked by a fake purchase,
+  /// or refunded. Only on a clean answer from Play — any error keeps it.
+  Future<void> _recheckAdFree() async {
+    if (_verifier == null || defaultTargetPlatform != TargetPlatform.android) return;
+    if (!AdsService.instance.adFree.value) return;
+    try {
+      final add = InAppPurchase.instance.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+      final r = await add.queryPastPurchases();
+      if (r.error != null) return;
+      final owns = r.pastPurchases.any((p) =>
+          p.productID == skuNoAds &&
+          p.billingClientPurchase.purchaseState == PurchaseStateWrapper.purchased &&
+          genuine(p));
+      if (!owns) {
+        AdsService.instance.setAdFree(false);
+        Analytics.instance.log('ad_free_revoked');
+        changed.value++;
+      }
+    } catch (e) {
+      debugPrint('iap recheck: $e');
     }
   }
 
@@ -141,7 +184,12 @@ class PurchaseService {
           busy.value = false;
         case PurchaseStatus.purchased || PurchaseStatus.restored:
           busy.value = false;
-          await _deliver(p);
+          if (genuine(p)) {
+            await _deliver(p);
+          } else {
+            Analytics.instance.log('iap_bad', {'sku': p.productID});
+            message.value = 'Giao dịch không hợp lệ: Google Play không xác nhận giao dịch này.';
+          }
       }
       if (p.pendingCompletePurchase) {
         try {
