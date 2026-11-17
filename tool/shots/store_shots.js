@@ -12,7 +12,9 @@ const devices = [
   ['tablet-10in', 1280, 800, 2], // Play 10" tablet 2560x1600
   ['iphone-6.9in', 956, 440, 3], // App Store 6.9" iPhone 2868x1320
   ['iphone-6.3in', 874, 402, 3], // App Store 6.1"/6.3" iPhone (Dynamic Island) 2622x1206
-  ['ipad-13in', 1376, 1032, 2], // App Store 13" iPad 2752x2064
+  // 13" iPad 2752x2064, drawn larger than the device's 1376x1032 points:
+  // at true size the panels sat mostly empty with tiny text.
+  ['ipad-13in', 1032, 774, 8 / 3],
 ];
 
 const shots = [
@@ -21,15 +23,18 @@ const shots = [
   ['03-vuot-ai', 'screen=dungeon&level=76&sect=4&cs=1&d=a15&pet=kylin&pets=all', 13000],
   ['04-kiem-trung', 'screen=dungeon&level=92&sect=1&cs=5&d=a17&pet=dragon&pets=all', 13000],
   ['05-chon-phai', 'screen=create', 3000],
-  ['06-linh-thu', 'screen=pets&level=60&sect=1&pets=all', 3500],
-  ['07-kham-ngoc', 'screen=gems&level=60&sect=3', 3000],
-  ['08-chuyen-sinh', 'screen=rebirth&level=99&sect=0&exp=100&cs=2', 3000],
+  ['06-hiep-khach', 'screen=comp&level=80&sect=1&comp=all', 3500],
+  ['07-boss-the-gioi', 'screen=boss&level=90&sect=1&cs=3', 9000],
+  ['08-thu-cuoi', 'screen=mounts&level=90&sect=3&mount=all', 3500],
+  ['09-tui-do', 'screen=items&level=60&sect=1&herbs=12&tbdmaps=3&dao=5', 3500],
+  ['10-loi-dai', 'screen=arena&level=99&sect=4&cs=6', 5000],
 ];
 
 (async () => {
   const onlyDevice = process.argv[2];
   const onlyShot = process.argv[3];
-  const browser = await chromium.launch();
+  // CHROME=<chrome.exe> when the installed Playwright has no matching browser.
+  const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
   for (const [dev, w, h, dpr] of devices) {
     if (onlyDevice && dev !== onlyDevice) continue;
     fs.mkdirSync(`store/${dev}`, { recursive: true });
