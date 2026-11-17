@@ -20,4 +20,13 @@ void main() {
     expect(p(min: '1.4.0', snoozed: true), UpdatePlan.force);
     expect(p(min: ''), UpdatePlan.offer);
   });
+
+  test('mustUpdate blocks only versions below min', () {
+    expect(mustUpdate('1.16.1', '1.16.2'), isTrue);
+    expect(mustUpdate('1.9.9', '1.16.2'), isTrue);
+    expect(mustUpdate('1.16.2', '1.16.2'), isFalse);
+    expect(mustUpdate('1.17.0', '1.16.2'), isFalse);
+    expect(mustUpdate('1.16.1', null), isFalse);
+    expect(mustUpdate('1.16.1', ' '), isFalse);
+  });
 }

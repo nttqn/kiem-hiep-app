@@ -25,3 +25,8 @@ UpdatePlan updatePlan({
   if (min != null && min.isNotEmpty && compareVersions(current, min) < 0) return UpdatePlan.force;
   return snoozedToday ? UpdatePlan.none : UpdatePlan.offer;
 }
+
+/// Bắt buộc cập nhật (1.16.2): [current] is below the developer's [min]
+/// (`config/app.min`), whatever Google Play says about a newer build.
+bool mustUpdate(String current, String? min) =>
+    min != null && min.trim().isNotEmpty && compareVersions(current, min) < 0;

@@ -1,5 +1,7 @@
 package com.trungsmail.kiem_hiep
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Display
@@ -36,6 +38,23 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                     result.success(null)
+                } else if (call.method == "openStore") {
+                    // Bắt buộc cập nhật (1.16.2): the game's Play page, or
+                    // the web one when the Play Store app is missing.
+                    val id = packageName
+                    val ok = try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$id")))
+                        true
+                    } catch (e: Exception) {
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/apps/details?id=$id")))
+                            true
+                        } catch (e2: Exception) {
+                            false
+                        }
+                    }
+                    result.success(ok)
                 } else {
                     result.notImplemented()
                 }
