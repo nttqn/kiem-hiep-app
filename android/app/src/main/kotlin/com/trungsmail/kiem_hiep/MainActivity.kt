@@ -55,6 +55,20 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                     result.success(ok)
+                } else if (call.method == "openUrl") {
+                    // Bảng tin (1.16.3): a notice's button, a store page or
+                    // a web page. A market:// link falls back to the web.
+                    val url = call.arguments as? String ?: ""
+                    fun view(u: String): Boolean = try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
+                    val ok = url.isNotEmpty() && (view(url) ||
+                        (url.startsWith("market://") &&
+                            view(url.replaceFirst("market://", "https://play.google.com/store/apps/"))))
+                    result.success(ok)
                 } else {
                     result.notImplemented()
                 }

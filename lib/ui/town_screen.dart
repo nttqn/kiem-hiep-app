@@ -24,6 +24,7 @@ import '../services/analytics.dart';
 import '../services/guild.dart';
 import '../services/leaderboard.dart';
 import '../services/mail.dart';
+import '../services/news.dart';
 import '../services/notify.dart';
 import '../services/cloud.dart';
 import '../services/save.dart';
@@ -48,6 +49,7 @@ import 'lists.dart';
 import 'manor_screen.dart';
 import '../core/unlocks.dart';
 import 'mail_dialog.dart';
+import 'news_dialog.dart';
 import 'newbie_dialog.dart';
 import 'play_screen.dart';
 import 'prologue.dart';
@@ -79,6 +81,8 @@ class _TownScreenState extends State<TownScreen> {
     SaveService.instance.addListener(_refresh);
     MailService.instance.addListener(_refresh);
     MailService.instance.refresh();
+    NewsService.instance.addListener(_refresh);
+    NewsService.instance.refresh();
     final away = SaveService.instance.pendingAway;
     SaveService.instance.pendingAway = null;
     WidgetsBinding.instance.addPostFrameCallback((_) => _welcome(away));
@@ -122,6 +126,9 @@ class _TownScreenState extends State<TownScreen> {
     }
     // Ask for notifications once the player has stuck around a little.
     if (h.level >= 5 || h.rebirths > 0) await NotifyService.instance.askOnce();
+    // Bảng tin: an important notice opens by itself once per phone.
+    final pop = await NewsService.instance.takePopup();
+    if (pop != null && mounted) await showNewsDialog(context, first: pop);
     if (mounted) setState(() {});
   }
 
@@ -368,6 +375,7 @@ class _TownScreenState extends State<TownScreen> {
   void dispose() {
     SaveService.instance.removeListener(_refresh);
     MailService.instance.removeListener(_refresh);
+    NewsService.instance.removeListener(_refresh);
     super.dispose();
   }
 
@@ -528,6 +536,19 @@ class _TownScreenState extends State<TownScreen> {
                               tooltip: 'Nên làm gì tiếp',
                               onPressed: _showSteps,
                               icon: const Icon(Icons.lightbulb_outline, color: goldLight),
+                            ),
+                            IconButton(
+                              tooltip: 'Bảng tin',
+                              onPressed: () async {
+                                await showNewsDialog(context);
+                                if (mounted) setState(() {});
+                              },
+                              icon: Badge(
+                                isLabelVisible: NewsService.instance.unread > 0,
+                                label: Text('${NewsService.instance.unread}'),
+                                backgroundColor: seal,
+                                child: const Icon(Icons.campaign_outlined, color: goldLight),
+                              ),
                             ),
                             IconButton(
                               tooltip: 'Hòm thư',

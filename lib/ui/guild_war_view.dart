@@ -8,6 +8,7 @@ import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart' show vnDayKey;
 import '../services/analytics.dart';
 import '../services/guild.dart';
+import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'play_screen.dart';
 import 'theme.dart';
@@ -139,8 +140,13 @@ class _GuildWarViewState extends State<GuildWarView> {
     try {
       final ms = await gs.members(id);
       final mine = gs.uid;
-      // Never a hero of this same account (one parked in another bang).
-      final list = [for (final m in ms) if (mine == null || !m.row.startsWith('${mine}_')) m]
+      final bans = await Leaderboard.instance.bans();
+      // Never a hero of this same account (one parked in another bang), nor
+      // one banned from the boards (lbBans).
+      final list = [
+        for (final m in ms)
+          if ((mine == null || !m.row.startsWith('${mine}_')) && !Leaderboard.bannedRow(bans, m.row)) m
+      ]
         ..sort((a, b) => b.power.compareTo(a.power));
       if (mounted && _foeId == id) setState(() => _targets = list);
     } catch (_) {

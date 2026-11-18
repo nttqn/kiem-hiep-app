@@ -119,6 +119,11 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // Bảng tin (1.16.3): notices written by hand in the console.
+    match /news/{id} {
+      allow read: if true;
+    }
+
     // Cập nhật (1.4.0+): config/app.min, the oldest version still allowed
     // to play, written by hand in the console.
     match /config/{id} {

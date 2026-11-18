@@ -19,6 +19,13 @@ import UIKit
         if call.method == "keepOn" {
           UIApplication.shared.isIdleTimerDisabled = (call.arguments as? Bool) ?? false
           result(nil)
+        } else if call.method == "openUrl" {
+          // Bảng tin (1.16.3): a notice's button (App Store or web page).
+          guard let s = call.arguments as? String, let url = URL(string: s) else {
+            result(false)
+            return
+          }
+          UIApplication.shared.open(url, options: [:]) { ok in result(ok) }
         } else {
           result(FlutterMethodNotImplemented)
         }

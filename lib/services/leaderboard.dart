@@ -268,6 +268,9 @@ class Leaderboard extends ChangeNotifier {
   Set<String> _banned = const {};
   DateTime? _bannedAt;
 
+  /// The banned accounts, for other lists of heroes (Bang chiến, 1.16.3).
+  Future<Set<String>> bans() => _bans();
+
   Future<Set<String>> _bans() async {
     final at = _bannedAt;
     if (at != null && DateTime.now().difference(at) < const Duration(minutes: 30)) return _banned;
