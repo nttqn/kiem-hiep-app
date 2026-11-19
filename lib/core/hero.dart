@@ -10,6 +10,7 @@ import 'branches.dart';
 import 'bounty.dart';
 import 'comeback.dart' show comebackExp, comebackGold;
 import 'companions.dart';
+import 'essence.dart';
 import 'content.dart';
 import 'dai_hoi.dart';
 import 'costumes.dart';
@@ -286,6 +287,16 @@ class HeroData {
   /// Tự bán: picked-up gear of this rarity (index) or lower is sold at
   /// once; -1 keeps everything.
   int autoSellUpTo = -1;
+
+  /// Tinh Hoa (1.18.0, essence.dart): held, the exchange's week and buys,
+  /// and Tự phân giải (rarity index broken down on pick-up, -1 none).
+  int essence = 0;
+  int essWeek = 0;
+  final Map<String, int> essBought = {};
+  int autoSalvageUpTo = -1;
+
+  /// Tinh Hoa the last [addItem] broke its piece into (0 when kept or sold).
+  int lastEssence = 0;
   int seed = 0;
 
   /// When this save was last written (ms since epoch); cloud sync keeps
@@ -1151,7 +1162,13 @@ class HeroData {
   /// Puts [it] in the bag, or sells it if the bag is full or auto-sell
   /// covers its rarity (never a Hoàng Kim set piece). Returns false if sold.
   bool addItem(Item it) {
+    lastEssence = 0;
     if (it.rarity == Rarity.legend) ownedLegend = true;
+    // 1.18.0: Tự phân giải, and a full bag breaks down what it can.
+    if (autoSalvages(it) || (bag.length >= bagSize && essenceOf(it) > 0 && !it.locked)) {
+      essence += lastEssence = essenceOf(it);
+      return false;
+    }
     if ((it.rarity.index <= autoSellUpTo && !it.golden) || bag.length >= bagSize) {
       gold += it.sellPrice;
       return false;
@@ -3248,6 +3265,7 @@ class HeroData {
         // The old switch too, for an older app on another device.
         'autoSell': autoSellUpTo >= 0,
         'autoSellR': autoSellUpTo,
+        if (essence > 0 || essWeek > 0 || autoSalvageUpTo >= 0) 'th': [essence, essWeek, essBought, autoSalvageUpTo],
         'seed': seed,
         'savedAt': savedAt,
         'loginDate': lastLoginDate,
@@ -3376,6 +3394,15 @@ class HeroData {
     h.playSeconds = (m['time'] as num).toDouble();
     h.autoSellUpTo = ((m['autoSellR'] as int?) ?? ((m['autoSell'] as bool? ?? false) ? 0 : -1))
         .clamp(-1, Rarity.rare.index);
+    final th = m['th'];
+    if (th is List && th.length >= 4) {
+      try {
+        h.essence = math.max(0, (th[0] as num).toInt());
+        h.essWeek = (th[1] as num).toInt();
+        (th[2] as Map).forEach((k, v) => h.essBought['$k'] = (v as num).toInt());
+        h.autoSalvageUpTo = (th[3] as num).toInt().clamp(-1, Rarity.legend.index);
+      } catch (_) {}
+    }
     h.seed = m['seed'] as int? ?? 0;
     h.savedAt = m['savedAt'] as int? ?? 0;
     h.lastLoginDate = m['loginDate'] as String? ?? '';

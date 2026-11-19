@@ -56,6 +56,20 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.18.0, ≤ 500 ký tự)
+1.18.0 – Tinh Hoa, Khắc ấn
+• Phân giải đồ rơi từ cấp 50 ra Tinh Hoa (Quý 1, Hiếm 3, Truyền thuyết 10) thay vì bán; có Tự phân giải, không bao giờ phân giải đồ tốt hơn món đang mặc.
+• Khắc ấn (Thợ rèn): lấy 1 dòng đẹp của đồ rơi khắc đè lên đồ Hoàng Kim.
+• Tẩy luyện định hướng bằng Tinh Hoa: dòng mới chỉ ra nhóm Công hoặc Thủ.
+• Đổi Tinh Hoa lấy Mảnh Hoàng Kim, Thần Thiết mỗi tuần.
+
+## What's new (1.18.0, en-US)
+1.18.0 – Essence & Engraving
+• Break down level 50+ drops into Essence (Rare 1, Epic 3, Legendary 10) instead of selling them; auto-breakdown never touches an upgrade.
+• Engraving (Smithy): carve one good line from a dropped piece onto a Golden piece.
+• Aimed reforging with Essence: new lines roll only from the attack or the defence group.
+• Trade Essence for Gold Shards and Divine Iron each week.
+
 ## Có gì mới (bản 1.17.0, ≤ 500 ký tự)
 1.17.0 – Quà hồi quy, đón Đông Chí
 • Quà hồi quy: vắng mặt từ 5 ngày trở lên, quay lại nhận lượng, thuốc, Song Bội Đan (cao thủ thêm Tinh Thạch, Thần Thiết, Mảnh Hoàng Kim) cùng vài ngày +50% EXP và lượng từ quái để bắt kịp giang hồ.

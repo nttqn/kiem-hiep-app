@@ -3684,7 +3684,9 @@ class World {
       events.add(GameEvent(EvKind.loot,
           text: kept
               ? 'Nhặt được ${it.name} [${it.rarityLabel}]'
-              : 'Đã bán ${it.name} (+${it.sellPrice} lượng)',
+              : hero.lastEssence > 0
+                  ? 'Đã phân giải ${it.name} (+${hero.lastEssence} Tinh Hoa)'
+                  : 'Đã bán ${it.name} (+${it.sellPrice} lượng)',
           color: it.color));
       _sfx('loot');
       if (kept && hero.autoCfg.gear && hero.autoEquip() > 0) {

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/essence.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
 import '../services/analytics.dart';
@@ -25,6 +26,9 @@ class _RefineTabState extends State<RefineTab> {
   String? _msg;
   final _rng = math.Random();
 
+  /// 1.18.0: null pays lượng; else Tinh Hoa, new lines from the group.
+  RefineAim? _aim;
+
   Item? get _item {
     final s = _sel ?? Slot.values.firstWhere((s) => (h.equip[s]?.bonus.isNotEmpty ?? false), orElse: () => Slot.weapon);
     return h.equip[s];
@@ -37,6 +41,19 @@ class _RefineTabState extends State<RefineTab> {
       });
 
   void _refine(Item it) {
+    final aim = _aim;
+    if (aim != null) {
+      final cost = aimedRefineCost(_locked.length);
+      if (!h.refineAimed(it, _locked, aim, _rng)) {
+        setState(() => _msg = h.essence < cost ? 'Không đủ Tinh Hoa (cần $cost).' : 'Không thể tẩy luyện món này.');
+        return;
+      }
+      Analytics.instance.log('refine', {'locks': _locked.length, 'rarity': it.rarity.index, 'aim': aim.name});
+      SaveService.instance.save();
+      setState(() => _msg = 'Đã tẩy luyện ${it.name} hướng ${aim.label} (-$cost Tinh Hoa).');
+      widget.onChanged();
+      return;
+    }
     final cost = refineCost(it, _locked.length);
     if (!h.refine(it, _locked, _rng)) {
       setState(() => _msg = h.gold < cost ? 'Không đủ lượng (cần ${fmt(cost)}).' : 'Không thể tẩy luyện món này.');
@@ -124,6 +141,7 @@ class _RefineTabState extends State<RefineTab> {
   Widget _detail(Item it) {
     final n = it.bonus.length;
     final cost = refineCost(it, _locked.length);
+    final affordable = _aim == null ? h.gold >= cost : h.essence >= aimedRefineCost(_locked.length);
     final canLockMore = _locked.length < n - 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -138,7 +156,28 @@ class _RefineTabState extends State<RefineTab> {
                   : 'Đổi ngẫu nhiên các dòng phụ. Khóa dòng muốn giữ (tối đa ${n - 1}); mỗi khóa làm giá tăng.',
           style: small.copyWith(fontSize: 11.5),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          children: [
+            for (final a in <RefineAim?>[null, ...RefineAim.values])
+              ChoiceChip(
+                label: Text(a == null ? 'Lượng' : 'Tinh Hoa · ${a.label}', style: small.copyWith(fontSize: 11.5)),
+                selected: _aim == a,
+                visualDensity: VisualDensity.compact,
+                selectedColor: Color.lerp(lacquer, seal, 0.5),
+                backgroundColor: lacquerDeep,
+                onSelected: (_) => setState(() {
+                  _aim = a;
+                  _msg = null;
+                }),
+              ),
+          ],
+        ),
+        if (_aim != null)
+          Text('Dòng mới chỉ ra nhóm ${_aim!.label}: ${_aim!.stats.map((s) => s.label).join(', ')}.',
+              style: small.copyWith(fontSize: 11, color: const Color(0xFFB8F0FF))),
+        const SizedBox(height: 4),
         Expanded(
           child: ListView(
             children: [
@@ -178,13 +217,16 @@ class _RefineTabState extends State<RefineTab> {
         Row(
           children: [
             Expanded(
-              child: Text('Giá: ${fmt(cost)} lượng${_locked.isEmpty ? '' : ' (${_locked.length} khóa)'}',
-                  style: bold.copyWith(color: h.gold >= cost ? goldLight : const Color(0xFFFF8A7A))),
+              child: Text(
+                  _aim == null
+                      ? 'Giá: ${fmt(cost)} lượng${_locked.isEmpty ? '' : ' (${_locked.length} khóa)'}'
+                      : 'Giá: ${aimedRefineCost(_locked.length)} Tinh Hoa (có ${h.essence})',
+                  style: bold.copyWith(color: affordable ? goldLight : const Color(0xFFFF8A7A))),
             ),
             LButton(
               label: 'Tẩy luyện',
               icon: Icons.autorenew,
-              enabled: n > 0 && h.gold >= cost,
+              enabled: n > 0 && affordable,
               onTap: () => _refine(it),
             ),
           ],

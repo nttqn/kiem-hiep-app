@@ -364,11 +364,15 @@ int refineCost(Item it, int locks) =>
     ((300 + it.level * 60) * (1 + it.rarity.index * 0.5) * (1 + locks * 1.5)).round();
 
 /// Rerolls every extra line of [it] not in [locked]: new stats (never a
-/// duplicate of a kept one) with fresh values for the item's level.
-void rerollAffixes(Item it, Set<Stat> locked, math.Random rng) {
+/// duplicate of a kept one) with fresh values for the item's level; with
+/// [prefer] (Tẩy luyện định hướng, 1.18.0), stats from it come first.
+void rerollAffixes(Item it, Set<Stat> locked, math.Random rng, {Set<Stat>? prefer}) {
   final n = it.bonus.length;
   it.bonus.removeWhere((k, _) => !locked.contains(k));
-  final pool = Stat.values.where((s) => !it.bonus.containsKey(s)).toList()..shuffle(rng);
+  final free = Stat.values.where((s) => !it.bonus.containsKey(s)).toList()..shuffle(rng);
+  final pool = prefer == null
+      ? free
+      : [...free.where(prefer.contains), ...free.where((s) => !prefer.contains(s))];
   for (final s in pool.take(n - it.bonus.length)) {
     it.bonus[s] = _affixValue(s, it.level, rng);
   }

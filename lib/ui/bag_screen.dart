@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../core/alchemy.dart';
 import '../core/bag_items.dart';
+import '../core/essence.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
+import '../services/analytics.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'character_screen.dart' show ItemDialog, TabChip;
@@ -77,6 +79,76 @@ class _GearBagViewState extends State<GearBagView> {
       };
 
   bool _bulkSells(Item it) => it.rarity.index <= _sellUpTo && !it.golden && !it.locked;
+
+  static String _salvageLabel(int r) => switch (r) {
+        < 0 => 'Không',
+        2 => 'Quý',
+        3 => 'đến Hiếm',
+        _ => 'đến Truyền thuyết',
+      };
+
+  /// Pieces the Phân giải button may take: never locked, Hoàng Kim or an
+  /// upgrade on what is worn.
+  bool _bulkSalvages(Item it) => canSalvage(it) && !h.betterThanWorn(it);
+
+  /// Breaks down the chosen rarities (Truyền thuyết only when ticked: a
+  /// good line there may be worth a Khắc ấn).
+  Future<void> _bulkSalvage() async {
+    final pick = {Rarity.rare, Rarity.epic};
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          final list = h.bag.where((it) => _bulkSalvages(it) && pick.contains(it.rarity)).toList();
+          final total = list.fold<int>(0, (a, it) => a + essenceOf(it));
+          return AlertDialog(
+            scrollable: true,
+            backgroundColor: lacquer,
+            title: Text('Phân giải', style: titleStyle(20)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Đồ từ cấp $essenceMinLevel, không tính đồ đã khóa, Hoàng Kim hay đồ tốt hơn món đang mặc.',
+                    style: small.copyWith(fontSize: 11.5)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    for (final r in [Rarity.rare, Rarity.epic, Rarity.legend])
+                      TabChip(
+                        label: '${r.label} (${h.bag.where((it) => _bulkSalvages(it) && it.rarity == r).length})',
+                        on: pick.contains(r),
+                        onTap: () => set(() {
+                          if (!pick.remove(r)) pick.add(r);
+                        }),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('${list.length} món → +$total Tinh Hoa', style: bold.copyWith(color: const Color(0xFFB8F0FF))),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
+              TextButton(onPressed: list.isEmpty ? null : () => Navigator.pop(ctx, true), child: const Text('Phân giải')),
+            ],
+          );
+        },
+      ),
+    );
+    if (ok != true) return;
+    var n = 0, got = 0;
+    for (final it in h.bag.where((it) => _bulkSalvages(it) && pick.contains(it.rarity)).toList()) {
+      final e = h.salvage(it);
+      if (e > 0) {
+        n++;
+        got += e;
+      }
+    }
+    if (n > 0) Analytics.instance.log('salvage', {'n': n, 'ess': got});
+    _changed();
+  }
 
   /// The grid's slot filter (null for all) and order.
   Slot? _slot;
@@ -217,6 +289,24 @@ class _GearBagViewState extends State<GearBagView> {
                           h.autoSellUpTo = v;
                           _changed();
                         },
+                      ),
+                      const SizedBox(width: 12),
+                      Text('Tự phân giải: ', style: small),
+                      _drop<int>(
+                        h.autoSalvageUpTo,
+                        [for (var r = -1; r <= Rarity.legend.index; r++) if (r < 0 || r >= Rarity.rare.index) (r, _salvageLabel(r))],
+                        (v) {
+                          h.autoSalvageUpTo = v;
+                          _changed();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      LButton(
+                        label: 'Phân giải',
+                        small: true,
+                        color: const Color(0xFF3A6A8A),
+                        enabled: h.bag.any(_bulkSalvages),
+                        onTap: _bulkSalvage,
                       ),
                       const SizedBox(width: 12),
                       _drop<Slot?>(
@@ -499,6 +589,31 @@ class _ItemsViewState extends State<ItemsView> {
               style: small.copyWith(fontSize: 11),
             ),
         ];
+      case BagAction.essenceShop:
+        return [
+          const SizedBox(height: 6),
+          for (final w in essenceWares)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text('1 ${w.name}\ncòn ${h.essLeft(w)}/${w.perWeek} tuần này',
+                        style: small.copyWith(fontSize: 11.5, color: cream), maxLines: 2),
+                  ),
+                  LButton(
+                    label: 'Đổi ${w.price}',
+                    small: true,
+                    color: const Color(0xFF3A6A8A),
+                    enabled: h.essLeft(w) > 0 && h.essence >= w.price,
+                    onTap: () {
+                      if (h.buyEssenceWare(w)) _changed('Đã đổi ${w.price} Tinh Hoa lấy 1 ${w.name}.');
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ];
       case BagAction.soulToIron:
         return [
           const SizedBox(height: 6),
@@ -549,6 +664,7 @@ class BagIcon extends StatelessWidget {
     'jade': Icons.diamond,
     'arena': Icons.military_tech,
     'fest': Icons.ac_unit,
+    'essence': Icons.blur_on,
     'sect': Icons.temple_buddhist,
     'guild': Icons.shield,
   };

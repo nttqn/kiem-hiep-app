@@ -1,5 +1,6 @@
 import 'alchemy.dart';
 import 'content.dart' show maps;
+import 'essence.dart';
 import 'festival.dart';
 import 'gems.dart';
 import 'hero.dart';
@@ -21,7 +22,7 @@ extension BagKindLabel on BagKind {
 }
 
 /// What the item's detail panel can do with it.
-enum BagAction { none, pill, soulToIron }
+enum BagAction { none, pill, soulToIron, essenceShop }
 
 class BagEntry {
   const BagEntry({
@@ -256,6 +257,21 @@ List<BagEntry> bagEntries(HeroData h) {
         glyph: 'sect',
         use: 'Đổi trang bí kíp, Mảnh Hoàng Kim và vật phẩm ở Tàng Kinh Các (Sư môn).',
         source: 'Làm nhiệm vụ Sư môn mỗi ngày (cứ nhiệm vụ thứ 5 được gấp đôi).',
+      ),
+    // 1.18.0: Tinh Hoa, from broken-down monster gear.
+    if (h.essence > 0 || h.bag.any((it) => essenceOf(it) > 0))
+      BagEntry(
+        id: 'essence',
+        name: 'Tinh Hoa',
+        kind: BagKind.mat,
+        count: h.essence,
+        color: 0xFFB8F0FF,
+        glyph: 'essence',
+        action: BagAction.essenceShop,
+        use: 'Tẩy luyện định hướng (dòng mới chỉ ra nhóm Công hoặc Thủ), Khắc ấn dòng từ đồ rơi '
+            'lên đồ Hoàng Kim (Thợ rèn), đổi Mảnh Hoàng Kim và Thần Thiết mỗi tuần.',
+        source: 'Phân giải đồ rơi từ cấp $essenceMinLevel: Quý 1, Hiếm 3, Truyền thuyết 10 '
+            '(Hành trang → Phân giải, hoặc bật Tự phân giải).',
       ),
     // 1.17.0: the festival currency, while its shop is open.
     if (h.festCoins > 0 && festShopOn(vnDayKey())?.id == h.festId)

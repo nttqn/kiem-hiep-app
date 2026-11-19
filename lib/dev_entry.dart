@@ -415,6 +415,19 @@ Future<void> main() async {
         h.equip[s] = makeGoldItem(set: gs, slot: s, level: level, sect: h.sect, rng: rng);
       }
     }
+    // ess=<n>: Tinh Hoa; drops=<n>: that many Quý-Truyền thuyết pieces
+    // near the hero's level in the bag (Phân giải, Khắc ấn).
+    h.essence = int.tryParse(q['ess'] ?? '') ?? h.essence;
+    final drops = int.tryParse(q['drops'] ?? '') ?? 0;
+    for (var i = 0; i < drops; i++) {
+      h.bag.add(makeItem(
+        slot: Slot.values[rng.nextInt(7)],
+        level: math.max(1, level - rng.nextInt(8)),
+        rarity: Rarity.values[2 + rng.nextInt(3)],
+        sect: h.sect,
+        rng: rng,
+      ));
+    }
     if (q['season'] == '1') {
       h.arenaRollDay(vnDayKey());
       h.arenaPoints = 1260;
@@ -608,6 +621,7 @@ Future<void> main() async {
     'boss' => const WorldBossScreen(),
     'treasure' => const ShopScreen(tab: 1),
     'refine' => const CharacterScreen(tab: 4, forge: true),
+    'engrave' => const CharacterScreen(tab: 9, forge: true),
     'char' => const CharacterScreen(tab: 0),
     'skills' => const CharacterScreen(tab: 1),
     'bag' => const BagScreen(),

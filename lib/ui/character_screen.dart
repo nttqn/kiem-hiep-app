@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/essence.dart';
 import '../core/gem_extras.dart';
 import '../core/gems.dart';
 import '../core/gold_extras.dart';
@@ -12,11 +13,13 @@ import '../core/items.dart';
 import '../core/manuals.dart';
 import '../core/sects.dart';
 import '../core/star_up.dart';
+import '../services/analytics.dart';
 import '../services/save.dart';
 import 'bag_screen.dart';
 import 'body_tab.dart';
 import 'branch_dialog.dart';
 import 'divine_tab.dart';
+import 'engrave_tab.dart';
 import 'gem_tab.dart';
 import 'gold_tab.dart';
 import 'manual_dialog.dart';
@@ -46,11 +49,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh', 'Luyện thể'];
+    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh', 'Luyện thể', 'Khắc ấn'];
     return SubScreen(
       title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
       actions: [
-        for (final i in widget.forge ? const [2, 3, 4, 6, 7] : [0, 1, 3, 5, if (h.rebirths > 0) 8])
+        for (final i in widget.forge ? [2, 3, 4, if (h.goldOpen) 9, 6, 7] : [0, 1, 3, 5, if (h.rebirths > 0) 8])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: TabChip(
@@ -75,6 +78,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
         6 => GoldTab(onChanged: () => setState(() {})),
         7 => DivineTab(onChanged: () => setState(() {})),
         8 => BodyTab(onChanged: () => setState(() {})),
+        9 => EngraveTab(onChanged: () => setState(() {})),
         _ => RefineTab(onChanged: () => setState(() {})),
       },
     );
@@ -677,6 +681,23 @@ class _ItemDialogState extends State<ItemDialog> {
                         ),
                       ],
                     ),
+                    // 1.18.0: Tinh Hoa instead of lượng.
+                    if (!isWorn && essenceOf(it) > 0) ...[
+                      const SizedBox(height: 4),
+                      LButton(
+                        label: 'Phân giải +${essenceOf(it)} Tinh Hoa',
+                        small: true,
+                        color: const Color(0xFF3A6A8A),
+                        enabled: !it.locked,
+                        onTap: () {
+                          if (h.salvage(it) > 0) {
+                            Analytics.instance.log('salvage', {'n': 1, 'ess': essenceOf(it)});
+                            SaveService.instance.save();
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
+                    ],
                     const Spacer(),
                     if (it.golden && it.level < h.level) ...[
                       LButton(
