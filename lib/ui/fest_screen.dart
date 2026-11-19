@@ -151,7 +151,7 @@ class _FestScreenState extends State<FestScreen> {
           ),
           const SizedBox(width: 6),
           SizedBox(
-            width: 62,
+            width: 84,
             child: taken
                 ? Text('Đã nhận', style: small.copyWith(fontSize: 11, color: jade), textAlign: TextAlign.center)
                 : LButton(

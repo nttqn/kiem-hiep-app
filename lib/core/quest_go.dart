@@ -1,4 +1,5 @@
 import 'content.dart';
+import 'festival.dart' show festMapPrefix;
 import 'hero.dart';
 
 /// Where the story quest wants the hero next, when that is not where they
@@ -22,6 +23,9 @@ class QuestGo {
 QuestGo? questGo(HeroData h, {String? hereMap, String? hereDungeon}) {
   final q = h.currentMain;
   if (q == null || h.mainLocked) return null;
+  // 1.17.0: a festival land is a choice of its own (autopilot there farms
+  // its coins); the countdown pulled players off it after six seconds.
+  if (hereMap != null && hereMap.startsWith(festMapPrefix)) return null;
   if (q.type == QuestType.dungeon) {
     final d = dungeonById[q.target];
     if (d == null || d.id == hereDungeon || h.level < d.level - 2) return null;

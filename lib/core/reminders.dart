@@ -1,3 +1,5 @@
+import 'comeback.dart';
+import 'festival.dart' show FestExtras, festivals, dayLabel;
 import 'hero.dart';
 import 'rewards.dart' show offlineCap;
 import 'week_goals.dart' show weekGoalDay;
@@ -25,8 +27,9 @@ DateTime vnAt(DateTime now, int days, int hour, int minute) {
 
 /// The reminders to set as [h] is left at [now]: closed-door training full
 /// (unless it lands at night or near the evening one), tomorrow evening's
-/// gifts, and a nudge after 3 and 7 days. At most two land on one day; all
-/// are cleared when the game is opened again.
+/// gifts, and a nudge after 3, 7, 14 and 30 days (1.17.0: the later ones
+/// tell of Quà hồi quy, and a festival's first day gets its own). At most
+/// two land on one day; all are cleared when the game is opened again.
 List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = false}) {
   final out = <Reminder>[];
   final tomorrow = vnAt(now, 1, reminderHour, reminderMinute);
@@ -58,9 +61,39 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
       out.add(Reminder(5, at, 'Ruộng linh thảo đã chín', 'Trang viên của ${h.name} có ruộng chín rồi, về thu hoạch nhé!'));
     }
   }
-  out.add(Reminder(3, vnAt(now, 3, reminderHour, reminderMinute), 'Giang hồ dậy sóng',
-      '${h.name} ơi, quái vật lại kéo đến. Mau trở lại hành hiệp!'));
-  out.add(Reminder(4, vnAt(now, 7, reminderHour, reminderMinute), 'Giang hồ vẫn chờ',
-      'Một tuần rồi, giang hồ vẫn chờ ${h.name}. Về nhận quà và xem thử thách mới nhé!'));
+  // A festival opening in the next month, for heroes who may join it.
+  final fest = h.festOpenFor
+      ? festivals.where((f) => f.from.compareTo(today) > 0 && daysBetween(today, f.from) <= 30).firstOrNull
+      : null;
+  final festIn = fest == null ? 0 : daysBetween(today, fest.from);
+  String festText() => '${fest!.landName} mở từ hôm nay đến ${dayLabel(fest.until)}. '
+      '${h.name} về hạ quái nhặt ${fest.coin} đổi ngoại trang, thú cưỡi nhé!';
+  if (festIn == 1) {
+    out[out.indexWhere((r) => r.id == 2)] = Reminder(2, tomorrow, '${fest!.name} đã mở!', festText());
+  }
+  // Would Quà hồi quy be waiting [days] days from now?
+  bool giftBy(int days) {
+    final day = vnDayKey(now.toUtc().add(Duration(days: days)));
+    return comebackDue(h, today, day) > 0;
+  }
+  for (final (id, days) in [(3, 3), (4, 7), (6, 14), (7, 30)]) {
+    final at = vnAt(now, days, reminderHour, reminderMinute);
+    if (festIn == days) {
+      out.add(Reminder(id, at, '${fest!.name} đã mở!', festText()));
+    } else if (days == 3) {
+      out.add(Reminder(id, at, 'Giang hồ dậy sóng', '${h.name} ơi, quái vật lại kéo đến. Mau trở lại hành hiệp!'));
+    } else if (giftBy(days)) {
+      final tier = comebackTier(days);
+      out.add(Reminder(id, at, 'Quà hồi quy đang chờ',
+          '${h.name} vắng mặt $days ngày rồi. Về nhận Quà hồi quy và ${comebackBoostDays(tier)} ngày '
+              '+${(comebackExp * 100).round()}% EXP để bắt kịp giang hồ!'));
+    } else {
+      out.add(Reminder(id, at, 'Giang hồ vẫn chờ',
+          'Đã $days ngày rồi, giang hồ vẫn chờ ${h.name}. Về nhận quà và xem thử thách mới nhé!'));
+    }
+  }
+  if (festIn > 1 && ![3, 7, 14, 30].contains(festIn)) {
+    out.add(Reminder(8, vnAt(now, festIn, reminderHour, reminderMinute), '${fest!.name} đã mở!', festText()));
+  }
   return out;
 }

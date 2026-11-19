@@ -74,6 +74,15 @@ const int festEliteCoins = 6;
 const int festBossCoins = 25;
 const int festDayCap = 260;
 
+/// A plain kill's coins: [festCoinChance] each, times the land's strength
+/// for [rebirths] (1.17.0: tougher monsters die slower, so a reborn hero
+/// took six times as long to reach the day's cap).
+int festKillCoins(int rebirths, math.Random rng) {
+  final want = festCoinChance * festMulByRebirth[rebirths.clamp(0, festMulByRebirth.length - 1)];
+  final whole = want.floor();
+  return whole + (rng.nextDouble() < want - whole ? 1 : 0);
+}
+
 /// Daily tasks: kills on the festival land (two steps) and its boss.
 const int festKillsA = 60, festKillsB = 180;
 const int festTaskCoins = 40, festBossTaskCoins = 60;
@@ -184,7 +193,7 @@ String festItemLabel(FestDef f, FestItem it, HeroData h) => switch (it.reward) {
       FestReward.skin => 'Ngoại hình thú cưỡi ${skinById[f.skin]?.name ?? ''}',
       FestReward.title => 'Danh hiệu « ${f.title} »',
       FestReward.gold => '${_dots(festGold(h))} lượng',
-      FestReward.gems => '${it.n} ${gemTierNames[festGemTier(h) - 1]}',
+      FestReward.gems => '${it.n} Ngọc ${gemTierNames[festGemTier(h) - 1]}',
       FestReward.stones => '${it.n} Tinh Thạch',
       FestReward.shards => '${it.n} Mảnh Hoàng Kim',
       FestReward.iron => '${it.n} Thần Thiết',
@@ -227,7 +236,7 @@ extension FestExtras on HeroData {
     festRoll(f, day);
     festKills++;
     if (m.boss) festBoss++;
-    var n = m.boss ? festBossCoins : (elite ? festEliteCoins : (rng.nextDouble() < festCoinChance ? 1 : 0));
+    var n = m.boss ? festBossCoins : (elite ? festEliteCoins : festKillCoins(rebirths, rng));
     n = math.min(n, math.max(0, festDayCap - festEarned));
     festEarned += n;
     festCoins += n;

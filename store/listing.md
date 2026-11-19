@@ -56,6 +56,18 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.17.0, ≤ 500 ký tự)
+1.17.0 – Quà hồi quy, đón Đông Chí
+• Quà hồi quy: vắng mặt từ 5 ngày trở lên, quay lại nhận lượng, thuốc, Song Bội Đan (cao thủ thêm Tinh Thạch, Thần Thiết, Mảnh Hoàng Kim) cùng vài ngày +50% EXP và lượng từ quái để bắt kịp giang hồ.
+• Lễ hội Đông Chí (15/12 – 4/1): cao thủ chuyển sinh nhặt Hoa Tuyết nhanh ngang mọi người; luyện công tự động ở Tuyết Lĩnh không còn bị kéo đi làm nhiệm vụ.
+• Hoa Tuyết có trong Túi đồ; nhắc nhở khi lễ hội mở.
+
+## What's new (1.17.0, en-US)
+1.17.0 – Welcome back, Winter Solstice
+• Welcome-back gift: away 5 days or more? Come back for gold, potions, EXP pills (reborn heroes also get Star Stones, Divine Iron and Gold Shards) plus a few days of +50% monster EXP and gold to catch up.
+• Winter Solstice festival (Dec 15 – Jan 4): reborn heroes now collect Snowflakes as fast as everyone else; autopilot on the festival land no longer walks off to the story quest.
+• Snowflakes show in the Inventory; a reminder when the festival opens.
+
 ## Có gì mới (bản 1.16.0, ≤ 500 ký tự)
 1.16.0 – Bang chiến
 • Bang chiến: mỗi ngày 3 Chiến lệnh, khiêu chiến cao thủ của bang khác. Thắng người mạnh hơn được nhiều Chiến công hơn. Bảng xếp hạng bang theo tuần; hết tuần mọi người tham chiến nhận xu Bang, Thần Thiết, Tiên Ngọc theo hạng của bang, hạng 1 nhận danh hiệu « Thiên Hạ Đệ Nhất Bang ».

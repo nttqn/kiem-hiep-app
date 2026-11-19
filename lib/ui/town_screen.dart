@@ -11,6 +11,7 @@ import '../core/festival.dart';
 import '../core/gold_boss.dart';
 import '../core/guide.dart';
 import '../core/helper.dart';
+import '../core/comeback.dart';
 import '../core/legacy.dart';
 import '../core/live_event.dart';
 import '../core/newbie.dart';
@@ -100,6 +101,7 @@ class _TownScreenState extends State<TownScreen> {
       return;
     }
     await _legacyGift();
+    await _comeback();
     await _hiepNghia();
     if (away != null) {
       final r = offlineReward(h, away);
@@ -167,6 +169,25 @@ class _TownScreenState extends State<TownScreen> {
       'Truyền thừa',
       '${src.name} truyền lại kinh nghiệm giang hồ cho ${h.name}: nhận thêm '
           '${(h.legacyExp * 100).round()}% EXP quái cho tới khi theo kịp ${src.name}.',
+      lines,
+    );
+  }
+
+  /// Quà hồi quy (1.17.0): back after days away (counted over every hero
+  /// on the phone), before today's login gift moves the last login day.
+  Future<void> _comeback() async {
+    final save = SaveService.instance;
+    final last = lastLoginOf(save.slots);
+    final today = vnDayKey();
+    final tier = comebackDue(h, last, today);
+    if (tier <= 0) return;
+    final days = daysBetween(last, today);
+    final lines = takeComeback(h, tier, today);
+    await save.save();
+    Analytics.instance.log('comeback', {'days': days, 'tier': tier, 'lv': h.level, 'cs': h.rebirths});
+    await _gotDialog(
+      'Quà hồi quy',
+      'Mừng ${h.name} trở lại giang hồ sau $days ngày! Quà đón chào và vài ngày luyện công nhanh hơn để bắt kịp:',
       lines,
     );
   }
@@ -270,6 +291,14 @@ class _TownScreenState extends State<TownScreen> {
             await Navigator.of(context).push(fadeRoute(const FestScreen()));
             if (mounted) setState(() {});
           },
+        ),
+      // 1.17.0: Quà hồi quy's boost while it lasts.
+      if (comebackOn(h, day))
+        _banner(
+          icon: Icons.auto_awesome,
+          color: const Color(0xFFFFB86B),
+          title: 'Hồi quy: +${(comebackExp * 100).round()}% EXP và lượng',
+          text: 'Từ quái, đến hết ngày ${dayLabel(h.comebackUntil)}. Tranh thủ luyện công bắt kịp giang hồ!',
         ),
       if (steps.isNotEmpty)
         _banner(

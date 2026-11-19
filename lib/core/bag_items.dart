@@ -1,9 +1,11 @@
 import 'alchemy.dart';
 import 'content.dart' show maps;
+import 'festival.dart';
 import 'gems.dart';
 import 'hero.dart';
 import 'ngo_dao.dart';
 import 'tang_bao.dart' show tbdDailyDrops, tbdMaxHeld;
+import 'world_boss.dart' show vnDayKey;
 
 /// Túi đồ (1.15.0): everything a hero collects that is not gear, counted
 /// rather than slotted, so it never takes a bag slot. Each entry says what
@@ -254,6 +256,20 @@ List<BagEntry> bagEntries(HeroData h) {
         glyph: 'sect',
         use: 'Đổi trang bí kíp, Mảnh Hoàng Kim và vật phẩm ở Tàng Kinh Các (Sư môn).',
         source: 'Làm nhiệm vụ Sư môn mỗi ngày (cứ nhiệm vụ thứ 5 được gấp đôi).',
+      ),
+    // 1.17.0: the festival currency, while its shop is open.
+    if (h.festCoins > 0 && festShopOn(vnDayKey())?.id == h.festId)
+      BagEntry(
+        id: 'fest',
+        name: festById[h.festId]!.coin,
+        kind: BagKind.coin,
+        count: h.festCoins,
+        color: 0xFFBFE8FF,
+        glyph: 'fest',
+        use: 'Đổi ngoại trang, thú cưỡi, danh hiệu và vật phẩm ở tiệm ${festById[h.festId]!.name}, '
+            'mở đến hết ngày ${dayLabel(dayAfter(festById[h.festId]!.until, festById[h.festId]!.shopDays))}.',
+        source: 'Hạ quái ở ${festById[h.festId]!.landName} (tối đa $festDayCap mỗi ngày), '
+            'nhiệm vụ ngày của lễ hội, Gói lễ hội.',
       ),
     if (h.guildCoins > 0)
       BagEntry(

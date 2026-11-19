@@ -560,6 +560,8 @@ Future<void> main() async {
       h.festCoins = int.tryParse(q['festcoins'] ?? '') ?? 1200;
       h.festKills = 75;
     }
+    // map=fest (with fest=1): its land at the hero's level.
+    if (q['map'] == 'fest') map = festMap(festivals.first, h);
     // branch=<0|1>[:lv]: Lưu phái taken (needs cs>=1).
     final br = q['branch']?.split(':');
     if (br != null && h.rebirths > 0) {
@@ -568,6 +570,11 @@ Future<void> main() async {
     }
     // gift=0: today's login gift already taken (no dialog over the town).
     if (q['gift'] == '0') h.lastLoginDate = todayKey();
+    // absent=<days>: last played that many days ago (Quà hồi quy on opening
+    // the town); cbon=1: its boost running.
+    final absent = int.tryParse(q['absent'] ?? '');
+    if (absent != null) h.lastLoginDate = dayAfter(vnDayKey(), -absent);
+    if (q['cbon'] == '1') h.comebackUntil = dayAfter(vnDayKey(), 2);
     h.recompute();
     h.refreshDaily(todayKey());
     SaveService.instance.slots[0] = h;

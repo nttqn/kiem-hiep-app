@@ -8,6 +8,7 @@ import 'pass_extras.dart';
 import 'body_train.dart';
 import 'branches.dart';
 import 'bounty.dart';
+import 'comeback.dart' show comebackExp, comebackGold;
 import 'companions.dart';
 import 'content.dart';
 import 'dai_hoi.dart';
@@ -605,6 +606,10 @@ class HeroData {
   /// account was taken; the bonus itself is worked out on opening the town
   /// from the other slots ([legacyExp], not saved) and who it comes from.
   bool legacyTaken = false;
+
+  /// Quà hồi quy (1.17.0, comeback.dart): the day the gift was last taken
+  /// and the last day of its EXP/gold boost.
+  String comebackDay = '', comebackUntil = '';
 
   /// Bang chiến (1.16.0, guild_war.dart): the day, Chiến lệnh used and rows
   /// fought in it; the week, its Chiến công and the bang they count for;
@@ -1832,7 +1837,8 @@ class HeroData {
       math.max(buffLeft('songboi') > 0 ? expPillMul : 1.0, EventBoost(vnDayKey()).exp) *
       fatigueMul(fatigueSec) *
       (1 + guildPerk) *
-      (1 + legacyExp);
+      (1 + legacyExp) *
+      (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackExp : 1.0);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {
@@ -1857,7 +1863,8 @@ class HeroData {
   /// Monster gold: Tụ Bảo Đan and today's event.
   /// Monster gold: the better of Tụ Bảo Đan and today's event, as for EXP.
   double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold) * (1 + guildPerk) *
-      (1 + legacyExp * legacyGoldShare);
+      (1 + legacyExp * legacyGoldShare) *
+      (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackGold : 1.0);
 
   /// Counts buff time down while playing; true when one ran out.
   bool tickBuffs(double dt) {
@@ -3302,6 +3309,7 @@ class HeroData {
           'fr': [[for (final f in friends) f.toJson()], friendDay, friendSent.toList(), friendTaken],
         if (helpDay.isNotEmpty || hnTotal > 0) 'hn': [helpDay, helpUsed, hnTotal],
         if (legacyTaken) 'lg': 1,
+        if (comebackDay.isNotEmpty) 'cb': [comebackDay, comebackUntil],
         if (gwDay.isNotEmpty || gwRankDue) 'gw': warToJson(),
         if (paidFlag || firstPayTaken) 'fp': [paidFlag ? 1 : 0, firstPayTaken ? 1 : 0],
         'mail': mailClaimed.toList(),
@@ -3673,6 +3681,11 @@ class HeroData {
       } catch (_) {}
     }
     h.legacyTaken = m['lg'] == 1;
+    final cb = m['cb'];
+    if (cb is List && cb.length >= 2 && cb[0] is String && cb[1] is String) {
+      h.comebackDay = cb[0] as String;
+      h.comebackUntil = cb[1] as String;
+    }
     h.warFromJson(m['gw']);
     final fp = m['fp'];
     if (fp is List && fp.length >= 2) {

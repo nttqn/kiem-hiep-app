@@ -548,6 +548,7 @@ class BagIcon extends StatelessWidget {
     'herb': Icons.spa,
     'jade': Icons.diamond,
     'arena': Icons.military_tech,
+    'fest': Icons.ac_unit,
     'sect': Icons.temple_buddhist,
     'guild': Icons.shield,
   };
