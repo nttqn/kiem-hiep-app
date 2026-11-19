@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Reminders (flutter_local_notifications): re-armed after a reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- sensorLandscape implies a required landscape screen; Play (1.17.0)
+         blocks review over it. The game still runs in landscape. -->
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false"/>
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false"/>
     <application
         android:label="Kiếm Hiệp"
         android:name="${applicationName}"
