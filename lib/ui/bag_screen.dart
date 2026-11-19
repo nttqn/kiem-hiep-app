@@ -300,6 +300,16 @@ class _GearBagViewState extends State<GearBagView> {
                           _changed();
                         },
                       ),
+                      const SizedBox(width: 12),
+                      Text('Túi đầy: ', style: small),
+                      _drop<bool>(
+                        h.fullBagSell,
+                        const [(false, 'Phân giải'), (true, 'Bán lấy vàng')],
+                        (v) {
+                          h.fullBagSell = v;
+                          _changed();
+                        },
+                      ),
                       const SizedBox(width: 8),
                       LButton(
                         label: 'Phân giải',

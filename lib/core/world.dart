@@ -3679,7 +3679,10 @@ class World {
       if (full && !_bagFullTold) {
         _bagFullTold = true;
         events.add(GameEvent(EvKind.bagFull,
-            text: 'Túi đồ đầy! Đồ nhặt thêm sẽ tự bán. Bấm ba lô để dọn túi.', color: 0xFFFF8A7A));
+            text: hero.lastEssence == 0
+                ? 'Túi đồ đầy! Đồ nhặt thêm sẽ tự bán. Bấm ba lô để dọn túi.'
+                : 'Túi đồ đầy! Đồ nhặt thêm sẽ tự phân giải (đổi ở Hành trang → Túi đầy). Bấm ba lô để dọn túi.',
+            color: 0xFFFF8A7A));
       }
       events.add(GameEvent(EvKind.loot,
           text: kept

@@ -88,6 +88,18 @@ void main() {
       expect(h.gold, gold0, reason: 'nothing sold yet');
       expect(h.addItem(_drop(70, Rarity.fine)), isFalse);
       expect(h.gold, greaterThan(gold0), reason: 'what gives no Tinh Hoa is still sold');
+      // 1.18.1 Túi đầy → Bán lấy vàng: sold, no Tinh Hoa; Tự phân giải still wins.
+      h.fullBagSell = true;
+      final gold1 = h.gold;
+      final legend = _drop(70, Rarity.legend);
+      expect(h.addItem(legend), isFalse);
+      expect((h.essence, h.lastEssence, h.gold), (13, 0, gold1 + legend.sellPrice));
+      h.autoSalvageUpTo = Rarity.epic.index;
+      expect(h.addItem(_drop(70, Rarity.epic)), isFalse);
+      expect(h.essence, greaterThan(13));
+      final b = _roundTrip(h);
+      expect(b.fullBagSell, isTrue);
+      expect(_roundTrip(_hero(5)).fullBagSell, isFalse);
     });
 
     test('Tinh Hoa and the settings survive a save', () {

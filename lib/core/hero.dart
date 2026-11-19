@@ -295,6 +295,10 @@ class HeroData {
   final Map<String, int> essBought = {};
   int autoSalvageUpTo = -1;
 
+  /// 1.18.1: with the bag full, sell new pick-ups for gold instead of
+  /// breaking them down (Tự phân giải still applies on its own).
+  bool fullBagSell = false;
+
   /// Tinh Hoa the last [addItem] broke its piece into (0 when kept or sold).
   int lastEssence = 0;
   int seed = 0;
@@ -1165,7 +1169,7 @@ class HeroData {
     lastEssence = 0;
     if (it.rarity == Rarity.legend) ownedLegend = true;
     // 1.18.0: Tự phân giải, and a full bag breaks down what it can.
-    if (autoSalvages(it) || (bag.length >= bagSize && essenceOf(it) > 0 && !it.locked)) {
+    if (autoSalvages(it) || (bag.length >= bagSize && !fullBagSell && essenceOf(it) > 0 && !it.locked)) {
       essence += lastEssence = essenceOf(it);
       return false;
     }
@@ -3265,7 +3269,8 @@ class HeroData {
         // The old switch too, for an older app on another device.
         'autoSell': autoSellUpTo >= 0,
         'autoSellR': autoSellUpTo,
-        if (essence > 0 || essWeek > 0 || autoSalvageUpTo >= 0) 'th': [essence, essWeek, essBought, autoSalvageUpTo],
+        if (essence > 0 || essWeek > 0 || autoSalvageUpTo >= 0 || fullBagSell)
+          'th': [essence, essWeek, essBought, autoSalvageUpTo, if (fullBagSell) 1],
         'seed': seed,
         'savedAt': savedAt,
         'loginDate': lastLoginDate,
@@ -3401,6 +3406,7 @@ class HeroData {
         h.essWeek = (th[1] as num).toInt();
         (th[2] as Map).forEach((k, v) => h.essBought['$k'] = (v as num).toInt());
         h.autoSalvageUpTo = (th[3] as num).toInt().clamp(-1, Rarity.legend.index);
+        h.fullBagSell = th.length >= 5 && th[4] == 1;
       } catch (_) {}
     }
     h.seed = m['seed'] as int? ?? 0;
