@@ -207,4 +207,51 @@ void main() {
       expect(h.essLeft(shard), shard.perWeek);
     });
   });
+
+  group('Mua lại (1.18.1)', () {
+    test('remembers Quý+ pieces sold or broken down, buys back at the same price', () {
+      final h = _hero(70)..autoSellUpTo = Rarity.rare.index;
+      h.gold = 0;
+      // Tự bán: a Thường piece is counted but not offered back; a Quý one is.
+      expect(h.addItem(_drop(70, Rarity.common)), isFalse);
+      final quy = _drop(70, Rarity.rare);
+      expect(h.addItem(quy), isFalse);
+      expect(h.gone.map((g) => g.item), [quy]);
+      // Tự phân giải: an Hiếm piece.
+      h.equip[Slot.boots] = _drop(70, Rarity.legend, slot: Slot.boots);
+      h.autoSalvageUpTo = Rarity.epic.index;
+      final epic = _drop(70, Rarity.epic, slot: Slot.boots);
+      expect(h.addItem(epic), isFalse);
+      expect(h.gone.first.item, epic);
+      expect(h.gone.first.essence, 3);
+      final tally = h.takeGoneTally()!;
+      expect(tally, contains('bán 2 món'));
+      expect(tally, contains('phân giải 1 món (+3 Tinh Hoa)'));
+      expect(h.takeGoneTally(), isNull, reason: 'shown once');
+      // Buying back costs exactly what it fetched.
+      final gold0 = h.gold, ess0 = h.essence;
+      expect(h.buyBack(h.gone.first), isNull);
+      expect(h.buyBack(h.gone.first), isNull);
+      expect((h.gold, h.essence), (gold0 - quy.sellPrice, ess0 - 3));
+      expect(h.bag, containsAll([quy, epic]));
+      expect(h.gone, isEmpty);
+    });
+
+    test('refuses a full bag or too little gold; keeps only the last $goneKeep', () {
+      final h = _hero(70)..autoSellUpTo = Rarity.rare.index;
+      for (var i = 0; i < goneKeep + 3; i++) {
+        h.addItem(_drop(70, Rarity.rare));
+      }
+      expect(h.gone.length, goneKeep);
+      final g = h.gone.first;
+      h.gold = 0;
+      expect(h.buyBack(g), 'Không đủ lượng.');
+      h.gold = 1 << 30;
+      while (h.bag.length < bagSize) {
+        h.bag.add(_drop(10, Rarity.common));
+      }
+      expect(h.buyBack(g), 'Hành trang đã đầy.');
+      expect(_roundTrip(h).gone, isEmpty, reason: 'not saved');
+    });
+  });
 }

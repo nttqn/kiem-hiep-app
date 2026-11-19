@@ -201,6 +201,73 @@ class _GearBagViewState extends State<GearBagView> {
     _changed();
   }
 
+  /// Mua lại (1.18.1): the last Quý+ pieces sold or broken down on pick-up
+  /// this session, each back for exactly what it fetched.
+  Future<void> _buyBack() async {
+    String? msg;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setMsg) => AlertDialog(
+          backgroundColor: lacquer,
+          title: Text('Mua lại', style: titleStyle(20)),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                    'Đồ Quý trở lên vừa tự bán hoặc tự phân giải (tối đa $goneKeep món, '
+                    'mất khi tắt game). Chuộc lại đúng giá đã nhận.',
+                    style: small),
+                const SizedBox(height: 6),
+                if (h.gone.isEmpty) Text('Không còn món nào.', style: body),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final g in h.gone)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text('${g.item.name} · cấp ${g.item.level} [${g.item.rarityLabel}]',
+                                    style: body.copyWith(color: rarityColor(g.item.rarity)),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                              const SizedBox(width: 6),
+                              LButton(
+                                label: g.gold > 0 ? '${fmt(g.gold)} lượng' : '${g.essence} Tinh Hoa',
+                                small: true,
+                                onTap: () {
+                                  final err = h.buyBack(g);
+                                  if (err == null) {
+                                    Analytics.instance.log('buyback', {'r': g.item.rarity.index, 'ess': g.essence});
+                                    _changed();
+                                  }
+                                  setMsg(() => msg = err);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (msg != null) Text(msg!, style: small.copyWith(color: const Color(0xFFFF8A7A))),
+              ],
+            ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Xong'))],
+        ),
+      ),
+    );
+    _changed();
+  }
+
   Future<void> _open(Item it) async {
     await showDialog<void>(context: context, builder: (ctx) => ItemDialog(item: it, forge: widget.forge));
     _changed();
@@ -309,6 +376,14 @@ class _GearBagViewState extends State<GearBagView> {
                           h.fullBagSell = v;
                           _changed();
                         },
+                      ),
+                      const SizedBox(width: 8),
+                      LButton(
+                        label: 'Mua lại${h.gone.isEmpty ? '' : ' (${h.gone.length})'}',
+                        small: true,
+                        color: const Color(0xFF7A5A2A),
+                        enabled: h.gone.isNotEmpty,
+                        onTap: _buyBack,
                       ),
                       const SizedBox(width: 8),
                       LButton(

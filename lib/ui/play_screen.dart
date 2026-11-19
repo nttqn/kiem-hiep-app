@@ -652,6 +652,13 @@ class _PlayScreenState extends State<PlayScreen> {
     // one is disposed, and must keep its own music.
     SoundService.instance.setBattle(false);
     SoundService.instance.playMusic('menu');
+    // 1.18.1: what the full bag / Tự bán / Tự phân giải did meanwhile.
+    final tally = SaveService.instance.hero.takeGoneTally();
+    if (tally != null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(tally), duration: const Duration(seconds: 5)));
+    }
     Navigator.of(context).pop();
     // A full-screen ad only ever on the walk back to town, and rarely.
     final h = SaveService.instance.hero;

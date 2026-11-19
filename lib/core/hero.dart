@@ -23,6 +23,7 @@ import 'luan_hoi.dart';
 import 'mail.dart';
 import 'newbie.dart';
 import 'ngo_dao.dart';
+import 'tam_ma.dart' show fmtThousands;
 import 'tien_khi.dart';
 import 'gems.dart';
 import 'guild.dart';
@@ -301,6 +302,51 @@ class HeroData {
 
   /// Tinh Hoa the last [addItem] broke its piece into (0 when kept or sold).
   int lastEssence = 0;
+
+  /// 1.18.1, this run of the app only (not saved): Quý+ pieces sold or
+  /// broken down on pick-up, newest first, for Mua lại; and the tally
+  /// shown on the way back to town ([takeGoneTally]).
+  final List<GoneItem> gone = [];
+  int goneSold = 0, goneGold = 0, goneSalv = 0, goneEss = 0;
+
+  void _gone(Item it, {int gold = 0, int essence = 0}) {
+    if (gold > 0) {
+      goneSold++;
+      goneGold += gold;
+    } else {
+      goneSalv++;
+      goneEss += essence;
+    }
+    if (it.rarity.index < Rarity.rare.index) return;
+    gone.insert(0, GoneItem(it, gold, essence));
+    if (gone.length > goneKeep) gone.removeLast();
+  }
+
+  /// "Đồ nhặt được: đã bán …" once, then the tally starts over; null if
+  /// nothing went.
+  String? takeGoneTally() {
+    if (goneSold == 0 && goneSalv == 0) return null;
+    final parts = [
+      if (goneSold > 0) 'bán $goneSold món (+${fmtThousands(goneGold)} lượng)',
+      if (goneSalv > 0) 'phân giải $goneSalv món (+$goneEss Tinh Hoa)',
+    ];
+    goneSold = goneGold = goneSalv = goneEss = 0;
+    return 'Đồ nhặt được: đã ${parts.join(', ')}. Lỡ tay? Hành trang → Mua lại.';
+  }
+
+  /// Takes [g] back into the bag for what it fetched; null when done, else
+  /// why not.
+  String? buyBack(GoneItem g) {
+    if (!gone.contains(g)) return 'Món này không còn.';
+    if (bag.length >= bagSize) return 'Hành trang đã đầy.';
+    if (gold < g.gold) return 'Không đủ lượng.';
+    if (essence < g.essence) return 'Không đủ Tinh Hoa.';
+    gold -= g.gold;
+    essence -= g.essence;
+    gone.remove(g);
+    bag.add(g.item);
+    return null;
+  }
   int seed = 0;
 
   /// When this save was last written (ms since epoch); cloud sync keeps
@@ -1171,10 +1217,12 @@ class HeroData {
     // 1.18.0: Tự phân giải, and a full bag breaks down what it can.
     if (autoSalvages(it) || (bag.length >= bagSize && !fullBagSell && essenceOf(it) > 0 && !it.locked)) {
       essence += lastEssence = essenceOf(it);
+      _gone(it, essence: lastEssence);
       return false;
     }
     if ((it.rarity.index <= autoSellUpTo && !it.golden) || bag.length >= bagSize) {
       gold += it.sellPrice;
+      _gone(it, gold: it.sellPrice);
       return false;
     }
     bag.add(it);
@@ -3908,4 +3956,15 @@ class HeroData {
       rebirths * rebirthPoints +
       maxPotentialPills * potentialPerPill +
       100;
+}
+
+/// How many sold or broken-down pieces Mua lại remembers.
+const int goneKeep = 12;
+
+/// A piece picked up and sold (gold) or broken down (essence) at once.
+class GoneItem {
+  GoneItem(this.item, this.gold, this.essence);
+  final Item item;
+  final int gold;
+  final int essence;
 }
