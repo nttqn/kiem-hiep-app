@@ -32,6 +32,8 @@ import 'hanh.dart';
 import 'items.dart';
 import 'legacy.dart';
 import 'live_event.dart';
+import 'codex.dart';
+import 'mentor.dart';
 import 'lore.dart';
 import 'manor.dart';
 import 'manuals.dart';
@@ -515,6 +517,33 @@ class HeroData {
   /// Giang Hồ Ký Sự pages found (loreKey).
   final Set<String> lorePages = {};
 
+  /// Đồ giám Truyền thuyết (1.19.0, codex.dart): Thần binh phổ cells
+  /// filled, monsters beaten (up to the page's goal) and pages taken.
+  final Set<String> codexGear = {};
+  final Map<String, int> mobKills = {};
+  final Set<String> codexClaimed = {};
+
+  /// Set by [addItem] when the piece filled a new Thần binh phổ cell.
+  bool lastCodexNew = false;
+
+  /// Sư đồ (1.19.0, mentor.dart). As đệ tử: the master (board row, name,
+  /// element), the master asked and not yet answered, the next step's gift,
+  /// the day Truyền công was last taken and whether one waits. As sư phụ:
+  /// the đệ tử, Truyền công sent today, đệ tử who reached xuất sư, and
+  /// whether this hero is listed as taking đệ tử.
+  String sdMaster = '', sdMasterName = '';
+  int sdMasterHanh = 0;
+  String sdPending = '', sdPendingName = '';
+  int sdPendingHanh = 0;
+  int sdGiftNext = 0;
+  String sdTcDay = '';
+  bool sdTcReady = false;
+  final List<Disciple> disciples = [];
+  String sdTcSentDay = '';
+  final Set<String> sdTcSent = {};
+  int sdGraduates = 0;
+  bool sdListing = false;
+
   // Bí cảnh: best stars by id, and per day the runs taken and ad runs added.
   final Map<String, int> realmStars = {};
   String realmDay = '';
@@ -836,6 +865,7 @@ class HeroData {
     add(daoBonuses(daoLv));
     add(starBonuses(equip.values));
     add(loreBonuses());
+    add(codexBonuses());
     add(manor.bonuses());
     final br = branchDef;
     if (br != null) add(branchBonus(br, branchLv));
@@ -1214,6 +1244,12 @@ class HeroData {
   bool addItem(Item it) {
     lastEssence = 0;
     if (it.rarity == Rarity.legend) ownedLegend = true;
+    // 1.19.0: Đồ giám keeps it even if it is sold or broken down below.
+    lastCodexNew = codexNote(it);
+    if (lastCodexNew) {
+      notices.add(Notice('Đồ giám: ghi nhận ${it.rarityLabel} ${codexTierName(codexTierOf(it.level))} · ${it.slot.label}',
+          color: 0xFFFF8A3D));
+    }
     // 1.18.0: Tự phân giải, and a full bag breaks down what it can.
     if (autoSalvages(it) || (bag.length >= bagSize && !fullBagSell && essenceOf(it) > 0 && !it.locked)) {
       essence += lastEssence = essenceOf(it);
@@ -1558,6 +1594,7 @@ class HeroData {
       bossKills++;
       bossKillsById[m.id] = (bossKillsById[m.id] ?? 0) + 1;
     }
+    codexKill(m);
     final q = currentMain;
     if (q != null && !mainLocked && q.target == m.id &&
         (q.type == QuestType.kill || q.type == QuestType.boss)) {
@@ -1768,6 +1805,10 @@ class HeroData {
   /// Xích Sa Pháp Vương beaten (1.11.0), for Bạch Đà.
   int get westBossKills => bossKillsById[tayVucMap.boss] ?? 0;
 
+  /// Vạn Độc Cổ Vương and Băng Ngọc Kỳ Lân beaten (1.19.0).
+  int get southBossKills => bossKillsById[mieuCuongMap.boss] ?? 0;
+  int get kunlunBossKills => bossKillsById[conLonMap.boss] ?? 0;
+
   /// The mount under the hero, if any.
   MountDef? get ridingMount {
     final m = riding ? mountById[activeMount] : null;
@@ -1780,6 +1821,8 @@ class HeroData {
         MountSource.abyss => abyssBossKills >= m.need,
         MountSource.sea => seaBossKills >= m.need,
         MountSource.west => westBossKills >= m.need,
+        MountSource.south => southBossKills >= m.need,
+        MountSource.kunlun => kunlunBossKills >= m.need,
         MountSource.gold || MountSource.arena => false,
       };
 
@@ -1907,6 +1950,7 @@ class HeroData {
       fatigueMul(fatigueSec) *
       (1 + guildPerk) *
       (1 + legacyExp) *
+      (1 + discipleExp) *
       (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackExp : 1.0);
 
   /// Starts a new Mệt mỏi day when the date changed.
@@ -3354,6 +3398,9 @@ class HeroData {
         'realm': [realmStars, realmDay, realmRuns, realmAds],
         'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
         'lore': lorePages.toList(),
+        if (codexGear.isNotEmpty || mobKills.isNotEmpty || codexClaimed.isNotEmpty) 'cx': codexToJson(),
+        if (sdMaster.isNotEmpty || sdPending.isNotEmpty || disciples.isNotEmpty || sdGraduates > 0 || sdListing || sdGiftNext > 0)
+          'sd': mentorToJson(),
         'auto': autoCfg.toJson(),
         'seen': seenFeatures.toList(),
         'manor': manor.toJson(),
@@ -3768,6 +3815,9 @@ class HeroData {
       h.comebackUntil = cb[1] as String;
     }
     h.warFromJson(m['gw']);
+    h.codexFromJson(m['cx']);
+    h.mentorFromJson(m['sd']);
+    h.codexScanOwned();
     final fp = m['fp'];
     if (fp is List && fp.length >= 2) {
       h.paidFlag = fp[0] == 1;

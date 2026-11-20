@@ -158,6 +158,8 @@ class _MountViewState extends State<MountView> {
                   MountSource.abyss => 'Đã hạ Ma Tôn: ${h.abyssBossKills}/${m.need}',
                   MountSource.sea => 'Đã hạ Long Vương: ${h.seaBossKills}/${m.need}',
                   MountSource.west => 'Đã hạ Pháp Vương: ${h.westBossKills}/${m.need}',
+                  MountSource.south => 'Đã hạ Cổ Vương: ${h.southBossKills}/${m.need}',
+                  MountSource.kunlun => 'Đã hạ Kỳ Lân: ${h.kunlunBossKills}/${m.need}',
                   _ => 'Uy danh: ${fmt(h.arenaCoins)}/${fmt(m.need)}',
                 },
                 style: small.copyWith(fontSize: 10.5, color: creamDim),

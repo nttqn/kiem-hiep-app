@@ -162,6 +162,8 @@ const _landmarks = <MapTheme, List<String>>{
   MapTheme.sea: ['lm_wreck', 'lm_shrine'],
   MapTheme.bloodSea: ['lm_ruin', 'lm_buddha'],
   MapTheme.canyon: ['lm_buddha', 'lm_ruin'],
+  MapTheme.jungle: ['lm_shrine', 'lm_stele'],
+  MapTheme.kunlun: ['lm_pagoda', 'lm_pavilion'],
 };
 
 const _propKinds = <MapTheme, List<String>>{
@@ -178,6 +180,8 @@ const _propKinds = <MapTheme, List<String>>{
   MapTheme.sea: ['palm', 'palm', 'coral', 'rock', 'anchor', 'palm', 'coral'],
   MapTheme.bloodSea: ['rockSpire', 'deadTree', 'brazier', 'rockSpire', 'crystal'],
   MapTheme.canyon: ['rockSpire', 'rockSpire', 'deadTree', 'pillar', 'rock', 'brazier'],
+  MapTheme.jungle: ['tree2', 'tree', 'palm', 'bush', 'bamboo', 'tree2', 'bush', 'rock'],
+  MapTheme.kunlun: ['pine', 'mistPine', 'iceCrystal', 'snowRock', 'plum', 'pine', 'lantern'],
 };
 
 const _decalKinds = <MapTheme, List<String>>{
@@ -194,4 +198,6 @@ const _decalKinds = <MapTheme, List<String>>{
   MapTheme.sea: ['shell', 'starfish', 'ripple', 'tidePool', 'shell', 'pebble'],
   MapTheme.bloodSea: ['ember', 'bones', 'skull', 'crack', 'ember'],
   MapTheme.canyon: ['pebble', 'ripple', 'crack', 'skull', 'pebble'],
+  MapTheme.jungle: ['leaf', 'tuft', 'flower', 'puddle', 'leaf', 'bones'],
+  MapTheme.kunlun: ['snowTuft', 'petal', 'icePatch', 'mist', 'snowTuft'],
 };

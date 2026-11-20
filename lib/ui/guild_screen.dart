@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/guild.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
+import '../core/mentor.dart';
 import '../core/sects.dart';
 import '../core/world_boss.dart' show vnDayKey;
 import '../services/guild.dart';
@@ -13,6 +14,7 @@ import '../services/save.dart';
 import 'cloud_panel.dart';
 import 'guild_war_view.dart';
 import 'hero_card.dart';
+import 'mentor_view.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -24,7 +26,7 @@ const _bangTint = Color(0xFF8CC8FF);
 class GuildScreen extends StatefulWidget {
   const GuildScreen({super.key, this.tab = 0});
 
-  /// 0: Bang hội, 1: Hảo hữu.
+  /// 0: Bang hội, 1: Hảo hữu, 2: Sư đồ.
   final int tab;
 
   @override
@@ -40,10 +42,11 @@ class _GuildScreenState extends State<GuildScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: _tab == 0 ? 'Bang hội' : 'Hảo hữu',
+      title: const ['Bang hội', 'Hảo hữu', 'Sư đồ'][_tab],
       actions: [
         tabChip('Bang hội', _tab == 0, () => setState(() => _tab = 0)),
         tabChip('Hảo hữu', _tab == 1, () => setState(() => _tab = 1)),
+        tabChip(h.mentorBadge > 0 ? 'Sư đồ (${h.mentorBadge})' : 'Sư đồ', _tab == 2, () => setState(() => _tab = 2)),
       ],
       child: !gs.available
           ? Panel(
@@ -67,9 +70,11 @@ class _GuildScreenState extends State<GuildScreen> {
                 ),
               ),
             )
-          : _tab == 0
-              ? const _GuildTab()
-              : const _FriendsTab(),
+          : switch (_tab) {
+              0 => const _GuildTab(),
+              1 => const _FriendsTab(),
+              _ => const MentorView(),
+            },
     );
   }
 }

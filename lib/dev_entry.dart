@@ -35,6 +35,8 @@ import 'core/tang_bao.dart';
 import 'core/weather.dart';
 import 'core/sect_duty.dart';
 import 'ui/fishing_view.dart';
+import 'ui/codex_screen.dart';
+import 'ui/guild_screen.dart';
 import 'ui/lore_screen.dart';
 import 'ui/mount_view.dart';
 import 'ui/sect_screen.dart';
@@ -662,6 +664,8 @@ Future<void> main() async {
     'nightmare' => const DungeonListScreen(nightmare: true),
     'realm' => const DungeonListScreen(realm: true),
     'lore' => const LoreScreen(),
+    'codex' => const CodexScreen(),
+    'mentor' => const GuildScreen(tab: 2),
     'stats' => const StatsScreen(),
     'manor' => const ManorScreen(),
     'prologue' => const TownScreen(firstVisit: true),

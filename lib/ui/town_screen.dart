@@ -18,6 +18,7 @@ import '../core/newbie.dart';
 import '../core/guild.dart';
 import '../core/guild_war.dart';
 import '../core/hero.dart';
+import '../core/mentor.dart';
 import '../core/week_goals.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
@@ -837,7 +838,7 @@ class _TownScreenState extends State<TownScreen> {
       tile('companions', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
       tile('rank', Icons.leaderboard, () => _go(const LeaderboardScreen())),
       tile('guild', Icons.shield, () => _go(const GuildScreen()),
-          badge: h.inGuild ? h.warLeft(vnDayKey()) + (h.gwRankDue ? 1 : 0) : 0),
+          badge: (h.inGuild ? h.warLeft(vnDayKey()) + (h.gwRankDue ? 1 : 0) : 0) + h.mentorBadge),
       tile('alchemy', Icons.science, () => _go(const AlchemyScreen())),
       tile('activity', Icons.local_fire_department, () => _go(const ActivityScreen()), badge: activityClaimable(h)),
       tile('sect', Icons.temple_buddhist, () => _go(const SectScreen()), badge: _sectBadge()),

@@ -897,6 +897,7 @@ void drawQuadChibi(Canvas c, MobDef d,
   final boar = v == 'boar';
   final kylin = v == 'kylin';
   final fire = v == 'fireWolf' || kylin;
+  final ice = kylin && d.hanh == Hanh.thuy;
   final step = moving ? math.sin(walk * 2.2) * 4 : 0.0;
   final lunge = attack > 0 ? math.sin(attack * math.pi) * 6 : 0.0;
   final breathe = math.sin(t * 3) * 0.6;
@@ -925,7 +926,7 @@ void drawQuadChibi(Canvas c, MobDef d,
       ..quadraticBezierTo(-32, by - 8 + wag, -31, by - 4 + wag)
       ..quadraticBezierTo(-28, by - 4, -26, by - 9 + wag)
       ..close();
-    c.drawPath(tip, _flat(fire ? 0xFFFFD34A : d.c2));
+    c.drawPath(tip, _flat(fire ? (ice ? 0xFFE8FAFF : 0xFFFFD34A) : d.c2));
   }
 
   // Far legs.
@@ -1049,7 +1050,7 @@ void drawQuadChibi(Canvas c, MobDef d,
     _shape(c, horn, _lit(0xFFE8C547, Rect.fromLTRB(hx - 1, hy - 20, hx + 7, hy - 8)), ow: 1.6);
   }
   // Eye: fierce slant with a glint.
-  final eyeC = fire ? 0xFFFFE04A : (d.hanh.index == 2 ? 0xFF7FD4FF : 0xFFFFF4D0);
+  final eyeC = ice ? 0xFF7FD4FF : fire ? 0xFFFFE04A : (d.hanh.index == 2 ? 0xFF7FD4FF : 0xFFFFF4D0);
   final eye = Path()
     ..moveTo(hx + 1, hy - 3)
     ..lineTo(hx + 7.5, hy - 4.5)
@@ -1068,7 +1069,8 @@ void drawQuadChibi(Canvas c, MobDef d,
             ..moveTo(fx - 3, fy + 3)
             ..quadraticBezierTo(fx, fy - 7, fx + 3, fy + 3)
             ..close(),
-          _flat(i.isEven ? 0xEEFFB03A : 0xEEFF6A2A));
+          // A Thủy kylin (Băng Ngọc Kỳ Lân, 1.19.0) burns with frost.
+          _flat(ice ? (i.isEven ? 0xEEE8FAFF : 0xEE7FD8F0) : (i.isEven ? 0xEEFFB03A : 0xEEFF6A2A)));
     }
   }
   c.restore();
@@ -1822,6 +1824,7 @@ void _turtle(Canvas c, double walk, bool moving, double attack, double t) {
 double mountSeatOf(MountDef d) => switch (d.look) {
       'sword' => _swordSeat,
       'tiger' || 'kylin' => 27,
+      'crane' => 33,
       _ => 26,
     };
 
@@ -1857,6 +1860,16 @@ void drawMount(Canvas c, MountDef d, {double walk = 0, bool moving = false, doub
 void _drawMountBody(Canvas c, MountDef d, {double walk = 0, bool moving = false, double t = 0}) {
   if (d.look == 'sword') {
     _drawFlyingSword(c, d, moving: moving, t: t);
+    return;
+  }
+  if (d.look == 'crane') {
+    // Côn Lôn Tiên Hạc (1.19.0): the pet crane, big, the rider on its back.
+    c.save();
+    c.translate(14, 0); // neck and head clear of the rider
+    c.scale(1.7);
+    _crane(c, walk, moving, 0, t);
+    c.restore();
+    _saddle(c, d, -46);
     return;
   }
   if (d.look == 'tiger' || d.look == 'kylin') {

@@ -32,6 +32,8 @@ const palettes = <MapTheme, Palette>{
   MapTheme.sea: Palette(0xFFD8C690, 0xFFE8D8A6, 0xFFB8AC80, 0xFF3A6A78),
   MapTheme.bloodSea: Palette(0xFF44262A, 0xFF56303A, 0xFF321C20, 0xFF160808, night: 0.3),
   MapTheme.canyon: Palette(0xFFC07A4E, 0xFFD69466, 0xFFA0603A, 0xFF5A2E1A),
+  MapTheme.jungle: Palette(0xFF3E6A44, 0xFF4E7E50, 0xFF2E5236, 0xFF14281A, night: 0.12),
+  MapTheme.kunlun: Palette(0xFFD6E6E2, 0xFFEAF4F2, 0xFFB8CEC8, 0xFF5E7E7A),
 };
 
 void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
@@ -69,7 +71,7 @@ void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
 
 /// Worn trails: a soft dark band with a lighter tread down the middle.
 void _paths(Canvas c, Scenery s, Rect view, Palette pal) {
-  final snow = s.theme == MapTheme.snow;
+  final snow = s.theme == MapTheme.snow || s.theme == MapTheme.kunlun;
   final outer = Paint()
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round

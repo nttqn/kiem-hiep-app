@@ -110,7 +110,7 @@ class Vfx {
     _lastX = p.x;
     _lastY = p.y;
     if (!p.moving || step <= 0 || step > 60) return;
-    final prints = theme == MapTheme.snow || theme == MapTheme.desert || theme == MapTheme.sea || theme == MapTheme.canyon;
+    final prints = theme == MapTheme.snow || theme == MapTheme.desert || theme == MapTheme.sea || theme == MapTheme.canyon || theme == MapTheme.kunlun;
     if (prints) {
       _stride += step;
       if (_stride >= 26) {
@@ -122,7 +122,7 @@ class Vfx {
         if (_prints.length > 60) _prints.removeAt(0);
       }
     }
-    final dusty = theme != MapTheme.snow && theme != MapTheme.cloud;
+    final dusty = theme != MapTheme.snow && theme != MapTheme.cloud && theme != MapTheme.kunlun;
     if (dusty && !liteGraphics) {
       _dustIn -= dt;
       if (_dustIn <= 0) {
@@ -287,7 +287,7 @@ int dustOf(MapTheme t) => switch (t) {
       MapTheme.desert || MapTheme.sea => 0xFFB8A070,
       MapTheme.canyon => 0xFFA0603A,
       MapTheme.volcano || MapTheme.abyss || MapTheme.bloodSea => 0xFF4A3A36,
-      MapTheme.snow => 0xFF8AA0B8,
+      MapTheme.snow || MapTheme.kunlun => 0xFF8AA0B8,
       MapTheme.cave || MapTheme.fortress => 0xFF6A6058,
       _ => 0xFF8A7A5A,
     };

@@ -457,6 +457,8 @@ class WorldRenderer {
       MapTheme.snow => (const Color(0xFF9CD4EA), const Color(0xFF3A7A9A), const Color(0xFFE8F2F8)),
       MapTheme.volcano => (const Color(0xFFD86A3A), const Color(0xFF8A2A1A), const Color(0xFF4A3A36)),
       MapTheme.cloud => (const Color(0xFFA8DCEC), const Color(0xFF5A9ABA), const Color(0xFFDCE6EE)),
+      MapTheme.kunlun => (const Color(0xFF9AE8DC), const Color(0xFF3A9A9A), const Color(0xFFEAF4F2)),
+      MapTheme.jungle => (const Color(0xFF4A8A6A), const Color(0xFF1E4A36), const Color(0xFF5A6A4A)),
       MapTheme.fortress => (const Color(0xFF3A5A6A), const Color(0xFF1A2A36), const Color(0xFF5A5A62)),
       _ => (const Color(0xFF4A9AB8), const Color(0xFF22587A), const Color(0xFF8A8A7A)),
     };
@@ -497,7 +499,7 @@ class WorldRenderer {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.4);
     }
-    if (theme == MapTheme.volcano || theme == MapTheme.cloud) {
+    if (theme == MapTheme.volcano || theme == MapTheme.cloud || theme == MapTheme.kunlun) {
       // Steam off a hot spring, mist over the cloud pool.
       for (var k = 0; k < 4; k++) {
         final ph = (t * 0.25 + k / 4) % 1;

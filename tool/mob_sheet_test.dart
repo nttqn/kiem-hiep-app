@@ -13,7 +13,7 @@ void main() {
     const cell = 230.0, rowH = 190.0;
     // Story lands, then the side lands and the festival's.
     final rows = [
-      for (final m in [...maps, dongHaiMap, tayVucMap]) [...m.mobs, m.boss],
+      for (final m in [...maps, ...sideMaps]) [...m.mobs, m.boss],
       [for (final m in festMobs) m.id],
     ];
     final w = cell * 4, h = rowH * rows.length;

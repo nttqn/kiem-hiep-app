@@ -286,6 +286,42 @@ const mobs = <MobDef>[
       body: Body.human, c1: 0xFFD8402E, c2: 0xFF3A1A0A, c3: 0xFFFFD34A,
       variant: 'demonLord', size: 1.75, hp: 17, atk: 1.7, def: 1.5,
       speed: 95, exp: 13, boss: true),
+  // Miêu Cương Cổ Lâm (1.19.0)
+  MobDef(
+      id: 'mcWarrior', name: 'Miêu Tộc Dũng Sĩ', hanh: Hanh.tho, body: Body.human,
+      c1: 0xFF2A3A6A, c2: 0xFF1A1A2A, c3: 0xFFD8DCE4, variant: 'spear',
+      hp: 1.1, atk: 1.1, speed: 108),
+  MobDef(
+      id: 'mcGu', name: 'Kim Tằm Cổ', hanh: Hanh.moc, body: Body.bug,
+      c1: 0xFFD8A030, c2: 0xFF5A3A0A, variant: 'spider', speed: 105,
+      hp: 0.95, atk: 1.1),
+  MobDef(
+      id: 'mcShaman', name: 'Vu Cổ Tế Sư', hanh: Hanh.moc, body: Body.human,
+      c1: 0xFF5A2A6A, c2: 0xFF1E2A1E, c3: 0xFF8CE07A, variant: 'darts',
+      ranged: true, range: 245, hp: 0.8, atk: 1.05, attackCd: 1.8),
+  MobDef(
+      id: 'mcKing', name: 'Vạn Độc Cổ Vương', hanh: Hanh.moc,
+      body: Body.human, c1: 0xFF2E5A2A, c2: 0xFF140E1A, c3: 0xFFB04AFF,
+      variant: 'demonLord', size: 1.65, hp: 14, atk: 1.6, def: 1.35,
+      speed: 90, exp: 12, boss: true),
+  // Côn Lôn Tiên Cảnh (1.19.0)
+  MobDef(
+      id: 'klGuard', name: 'Côn Lôn Tiên Vệ', hanh: Hanh.kim, body: Body.human,
+      c1: 0xFFF0F6F4, c2: 0xFF3A7A72, c3: 0xFFB8F0E8, variant: 'swordsman',
+      hp: 1.2, atk: 1.25, def: 1.15, speed: 115),
+  MobDef(
+      id: 'klApe', name: 'Tuyết Sơn Linh Viên', hanh: Hanh.tho, body: Body.brute,
+      c1: 0xFFF6FAFA, c2: 0xFF8AB8B0, variant: 'ape', size: 1.3,
+      hp: 1.75, atk: 1.2, def: 1.3, speed: 105),
+  MobDef(
+      id: 'klSword', name: 'Côn Lôn Kiếm Linh', hanh: Hanh.thuy, body: Body.flyer,
+      c1: 0xFF8AE8F0, c2: 0xFFF0FFFF, variant: 'ghost', ranged: true,
+      range: 275, hp: 0.9, atk: 1.25, attackCd: 1.7),
+  MobDef(
+      id: 'klKylin', name: 'Băng Ngọc Kỳ Lân', hanh: Hanh.thuy,
+      body: Body.quad, c1: 0xFFBFE8F4, c2: 0xFFF4FCFF, c3: 0xFF3AB8D0,
+      variant: 'kylin', size: 2.15, hp: 26, atk: 1.95, def: 1.85,
+      speed: 100, exp: 18, boss: true),
 ];
 
 /// Lễ hội Đông Chí's monsters (festival.dart, 1.11.0), kept out of [mobs]
@@ -316,7 +352,7 @@ final Map<String, MobDef> mobById = {
   for (final m in goldBossMobs) m.id: m,
 };
 
-enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea, bloodSea, canyon }
+enum MapTheme { grass, bamboo, cave, desert, snow, volcano, fortress, cloud, summit, abyss, sea, bloodSea, canyon, jungle, kunlun }
 
 class MapDef {
   const MapDef({
@@ -391,6 +427,13 @@ const double huyetHaiMul = 16;
 
 /// Thần Thiết chance a kill and the boss's handful on a map that needs
 /// [rebirths] rebirths: Cửu U's at five, double at six.
+/// Côn Lôn Tiên Cảnh (1.19.0): now and then Thần Thiết and Tinh Hoa from a
+/// kill, a fifth of Cửu U's iron, always some from its boss.
+const double kunlunIronChance = 0.006;
+const int kunlunBossIron = 2;
+const double kunlunEssenceChance = 0.02;
+const int kunlunBossEssence = 3;
+
 double ironChanceOf(int rebirths) => abyssIronChance * (rebirths >= 6 ? 2 : 1);
 int bossIronOf(int rebirths) => abyssBossIron * (rebirths >= 6 ? 2 : 1);
 
@@ -461,22 +504,44 @@ const MapDef tayVucMap = MapDef(
     minLv: 40, maxLv: 56, theme: MapTheme.canyon,
     mobs: ['tvRider', 'tvWorm', 'tvPriest'], boss: 'tvKing');
 
-/// Field maps as listed to the player, by level: Tây Vực after Băng Tuyết,
-/// Đông Hải after Ma Giáo, Cửu U Ma Vực last.
+/// Miêu Cương Cổ Lâm (1.19.0): the poison forests of the south-west, a
+/// second road for the long stretch from Hắc Phong Động to Hoàng Sa Mạc
+/// (players fell away there with one land to grind).
+const MapDef mieuCuongMap = MapDef(
+    id: 'mieucuong', name: 'Miêu Cương Cổ Lâm',
+    desc: 'Rừng thiêng phương nam, sương độc phủ quanh năm, Vạn Độc Cổ Vương luyện cổ trùng trong thánh hồ.',
+    minLv: 20, maxLv: 35, theme: MapTheme.jungle,
+    mobs: ['mcWarrior', 'mcGu', 'mcShaman'], boss: 'mcKing');
+
+/// Côn Lôn Tiên Cảnh (1.19.0): snow peaks above the clouds beside Hoa Sơn,
+/// a second land for the last climb to 99, with more Thần Thiết and Tinh
+/// Hoa than the fields below it.
+const MapDef conLonMap = MapDef(
+    id: 'conlon', name: 'Côn Lôn Tiên Cảnh',
+    desc: 'Tiên sơn trên tầng mây, Dao Trì đóng băng, kiếm linh của các đời chưởng môn còn giữ núi.',
+    minLv: 85, maxLv: 99, theme: MapTheme.kunlun,
+    mobs: ['klGuard', 'klApe', 'klSword'], boss: 'klKylin');
+
+/// Field maps as listed to the player, by level: Miêu Cương after Hắc
+/// Phong, Tây Vực after Băng Tuyết, Đông Hải after Ma Giáo, Côn Lôn after
+/// Hoa Sơn, Cửu U Ma Vực last.
 final fieldMaps = <MapDef>[
-  ...maps.sublist(0, 5), tayVucMap, ...maps.sublist(5, 7), dongHaiMap, ...maps.sublist(7), abyssMap, huyetHaiMap,
+  ...maps.sublist(0, 3), mieuCuongMap, ...maps.sublist(3, 5), tayVucMap, ...maps.sublist(5, 7), dongHaiMap,
+  ...maps.sublist(7), conLonMap, abyssMap, huyetHaiMap,
 ];
+
+/// Side lands open to every hero (not Cửu U nor festivals).
+const sideMaps = <MapDef>[mieuCuongMap, tayVucMap, dongHaiMap, conLonMap];
 
 /// Field maps that are not on the story's road ([maps]).
 bool isSideMap(MapDef m) =>
-    m.id == dongHaiMap.id || m.id == tayVucMap.id || m.rebirths > 0 || m.id.startsWith('fest_');
+    sideMaps.any((s) => s.id == m.id) || m.rebirths > 0 || m.id.startsWith('fest_');
 
 final Map<String, MapDef> mapById = {
   for (final m in maps) m.id: m,
   abyssMap.id: abyssMap,
   huyetHaiMap.id: huyetHaiMap,
-  dongHaiMap.id: dongHaiMap,
-  tayVucMap.id: tayVucMap,
+  for (final m in sideMaps) m.id: m,
 };
 
 class DungeonDef {
@@ -637,6 +702,14 @@ const dungeons = <DungeonDef>[
 /// Dungeons off the main ladder (not Ác Mộng's eighteen): Đông Hải's and
 /// Tây Vực's.
 const extraDungeons = <DungeonDef>[
+  DungeonDef(id: 'mc1', name: 'Vạn Độc Quật', mapId: 'mieucuong',
+      level: 25, waves: [7, 9, 11]),
+  DungeonDef(id: 'mc2', name: 'Cổ Vương Thần Điện', mapId: 'mieucuong',
+      level: 32, waves: [8, 10, 12]),
+  DungeonDef(id: 'kl1', name: 'Dao Trì Tiên Cung', mapId: 'conlon',
+      level: 90, waves: [11, 13, 15]),
+  DungeonDef(id: 'kl2', name: 'Ngọc Hư Kiếm Trủng', mapId: 'conlon',
+      level: 97, waves: [12, 14, 16]),
   DungeonDef(id: 'tv1', name: 'Ngọc Môn Quan', mapId: 'tayvuc',
       level: 43, waves: [8, 10, 12]),
   DungeonDef(id: 'tv2', name: 'Bái Hỏa Thánh Điện', mapId: 'tayvuc',

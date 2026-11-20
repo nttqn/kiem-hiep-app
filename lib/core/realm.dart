@@ -39,6 +39,8 @@ const realms = <RealmDef>[
       desc: 'Rừng trúc tím bày trận cổ, người lạc vào ít ai tìm được lối ra.'),
   RealmDef(id: 'r3', name: 'U Minh Địa Huyệt', mapId: 'hacphong', level: 22,
       desc: 'Hang sâu dưới Hắc Phong Động, mộ cổ chôn theo nhiều báu vật.'),
+  RealmDef(id: 'r12', name: 'Thánh Hồ Miêu Cương', mapId: 'mieucuong', level: 27,
+      desc: 'Hồ thiêng giữa rừng độc, Miêu tộc thờ cổ thần dưới đáy nước xanh thẫm.'),
   RealmDef(id: 'r4', name: 'Lâu Lan Phế Thành', mapId: 'hoangsa', level: 31,
       desc: 'Tòa thành vùi trong cát, kho báu thương đoàn còn nằm dưới đổ nát.'),
   RealmDef(id: 'r5', name: 'Hàn Băng Cổ Động', mapId: 'bangnguyen', level: 41,
@@ -55,6 +57,8 @@ const realms = <RealmDef>[
       desc: 'Tiên cảnh trên tầng mây, chỉ hiện ra khi sương tan.'),
   RealmDef(id: 'r9', name: 'Kiếm Mộ Hoa Sơn', mapId: 'hoason', level: 92,
       desc: 'Mộ kiếm của các đời kiếm khách, kiếm hồn vẫn canh giữ di vật.'),
+  RealmDef(id: 'r13', name: 'Ngọc Hư Cung', mapId: 'conlon', level: 95,
+      desc: 'Cung điện băng ngọc trên đỉnh Côn Lôn, tổ sư phái Côn Lôn tọa hóa nơi đây.'),
 ];
 
 final Map<String, RealmDef> realmById = {for (final r in realms) r.id: r};

@@ -230,6 +230,8 @@ class _ThemeSwatch extends StatelessWidget {
       MapTheme.sea: [Color(0xFF5AC8E0), Color(0xFF1E4A5A)],
       MapTheme.bloodSea: [Color(0xFFFF4A4A), Color(0xFF160808)],
       MapTheme.canyon: [Color(0xFFE89A66), Color(0xFF6A2E1A)],
+      MapTheme.jungle: [Color(0xFF6AC86A), Color(0xFF3A1A4A)],
+      MapTheme.kunlun: [Color(0xFFE8FAF6), Color(0xFF3AB8D0)],
     };
     final c = colors[theme]!;
     return Container(
@@ -246,6 +248,15 @@ class _ThemeSwatch extends StatelessWidget {
     );
   }
 }
+
+/// A side land's short name, for its dungeons in the list.
+String landShort(String mapId) => switch (mapId) {
+      'mieucuong' => 'Miêu Cương',
+      'tayvuc' => 'Tây Vực',
+      'donghai' => 'Đông Hải',
+      'conlon' => 'Côn Lôn',
+      _ => mapById[mapId]?.name ?? '',
+    };
 
 class DungeonListScreen extends StatefulWidget {
   const DungeonListScreen({super.key, this.nightmare = false, this.realm = false});
@@ -361,7 +372,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    n >= 0 ? 'Ải ${n + 1}: ${d.name}' : '${d.mapId == 'tayvuc' ? 'Tây Vực' : 'Đông Hải'}: ${d.name}',
+                                    n >= 0 ? 'Ải ${n + 1}: ${d.name}' : '${landShort(d.mapId)}: ${d.name}',
                                     style: bold.copyWith(color: goldLight),
                                     overflow: TextOverflow.ellipsis,
                                   ),

@@ -1014,7 +1014,12 @@ class World {
           // Tây Vực grows Hỏa Diệm Sơn's.
           : map.id == tayVucMap.id
               ? maps.indexWhere((m) => m.id == 'hoadiem')
-              : math.max(0, maps.indexOf(map)));
+              // Miêu Cương grows Hoàng Sa's, Côn Lôn Hoa Sơn's.
+              : map.id == mieuCuongMap.id
+                  ? maps.indexWhere((m) => m.id == 'hoangsa')
+                  : map.id == conLonMap.id
+                      ? maps.length - 1
+                      : math.max(0, maps.indexOf(map)));
 
   void _plantHerbs() {
     final r = math.Random(map.id.hashCode ^ 0x5eed);
@@ -3033,8 +3038,21 @@ class World {
         hero.unlockMounts();
       }
     }
-    // Đông Hải Long Vương counts toward Long Mã.
-    if (m.def.id == dongHaiMap.boss || m.def.id == tayVucMap.boss) hero.unlockMounts();
+    // Côn Lôn: Thần Thiết and Tinh Hoa now and then, the boss's always.
+    if (dungeon == null && map.id == conLonMap.id) {
+      final iron = m.def.boss ? kunlunBossIron : (rng.nextDouble() < kunlunIronChance ? 1 : 0);
+      if (iron > 0) {
+        hero.divineIron += iron;
+        events.add(GameEvent(EvKind.loot, text: 'Nhặt được $iron Thần Thiết', color: 0xFF9FD8FF));
+      }
+      final ess = m.def.boss ? kunlunBossEssence : (rng.nextDouble() < kunlunEssenceChance ? 1 : 0);
+      if (ess > 0) {
+        hero.essence += ess;
+        events.add(GameEvent(EvKind.loot, text: 'Nhặt được $ess Tinh Hoa', color: 0xFFE8B8FF));
+      }
+    }
+    // A side land's boss counts toward its mount.
+    if (sideMaps.any((s) => s.boss == m.def.id)) hero.unlockMounts();
     // Lễ hội: the festival's coins.
     if (dungeon == null && isFestMap(map)) {
       final f = festOn(vnDayKey());

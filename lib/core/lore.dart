@@ -63,6 +63,13 @@ const loreChapters = <LoreChapter>[
     'Tuyết Sơn Yêu Vương canh giữ hang, có lẽ từng là con vật ông nuôi.',
     'Tấm bia cuối chỉ còn một câu: "Kiếm lạnh, lòng đừng lạnh."',
   ], Bonus.critDmg, 0.05),
+  LoreChapter('r12', 'Cổ thần dưới hồ', [
+    'Miêu tộc tin rằng dưới Thánh Hồ có một vị cổ thần ngủ say, giữ cho rừng xanh tốt.',
+    'Mỗi năm, vu sư thả một con Kim Tằm xuống hồ để dâng thần, cầu mưa thuận gió hòa.',
+    'Một vu sư trẻ muốn sống mãi, lén nuôi vạn loài độc trùng cho cắn nuốt lẫn nhau.',
+    'Con cổ trùng cuối cùng sống sót chui vào tim hắn, từ đó hắn tự xưng Vạn Độc Cổ Vương.',
+    'Người già trong bản dặn con cháu: "Độc dược cũng là thuốc, chỉ lòng người mới là độc."',
+  ], Bonus.hpPct, 0.02),
   LoreChapter('r11', 'Bích họa Thiên Phật', [
     'Thương đoàn đi Tây Vực xưa kia đều dừng ở Thiên Phật Động thắp hương cầu bình an.',
     'Các họa sư vẽ lên vách đá suốt ba trăm năm, mỗi hang một tích truyện.',
@@ -105,6 +112,13 @@ const loreChapters = <LoreChapter>[
     'Thiên Ma Lão Tổ từng thua một trận duy nhất, và chưa bao giờ quên.',
     'Câu khắc trên đá: "Kiếm pháp cao nhất là biết lúc nào tra kiếm vào vỏ."',
   ], Bonus.atkPct, 0.03),
+  LoreChapter('r13', 'Ngọc Hư di huấn', [
+    'Tổ sư Côn Lôn lập phái trên đỉnh tuyết, nơi người thường đi ba tháng chưa tới chân núi.',
+    'Ngài thuần phục một con Kỳ Lân băng, cùng nó canh giữ Dao Trì suốt trăm năm.',
+    'Trước khi tọa hóa, tổ sư khắc kiếm ý của mình vào băng ngọc, chia cho các đệ tử.',
+    'Các đời chưởng môn sau đều về đây nhập định, kiếm linh của họ không rời núi.',
+    'Câu cuối trên vách Ngọc Hư Cung: "Núi cao không bằng lòng người, tuyết lạnh không bằng thế thái."',
+  ], Bonus.skillDmg, 0.03),
 ];
 
 final Map<String, LoreChapter> loreByRealm = {for (final c in loreChapters) c.realm: c};

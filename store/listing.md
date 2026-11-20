@@ -56,6 +56,20 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.19.0, ≤ 500 ký tự)
+1.19.0 – Miêu Cương, Côn Lôn, Sư đồ, Đồ giám
+• Miêu Cương Cổ Lâm (cấp 20–35): rừng độc phương nam, 2 phó bản, Bí cảnh Thánh Hồ, thú cưỡi Hắc Báo.
+• Côn Lôn Tiên Cảnh (cấp 85–99): rơi thêm Thần Thiết, Tinh Hoa; 2 phó bản, Bí cảnh Ngọc Hư Cung, thú cưỡi Tiên Hạc.
+• Sư đồ: tân thủ bái sư nhận +10% EXP, quà mốc cấp, Truyền công mỗi ngày; sư phụ nhận Tinh Hoa, Thần Thiết.
+• Đồ giám Truyền thuyết: sưu tầm đồ và quái để được cộng chỉ số vĩnh viễn.
+
+## What's new (1.19.0, en-US)
+1.19.0 – Miêu Cương, Côn Lôn, Masters, Codex
+• Miêu Cương Old Forest (level 20–35): poison jungle, 2 dungeons, a secret realm, the Black Panther mount.
+• Côn Lôn Fairy Peaks (level 85–99): extra Divine Iron and Essence, 2 dungeons, a secret realm, the Crane mount.
+• Masters & disciples: new heroes get +10% EXP, milestone gifts and daily training; masters earn Essence and Divine Iron.
+• Legend Codex: collect gear and monsters for lasting stat bonuses.
+
 ## Có gì mới (bản 1.18.0, ≤ 500 ký tự)
 1.18.0 – Tinh Hoa, Khắc ấn
 • Phân giải đồ rơi từ cấp 50 ra Tinh Hoa (Quý 1, Hiếm 3, Truyền thuyết 10) thay vì bán; có Tự phân giải, không bao giờ phân giải đồ tốt hơn món đang mặc.

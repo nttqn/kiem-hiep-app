@@ -410,5 +410,39 @@ service cloud.firestore {
         && request.resource.data.day is string && request.resource.data.day.size() == 8
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 60;
     }
+
+    // Sư đồ (1.19.0): a message between master and đệ tử, mentor/{toRow}/in/{fromRow}:
+    // k = req (ask to be taken, level 60 or less), ok, tc (Truyền công), bye.
+    match /mentor/{to}/in/{from} {
+      allow read, delete: if request.auth != null && to in myRows();
+      allow create, update: if request.auth != null
+        && from in myRows()
+        && !(to in myRows())
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'day', 'k', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.day is string && request.resource.data.day.size() == 8
+        && request.resource.data.level is int && request.resource.data.level >= 1 && request.resource.data.level <= 99
+        && request.resource.data.k in ['req', 'ok', 'tc', 'bye']
+        && (request.resource.data.k != 'req' || request.resource.data.level <= 60);
+    }
+
+    // Sư đồ (1.19.0): masters taking đệ tử, mentors/{row}, level 90+ or reborn.
+    match /mentors/{row} {
+      allow read: if true;
+      allow delete: if request.auth != null && row in myRows();
+      allow create, update: if request.auth != null
+        && row in myRows()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'rebirths', 'power', 'n', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.hanh is int && request.resource.data.hanh >= 0 && request.resource.data.hanh <= 4
+        && request.resource.data.level is int && request.resource.data.level >= 1 && request.resource.data.level <= 99
+        && request.resource.data.rebirths is int && request.resource.data.rebirths >= 0 && request.resource.data.rebirths <= 9
+        && (request.resource.data.level >= 90 || request.resource.data.rebirths > 0)
+        && request.resource.data.power is int && request.resource.data.power >= 0
+        && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 3
+        && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
+    }
   }
 }

@@ -2,12 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/codex.dart';
 import '../core/hero.dart';
 import '../core/monthly.dart';
 import '../core/rewards.dart';
 import '../core/world_boss.dart' show vnNow;
 import '../services/ads.dart';
 import '../services/save.dart';
+import 'codex_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 
@@ -314,6 +316,25 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     return SubScreen(
       title: 'Thành tựu',
       actions: [
+        // Đồ giám Truyền thuyết (1.19.0) lives here, its pages to take on the badge.
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Badge(
+            isLabelVisible: h.codexReady > 0,
+            label: Text('${h.codexReady}'),
+            backgroundColor: seal,
+            child: LButton(
+              label: 'Đồ giám',
+              icon: Icons.menu_book,
+              small: true,
+              color: const Color(0xFF8A4A1A),
+              onTap: () async {
+                await Navigator.of(context).push(fadeRoute(const CodexScreen()));
+                if (mounted) setState(() {});
+              },
+            ),
+          ),
+        ),
         Text('$done/${achievements.length}', style: bold.copyWith(color: goldLight)),
         const SizedBox(width: 12),
         Text('Danh hiệu: ', style: small),
@@ -404,4 +425,4 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 }
 
 /// Number of finished achievements waiting to be claimed (town badge).
-int claimableCount(HeroData h) => claimable(h).length;
+int claimableCount(HeroData h) => claimable(h).length + h.codexReady;

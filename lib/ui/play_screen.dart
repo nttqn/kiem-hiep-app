@@ -220,6 +220,8 @@ class _PlayScreenState extends State<PlayScreen> {
         MapTheme.sea => 'cloud',
         MapTheme.bloodSea => 'fortress',
         MapTheme.canyon => 'desert',
+        MapTheme.jungle => 'bamboo',
+        MapTheme.kunlun => 'summit',
         _ => t.name,
       };
 

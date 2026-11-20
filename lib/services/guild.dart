@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../core/guild.dart';
 import '../core/guild_war.dart';
 import '../core/hero.dart';
+import '../core/mentor.dart' show mentorMaxDisciples;
 import 'leaderboard.dart';
 import 'save.dart';
 
@@ -722,6 +723,143 @@ class GuildService extends ChangeNotifier {
       rows = [for (final d in snap.docs) ?WarRow.fromDoc(d.id, d.data())];
     }
     return rows.where((r) => warPlausible(r.pts, r.n)).take(limit).toList();
+  }
+
+  // ------------------------------------------------------------ Sư đồ
+
+  /// In-memory stand-ins for tests: `mentor` inboxes (to → from → message)
+  /// and the `mentors` listing (row → ad).
+  final Map<String, Map<String, MentorMsg>> dMentorIn = {};
+  final Map<String, MentorAd> dMentors = {};
+
+  /// Leaves message [kind] (one of [MentorMsg.kinds]) for row [to] in
+  /// `mentor/{to}/in/{myRow}` (1.19.0); a newer one replaces it.
+  Future<bool> mentorSend(HeroData h, String to, String kind, String day) async {
+    final u = uid, row = myRow;
+    if (u == null || row == null || to.startsWith('${u}_') || !MentorMsg.kinds.contains(kind)) return false;
+    final name = h.name.length > 24 ? h.name.substring(0, 24) : h.name;
+    if (debug) {
+      (dMentorIn[to] ??= {})[row] = MentorMsg(row, name, h.hanh.index, h.level, day, kind);
+      return true;
+    }
+    try {
+      await _db.collection('mentor').doc(to).collection('in').doc(row).set({
+        'uid': u,
+        'name': name,
+        'hanh': h.hanh.index,
+        'level': h.level,
+        'day': day,
+        'k': kind,
+        'at': FieldValue.serverTimestamp(),
+      }).timeout(_t);
+      return true;
+    } catch (e) {
+      debugPrint('mentor send failed: $e');
+      return false;
+    }
+  }
+
+  /// Messages waiting for this hero.
+  Future<List<MentorMsg>> mentorInbox() async {
+    final row = myRow;
+    if (row == null) return const [];
+    if (debug) return [...?dMentorIn[row]?.values];
+    final snap = await _db.collection('mentor').doc(row).collection('in').limit(50).get().timeout(_t);
+    return [for (final d in snap.docs) ?MentorMsg.fromDoc(d.id, d.data())];
+  }
+
+  /// Removes the message from [from] once dealt with.
+  Future<void> mentorDrop(String from) async {
+    final row = myRow;
+    if (row == null) return;
+    if (debug) {
+      dMentorIn[row]?.remove(from);
+      return;
+    }
+    try {
+      await _db.collection('mentor').doc(row).collection('in').doc(from).delete().timeout(_t);
+    } catch (e) {
+      debugPrint('mentor drop failed: $e');
+    }
+  }
+
+  /// Lists this hero as a master taking đệ tử (`mentors/{row}`), or takes
+  /// the listing down.
+  Future<bool> mentorList(HeroData h, bool on, int seatsUsed) async {
+    final u = uid, row = myRow;
+    if (u == null || row == null) return false;
+    final ad = MentorAd(row, h.name.length > 24 ? h.name.substring(0, 24) : h.name, h.hanh.index, h.level, h.rebirths,
+        h.power, seatsUsed);
+    if (debug) {
+      if (on) {
+        dMentors[row] = ad;
+      } else {
+        dMentors.remove(row);
+      }
+      return true;
+    }
+    try {
+      final ref = _db.collection('mentors').doc(row);
+      if (on) {
+        await ref.set({...ad.toMap(), 'uid': u, 'at': FieldValue.serverTimestamp()}).timeout(_t);
+      } else {
+        await ref.delete().timeout(_t);
+      }
+      return true;
+    } catch (e) {
+      debugPrint('mentor list failed: $e');
+      return false;
+    }
+  }
+
+  /// Masters taking đệ tử, the most recently seen first, full ones left out.
+  Future<List<MentorAd>> mentors({int limit = 40}) async {
+    final List<MentorAd> all;
+    if (debug) {
+      all = dMentors.values.toList();
+    } else {
+      final snap = await _db.collection('mentors').orderBy('at', descending: true).limit(limit).get().timeout(_t);
+      all = [for (final d in snap.docs) ?MentorAd.fromDoc(d.id, d.data())];
+    }
+    final me = uid;
+    return [for (final a in all) if (a.n < mentorMaxDisciples && (me == null || !a.row.startsWith('${me}_'))) a];
+  }
+}
+
+/// A Sư đồ message (`mentor/{to}/in/{from}`): a request to be taken as
+/// đệ tử ('req'), the master's yes ('ok'), today's Truyền công ('tc'), or
+/// the end of it from either side ('bye').
+class MentorMsg {
+  const MentorMsg(this.from, this.name, this.hanh, this.level, this.day, this.kind);
+  final String from, name, day, kind;
+  final int hanh, level;
+
+  static const kinds = ['req', 'ok', 'tc', 'bye'];
+
+  static MentorMsg? fromDoc(String id, Map<String, dynamic> m) {
+    final k = m['k'];
+    if (k is! String || !kinds.contains(k)) return null;
+    return MentorMsg(id, m['name'] as String? ?? '?', (m['hanh'] as num?)?.toInt().clamp(0, 4) ?? 0,
+        (m['level'] as num?)?.toInt().clamp(1, 99) ?? 1, m['day'] as String? ?? '', k);
+  }
+}
+
+/// A master's listing in `mentors/{row}`.
+class MentorAd {
+  const MentorAd(this.row, this.name, this.hanh, this.level, this.rebirths, this.power, this.n);
+  final String row, name;
+  final int hanh, level, rebirths, power, n;
+
+  Map<String, Object> toMap() =>
+      {'name': name, 'hanh': hanh, 'level': level, 'rebirths': rebirths, 'power': power, 'n': n};
+
+  static MentorAd? fromDoc(String id, Map<String, dynamic> m) {
+    try {
+      return MentorAd(id, m['name'] as String, (m['hanh'] as num).toInt().clamp(0, 4), (m['level'] as num).toInt(),
+          (m['rebirths'] as num?)?.toInt() ?? 0, (m['power'] as num?)?.toInt() ?? 0, (m['n'] as num?)?.toInt() ?? 0);
+    } catch (_) {
+      return null;
+    }
   }
 }
 

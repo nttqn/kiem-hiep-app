@@ -4,7 +4,7 @@ import 'sects.dart';
 
 /// Thú cưỡi: the hero rides one on every map. Each mount adds running speed
 /// and one stat; feeding (gold) raises its level and both bonuses.
-enum MountSource { gold, tower, arena, rebirth, abyss, sea, west }
+enum MountSource { gold, tower, arena, rebirth, abyss, sea, west, south, kunlun }
 
 class MountDef {
   const MountDef({
@@ -72,6 +72,8 @@ class MountDef {
         MountSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
         MountSource.sea => 'Hạ Đông Hải Long Vương $need lần (Đông Hải Quần Đảo)',
         MountSource.west => 'Hạ Xích Sa Pháp Vương $need lần (Tây Vực Cổ Đạo)',
+        MountSource.south => 'Hạ Vạn Độc Cổ Vương $need lần (Miêu Cương Cổ Lâm)',
+        MountSource.kunlun => 'Hạ Băng Ngọc Kỳ Lân $need lần (Côn Lôn Tiên Cảnh)',
       };
 }
 
@@ -130,6 +132,17 @@ const mounts = <MountDef>[
       desc: 'Lạc đà trắng hai bướu của thương đoàn Tây Vực, vượt cát đỏ không biết mệt.',
       c1: 0xFFE8DCC4, c2: 0xFFB89A70, c3: 0xFFB3261E,
       move: 0.22, bonus: Bonus.defPct, base: 0.06, perLv: 0.004, source: MountSource.west, need: 15),
+  // 1.19.0: the new side lands' mounts.
+  MountDef(
+      id: 'hacbao', name: 'Hắc Báo Miêu Cương', look: 'tiger',
+      desc: 'Báo đen của Miêu tộc, lặng lẽ như bóng đêm giữa rừng độc.',
+      c1: 0xFF2A2A34, c2: 0xFF3E3E4E, c3: 0xFF8CE07A,
+      move: 0.2, bonus: Bonus.atkPct, base: 0.04, perLv: 0.003, source: MountSource.south, need: 12),
+  MountDef(
+      id: 'tienhac', name: 'Côn Lôn Tiên Hạc', look: 'crane',
+      desc: 'Hạc tiên Dao Trì, chở người tu đạo bay qua biển mây Côn Lôn.',
+      c1: 0xFFFFFFFF, c2: 0xFF1A1A1A, c3: 0xFF3AB8D0,
+      move: 0.33, bonus: Bonus.skillDmg, base: 0.07, perLv: 0.005, source: MountSource.kunlun, need: 25),
   MountDef(
       id: 'cuusac', name: 'Cửu Sắc Thần Lộc', look: 'deer',
       desc: 'Hươu thần chín sắc, chỉ hiện thân trước bậc lục chuyển.',
