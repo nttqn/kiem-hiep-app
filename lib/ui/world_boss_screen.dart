@@ -559,6 +559,7 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
 const bossArtIds = {
   'banditBoss', 'snakeKing', 'zombieKing', 'scorpionKing', 'yetiKing', 'kylin', 'demonLord', //
   'whiteDragon', 'heavenDemon', 'seaDragon', 'tvKing', 'abyssLord', 'hhLord', 'fdDragon', //
+  'mcKing', 'klKylin', //
   'gbSpear', 'gbBandit', 'gbLady',
 };
 
