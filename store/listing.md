@@ -56,6 +56,18 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.20.0, ≤ 500 ký tự)
+1.20.0 – Kỳ ngộ, Kết duyên
+• Kỳ ngộ: đánh quái ngoài bản đồ thỉnh thoảng gặp ẩn sĩ truyền công, rương cổ, tiên nhân chỉ lộ, bí kíp, thiên thạch… hoặc cao thủ ẩn danh, ma đầu chặn đường. Tối đa 5 lần mỗi ngày.
+• Kỳ ngộ phổ (Đồ giám): gặp mỗi loại 3 lần nhận thưởng, thêm danh hiệu.
+• Kết duyên: hai Hảo hữu cấp 40+ thành phu thê. Gửi Tương tư, trợ chiến cho nhau để tăng Tình ý, nâng Nhẫn Đồng Tâm (+HP, công, phòng). Thêm 1 lượt Trợ chiến mỗi ngày.
+
+## What's new (1.20.0, en-US)
+1.20.0 – Encounters, Soulmates
+• Encounters: field fights now and then turn up a hermit's teaching, an old chest, a fairy's blessing, a manual page, a falling star… or a masked master or demon lord to beat. Up to 5 a day.
+• Encounter Codex: meet each kind 3 times for a reward and new titles.
+• Soulmates: two level 40+ friends can bond. Send daily keepsakes and fight together to raise the Heart Ring (+HP, attack, defence). One extra ally call a day.
+
 ## Có gì mới (bản 1.19.0, ≤ 500 ký tự)
 1.19.0 – Miêu Cương, Côn Lôn, Sư đồ, Đồ giám
 • Miêu Cương Cổ Lâm (cấp 20–35): rừng độc phương nam, 2 phó bản, Bí cảnh Thánh Hồ, thú cưỡi Hắc Báo.

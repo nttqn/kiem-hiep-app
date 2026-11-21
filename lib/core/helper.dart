@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'bond.dart';
 import 'content.dart';
 import 'hero.dart';
 
@@ -30,9 +31,10 @@ const double helperHit = 0.665;
 const double helperSkill = 0.81;
 
 /// Where a candidate came from, shown on their card and in analytics.
-enum HelperSource { friend, guild, master }
+enum HelperSource { partner, friend, guild, master }
 
 const helperSourceNames = {
+  HelperSource.partner: 'Phu thê',
   HelperSource.friend: 'Hảo hữu',
   HelperSource.guild: 'Đồng môn bang',
   HelperSource.master: 'Cao thủ',
@@ -51,10 +53,17 @@ extension HelperCalls on HeroData {
     helpUsed.clear();
   }
 
+  /// Calls a day: one more while bonded (Kết duyên, 1.20.0).
+  int get helpCap => helpCallsPerDay + (bonded ? 1 : 0);
+
   int helpsLeft(String day) {
     helpRollDay(day);
-    return math.max(0, helpCallsPerDay - helpUsed.length);
+    return math.max(0, helpCap - helpUsed.length);
   }
+
+  /// How hard [row] hits beside this hero: [helperMul], more for the partner.
+  double helperMulFor(String row, int power) =>
+      helperMul(power, this.power) * (bonded && row == kdPartner ? bondHelperMul : 1);
 
   bool canCallHelper(String row, String day) => helpsLeft(day) > 0 && !helpUsed.contains(row);
 

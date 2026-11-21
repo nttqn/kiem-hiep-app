@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../app_version.dart';
+import '../core/bond.dart';
 import '../core/content.dart';
 import '../core/ngo_dao.dart';
 import '../core/clock.dart';
@@ -206,6 +207,9 @@ class _TownScreenState extends State<TownScreen> {
     final (n, names) = await GuildService.instance.takeHelps();
     if (n <= 0 || !mounted) return;
     final lines = h.takeHiepNghia(n);
+    if (h.bonded && GuildService.instance.lastHelpRows.contains(h.kdPartner)) {
+      lines.addAll(h.addLove(LoveWay.helped, vnDayKey()));
+    }
     await SaveService.instance.save();
     final who = names.length <= 3 ? names.join(', ') : '${names.take(3).join(', ')} và ${names.length - 3} người khác';
     await _gotDialog('Hiệp nghĩa', '$who đã mời ${h.name} trợ chiến.', lines);
@@ -838,7 +842,7 @@ class _TownScreenState extends State<TownScreen> {
       tile('companions', Icons.groups, () => _go(PetScreen(tab: h.companionsOpen ? 2 : 0))),
       tile('rank', Icons.leaderboard, () => _go(const LeaderboardScreen())),
       tile('guild', Icons.shield, () => _go(const GuildScreen()),
-          badge: (h.inGuild ? h.warLeft(vnDayKey()) + (h.gwRankDue ? 1 : 0) : 0) + h.mentorBadge),
+          badge: (h.inGuild ? h.warLeft(vnDayKey()) + (h.gwRankDue ? 1 : 0) : 0) + h.mentorBadge + h.bondBadge(vnDayKey())),
       tile('alchemy', Icons.science, () => _go(const AlchemyScreen())),
       tile('activity', Icons.local_fire_department, () => _go(const ActivityScreen()), badge: activityClaimable(h)),
       tile('sect', Icons.temple_buddhist, () => _go(const SectScreen()), badge: _sectBadge()),

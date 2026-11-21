@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/hanh.dart';
 import '../core/helper.dart';
 import '../core/hero.dart';
+import '../core/bond.dart';
 import '../core/guild.dart';
 import '../core/sects.dart';
 import '../core/world_boss.dart' show vnDayKey;
@@ -34,6 +35,7 @@ Future<List<HelperPick>> loadHelpers(HeroData h) async {
 
   if (gs.available) {
     try {
+      if (h.bonded) add(await gs.rows([h.kdPartner]), HelperSource.partner);
       add(await gs.rows([for (final f in h.friends) f.row]), HelperSource.friend);
     } catch (_) {}
     if (h.inGuild) {
@@ -90,7 +92,7 @@ class _HelperDialogState extends State<_HelperDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Còn $left/$helpCallsPerDay lượt hôm nay · người được mời nhận Hiệp nghĩa',
+            Text('Còn $left/${h.helpCap} lượt hôm nay · người được mời nhận Hiệp nghĩa',
                 style: small.copyWith(fontSize: 11.5), maxLines: 1, overflow: TextOverflow.ellipsis),
             if (!signed)
               Text('Đăng nhập để mời Hảo hữu, đồng môn bang',
@@ -129,7 +131,7 @@ class _HelperDialogState extends State<_HelperDialog> {
     final e = p.entry;
     final hanh = Hanh.values[e.hanh];
     final used = h.helpUsed.contains(e.id) && h.helpDay == day;
-    final mul = helperMul(e.power, h.power);
+    final mul = h.helperMulFor(e.id, e.power);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(

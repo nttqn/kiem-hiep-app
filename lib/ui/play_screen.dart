@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/bond.dart';
 import '../core/content.dart';
 import '../core/gold_boss.dart';
 import '../core/guild.dart';
@@ -185,8 +186,12 @@ class _PlayScreenState extends State<PlayScreen> {
     _picking = false;
     if (!mounted) return;
     if (p != null && world.canCallHelper && hero.canCallHelper(p.entry.id, day)) {
-      world.callHelper(p.entry.toRival(), helperMul(p.entry.power, hero.power));
+      world.callHelper(p.entry.toRival(), hero.helperMulFor(p.entry.id, p.entry.power));
       hero.useHelper(p.entry.id, day);
+      if (hero.bonded && p.entry.id == hero.kdPartner) {
+        final love = hero.addLove(LoveWay.called, day);
+        if (love.isNotEmpty) _toast(love.join(' · '), const Color(0xFFFFB0C8));
+      }
       GuildService.instance.sendHelp(hero, p.entry.id, day);
       Analytics.instance.log('helper_call', {
         'src': p.source.name,

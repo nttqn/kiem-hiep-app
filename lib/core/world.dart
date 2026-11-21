@@ -15,6 +15,7 @@ import 'hanh.dart';
 import 'helper.dart';
 import 'hero.dart';
 import 'hung_thu.dart';
+import 'ky_ngo.dart';
 import 'items.dart';
 import 'live_event.dart';
 import 'lore.dart';
@@ -1490,6 +1491,104 @@ class World {
     events.add(GameEvent(EvKind.loot, text: 'Đào được rương báu: +$g lượng', color: 0xFFFFD34A));
   }
 
+  // ------------------------------------------------------------ kỳ ngộ
+
+  /// Dev build: the kind every field kill turns up (today's cap still holds).
+  static KyNgo? debugKy;
+
+  /// A fight to bring on at the next field update.
+  KyNgo? _kyPending;
+
+  /// A chance meeting off a field kill at (x, y): paid at once, or a fight.
+  void _kyNgo(KyNgo k, double x, double y) {
+    final lv = math.min(hero.level, map.maxLv);
+    fx.add(Fx('buddha', x, y, life: 0.8, radius: 120));
+    _sfx('loot');
+    final lines = hero.payKy(k, rng, herbTier: _herbTier);
+    switch (k) {
+      case KyNgo.ruongCo:
+        double j() => (rng.nextDouble() - 0.5) * 80;
+        drops.add(Drop(x + j(), y + 30,
+            item: makeItem(
+              slot: Slot.values[rng.nextInt(Slot.values.length)],
+              level: math.min(maxLevel, lv),
+              rarity: rollRarity(rng, boss: true),
+              sect: sect,
+              rng: rng,
+            )));
+        drops.add(Drop(x + j(), y + 30, gem: Gem(Hanh.values[rng.nextInt(5)], dropTier(lv, boss: true))));
+      case KyNgo.tienChi:
+        fx.add(Fx('buddha', player.x, player.y, life: 1, radius: 200));
+      case KyNgo.caoThu || KyNgo.maDau:
+        // Not now: a kill can land while the mobs are being looped over.
+        _kyPending = k;
+      default:
+    }
+    events.add(GameEvent(EvKind.wave, text: 'Kỳ ngộ · ${k.label}', color: 0xFFFFD34A, big: true));
+    final say = [...lines, ...hero.kyTitles()];
+    if (say.isNotEmpty) events.add(GameEvent(EvKind.loot, text: say.join(' · '), color: 0xFFFFE8A0));
+    if (k == KyNgo.caoThu || k == KyNgo.maDau) {
+      events.add(GameEvent(EvKind.boss, text: k.desc, color: 0xFFFF6A4A, big: true));
+    }
+  }
+
+  void _kySpawn(KyNgo k, int lv) {
+    final p = player;
+    final a = rng.nextDouble() * math.pi * 2;
+    final x = (p.x + math.cos(a) * 320).clamp(80.0, width - 80);
+    final y = (p.y + math.sin(a) * 220).clamp(100.0, height - 80);
+    final maDau = k == KyNgo.maDau;
+    final def = mobById[map.mobs.last]!;
+    final m = Mob(_uid++, def, lv + (maDau ? 2 : 1), x, y)
+      ..eliteKey = maDau ? kyMaDauKey : kyCaoThuKey
+      ..eliteName = maDau ? kyMaDauName : kyCaoThuName
+      ..state = MobState.chase;
+    m.maxHp *= (maDau ? 14 : 9) * map.mul;
+    m.hp = m.maxHp;
+    m.atk *= (maDau ? 1.6 : 1.4) * map.mul;
+    mobs.add(m);
+    fx.add(Fx('quake', x, y, life: 0.6, radius: 90));
+    if (!maDau) return;
+    for (var i = 0; i < kyMaDauMinions; i++) {
+      final b = i * math.pi * 2 / kyMaDauMinions;
+      final d = mobById[map.mobs[rng.nextInt(map.mobs.length)]]!;
+      final n = Mob(_uid++, d, lv, (x + math.cos(b) * 110).clamp(60.0, width - 60),
+          (y + math.sin(b) * 80).clamp(80.0, height - 60))
+        ..state = MobState.chase;
+      _scale(n, map.mul);
+      mobs.add(n);
+      fx.add(Fx('spark_mob_${d.hanh.name}', n.x, n.y - 20, life: 0.4));
+    }
+    _shake(5);
+  }
+
+  /// The challenger or the ma đầu beaten: Sử thi pieces, a better gem,
+  /// Tinh Hoa, and from the ma đầu now and then a Mảnh Hoàng Kim.
+  void _kyWon(Mob m) {
+    final maDau = m.eliteKey == kyMaDauKey;
+    final k = maDau ? KyNgo.maDau : KyNgo.caoThu;
+    final lv = math.min(maxLevel, m.level);
+    for (var i = 0; i < (maDau ? 2 : 1); i++) {
+      drops.add(Drop(m.x + 30 - 60.0 * i, m.y,
+          item: makeItem(
+            slot: Slot.values[rng.nextInt(Slot.values.length)],
+            level: lv,
+            rarity: Rarity.epic,
+            sect: sect,
+            rng: rng,
+          )));
+    }
+    drops.add(Drop(m.x, m.y + 30, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(lv, boss: true) + 1))));
+    final lines = <String>['Đã hạ ${m.eliteName}!'];
+    final ess = hero.kyFightEssence(k);
+    if (ess > 0) lines.add('+$ess Tinh Hoa');
+    if (maDau && lv >= bossShardLevel && rng.nextDouble() < kyMaDauShardChance) {
+      hero.goldShards++;
+      lines.add('+1 Mảnh Hoàng Kim');
+    }
+    events.add(GameEvent(EvKind.wave, text: lines.join(' · '), color: 0xFFFFD34A, big: true));
+  }
+
   // ------------------------------------------------------------ bí cảnh
 
   /// This run's bí cảnh (null outside one).
@@ -1949,6 +2048,7 @@ class World {
     // Only time on the maps tires (1.13.0): monster EXP is what it cuts.
     if (mode == WorldMode.field) hero.tickFatigue(dt);
     if (hero.tickBuffs(dt)) player.maxHp = st.maxHp;
+    hero.tickKyBless(dt);
     if (mode == WorldMode.dungeon) _updateDungeon(dt);
     if (mode == WorldMode.field) {
       _updateField();
@@ -2017,6 +2117,11 @@ class World {
   }
 
   void _updateField() {
+    final ky = _kyPending;
+    if (ky != null && player.alive) {
+      _kyPending = null;
+      _kySpawn(ky, math.min(hero.level, map.maxLv));
+    }
     if (time >= _eliteCheck) {
       _eliteCheck = time + 1;
       _spawnElites();
@@ -3083,6 +3188,11 @@ class World {
       if (hero.rollTreasureMap(vnDayKey(), m.big, rng)) {
         events.add(GameEvent(EvKind.loot, text: 'Nhặt được Tàng Bảo Đồ (${hero.tbdMaps})', color: 0xFFFFD34A));
       }
+      if (!isFestMap(map) && m.eliteKey != kyMaDauKey && m.eliteKey != kyCaoThuKey) {
+        final k = hero.rollKy(vnDayKey(), m.big, rng, force: debugKy);
+        if (k != null) _kyNgo(k, m.x, m.y);
+      }
+      if (m.eliteKey == kyCaoThuKey || m.eliteKey == kyMaDauKey) _kyWon(m);
       if (m.eliteKey == 'tbd_guard') {
         _tbdChest(m.x, m.y, m.level);
         drops.add(Drop(m.x - 30, m.y, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(m.level, boss: true) + 1))));

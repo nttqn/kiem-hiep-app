@@ -7,6 +7,7 @@ import 'package:kiem_hiep/core/costumes.dart';
 import 'package:kiem_hiep/core/festival.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/ky_ngo.dart';
 import 'package:kiem_hiep/core/live_event.dart';
 import 'package:kiem_hiep/core/mount_skins.dart';
 import 'package:kiem_hiep/core/premium.dart';
@@ -122,6 +123,10 @@ void main() {
         // Easier than Cửu U Ma Vực for the same hero.
         final b = geared(lv, Hanh.values[lv % 5])..rebirths = cs;
         b.recompute();
+        // Kỳ ngộ (1.20.0) stays out of it: the festival land has none.
+        b
+          ..kyDay = vnDayKey()
+          ..kyToday = kyDaily;
         final (abyss, _) = farm(b, abyssMap, minutes: 3);
         // ignore: avoid_print
         print('  Cửu U: $abyss kills');

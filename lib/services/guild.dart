@@ -630,13 +630,18 @@ class GuildService extends ChangeNotifier {
     }
   }
 
+  /// Board rows of those who called, from the last [takeHelps].
+  List<String> lastHelpRows = const [];
+
   /// Takes every Hiệp nghĩa waiting for this hero: (times, names of those
   /// who called), the docs removed. (0, []) when none or offline.
   Future<(int, List<String>)> takeHelps() async {
     final row = myRow;
+    lastHelpRows = const [];
     if (row == null) return (0, const <String>[]);
     if (debug) {
       final m = dHelps.remove(row) ?? {};
+      lastHelpRows = m.keys.toList();
       return (m.values.fold<int>(0, (a, b) => a + b), m.keys.toList());
     }
     try {
@@ -644,6 +649,7 @@ class GuildService extends ChangeNotifier {
       final snap = await col.limit(50).get().timeout(_t);
       if (snap.docs.isEmpty) return (0, const <String>[]);
       var n = 0;
+      final rows = <String>[];
       final names = <String>[];
       final batch = _db.batch();
       for (final d in snap.docs) {
@@ -651,10 +657,12 @@ class GuildService extends ChangeNotifier {
         // time still counts no more than a month of calls.
         n += ((d.data()['n'] as num?)?.toInt() ?? 1).clamp(1, 31);
         names.add(d.data()['name'] as String? ?? '?');
+        rows.add(d.id);
         batch.delete(d.reference);
       }
       // Paid only once they are gone, so nothing is paid twice.
       await batch.commit().timeout(_t);
+      lastHelpRows = rows;
       return (n, names);
     } catch (e) {
       debugPrint('helps read failed: $e');
@@ -824,6 +832,63 @@ class GuildService extends ChangeNotifier {
     final me = uid;
     return [for (final a in all) if (a.n < mentorMaxDisciples && (me == null || !a.row.startsWith('${me}_'))) a];
   }
+
+  // ------------------------------------------------------------ Kết duyên
+
+  /// In-memory `bond` inboxes for tests: to → from → message.
+  final Map<String, Map<String, BondMsg>> dBondIn = {};
+
+  /// Leaves message [kind] (one of [BondMsg.kinds]) for row [to] in
+  /// `bond/{to}/in/{myRow}` (1.20.0); a newer one replaces it.
+  Future<bool> bondSend(HeroData h, String to, String kind, String day) async {
+    final u = uid, row = myRow;
+    if (u == null || row == null || to.startsWith('${u}_') || !BondMsg.kinds.contains(kind)) return false;
+    final name = h.name.length > 24 ? h.name.substring(0, 24) : h.name;
+    if (debug) {
+      (dBondIn[to] ??= {})[row] = BondMsg(row, name, h.hanh.index, h.level, h.rebirths, day, kind);
+      return true;
+    }
+    try {
+      await _db.collection('bond').doc(to).collection('in').doc(row).set({
+        'uid': u,
+        'name': name,
+        'hanh': h.hanh.index,
+        'level': h.level,
+        'rb': h.rebirths,
+        'day': day,
+        'k': kind,
+        'at': FieldValue.serverTimestamp(),
+      }).timeout(_t);
+      return true;
+    } catch (e) {
+      debugPrint('bond send failed: $e');
+      return false;
+    }
+  }
+
+  /// Kết duyên messages waiting for this hero.
+  Future<List<BondMsg>> bondInbox() async {
+    final row = myRow;
+    if (row == null) return const [];
+    if (debug) return [...?dBondIn[row]?.values];
+    final snap = await _db.collection('bond').doc(row).collection('in').limit(50).get().timeout(_t);
+    return [for (final d in snap.docs) ?BondMsg.fromDoc(d.id, d.data())];
+  }
+
+  /// Removes the message from [from] once dealt with.
+  Future<void> bondDrop(String from) async {
+    final row = myRow;
+    if (row == null) return;
+    if (debug) {
+      dBondIn[row]?.remove(from);
+      return;
+    }
+    try {
+      await _db.collection('bond').doc(row).collection('in').doc(from).delete().timeout(_t);
+    } catch (e) {
+      debugPrint('bond drop failed: $e');
+    }
+  }
 }
 
 /// A Sư đồ message (`mentor/{to}/in/{from}`): a request to be taken as
@@ -875,5 +940,23 @@ class WarRow {
     } catch (_) {
       return null;
     }
+  }
+}
+
+/// A Kết duyên message (`bond/{to}/in/{from}`): a proposal ('req'), the
+/// yes ('ok'), the day's Tương tư ('tt'), or no / parting ('bye').
+class BondMsg {
+  const BondMsg(this.from, this.name, this.hanh, this.level, this.rebirths, this.day, this.kind);
+  final String from, name, day, kind;
+  final int hanh, level, rebirths;
+
+  static const kinds = ['req', 'ok', 'tt', 'bye'];
+
+  static BondMsg? fromDoc(String id, Map<String, dynamic> m) {
+    final k = m['k'];
+    if (k is! String || !kinds.contains(k)) return null;
+    return BondMsg(id, m['name'] as String? ?? '?', (m['hanh'] as num?)?.toInt().clamp(0, 4) ?? 0,
+        (m['level'] as num?)?.toInt().clamp(1, 99) ?? 1, (m['rb'] as num?)?.toInt().clamp(0, 9) ?? 0,
+        m['day'] as String? ?? '', k);
   }
 }

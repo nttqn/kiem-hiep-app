@@ -444,5 +444,23 @@ service cloud.firestore {
         && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 3
         && !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
     }
+
+    // Kết duyên (1.20.0): bond/{toRow}/in/{fromRow}, a proposal, the yes,
+    // the day's Tương tư or parting; never between one account's heroes.
+    match /bond/{to}/in/{from} {
+      allow read, delete: if request.auth != null && to in myRows();
+      allow create, update: if request.auth != null
+        && from in myRows()
+        && !(to in myRows())
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'hanh', 'level', 'rb', 'day', 'k', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.day is string && request.resource.data.day.size() == 8
+        && request.resource.data.level is int && request.resource.data.level >= 1 && request.resource.data.level <= 99
+        && request.resource.data.rb is int && request.resource.data.rb >= 0 && request.resource.data.rb <= 9
+        && request.resource.data.k in ['req', 'ok', 'tt', 'bye']
+        && (request.resource.data.k != 'req' || request.resource.data.level >= 40 || request.resource.data.rb > 0)
+        && (request.resource.data.k == 'bye' || !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
+    }
   }
 }

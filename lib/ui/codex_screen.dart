@@ -4,7 +4,9 @@ import '../core/codex.dart';
 import '../core/content.dart';
 import '../core/hero.dart';
 import '../core/items.dart';
+import '../core/ky_ngo.dart';
 import '../core/lore.dart' show loreBonusLabel;
+import '../core/world_boss.dart' show vnDayKey;
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
@@ -16,7 +18,7 @@ const _done = Color(0xFF8CE07A);
 class CodexScreen extends StatefulWidget {
   const CodexScreen({super.key, this.tab = 0});
 
-  /// 0: Thần binh phổ, 1: Vạn thú phổ.
+  /// 0: Thần binh phổ, 1: Vạn thú phổ, 2: Kỳ ngộ phổ (1.20.0).
   final int tab;
 
   @override
@@ -53,13 +55,14 @@ class _CodexScreenState extends State<CodexScreen> {
       actions: [
         tabChip(gearReady > 0 ? 'Thần binh phổ ($gearReady)' : 'Thần binh phổ', _tab == 0, () => setState(() => _tab = 0)),
         tabChip(landReady > 0 ? 'Vạn thú phổ ($landReady)' : 'Vạn thú phổ', _tab == 1, () => setState(() => _tab = 1)),
+        tabChip(h.kyPagesReady > 0 ? 'Kỳ ngộ phổ (${h.kyPagesReady})' : 'Kỳ ngộ phổ', _tab == 2, () => setState(() => _tab = 2)),
       ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: _tab == 0 ? _gear() : _lands()),
+          Expanded(child: switch (_tab) { 0 => _gear(), 1 => _lands(), _ => _ky() }),
           const SizedBox(width: 10),
-          SizedBox(width: 220, child: _side()),
+          SizedBox(width: 220, child: _tab == 2 ? _kySide() : _side()),
         ],
       ),
     );
@@ -292,6 +295,94 @@ class _CodexScreenState extends State<CodexScreen> {
       child: Text(
         '${boss ? '★ ' : ''}$name ${fmt(n)}/$goal',
         style: small.copyWith(fontSize: 10.5, color: full ? _done : cream),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------ Kỳ ngộ phổ
+
+  Future<void> _claimKy(KyNgo k) async {
+    final lines = h.kyClaimPage(k);
+    if (lines.isEmpty) return;
+    await SaveService.instance.save();
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(lines.join(' · ')), duration: const Duration(seconds: 3)));
+  }
+
+  Widget _ky() => ListView.builder(
+        itemCount: KyNgo.values.length,
+        itemBuilder: (_, i) => _kyRow(KyNgo.values[i]),
+      );
+
+  Widget _kyRow(KyNgo k) {
+    final n = h.kySeen(k);
+    final done = h.kyClaimed.contains(k.name);
+    final ready = h.kyPageReady(k);
+    return Panel(
+      padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+      border: ready ? goldLight : (done ? jade : gold),
+      child: Row(
+        children: [
+          Icon(n > 0 ? Icons.auto_awesome : Icons.help_outline, size: 20, color: n > 0 ? _legendInk : creamDim),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(n > 0 ? k.label : '???', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+                Text(n > 0 ? k.desc : 'Chưa gặp kỳ ngộ này.',
+                    style: small.copyWith(fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text('Đã gặp ${fmt(n)}', style: small.copyWith(fontSize: 10.5)),
+          const SizedBox(width: 6),
+          if (done)
+            const Icon(Icons.check_circle, color: _done, size: 22)
+          else
+            LButton(
+              label: ready ? 'Nhận' : '${n.clamp(0, kyPageNeed)}/$kyPageNeed',
+              small: true,
+              color: jade,
+              enabled: ready,
+              onTap: () => _claimKy(k),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kySide() {
+    final day = vnDayKey();
+    return Panel(
+      border: _legendInk,
+      padding: const EdgeInsets.all(10),
+      child: ListView(
+        children: [
+          Text('Kỳ ngộ phổ', style: titleStyle(16, color: _legendInk)),
+          const SizedBox(height: 4),
+          Text(
+            'Đánh quái ngoài bản đồ (từ cấp $kyMinLevel) thỉnh thoảng gặp kỳ ngộ, tinh anh và boss dễ gặp hơn. '
+            'Gặp mỗi loại $kyPageNeed lần thì nhận thưởng trang: lượng, $kyPageGems ngọc, $kyPageEssence Tinh Hoa.',
+            style: small.copyWith(fontSize: 11),
+          ),
+          const Divider(color: gold),
+          _kv('Hôm nay', '${kyDaily - h.kyLeft(day)}/$kyDaily'),
+          _kv('Tổng đã gặp', fmt(h.kyTotal)),
+          _kv('Trang đã nhận', '${h.kyClaimed.length}/${KyNgo.values.length}'),
+          if (h.kyBless > 0) _kv('Tiên nhân chỉ lộ', '${(h.kyBless / 60).ceil()} phút'),
+          const Divider(color: gold),
+          Text('Danh hiệu', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+          for (final e in kyTotalTitles.entries)
+            Text('« ${e.value} »: gặp ${e.key} kỳ ngộ',
+                style: small.copyWith(fontSize: 11, color: h.seasonTitles.contains(e.value) ? _done : creamDim)),
+          Text('« $kyAllTitle »: nhận đủ ${KyNgo.values.length} trang',
+              style: small.copyWith(fontSize: 11, color: h.seasonTitles.contains(kyAllTitle) ? _done : creamDim)),
+        ],
       ),
     );
   }

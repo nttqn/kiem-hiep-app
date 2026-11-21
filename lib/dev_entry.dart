@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'core/ky_ngo.dart';
 import 'core/activity.dart';
 import 'core/ngo_dao.dart';
 import 'core/gold_boss.dart';
@@ -107,6 +108,8 @@ Future<void> main() async {
   // Tàng Bảo Đồ: tbd=<outcome> for every dig, tbdnear=1 marks beside the hero.
   World.debugTbd = TbdOutcome.values.where((o) => o.name == q['tbd']).firstOrNull;
   World.debugTbdNear = q['tbdnear'] == '1';
+  // Kỳ ngộ: ky=<kind> on every field kill (today's cap still holds).
+  World.debugKy = KyNgo.values.where((k) => k.name == q['ky']).firstOrNull;
   // slow=4 runs battles at quarter speed for smooth screen recordings.
   BattleGame.debugSpeed = 1 / (double.tryParse(q['slow'] ?? '') ?? 1);
   // vnat=HHMM: today at that Vietnam time (Boss Hoàng Kim sessions).
@@ -666,6 +669,8 @@ Future<void> main() async {
     'lore' => const LoreScreen(),
     'codex' => const CodexScreen(),
     'mentor' => const GuildScreen(tab: 2),
+    'bond' => const GuildScreen(tab: 3),
+    'kyngo' => const CodexScreen(tab: 2),
     'stats' => const StatsScreen(),
     'manor' => const ManorScreen(),
     'prologue' => const TownScreen(firstVisit: true),

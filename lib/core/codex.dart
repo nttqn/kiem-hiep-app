@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'content.dart';
 import 'hero.dart';
+import 'ky_ngo.dart';
 import 'items.dart';
 import 'lore.dart' show loreBonusLabel;
 import 'sects.dart';
@@ -128,7 +129,8 @@ extension Codex on HeroData {
         for (final m in codexLands) codexLandPage(m.id),
       ];
 
-  int get codexReady => codexPages.where(codexClaimable).length;
+  /// Pages to take, Kỳ ngộ phổ's (1.20.0) among them.
+  int get codexReady => codexPages.where(codexClaimable).length + kyPagesReady;
 
   bool get codexGearAll => [for (var t = 0; t < codexTiers; t++) codexGearPage(t)].every(codexClaimed.contains);
   bool get codexLandAll => codexLands.every((m) => codexClaimed.contains(codexLandPage(m.id)));

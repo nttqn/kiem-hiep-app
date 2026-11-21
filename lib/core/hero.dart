@@ -34,6 +34,8 @@ import 'legacy.dart';
 import 'live_event.dart';
 import 'codex.dart';
 import 'mentor.dart';
+import 'ky_ngo.dart';
+import 'bond.dart';
 import 'lore.dart';
 import 'manor.dart';
 import 'manuals.dart';
@@ -544,6 +546,27 @@ class HeroData {
   int sdGraduates = 0;
   bool sdListing = false;
 
+  /// Kỳ ngộ (1.20.0, ky_ngo.dart): the day and meetings in it, meetings
+  /// ever and by kind, Kỳ ngộ phổ pages taken, Tiên nhân chỉ lộ seconds.
+  String kyDay = '';
+  int kyToday = 0, kyTotal = 0;
+  final Map<String, int> kyCount = {};
+  final Set<String> kyClaimed = {};
+  double kyBless = 0;
+
+  /// Kết duyên (1.20.0, bond.dart): the partner (board row, name, element)
+  /// and the day bonded, Tình ý, the day and ways it was earned in it, the
+  /// one asked and not yet answered, the day last parted, and whether the
+  /// partner's Tương tư waits.
+  String kdPartner = '', kdPartnerName = '', kdSince = '';
+  int kdPartnerHanh = 0, kdLove = 0;
+  String kdDay = '';
+  final Set<int> kdWays = {};
+  String kdPending = '', kdPendingName = '', kdPendingDay = '';
+  int kdPendingHanh = 0;
+  String kdPartedDay = '';
+  bool kdTtWaiting = false;
+
   // Bí cảnh: best stars by id, and per day the runs taken and ad runs added.
   final Map<String, int> realmStars = {};
   String realmDay = '';
@@ -866,6 +889,7 @@ class HeroData {
     add(starBonuses(equip.values));
     add(loreBonuses());
     add(codexBonuses());
+    add(bondBonuses());
     add(manor.bonuses());
     final br = branchDef;
     if (br != null) add(branchBonus(br, branchLv));
@@ -1951,6 +1975,7 @@ class HeroData {
       (1 + guildPerk) *
       (1 + legacyExp) *
       (1 + discipleExp) *
+      kyBlessMul *
       (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackExp : 1.0);
 
   /// Starts a new Mệt mỏi day when the date changed.
@@ -1977,6 +2002,7 @@ class HeroData {
   /// Monster gold: the better of Tụ Bảo Đan and today's event, as for EXP.
   double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold) * (1 + guildPerk) *
       (1 + legacyExp * legacyGoldShare) *
+      kyBlessMul *
       (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackGold : 1.0);
 
   /// Counts buff time down while playing; true when one ran out.
@@ -3401,6 +3427,8 @@ class HeroData {
         if (codexGear.isNotEmpty || mobKills.isNotEmpty || codexClaimed.isNotEmpty) 'cx': codexToJson(),
         if (sdMaster.isNotEmpty || sdPending.isNotEmpty || disciples.isNotEmpty || sdGraduates > 0 || sdListing || sdGiftNext > 0)
           'sd': mentorToJson(),
+        if (kyTotal > 0 || kyBless > 0) 'ky': kyToJson(),
+        if (kdPartner.isNotEmpty || kdPending.isNotEmpty || kdPartedDay.isNotEmpty) 'kd': bondToJson(),
         'auto': autoCfg.toJson(),
         'seen': seenFeatures.toList(),
         'manor': manor.toJson(),
@@ -3817,6 +3845,8 @@ class HeroData {
     h.warFromJson(m['gw']);
     h.codexFromJson(m['cx']);
     h.mentorFromJson(m['sd']);
+    h.kyFromJson(m['ky']);
+    h.bondFromJson(m['kd']);
     h.codexScanOwned();
     final fp = m['fp'];
     if (fp is List && fp.length >= 2) {
