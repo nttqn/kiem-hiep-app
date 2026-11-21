@@ -149,14 +149,18 @@ void _noAds(Canvas c) {
 }
 
 Future<void> _write(String name, void Function(Canvas) paint) async {
-  final rec = ui.PictureRecorder();
-  final c = Canvas(rec, const Rect.fromLTWH(0, 0, _s, _s));
-  paint(c);
-  final img = await rec.endRecording().toImage(_s.toInt(), _s.toInt());
-  final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
-  final f = File('build/shots/iap_$name.png');
-  f.parent.createSync(recursive: true);
-  f.writeAsBytesSync(bytes!.buffer.asUint8List());
+  // 512 for Play, 1024 (drawn at x2, not upscaled) for App Store Connect.
+  for (final k in const [1, 2]) {
+    final rec = ui.PictureRecorder();
+    final c = Canvas(rec, Rect.fromLTWH(0, 0, _s * k, _s * k));
+    c.scale(k.toDouble());
+    paint(c);
+    final img = await rec.endRecording().toImage((_s * k).toInt(), (_s * k).toInt());
+    final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
+    final f = File(k == 1 ? 'build/shots/iap_$name.png' : 'store/iap-icons-1024/iap_$name.png');
+    f.parent.createSync(recursive: true);
+    f.writeAsBytesSync(bytes!.buffer.asUint8List());
+  }
 }
 
 /// One faceted crystal standing at [base], [h] tall and [w] wide.
