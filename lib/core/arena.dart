@@ -33,7 +33,7 @@ const double arenaRivalSkillCd = 1.3;
 /// The duel ground: Hoa Sơn's summit, where swords are judged.
 DungeonDef arenaDef(ArenaRival r, {String? round}) => DungeonDef(
       id: 'arena',
-      name: round != null ? tr('Đại Hội · {round} · {rName}', {'round': round, 'rName': tr(r.name)}) : tr('Lôi đài · {rName}', {'rName': tr(r.name)}),
+      name: round != null ? tr('Đại Hội · {round} · {rName}', {'round': round, 'rName': r.bot ? tr(r.name) : r.name}) : tr('Lôi đài · {rName}', {'rName': r.bot ? tr(r.name) : r.name}),
       daiHoi: round != null,
       mapId: 'hoason',
       level: r.level,

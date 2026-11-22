@@ -207,7 +207,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
     final b = daoBonuses(lv);
     final gate = daoAtGate(lv);
     final open = h.expFull;
-    String pct(Bonus k) => '+${(((b[k] ?? 0) * 1000).round() / 10).toString().replaceAll('.', ',')}%';
+    String pct(Bonus k) => '+${(((b[k] ?? 0) * 1000).round() / 10).toString().replaceAll('.', decSep)}%';
     return Panel(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -248,7 +248,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                   _line(tr('Đã đầy cấp {maxLevel}, kinh nghiệm vừa ngưng tụ Linh Phách Đơn vừa tăng Đạo hạnh.', {'maxLevel': maxLevel})),
                   _line(tr('Mỗi tầng: Sinh lực, Công lực +{p0}%, '
                       'Phòng thủ +{p1}%. Mỗi cảnh giới mới thêm '
-                      '+{p2}% Sinh lực, Công lực.', {'p0': (daoHpAtk * 100).toStringAsFixed(1).replaceAll('.', ','), 'p1': (daoDef * 100).toStringAsFixed(1).replaceAll('.', ','), 'p2': (daoStageHpAtk * 100).round()})),
+                      '+{p2}% Sinh lực, Công lực.', {'p0': (daoHpAtk * 100).toStringAsFixed(1).replaceAll('.', decSep), 'p1': (daoDef * 100).toStringAsFixed(1).replaceAll('.', decSep), 'p2': (daoStageHpAtk * 100).round()})),
                   _line(tr('Chín tầng một cảnh giới; Chân Tiên không có giới hạn. Cảnh giới hiện trên Bảng xếp hạng.')),
                   const SizedBox(height: 6),
                   Wrap(

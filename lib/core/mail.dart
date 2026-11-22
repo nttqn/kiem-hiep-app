@@ -47,7 +47,7 @@ class MailDef {
 
   /// What it gives, as short labels.
   List<String> get rewards => [
-        if (gold > 0) tr('{p0} lượng', {'p0': gold.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.')}),
+        if (gold > 0) tr('{p0} lượng', {'p0': gold.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => thouSep)}),
         if (shards > 0) tr('{shards} Mảnh Hoàng Kim', {'shards': shards}),
         if (iron > 0) tr('{iron} Thần Thiết', {'iron': iron}),
         if (gems > 0) tr('{gems} ngọc bậc {gemTier}', {'gems': gems, 'gemTier': gemTier}),

@@ -606,7 +606,7 @@ class WorldRenderer {
     final mount = ally?.mountDef;
     if (!debugClean) {
       // A called-in player's name in gold, above any mount.
-      final tp = _label(a.name, ally != null ? 0xFFFFE08A : 0xFFB8F0C8, 10.5);
+      final tp = _label(ally != null && !ally.bot ? a.name : tr(a.name), ally != null ? 0xFFFFE08A : 0xFFB8F0C8, 10.5);
       tp.paint(c, Offset(-tp.width / 2, -86 - (mount != null ? mountSeatOf(mount) : 0)));
     }
     c.scale(a.face, 1);
@@ -632,7 +632,7 @@ class WorldRenderer {
     c.drawRect(Rect.fromLTWH(r.left, r.top, r.width * (m.hp / m.maxHp).clamp(0, 1), r.height),
         Paint()..color = m.big ? const Color(0xFFE8503A) : const Color(0xFFD8403A));
     if (targeted || m.big) {
-      final tp = _label(m.elite ? '★ ${tr(m.eliteName)} · ${m.level}' : '${tr(d.name)} · ${m.level}',
+      final tp = _label(m.elite ? '★ ${tr(m.eliteName)} · ${m.level}' : '${m.rival != null && !m.rival!.bot ? d.name : tr(d.name)} · ${m.level}',
           m.elite ? 0xFFFFD34A : (d.boss ? 0xFFFFB08A : 0xFFFFF3C4), m.big ? 13 : 11);
       tp.paint(c, Offset(m.x - tp.width / 2, y - tp.height - 1));
       // Hanh pip.

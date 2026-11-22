@@ -108,4 +108,4 @@ List<String> newbieLabels(NewbieGift g, {String Function(String id)? costumeName
       if (g.mount.isNotEmpty) tr('Thú cưỡi {p0}', {'p0': mountName?.call(g.mount) ?? g.mount}),
     ];
 
-String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => thouSep);

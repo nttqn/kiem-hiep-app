@@ -43,6 +43,10 @@ Map<String, String> _table = const {};
 /// The language in use.
 Lang get currentLang => _lang;
 
+/// Digit grouping and decimal mark: 1.234,5 in Vietnamese, 1,234.5 in Chinese.
+String get thouSep => _lang == Lang.vi ? '.' : ',';
+String get decSep => _lang == Lang.vi ? ',' : '.';
+
 /// Puts [lang] in use with its table ([table] is empty for Vietnamese).
 void setLanguage(Lang lang, Map<String, String> table) {
   _lang = lang;

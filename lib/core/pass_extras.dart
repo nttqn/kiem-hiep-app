@@ -28,7 +28,7 @@ List<String> passLabels(PassReward r, int level, int rebirths, int season) => [
       if (r.pots > 0) tr('{pots} bình máu + nội lực', {'pots': r.pots}),
     ];
 
-String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => thouSep);
 
 extension PassExtras on HeroData {
   /// Moves to the season of [day]. Rewards reached but not taken in the

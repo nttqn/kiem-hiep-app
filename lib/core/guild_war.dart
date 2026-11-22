@@ -41,7 +41,7 @@ bool warPlausible(int pts, int members) => pts >= 0 && members >= 1 && members <
 
 DungeonDef warDef(ArenaRival r, String guildName) => DungeonDef(
       id: 'guildwar',
-      name: tr('Bang chiến · {rName}{p0}', {'rName': tr(r.name), 'p0': guildName.isEmpty ? '' : ' ($guildName)'}),
+      name: tr('Bang chiến · {rName}{p0}', {'rName': r.bot ? tr(r.name) : r.name, 'p0': guildName.isEmpty ? '' : ' ($guildName)'}),
       mapId: 'hoason',
       level: r.level,
       waves: const [],

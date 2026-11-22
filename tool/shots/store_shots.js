@@ -2,6 +2,7 @@
 // from the dev entry. NODE_PATH must point at a Playwright install; the dev
 // build must be served on :8765.
 //   node store_shots.js [deviceName] [shotPrefix]
+// LANG_SHOT=zh_Hant shoots that language into store/<LANG>/<device>/; PORT overrides 8765.
 const fs = require('fs');
 const { chromium } = require('playwright');
 
@@ -30,6 +31,10 @@ const shots = [
   ['10-loi-dai', 'screen=arena&level=99&sect=4&cs=6', 5000],
 ];
 
+const lang = process.env.LANG_SHOT || "";
+const port = process.env.PORT || 8765;
+const outRoot = lang ? `store/${lang}` : "store";
+
 (async () => {
   const onlyDevice = process.argv[2];
   const onlyShot = process.argv[3];
@@ -37,14 +42,14 @@ const shots = [
   const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
   for (const [dev, w, h, dpr] of devices) {
     if (onlyDevice && dev !== onlyDevice) continue;
-    fs.mkdirSync(`store/${dev}`, { recursive: true });
+    fs.mkdirSync(`${outRoot}/${dev}`, { recursive: true });
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: dpr });
     for (const [name, q, wait] of shots) {
       if (onlyShot && !name.startsWith(onlyShot)) continue;
       const page = await ctx.newPage();
-      await page.goto(`http://localhost:8765/?${q}&nocache=${Date.now()}`);
+      await page.goto(`http://localhost:${port}/?${q}${lang ? `&lang=${lang}` : ""}&nocache=${Date.now()}`);
       await page.waitForTimeout(wait);
-      await page.screenshot({ path: `store/${dev}/${name}.png` });
+      await page.screenshot({ path: `${outRoot}/${dev}/${name}.png` });
       await page.close();
     }
     await ctx.close();

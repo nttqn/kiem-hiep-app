@@ -323,7 +323,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
 
 /// Lực chiến in a few characters: 17,8k, 1,2tr.
 String _short(int n) {
-  String one(double v) => v.toStringAsFixed(v >= 100 ? 0 : 1).replaceAll('.', ',');
+  String one(double v) => v.toStringAsFixed(v >= 100 ? 0 : 1).replaceAll('.', decSep);
   if (n >= 1000000) return '${one(n / 1000000)}tr';
   if (n >= 1000) return '${one(n / 1000)}k';
   return '$n';

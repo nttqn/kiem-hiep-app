@@ -317,7 +317,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(r != null ? m.def.name : m.def.name.toUpperCase(),
+                    Text(r != null ? (r.bot ? tr(m.def.name) : m.def.name) : tr(m.def.name).toUpperCase(),
                         style: titleStyle(32, color: const Color(0xFFFF8A6A)).copyWith(letterSpacing: 2)),
                     Container(width: 220, height: 2, color: const Color(0xFFFFD34A)),
                     const SizedBox(height: 4),

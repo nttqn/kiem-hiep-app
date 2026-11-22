@@ -1,3 +1,4 @@
+import '../core/i18n.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -62,7 +63,7 @@ String fmt(num n) {
   final s = n.round().abs().toString();
   final out = StringBuffer(n < 0 ? '-' : '');
   for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) out.write('.');
+    if (i > 0 && (s.length - i) % 3 == 0) out.write(thouSep);
     out.write(s[i]);
   }
   return out.toString();

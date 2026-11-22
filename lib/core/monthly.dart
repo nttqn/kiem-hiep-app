@@ -57,4 +57,4 @@ List<String> monthlyLabels(MonthlyMark m, int level) => [
 /// The gear line of a mark (also how the UI finds it to colour it).
 String monthlyItemLabel(Rarity r) => tr('Trang bị {rarity}', {'rarity': tr(r.label)});
 
-String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => thouSep);

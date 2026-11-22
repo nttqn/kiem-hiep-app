@@ -78,7 +78,7 @@ ArenaRival sectExaminerRival(Hanh h, int r, int level, int rebirths, int power) 
 
 DungeonDef sectTrialDef(ArenaRival r) => DungeonDef(
       id: 'trial',
-      name: tr('Khảo hạch · {rName}', {'rName': tr(r.name)}),
+      name: tr('Khảo hạch · {rName}', {'rName': r.bot ? tr(r.name) : r.name}),
       mapId: 'hoason',
       level: r.level,
       waves: const [],

@@ -738,7 +738,7 @@ class World {
     helper = c;
     fx.add(Fx('spark_mob_${r.hanh.name}', c.x, c.y - 20, life: 0.6));
     _sfx('levelup');
-    events.add(GameEvent(EvKind.notice, text: tr('{rName} đến trợ chiến!', {'rName': tr(r.name)}), color: r.hanh.color, big: true));
+    events.add(GameEvent(EvKind.notice, text: tr('{rName} đến trợ chiến!', {'rName': r.bot ? tr(r.name) : r.name}), color: r.hanh.color, big: true));
   }
 
   void _updateCompanion(double dt) {
@@ -849,7 +849,7 @@ class World {
     c.attackAnim = 1;
     final ang = math.atan2(t.y - c.y, t.x - c.x);
     _sfx(k.fx);
-    if (k.ultimate) events.add(GameEvent(EvKind.notice, text: '${c.name}: ${k.name}!', color: h.color));
+    if (k.ultimate) events.add(GameEvent(EvKind.notice, text: '${c.def != null || (c.ally?.bot ?? false) ? tr(c.name) : c.name}: ${tr(k.name)}!', color: h.color));
     void hit(Mob m, double power) => _hitMob(m, power,
         skill: true,
         status: k.status,
@@ -1345,7 +1345,7 @@ class World {
     mobs.add(m);
     boss = m;
     introBoss = m;
-    events.add(GameEvent(EvKind.boss, text: dungeon!.isKiep ? tr('Tâm ma hiện hình!') : tr('{rName} lên lôi đài!', {'rName': tr(r.name)}), color: 0xFFFF6A4A, big: true));
+    events.add(GameEvent(EvKind.boss, text: dungeon!.isKiep ? tr('Tâm ma hiện hình!') : tr('{rName} lên lôi đài!', {'rName': r.bot ? tr(r.name) : r.name}), color: 0xFFFF6A4A, big: true));
   }
 
   void _endArena(bool won) {
@@ -1532,7 +1532,7 @@ class World {
     final say = [...lines, ...hero.kyTitles()];
     if (say.isNotEmpty) events.add(GameEvent(EvKind.loot, text: say.join(' · '), color: 0xFFFFE8A0));
     if (k == KyNgo.caoThu || k == KyNgo.maDau) {
-      events.add(GameEvent(EvKind.boss, text: k.desc, color: 0xFFFF6A4A, big: true));
+      events.add(GameEvent(EvKind.boss, text: tr(k.desc), color: 0xFFFF6A4A, big: true));
     }
   }
 
@@ -1928,7 +1928,7 @@ class World {
           captivesFreed++;
           final (who, line) = realmCaptiveLines[o.index];
           _sfx('loot');
-          events.add(GameEvent(EvKind.notice, text: '$who: “$line”', color: 0xFFF3E6C8, big: true));
+          events.add(GameEvent(EvKind.notice, text: '${tr(who)}: “${tr(line)}”', color: 0xFFF3E6C8, big: true));
           if (rng.nextDouble() < loreCaptiveChance) _lore();
           for (final l in hero.realmCaptiveFreed(dungeon!.level)) {
             events.add(GameEvent(EvKind.loot, text: l, color: 0xFFFFD34A));
@@ -2463,7 +2463,7 @@ class World {
       fx: set.burstFx,
       hanh: set.hanh,
     ));
-    _text(t.x, t.y - 96, set.burst, goldItemColor);
+    _text(t.x, t.y - 96, tr(set.burst), goldItemColor);
   }
 
   bool _inArc(Mob m, double ang, double range, double spread) =>
@@ -3536,7 +3536,7 @@ class World {
     final ang = math.atan2(p.y - m.y, p.x - m.x);
     _sfx(s.fx);
     if (s.ultimate) {
-      events.add(GameEvent(EvKind.boss, text: '${r.name}: ${s.name}!', color: 0xFFFF6A4A, big: true));
+      events.add(GameEvent(EvKind.boss, text: '${r.bot ? tr(r.name) : r.name}: ${tr(s.name)}!', color: 0xFFFF6A4A, big: true));
     }
     void zone(double x, double y, double delay) {
       final ticks = math.max(1, s.ticks);

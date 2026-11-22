@@ -12,7 +12,7 @@ const int sparLossCoins = 3;
 
 DungeonDef sparDef(ArenaRival r) => DungeonDef(
       id: 'spar',
-      name: tr('Tỉ thí · {rName}', {'rName': tr(r.name)}),
+      name: tr('Tỉ thí · {rName}', {'rName': r.bot ? tr(r.name) : r.name}),
       mapId: 'hoason',
       level: r.level,
       waves: const [],

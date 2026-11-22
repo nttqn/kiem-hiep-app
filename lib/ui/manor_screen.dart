@@ -466,5 +466,5 @@ class _FieldPainter extends CustomPainter {
 /// 0.015 → "1,5%", 0.04 → "4%".
 String _pct(double v) {
   final p = v * 100;
-  return '${p.toStringAsFixed(p % 1 == 0 ? 0 : 1).replaceAll('.', ',')}%';
+  return '${p.toStringAsFixed(p % 1 == 0 ? 0 : 1).replaceAll('.', decSep)}%';
 }

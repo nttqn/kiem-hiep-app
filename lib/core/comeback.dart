@@ -121,4 +121,4 @@ List<String> takeComeback(HeroData h, int tier, String today) {
 /// The boost is on for [day].
 bool comebackOn(HeroData h, String day) => h.comebackUntil.isNotEmpty && h.comebackUntil.compareTo(day) >= 0;
 
-String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => thouSep);

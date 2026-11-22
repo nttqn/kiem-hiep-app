@@ -206,7 +206,7 @@ String festItemLabel(FestDef f, FestItem it, HeroData h) => switch (it.reward) {
 int festGold(HeroData h) => 2000 * (h.level + 10) * (1 + h.rebirths);
 int festGemTier(HeroData h) => math.min(maxRewardGemTier, 1 + (h.level + 20 * h.rebirths) ~/ 20);
 
-String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
+String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => thouSep);
 
 extension FestExtras on HeroData {
   bool get festOpenFor => level >= festOpenLevel || rebirths > 0;

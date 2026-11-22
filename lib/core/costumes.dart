@@ -56,7 +56,7 @@ String _thousands(int n) {
   final s = '$n';
   final b = StringBuffer();
   for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) b.write('.');
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(thouSep);
     b.write(s[i]);
   }
   return b.toString();

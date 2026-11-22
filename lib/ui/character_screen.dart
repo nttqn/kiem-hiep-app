@@ -418,7 +418,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             const Spacer(),
             if (h.branchOpen) ...[
               LButton(
-                label: h.branchDef?.name ?? tr('Lưu phái •'),
+                label: h.branchDef != null ? tr(h.branchDef!.name) : tr('Lưu phái •'),
                 small: true,
                 color: branchWaiting(h) ? seal : const Color(0xFF8A6A1A),
                 onTap: () async {
