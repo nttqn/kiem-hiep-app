@@ -10,6 +10,8 @@ import 'analytics.dart';
 import 'cloud.dart';
 import 'presence.dart';
 import 'sync_plan.dart';
+import '../core/newcomer.dart';
+import '../core/i18n.dart';
 
 /// Character slots: three until 1.11.0, five since (older apps only read and
 /// sync slots 0-2 and ignore the rest).
@@ -136,6 +138,9 @@ class SaveService extends ChangeNotifier {
     active = slot;
     h.seed = DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
     h.bornDay = vnDayKey();
+    // Tân hiệp khách (1.24.0): made in Chinese, Korean or English.
+    h.bornLang = currentLang.code;
+    if (newcomerLang(h.bornLang)) h.pills['songboi'] = (h.pills['songboi'] ?? 0) + newcomerPills;
     // A new player's points and gear look after themselves (Cài đặt tự đánh).
     h.autoCfg
       ..points = true

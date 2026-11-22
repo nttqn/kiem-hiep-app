@@ -3167,7 +3167,7 @@ class World {
       final f = festOn(vnDayKey());
       final coins = hero.festKill(m.def, elite: m.elite, rng: rng);
       if (coins > 0 && f != null) {
-        events.add(GameEvent(EvKind.loot, text: '+$coins ${f.coin}', color: 0xFFE8F4FF));
+        events.add(GameEvent(EvKind.loot, text: '+$coins ${tr(f.coin)}', color: 0xFFE8F4FF));
       }
     }
     if (m.big && hero.manualOpen && dungeon?.isTower != true &&

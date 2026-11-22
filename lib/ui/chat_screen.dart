@@ -12,6 +12,8 @@ import 'cloud_panel.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import '../core/i18n.dart';
+import '../core/quick_chat.dart';
+import 'quick_chat_button.dart';
 
 /// Kênh Thế Giới: the last hundred messages of every player, one message
 /// per ten minutes each.
@@ -63,17 +65,18 @@ class _ChatScreenState extends State<ChatScreen> {
   void _toast(String s) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s), duration: const Duration(seconds: 2)));
 
-  Future<void> _send() async {
+  /// Sends what is typed, or a quick line ([text]) leaving the draft alone.
+  Future<void> _send({String? text}) async {
     if (_sending) return;
     if (!chat.rulesAccepted && !await _showRules(ask: true)) return;
     setState(() => _sending = true);
-    final err = await chat.send(SaveService.instance.hero, _input.text);
+    final err = await chat.send(SaveService.instance.hero, text ?? _input.text);
     if (!mounted) return;
     setState(() => _sending = false);
     if (err != null) {
       _toast(err);
     } else {
-      _input.clear();
+      if (text == null) _input.clear();
       FocusScope.of(context).unfocus();
     }
   }
@@ -262,7 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Text(_time(m.at), style: small.copyWith(fontSize: 10.5)),
               ],
             ),
-            Text(m.text, style: body.copyWith(fontSize: 13.5)),
+            Text(chatShow(m.text), style: body.copyWith(fontSize: 13.5)),
           ],
         ),
       ),
@@ -285,6 +288,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final w = chat.wait;
     return Row(
       children: [
+        QuickChatButton(
+          input: _input,
+          onPhrase: (p) => _send(text: p),
+        ),
+        const SizedBox(width: 6),
         Expanded(
           child: TextField(
             controller: _input,

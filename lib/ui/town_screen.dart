@@ -63,6 +63,7 @@ import 'theme.dart';
 import 'title_screen.dart';
 import 'week_goals_dialog.dart';
 import '../core/i18n.dart';
+import '../core/newcomer.dart';
 
 class TownScreen extends StatefulWidget {
   const TownScreen({super.key, this.firstVisit = false});
@@ -305,6 +306,14 @@ class _TownScreenState extends State<TownScreen> {
           color: const Color(0xFFFFB86B),
           title: tr('Hồi quy: +{p0}% EXP và lượng', {'p0': (comebackExp * 100).round()}),
           text: tr('Từ quái, đến hết ngày {p0}. Tranh thủ luyện công bắt kịp giang hồ!', {'p0': dayLabel(h.comebackUntil)}),
+        ),
+      // 1.24.0: Tân hiệp khách's first week.
+      if (newcomerOn(h, day))
+        _banner(
+          icon: Icons.waving_hand,
+          color: const Color(0xFF8AD8FF),
+          title: tr('Tân hiệp khách: +{p0}% EXP và lượng', {'p0': (newcomerExp * 100).round()}),
+          text: tr('Từ quái, tới hết ngày {p0}. Chào mừng đến giang hồ!', {'p0': dayLabel(newcomerUntil(h))}),
         ),
       if (steps.isNotEmpty)
         _banner(

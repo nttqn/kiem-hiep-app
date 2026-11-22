@@ -58,27 +58,31 @@ Hỗ trợ: trungsmail@gmail.com
 
 ## Có gì mới (bản 1.24.0, ≤ 500 ký tự)
 1.24.0 – Giang hồ năm châu
-• Thêm ngôn ngữ English (tiếng Anh), có kênh chat Thế Giới riêng. Nhân vật đang chơi vẫn giữ tiếng Việt; đổi ngôn ngữ ở nút quả cầu hoặc Cài đặt.
-• Bảng xếp hạng và bang hội có thêm nhãn EN.
-• Nhãn ngũ hành và vài nút được chỉnh cho vừa chữ.
+• Thêm tiếng Anh, có kênh chat Thế Giới riêng; nhân vật đang chơi vẫn giữ tiếng Việt.
+• Chat nhanh: bấm mặt cười cạnh ô chat để gửi câu soạn sẵn (hiện theo ngôn ngữ người đọc) hoặc biểu cảm.
+• Tân hiệp khách: nhân vật mới tạo khi chơi tiếng Trung, Hàn, Anh được +50% EXP và lượng từ quái trong 7 ngày đầu, kèm 3 Song Bội Đan.
+• Bảng xếp hạng và bang hội có thêm nhãn EN; tên đồng xu lễ hội được dịch đầy đủ.
 
 ## What's new (1.24.0, en-US)
 1.24.0 – Now in English
-• The whole game is now in English, with its own World chat channel. Switch language from the globe button or in Settings.
-• Leaderboards and guilds show an EN tag.
-• Element badges and a few buttons resized to fit.
+• The whole game is now in English, with its own World chat channel.
+• Quick chat: tap the smiley by the chat box for ready-made lines (shown in each reader's language) and emotes.
+• Newcomers who start in English, Chinese or Korean get +50% EXP and gold from monsters for their first 7 days, plus 3 Double Pills.
+• Leaderboards and guilds show an EN tag; festival coin names are now translated.
 
 ## 更新內容（1.24.0，zh-TW）
 1.24.0 – 江湖五洲
 • 新增 English（英文），並有專屬世界頻道。可在地球按鈕或設定中切換語言。
-• 排行榜與幫會新增 EN 標示。
-• 調整五行標示與部分按鈕以容納文字。
+• 快速聊天：點聊天框旁的笑臉，可發送預設句子（自動以讀者的語言顯示）或插入表情，世界與幫會頻道皆可用。
+• 新俠客：以中文、韓文、英文建立的新角色，前 7 天打怪經驗與銀兩 +50%，並獲得 3 顆雙倍丹。
+• 排行榜與幫會新增 EN 標示；節慶貨幣名稱完整翻譯。
 
 ## 업데이트 내용 (1.24.0, ko-KR)
 1.24.0 – 영어 지원
 • English(영어) 추가, 영어 전용 월드 채팅 채널. 지구본 버튼이나 설정에서 언어를 바꿀 수 있습니다.
-• 순위표와 방회에 EN 표시 추가.
-• 오행 표시와 일부 버튼 크기 조정.
+• 빠른 채팅: 채팅창 옆 웃는 얼굴을 눌러 준비된 문장(읽는 사람의 언어로 표시)이나 이모티콘을 보낼 수 있습니다. 월드·방회 채팅 모두 가능.
+• 신참 협객: 한국어·중국어·영어로 만든 새 캐릭터는 첫 7일간 몬스터 경험치와 냥 +50%, 쌍배단 3개 지급.
+• 순위표와 방회에 EN 표시 추가, 축제 화폐 이름 번역.
 
 ## Có gì mới (bản 1.23.0, ≤ 500 ký tự)
 1.23.0 – Giang hồ bốn phương

@@ -60,6 +60,7 @@ import 'sects.dart';
 import 'stats.dart';
 import 'unlocks.dart';
 import 'i18n.dart';
+import 'newcomer.dart';
 
 /// 1234567 as "1.234.567" (Vietnamese grouping) for reward lines.
 String _thousands(int v) {
@@ -776,6 +777,9 @@ class HeroData {
   // New-player funnel (analytics): the Vietnam day the hero was made, times
   // knocked out, and the steps already sent (see funnel.dart).
   String bornDay = '';
+
+  /// The language the hero was made in (1.24.0, '' before): newcomer.dart.
+  String bornLang = '';
   int deaths = 0;
   final Set<String> funnel = {funnelVersion};
 
@@ -1981,7 +1985,8 @@ class HeroData {
       (1 + legacyExp) *
       (1 + discipleExp) *
       kyBlessMul *
-      (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackExp : 1.0);
+      (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackExp : 1.0) *
+      (newcomerOn(this, vnDayKey()) ? 1 + newcomerExp : 1.0);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {
@@ -2008,7 +2013,8 @@ class HeroData {
   double get goldMul => math.max(buffLeft('tubao') > 0 ? goldPillMul : 1.0, EventBoost(vnDayKey()).gold) * (1 + guildPerk) *
       (1 + legacyExp * legacyGoldShare) *
       kyBlessMul *
-      (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackGold : 1.0);
+      (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackGold : 1.0) *
+      (newcomerOn(this, vnDayKey()) ? 1 + newcomerGold : 1.0);
 
   /// Counts buff time down while playing; true when one ran out.
   bool tickBuffs(double dt) {
@@ -3467,6 +3473,7 @@ class HeroData {
         if (mailJade.isNotEmpty) 'mj': mailJade.toList(),
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
+        if (bornLang.isNotEmpty) 'bl': bornLang,
         'ren': [renamedAt, oldNames],
         'newbie': [newbieClaimed, newbieDay],
         'month': [monthKey, monthDays],
@@ -3883,6 +3890,7 @@ class HeroData {
         h.oldNames = [for (final v in ren[1] as List) '$v'];
       } catch (_) {}
     }
+    if (m['bl'] is String) h.bornLang = m['bl'] as String;
     final fun = m['fun'];
     if (fun is List && fun.length == 3) {
       h.bornDay = fun[0] as String;

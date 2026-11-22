@@ -22,6 +22,8 @@ import 'sub_screen.dart';
 import 'theme.dart';
 import 'world_boss_screen.dart' show BossPreview;
 import '../core/i18n.dart';
+import '../core/quick_chat.dart';
+import 'quick_chat_button.dart';
 
 const _bangTint = Color(0xFF8CC8FF);
 
@@ -932,14 +934,15 @@ class _ChatViewState extends State<_ChatView> {
   late final Stream<List<GuildChat>> _stream = GuildService.instance.chat(widget.gid);
   bool _sending = false;
 
-  Future<void> _send() async {
-    if (_sending || _text.text.trim().isEmpty) return;
+  Future<void> _send({String? line}) async {
+    final text = line ?? _text.text;
+    if (_sending || text.trim().isEmpty) return;
     setState(() => _sending = true);
-    final ok = await GuildService.instance.say(widget.gid, SaveService.instance.hero, _text.text);
+    final ok = await GuildService.instance.say(widget.gid, SaveService.instance.hero, text);
     if (!mounted) return;
     setState(() => _sending = false);
     if (ok) {
-      _text.clear();
+      if (line == null) _text.clear();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Không gửi được, thử lại sau.'))));
     }
@@ -972,7 +975,7 @@ class _ChatViewState extends State<_ChatView> {
                         TextSpan(
                             text: '${m.name}: ',
                             style: bold.copyWith(fontSize: 12, color: m.row == me ? goldLight : _bangTint)),
-                        TextSpan(text: m.text, style: body.copyWith(fontSize: 12.5)),
+                        TextSpan(text: chatShow(m.text), style: body.copyWith(fontSize: 12.5)),
                       ])),
                     ),
                 ],
@@ -982,6 +985,8 @@ class _ChatViewState extends State<_ChatView> {
         ),
         Row(
           children: [
+            QuickChatButton(input: _text, onPhrase: (p) => _send(line: p), size: 34),
+            const SizedBox(width: 6),
             Expanded(
               child: SizedBox(
                 height: 34,

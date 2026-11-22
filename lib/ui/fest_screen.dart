@@ -105,7 +105,7 @@ class _FestScreenState extends State<FestScreen> {
               const Icon(Icons.ac_unit, color: _ice, size: 20),
               const SizedBox(width: 6),
               Flexible(
-                child: Text('${fmt(h.festCoins)} ${f.coin}',
+                child: Text('${fmt(h.festCoins)} ${tr(f.coin)}',
                     style: titleStyle(18, color: _ice), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
@@ -144,7 +144,7 @@ class _FestScreenState extends State<FestScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${t.$1} (+${t.$4} ${f.coin})', style: small.copyWith(fontSize: 11.5, color: cream)),
+                Text('${t.$1} (+${t.$4} ${tr(f.coin)})', style: small.copyWith(fontSize: 11.5, color: cream)),
                 const SizedBox(height: 2),
                 Bar(value: t.$2 / t.$3, color: taken ? jade : _ice, height: 5),
               ],
@@ -165,7 +165,7 @@ class _FestScreenState extends State<FestScreen> {
                       if (n > 0) {
                         SoundService.instance.cue('loot');
                         SaveService.instance.save();
-                        _say('+$n ${f.coin}');
+                        _say('+$n ${tr(f.coin)}');
                       }
                       setState(() {});
                     },
