@@ -65,7 +65,7 @@ void _text(
 }
 
 void main() {
-  for (final lang in ['vi', 'zh_Hant', 'ko']) {
+  for (final lang in ['vi', 'zh_Hant', 'ko', 'en']) {
     final zh = lang == 'zh_Hant', ko = lang == 'ko';
     test(lang == 'vi' ? 'feature graphic' : 'feature graphic $lang', () async {
       await _font('Playfair', 'assets/fonts/PlayfairDisplay.ttf');
@@ -153,6 +153,18 @@ void main() {
           28,
           const Color(0xFFFFF3C4),
           family: 'JhengHei',
+          outline: 5,
+          weight: FontWeight.w700,
+        );
+      } else if (lang == 'en') {
+        _text(c, 'KIEM HIEP', const Offset(w / 2, 70), 70, const Color(0xFFF3D27A), outline: 8);
+        _text(
+          c,
+          'Five sects · Five elements · Wuxia action RPG',
+          const Offset(w / 2, 132),
+          24,
+          const Color(0xFFFFF3C4),
+          family: 'BeVietnam',
           outline: 5,
           weight: FontWeight.w700,
         );

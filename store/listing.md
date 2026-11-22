@@ -304,63 +304,80 @@ Nhập vai, Hành động, Offline, Kiếm hiệp, Tự động đánh
 
 ---
 
-# English translation (optional, add as en-US on Play Console)
+# English (thêm ngôn ngữ en-US trên Play Console; game có tiếng Anh từ 1.24.0)
 
-## Title
+## Title (≤ 30)
 Kiem Hiep: Five Elements RPG
 
-## Short description
-Wuxia action RPG: five element sects, auto battle, offline play and cloud save
+## Short description (≤ 80)
+Wuxia action RPG: five sects, auto battle, offline play and server-wide rankings
 
-## Full description (updated for 1.6.0)
-Step into the martial world, join one of five sects, train, clear dungeons, be reborn six times and become the Supreme Master of the jianghu!
+## Full description (≤ 4000, for 1.24.0)
+Step into the jianghu, join one of five martial sects, train, clear dungeons and be reborn six times to become the Supreme Master!
 
 ⚔️ FIVE SECTS, FIVE ELEMENTS
-• Kim Cang Temple (Metal): mighty staff arts and iron defence, easiest to start with.
+• Kim Cang Temple (Metal): mighty staff arts, high HP and defense, the easiest to start with.
 • Hundred Poisons Sect (Wood): darts and poison from range, high critical hits.
-• Jade Water Convent (Water): ice magic that freezes and slows, plus self-healing.
-• Blazing Fire Clan (Fire): burning sabre strikes and dashes, huge burst damage.
-• Mystic Earth Abbey (Earth): sword energy, earth shields and stunning quakes.
+• Jade Water Convent (Water): ice magic that freezes and slows, with self-healing.
+• Blazing Fire Clan (Fire): burning sabre strikes and dashes for huge burst damage.
+• Mystic Earth Abbey (Earth): sword qi, earth shields and stunning quakes.
 Metal beats Wood, Wood beats Earth, Earth beats Water, Water beats Fire, Fire beats Metal: hit the right element for 25% extra damage.
 
 🗺️ A VAST JIANGHU
-• 12 hunting grounds: grasslands, a purple bamboo forest, a desert, a volcano, the Eastern Sea islands, the summit of Mount Hua, the Nine Netherworld Abyss, the Sea of Blood…
-• 48 monsters and 12 bosses with telegraphed area attacks: jiangshi, a fire qilin, the White Dragon, pirates, the Dragon King of the Eastern Sea…
-• 19 dungeons with 3-star ratings, 18 Nightmare dungeons with weekly curses, 10 fog-covered Secret Realms to explore and the endless Trial Tower.
-• 56 story quests plus 6 Reincarnation chapters (72 quests) against the Heavenly Demon, the Blood Demon Cult, the Seven Killers and the Blood Sea Emperor.
-• A bounty board of named elites, treasure maps to dig up, and fishing with 36 kinds of fish.
+• Over a dozen hunting grounds: the Purple Bamboo Forest, the Yellow Sand Desert, the Flaming Mountain, the Eastern Sea Isles, Mount Hua Summit, the Nine Nether Abyss, the Sea of Blood, the Western Regions, the Miao Frontier and the Kunlun Fairyland…
+• Dozens of monsters and bosses with telegraphed area attacks to dodge: jiangshi, the Fire Qilin, the White Dragon, pirates, the Dragon King of the Eastern Sea, the Nine Nether Demon Lord…
+• 3-star dungeons, Nightmare dungeons with a new curse every week, fog-covered Secret Realms and the endless Trial Tower.
+• A main story plus six Reincarnation chapters: the Heavenly Demon, the Blood Demon Cult, the Seven Killers, the Blood Sea Demon Emperor…
+• Bounties on named elites, treasure maps to dig up, random encounters, and fishing for dozens of fish.
 
 🏆 COMPETE WITH THE WHOLE SERVER
-• Arena: duel copies of other players' heroes, with 2-week seasons and rank rewards.
-• Weekly Martial Conclave: an 8-master knockout for the title of Martial Alliance Leader.
-• A daily World Boss, a weekly monster hunt and a World channel to chat.
-• Leaderboards for combat power, tower, level, arena, hunt and champions (sign-in required).
+• Arena: duel copies of other players' heroes, with two-week seasons and rank rewards.
+• The weekly Martial Conclave: an eight-master knockout for the title of Champion.
+• A daily World Boss, a Golden Boss, a weekly monster hunt, guilds and Guild Wars, mentors, friends and bonds.
+• World chat split by language, with an English channel of its own.
+• Leaderboards for power, tower, level, arena, hunt and champions (sign-in required).
 
 🧙 BUILD YOUR HERO
 • Up to level 99, then rebirth up to 6 times for permanent HP, attack and defense.
-• Per sect: 4 active skills, 2 passives and an ultimate; skill breakthroughs, skill manuals that change how each skill fights, five meridians.
-• 7 gear slots, 5 rarities, forging to +10, rerolling, five-element gems, 5 Golden sets and an awakening divine weapon.
-• 5 companions with their own stories, 6 spirit beasts, 10 mounts (a flying sword among them) and 17 outfits.
-• Rise to Sect Master, brew pills, and grow herbs and raise silkworms on your own manor.
+• Per sect: 4 skills, 2 inner arts and an ultimate; skill breakthroughs, manuals that change how skills fight, meridians and Enlightenment.
+• 7 gear slots, 5 rarities, enhancing, rerolling, five-element gems, Golden sets, an awakening Divine Weapon and Immortal Gear.
+• Companions with their own stories, spirit beasts, mounts (flying swords among them) and many outfits.
+• Rise to Sect Master, brew pills, grow herbs and raise silkworms on your own manor, and fill your codex.
 
 🎁 REWARDS EVERY DAY
 • Closed-door training: earn EXP and gold while the game is closed, up to 8 hours.
-• Login gifts, 7-day goals for newcomers, daily and weekly activity chests, mail gifts and weekend events.
-• 26 achievements that unlock titles to wear.
+• Login gifts, 7-day goals for newcomers, daily and weekly activity chests, mail, weekend events and festivals.
+• Achievements that unlock titles: Great Hero, Martial Saint, Fifth Rebirth Sage, Sixth Rebirth Saint…
 
-🤖 EASY TO PLAY ANYTIME
-• Real-time combat with joystick and skill buttons, or switch on AUTO to hunt quest monsters, cast skills, drink potions, spend points and wear better gear; tune how it fights.
-• Play offline with no connection (except leaderboards, arena and chat). A lite mode for low-end phones.
-• Optional cloud save: sign in with Google to keep your heroes across reinstalls and phones. 5 character slots.
+🤖 EASY TO PLAY, ANYTIME
+• Real-time combat with a joystick and skill buttons, or switch on AUTO: your hero finds quest monsters, casts skills, drinks potions, spends points and wears better gear. Tune how auto battle fights.
+• Play offline with no connection (except leaderboards, arena, guilds and chat). A lite mode for low-end phones.
+• Optional cloud save: sign in with Google to keep your heroes across reinstalls and new phones. 5 hero slots.
 • Damage stats and personal records after every fight.
 
 🎵 PURE WUXIA STYLE
 • Lively chibi heroes and monsters, a distinct effect for every skill, with rain, thunderstorms and night.
-• Pentatonic music with guzheng, erhu, bamboo flute and war drums — a different tune for every region.
+• Pentatonic music with guzheng, erhu, bamboo flute and war drums, a different tune for every region.
+
+Play in English, Tiếng Việt, 繁體中文 or 한국어.
 
 Free to play with ads. Most ads are optional and give rewards: revive on the spot, double rewards, free potions.
 
 Support: trungsmail@gmail.com
+
+## What's new (1.24.0)
+(xem mục What's new (1.24.0, en-US) ở trên)
+
+## Tags
+Role Playing, Action, Offline, Martial Arts, Idle RPG
+
+## Hình ảnh (en)
+- Ảnh nổi bật 1024×500: store/en/feature-graphic.png (`flutter test tool/gen_feature_test.dart`)
+- Ảnh chụp màn hình tiếng Anh (10 ảnh mỗi cỡ, chọn 8): `LANG_SHOT=en PORT=<cổng> node tool/shots/store_shots.js <cỡ>` (chạy từ thư mục gốc repo)
+  - Điện thoại 1920×1080: store/en/phone/
+  - Máy tính bảng 7" 1920×1200: store/en/tablet-7in/
+  - Máy tính bảng 10" 2560×1600: store/en/tablet-10in/
+- Biểu tượng dùng chung store/icon-512.png.
 
 ---
 
