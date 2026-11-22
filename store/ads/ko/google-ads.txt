@@ -1,0 +1,25 @@
+Google Ads – chiến dịch ứng dụng (App campaign) 검협 오행, nhắm Hàn Quốc
+Ngôn ngữ: Korean. Google tính chữ Hangul = 2 ký tự.
+
+== Dòng tiêu đề (≤30) ==
+검협 오행: 무협 액션 RPG        (24)
+5대 문파 중 하나를 골라라       (25)
+절기 한 방으로 전장 정리        (24)
+오프라인 무협 RPG               (17)
+매일 월드 보스에 도전           (21)
+
+== Nội dung mô tả (≤90) ==
+금목수화토 5대 문파, 오행상극으로 적을 제압하고 무림지존이 되어라!   (66)
+화려한 스킬 이펙트, 직접 싸우거나 자동 전투로 쉽게 성장.            (56)
+월드 보스, 뇌대, 무림대회에서 전 서버 고수와 겨뤄라.                (52)
+오프라인 플레이와 클라우드 저장, 탈것·영수·협객 동료 수집.          (58)
+한국어 출시! 한국어 전용 채팅 채널, 지금 무료로 시작하세요.          (59)
+
+== Hình ảnh (store/ads/ko/) ==
+Ngang 1.91:1 (1200x628): ko-ads-L1-tuyet-ky.png, ko-ads-L2-thu-cuoi.png
+Vuông 1:1 (1200x1200):  ko-ads-S1-the-gioi.png, ko-ads-S2-mon-phai.png
+Dọc 4:5 (1200x1500):    ko-ads-P1-hoa-son.png, ko-ads-P2-nhu-lai.png
+Tạo lại: FF=... node tool/promo/ko/ads.js (trong thư mục làm việc của trailer).
+
+== Video (YouTube, Không công khai) ==
+16:9, 9:16, 1:1 trong store/video/kiem-hiep-ko-*.mp4
