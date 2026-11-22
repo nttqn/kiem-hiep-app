@@ -183,6 +183,7 @@ class _GuildTabState extends State<_GuildTab> {
           await gs.pushMine(g.id, h, me.role, all: members);
           final apps = me.role >= roleVice ? await gs.apps(g.id) : const <GuildMember>[];
           _g = g;
+          unawaited(gs.claimLang(g));
           _members = members..sort((a, b) => b.role != a.role ? b.role - a.role : b.contrib - a.contrib);
           _apps = apps;
         }
@@ -190,7 +191,7 @@ class _GuildTabState extends State<_GuildTab> {
       if (!h.inGuild) {
         _g = null;
         _members = const [];
-        _list = await gs.top();
+        _list = await gs.browse();
       }
       await SaveService.instance.save();
     } catch (e) {
@@ -829,7 +830,10 @@ class _GuildTabState extends State<_GuildTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(g.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis),
+                Row(children: [
+                  Flexible(child: Text(g.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis)),
+                  LangTag(g.language),
+                ]),
                 Text(
                   tr('Cấp {level} · {n}/{p0} · Bang chủ {leaderName} · {p1}', {'level': g.level, 'n': g.n, 'p0': guildMaxMembers(g.level), 'leaderName': g.leaderName, 'p1': g.open ? tr('tự do vào') : tr('duyệt đơn')}),
                   style: small.copyWith(fontSize: 11),

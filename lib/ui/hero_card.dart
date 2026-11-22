@@ -214,7 +214,7 @@ class _HeroCardState extends State<_HeroCard> {
             ),
           ],
         ),
-        if (e.title.isNotEmpty) Text('« ${e.title} »', style: small.copyWith(color: goldLight, fontSize: 12)),
+        if (e.title.isNotEmpty) Text('« ${tr(e.title)} »', style: small.copyWith(color: goldLight, fontSize: 12)),
         const SizedBox(height: 4),
         Expanded(
           child: ListView(

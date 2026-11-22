@@ -24,6 +24,16 @@ class Analytics {
     }
   }
 
+  /// Sets the `lang` user property (1.22): every report in Firebase can
+  /// then be filtered to the players of one language.
+  Future<void> setLang(String code) async {
+    try {
+      await _fa?.setUserProperty(name: 'lang', value: code);
+    } catch (e) {
+      debugPrint('analytics lang: $e');
+    }
+  }
+
   Future<void> log(String name, [Map<String, Object>? params]) async {
     try {
       await _fa?.logEvent(name: name, parameters: params);

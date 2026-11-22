@@ -5,6 +5,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/i18n.dart';
+import 'analytics.dart';
+import 'dart:async';
 
 /// The language the game is shown in (see core/i18n.dart): the player's
 /// choice once made, else the phone's (Traditional Chinese on zh-TW/HK/MO
@@ -55,5 +57,6 @@ class LanguageService {
     }
     setLanguage(l, table);
     lang.value = l;
+    unawaited(Analytics.instance.setLang(l.code));
   }
 }

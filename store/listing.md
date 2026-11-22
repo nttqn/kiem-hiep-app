@@ -56,6 +56,27 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.22.0, ≤ 500 ký tự)
+1.22.0 – Giang hồ hai miền
+• Bảng xếp hạng ghi nhãn VN / 繁中 cạnh tên mỗi cao thủ.
+• Tìm bang: bang cùng ngôn ngữ với bạn hiện lên đầu; mỗi bang có nhãn ngôn ngữ.
+• Bảng tin và Hòm thư hiện theo ngôn ngữ bạn chọn.
+• Danh hiệu trên bảng xếp hạng và thẻ nhân vật được dịch đầy đủ.
+
+## What's new (1.22.0, en-US)
+1.22.0 – One jianghu, two tongues
+• Leaderboards tag each hero VN or 繁中.
+• Finding a guild: guilds in your language come first, each with a language tag.
+• News and Mail follow the language you picked.
+• Titles on the boards and hero cards are now translated.
+
+## 更新內容（1.22.0，zh-TW）
+1.22.0 – 江湖兩地
+• 排行榜在每位高手名字旁標示 VN／繁中。
+• 尋找幫會：與你同語言的幫會優先顯示，並標示幫會語言。
+• 公告與信箱依你選擇的語言顯示。
+• 排行榜與角色卡上的稱號完整翻譯。
+
 ## Có gì mới (bản 1.21.0, ≤ 500 ký tự)
 1.21.0 – Tiếng Trung phồn thể
 • Thêm ngôn ngữ 繁體中文: máy để tiếng Trung Đài Loan, Hồng Kông, Macau tự mở bằng phồn thể; đổi ngôn ngữ ở nút quả cầu màn chọn nhân vật hoặc trong Cài đặt.

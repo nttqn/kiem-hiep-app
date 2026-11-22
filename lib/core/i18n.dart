@@ -29,6 +29,13 @@ enum Lang {
   /// Always in the language itself.
   final String label;
 
+  /// The short mark next to a player or bang from this language (1.22).
+  String get tag => switch (this) { Lang.vi => 'VN', Lang.zhHant => '繁中' };
+
+  /// The language a stored code stands for; Vietnamese for rows written
+  /// before 1.22 (no code) or an unknown one.
+  static Lang ofRow(Object? code) => code is String ? byCode(code) ?? Lang.vi : Lang.vi;
+
   static Lang? byCode(String? code) {
     for (final l in values) {
       if (l.code == code) return l;

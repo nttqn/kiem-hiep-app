@@ -23,9 +23,15 @@ class GuildInfo {
     this.minLv = guildOpenLevel,
     this.pts = 0,
     this.n = 0,
+    this.lang = '',
   });
 
   final String id, name, leader, leaderName, notice;
+
+  /// The bang's language code (1.22); '' on bangs made before, which count
+  /// as Vietnamese ([language]) until their Bang chủ opens the bang.
+  final String lang;
+  Lang get language => Lang.ofRow(lang.isEmpty ? null : lang);
   final List<String> officers;
   final bool open;
   final int minLv;
@@ -50,6 +56,7 @@ class GuildInfo {
         minLv: (m['minLv'] as num?)?.toInt() ?? guildOpenLevel,
         pts: (m['pts'] as num?)?.toInt() ?? 0,
         n: (m['n'] as num?)?.toInt() ?? 0,
+        lang: m['lang'] is String ? m['lang'] as String : '',
       );
     } catch (_) {
       return null;
@@ -232,6 +239,47 @@ class GuildService extends ChangeNotifier {
     return [for (final d in snap.docs) ?GuildInfo.fromDoc(d.id, d.data())];
   }
 
+  /// Bangs to join (1.22): the biggest, plus the biggest of the player's
+  /// language when that is not Vietnamese (asked by equality only, so no
+  /// extra Firestore index), the player's language first, then by size.
+  Future<List<GuildInfo>> browse({int limit = 30}) async {
+    final all = <String, GuildInfo>{for (final g in await top(limit: limit)) g.id: g};
+    if (!debug && currentLang != Lang.vi) {
+      try {
+        final snap = await _guilds.where('lang', isEqualTo: currentLang.code).limit(50).get().timeout(_t);
+        for (final d in snap.docs) {
+          final g = GuildInfo.fromDoc(d.id, d.data());
+          if (g != null) all[g.id] = g;
+        }
+      } catch (e) {
+        debugPrint('guild browse by lang failed: $e');
+      }
+    }
+    return sortForLang(all.values, currentLang);
+  }
+
+  /// [gs] with bangs of [l] first, each part biggest first.
+  static List<GuildInfo> sortForLang(Iterable<GuildInfo> gs, Lang l) => gs.toList()
+    ..sort((a, b) {
+      final la = a.language == l ? 0 : 1, lb = b.language == l ? 0 : 1;
+      return la != lb ? la - lb : b.pts.compareTo(a.pts);
+    });
+
+  /// Marks a bang made before 1.22 with its Bang chủ's language (only the
+  /// Bang chủ may write it under the rules).
+  Future<void> claimLang(GuildInfo g) async {
+    if (g.lang.isNotEmpty || g.leader != uid) return;
+    if (debug) {
+      _dGuilds[g.id] = GuildInfo.fromDoc(g.id, {..._infoMap(g), 'lang': currentLang.code})!;
+      return;
+    }
+    try {
+      await _guilds.doc(g.id).update({'lang': currentLang.code}).timeout(_t);
+    } catch (e) {
+      debugPrint('guild lang failed: $e');
+    }
+  }
+
   /// The bang called [name], if any.
   Future<GuildInfo?> find(String name) async {
     final key = nameKey(name);
@@ -302,7 +350,7 @@ class GuildService extends ChangeNotifier {
     final me = GuildMember.of(row, u, h, roleLeader);
     if (debug) {
       final id = 'g${_dGuilds.length + 1}';
-      _dGuilds[id] = GuildInfo(id: id, name: name, leader: u, leaderName: h.name, notice: notice, open: open);
+      _dGuilds[id] = GuildInfo(id: id, name: name, leader: u, leaderName: h.name, notice: notice, open: open, lang: currentLang.code);
       _dMembers[id] = {row: me};
       return (id, null);
     }
@@ -318,6 +366,7 @@ class GuildService extends ChangeNotifier {
           'notice': notice,
           'open': open,
           'minLv': guildOpenLevel,
+          'lang': currentLang.code,
           'pts': 0,
           'n': 1,
           'created': FieldValue.serverTimestamp(),
@@ -490,6 +539,7 @@ class GuildService extends ChangeNotifier {
         'minLv': g.minLv,
         'pts': g.pts,
         'n': g.n,
+        if (g.lang.isNotEmpty) 'lang': g.lang,
       };
 
   // ------------------------------------------------------------ chat

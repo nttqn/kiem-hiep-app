@@ -49,7 +49,11 @@ class LbEntry {
     this.ts = 0,
     this.play = 0,
     this.hs = 0,
+    this.lang = Lang.vi,
   }) : rk = rk ?? (rebirths * 100 + level) * 1000;
+
+  /// The language the player plays in (1.22); Vietnamese on older rows.
+  final Lang lang;
 
   /// Hung Thú Tinh Phách locked in worn gear ([soulsInvested], 1.13.3);
   /// from the worn stars alone on rows of older apps.
@@ -168,6 +172,7 @@ class LbEntry {
         power: (m['power'] as num).toInt(),
         tower: (m['tower'] as num?)?.toInt() ?? 0,
         title: m['title'] as String? ?? '',
+        lang: Lang.ofRow(m['lang']),
         arenaS: (m['arenaS'] as num?)?.toInt() ?? 0,
         wk: (m['wk'] as num?)?.toInt() ?? 0,
         dhC: (m['dhC'] as num?)?.toInt() ?? 0,
@@ -341,6 +346,8 @@ class Leaderboard extends ChangeNotifier {
       'mountLv': h.mountLevels[h.activeMount] ?? 1,
       'skin': h.ridingMount == null ? '' : h.mountSkin[h.activeMount] ?? '',
       'look': lookRow(h),
+      // The player's language (1.22), shown as a tag on the boards.
+      'lang': currentLang.code,
     };
     // Play time goes along for the rules' sanity check, but on its own
     // does not call for a write; nor do lực chiến creeping up by a little

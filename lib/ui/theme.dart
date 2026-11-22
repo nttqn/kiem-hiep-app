@@ -69,6 +69,23 @@ String fmt(num n) {
   return out.toString();
 }
 
+/// A small mark of a player's or bang's language (1.22): VN, 繁中.
+class LangTag extends StatelessWidget {
+  const LangTag(this.lang, {super.key});
+  final Lang lang;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(left: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: lang == Lang.vi ? const Color(0xFF8A2A1E) : const Color(0xFF1E4E8A),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(lang.tag, style: const TextStyle(fontSize: 9, height: 1.2, color: Color(0xFFFFF3C4), fontWeight: FontWeight.w800)),
+      );
+}
+
 /// A dark lacquer panel with a gold rim.
 class Panel extends StatelessWidget {
   const Panel({

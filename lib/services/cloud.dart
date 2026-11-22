@@ -84,6 +84,7 @@ class CloudSave extends ChangeNotifier {
       await Firebase.initializeApp(options: isApplePlatform ? _iosOptions : null)
           .timeout(const Duration(seconds: 8));
       available = true;
+      unawaited(Analytics.instance.setLang(currentLang.code));
     } catch (e) {
       debugPrint('cloud save off: $e');
       _clockDone();

@@ -160,6 +160,8 @@ Future<void> main() async {
           arenaS: arenaSeasonScore(arenaSeasonOf(vnDayKey()), 2150 - i * 95),
           dao: i < 3 ? 23 - i * 7 : 0,
           rk: i < 3 ? rankScore(6, 99, 23 - i * 7) : null,
+          // Every third row from a 繁中 player, for the language tags.
+          lang: i % 3 == 1 ? Lang.zhHant : Lang.vi,
         ),
     ];
   }

@@ -298,11 +298,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(e.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis),
+                Row(children: [
+                  Flexible(child: Text(e.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis)),
+                  LangTag(e.lang),
+                ]),
                 Text(
                   tr('{p0} · Cấp {level}{p1}'
                   '{p2}'
-                  '{p3}', {'p0': tr(sectOf(hn).name), 'level': e.level, 'p1': e.rebirths > 0 ? tr(' · Chuyển sinh {rebirths}', {'rebirths': e.rebirths}) : '', 'p2': e.dao > 0 && _board != LbBoard.rank ? ' · ${daoName(e.dao)}' : '', 'p3': e.title.isNotEmpty ? ' · « ${e.title} »' : ''}),
+                  '{p3}', {'p0': tr(sectOf(hn).name), 'level': e.level, 'p1': e.rebirths > 0 ? tr(' · Chuyển sinh {rebirths}', {'rebirths': e.rebirths}) : '', 'p2': e.dao > 0 && _board != LbBoard.rank ? ' · ${daoName(e.dao)}' : '', 'p3': e.title.isNotEmpty ? ' · « ${tr(e.title)} »' : ''}),
                   style: small.copyWith(fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
