@@ -22,7 +22,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const LIB = path.join(ROOT, 'lib');
-const LANGS = ['zh_Hant', 'ko'];
+const LANGS = ['zh_Hant', 'ko', 'en'];
 
 // Const data whose Vietnamese literals are all shown through tr(x) at the
 // display site. Paths relative to lib/.

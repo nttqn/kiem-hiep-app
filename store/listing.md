@@ -56,6 +56,30 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.24.0, ≤ 500 ký tự)
+1.24.0 – Giang hồ năm châu
+• Thêm ngôn ngữ English (tiếng Anh), có kênh chat Thế Giới riêng. Nhân vật đang chơi vẫn giữ tiếng Việt; đổi ngôn ngữ ở nút quả cầu hoặc Cài đặt.
+• Bảng xếp hạng và bang hội có thêm nhãn EN.
+• Nhãn ngũ hành và vài nút được chỉnh cho vừa chữ.
+
+## What's new (1.24.0, en-US)
+1.24.0 – Now in English
+• The whole game is now in English, with its own World chat channel. Switch language from the globe button or in Settings.
+• Leaderboards and guilds show an EN tag.
+• Element badges and a few buttons resized to fit.
+
+## 更新內容（1.24.0，zh-TW）
+1.24.0 – 江湖五洲
+• 新增 English（英文），並有專屬世界頻道。可在地球按鈕或設定中切換語言。
+• 排行榜與幫會新增 EN 標示。
+• 調整五行標示與部分按鈕以容納文字。
+
+## 업데이트 내용 (1.24.0, ko-KR)
+1.24.0 – 영어 지원
+• English(영어) 추가, 영어 전용 월드 채팅 채널. 지구본 버튼이나 설정에서 언어를 바꿀 수 있습니다.
+• 순위표와 방회에 EN 표시 추가.
+• 오행 표시와 일부 버튼 크기 조정.
+
 ## Có gì mới (bản 1.23.0, ≤ 500 ký tự)
 1.23.0 – Giang hồ bốn phương
 • Thêm ngôn ngữ 한국어 (tiếng Hàn): máy để tiếng Hàn tự mở bằng tiếng Hàn; có kênh chat Thế Giới riêng.

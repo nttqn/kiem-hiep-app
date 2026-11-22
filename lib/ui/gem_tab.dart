@@ -237,7 +237,8 @@ class _GemTabState extends State<GemTab> {
         color: on ? hanhColor(hn) : lacquerDeep,
         border: Border.all(color: hanhColor(hn), width: 1.5),
       ),
-      child: Text(tr(hn.label)[0], style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: on ? Colors.white : creamDim)),
+      // Two letters in English, where Wood and Water share the first.
+      child: Text(tr(hn.label).substring(0, currentLang == Lang.en ? 2 : 1), style: TextStyle(fontSize: currentLang == Lang.en ? 8.5 : 10, fontWeight: FontWeight.w800, color: on ? Colors.white : creamDim)),
     );
   }
 

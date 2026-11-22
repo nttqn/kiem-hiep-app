@@ -292,7 +292,12 @@ class _HanhBadge extends StatelessWidget {
         gradient: RadialGradient(colors: [Color.lerp(c, Colors.white, 0.3)!, Color.lerp(c, Colors.black, 0.4)!]),
         border: Border.all(color: goldLight, width: 1.2),
       ),
-      child: Text(tr(hanh.label), style: TextStyle(fontSize: size * 0.3, fontWeight: FontWeight.w800, color: Colors.white)),
+      padding: EdgeInsets.all(size * 0.12),
+      // Scaled down to fit the longer English names (Metal, Water).
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(tr(hanh.label), style: TextStyle(fontSize: size * 0.3, fontWeight: FontWeight.w800, color: Colors.white)),
+      ),
     );
   }
 }

@@ -9,8 +9,9 @@ import 'analytics.dart';
 import 'dart:async';
 
 /// The language the game is shown in (see core/i18n.dart): the player's
-/// choice once made, else the phone's (Traditional Chinese on zh-TW/HK/MO
-/// phones, Vietnamese everywhere else).
+/// choice once made, else the phone's (defaultLangFor). A phone that already
+/// holds heroes from before English (1.23) never moves to English on its
+/// own: those players were playing in Vietnamese.
 class LanguageService {
   LanguageService._();
   static final instance = LanguageService._();
@@ -21,13 +22,23 @@ class LanguageService {
 
   Future<void> load() async {
     Lang? l;
+    var played = false;
+    SharedPreferences? prefs;
     try {
-      final prefs = await SharedPreferences.getInstance();
+      prefs = await SharedPreferences.getInstance();
       l = Lang.byCode(prefs.getString(_key));
+      played = prefs.getKeys().any((k) => k.startsWith('hero_slot_'));
     } catch (_) {}
     if (l == null) {
       final loc = PlatformDispatcher.instance.locale;
-      l = defaultLangFor(loc.languageCode, loc.scriptCode, loc.countryCode);
+      l = defaultLangFor(loc.languageCode, loc.scriptCode, loc.countryCode, DateTime.now().timeZoneOffset.inHours);
+      if (played && l == Lang.en) {
+        l = Lang.vi;
+        // Kept from now on, so a later English phone does not switch it.
+        try {
+          await prefs?.setString(_key, l.code);
+        } catch (_) {}
+      }
     }
     await _apply(l);
   }

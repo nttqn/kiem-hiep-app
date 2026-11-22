@@ -20,7 +20,8 @@ import 'dart:math' as math;
 enum Lang {
   vi('vi', 'Tiếng Việt'),
   zhHant('zh_Hant', '繁體中文'),
-  ko('ko', '한국어');
+  ko('ko', '한국어'),
+  en('en', 'English');
 
   const Lang(this.code, this.label);
 
@@ -31,7 +32,7 @@ enum Lang {
   final String label;
 
   /// The short mark next to a player or bang from this language (1.22).
-  String get tag => switch (this) { Lang.vi => 'VN', Lang.zhHant => '繁中', Lang.ko => 'KR' };
+  String get tag => switch (this) { Lang.vi => 'VN', Lang.zhHant => '繁中', Lang.ko => 'KR', Lang.en => 'EN' };
 
   /// The language a stored code stands for; Vietnamese for rows written
   /// before 1.22 (no code) or an unknown one.
@@ -51,8 +52,8 @@ Map<String, String> _table = const {};
 /// The language in use.
 Lang get currentLang => _lang;
 
-/// Digit grouping and decimal mark: 1.234,5 in Vietnamese, 1,234.5 in Chinese
-/// and Korean.
+/// Digit grouping and decimal mark: 1.234,5 in Vietnamese, 1,234.5 in the
+/// other languages.
 String get thouSep => _lang == Lang.vi ? '.' : ',';
 String get decSep => _lang == Lang.vi ? ',' : '.';
 
@@ -141,13 +142,16 @@ String? _composed(String vi) {
 
 /// The language a phone set to [languageCode]/[scriptCode]/[countryCode]
 /// gets on first launch: Traditional Chinese for Taiwan, Hong Kong and
-/// Macau (or any zh-Hant), Korean on Korean phones, Vietnamese for everyone
-/// else, as before.
-Lang defaultLangFor(String languageCode, String? scriptCode, String? countryCode) {
+/// Macau (or any zh-Hant), Korean on Korean phones, Vietnamese on Vietnamese
+/// ones, English for everyone else (1.23) — except on a clock at UTC+7
+/// ([utcOffsetHours]), where many Vietnamese players keep their phone in
+/// English: those stay Vietnamese.
+Lang defaultLangFor(String languageCode, String? scriptCode, String? countryCode, [int? utcOffsetHours]) {
   if (languageCode == 'zh' &&
       (scriptCode == 'Hant' || const {'TW', 'HK', 'MO'}.contains(countryCode))) {
     return Lang.zhHant;
   }
   if (languageCode == 'ko') return Lang.ko;
-  return Lang.vi;
+  if (languageCode == 'vi' || countryCode == 'VN' || utcOffsetHours == 7) return Lang.vi;
+  return Lang.en;
 }

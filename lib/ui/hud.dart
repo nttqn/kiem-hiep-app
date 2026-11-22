@@ -44,7 +44,7 @@ class HeroFrame extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(tr(h.hanh.label), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white70, height: 1)),
+                Text(tr(h.hanh.label), style: TextStyle(fontSize: currentLang == Lang.en ? 8.5 : 10, fontWeight: FontWeight.w800, color: Colors.white70, height: 1)),
                 Text('${h.level}', style: titleStyle(20, color: Colors.white)),
               ],
             ),

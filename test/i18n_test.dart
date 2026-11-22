@@ -20,7 +20,7 @@ void main() {
     final ph = RegExp(r'\{\w+\}');
     Set<String> of(String s) => ph.allMatches(s).map((m) => m[0]!).toSet();
     final bad = [
-      for (final e in [..._zh().entries, ..._table('ko').entries])
+      for (final e in [..._zh().entries, ..._table('ko').entries, ..._table('en').entries])
         if (e.value.isNotEmpty && !of(e.key).containsAll(of(e.value)) || (e.value.isNotEmpty && !of(e.value).containsAll(of(e.key))))
           e.key,
     ];
@@ -53,10 +53,20 @@ void main() {
     expect(defaultLangFor('zh', 'Hant', null), Lang.zhHant);
     expect(defaultLangFor('zh', null, 'TW'), Lang.zhHant);
     expect(defaultLangFor('zh', null, 'HK'), Lang.zhHant);
-    expect(defaultLangFor('zh', 'Hans', 'CN'), Lang.vi);
+    expect(defaultLangFor('zh', 'Hans', 'CN'), Lang.en);
     expect(defaultLangFor('vi', null, 'VN'), Lang.vi);
-    expect(defaultLangFor('en', null, 'US'), Lang.vi);
+    expect(defaultLangFor('en', null, 'US'), Lang.en);
+    expect(defaultLangFor('en', null, 'US', 7), Lang.vi);
+    expect(defaultLangFor('en', null, 'VN'), Lang.vi);
+    expect(defaultLangFor('th', null, 'TH', 0), Lang.en);
     expect(defaultLangFor('ko', null, 'KR'), Lang.ko);
+  });
+
+  test('English fills placeholders and composes item names with spaces', () {
+    setLanguage(Lang.en, _table('en'));
+    expect(tr('Cấp {level}', {'level': 5}), 'Level 5');
+    expect(tr('Huyền Thiết Côn'), 'Dark Iron Staff');
+    expect(tr('Tiểu Hiệp Xyz'), 'Tiểu Hiệp Xyz');
   });
 
   test('Korean fills placeholders, data names and composed names', () {

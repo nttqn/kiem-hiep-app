@@ -83,6 +83,7 @@ class LangTag extends StatelessWidget {
             Lang.vi => const Color(0xFF8A2A1E),
             Lang.zhHant => const Color(0xFF1E4E8A),
             Lang.ko => const Color(0xFF2E6B3A),
+            Lang.en => const Color(0xFF5A3E8A),
           },
           borderRadius: BorderRadius.circular(4),
         ),
