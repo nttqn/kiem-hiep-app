@@ -1,0 +1,66 @@
+劍俠五行 trailer (zh_Hant): for Google Ads TW/HK and the zh-TW Play listing video.
+Upload to a separate brand channel, not Tư liệu mầm non.
+Set it to Unlisted and "No, it's not made for kids".
+
+Videos:
+- store/video/kiem-hiep-zh-16x9.mp4
+- store/video/kiem-hiep-zh-9x16.mp4
+- store/video/kiem-hiep-zh-1x1.mp4
+
+== Title (16:9) ==
+劍俠五行｜五大門派武俠動作RPG・離線也能玩
+
+== Title (9:16, Shorts) ==
+劍俠五行：一招絕技橫掃全場！#武俠 #手遊
+
+== Title (1:1) ==
+劍俠五行｜熱血武俠動作手遊
+
+== Description ==
+踏入江湖，拜入五大門派，五行相剋、以巧破力！
+⚔️ 金剛寺・百毒門・碧水庵・烈火幫・玄土觀，五種玩法任你選
+✨ 華麗技能特效，一招絕技橫掃全場
+🤖 邊跑邊打，也能一鍵自動戰鬥
+🐉 每日世界首領、擂台、武林大會，與全服高手一較高下
+🐎 俠客夥伴、坐騎、靈獸，打造你的江湖
+📶 支援離線遊玩，雲端存檔換機不怕
+
+Google Play 免費下載：
+https://play.google.com/store/apps/details?id=com.trungsmail.kiemhiep
+
+#劍俠五行 #武俠 #手遊 #RPG #動作遊戲 #離線遊戲
+
+======== Kênh YouTube 劍俠五行 ========
+Ảnh bìa: store/youtube/zh-channel-banner.png (2560x1440; tạo lại bằng flutter test tool/gen_banner_test.dart)
+Ảnh hồ sơ: store/icon-512.png
+Tên người dùng gợi ý: @劍俠五行 hoặc @JianXiaWuXing
+
+== Mô tả kênh ==
+《劍俠五行》官方頻道｜五大門派武俠動作 RPG
+
+踏入江湖，拜入金剛寺、百毒門、碧水庵、烈火幫、玄土觀五大門派，金木水火土五行相剋，以巧破力，成就武林至尊！
+
+在這裡你可以看到：
+⚔️ 各門派技能與絕技展示
+🐉 世界首領、擂台、武林大會實戰
+🐎 坐騎、靈獸、外裝與新版本內容
+📢 更新公告與活動消息
+
+✔ 華麗技能特效，一招絕技橫掃全場
+✔ 邊跑邊打，一鍵自動戰鬥，輕鬆練功
+✔ 支援離線遊玩，雲端存檔換機不怕
+✔ 繁體中文版，專屬中文世界頻道
+
+📲 Google Play 免費下載：
+https://play.google.com/store/apps/details?id=com.trungsmail.kiemhiep
+
+歡迎訂閱，一起闖蕩江湖！
+
+== Từ khóa kênh (Cài đặt → Kênh → Từ khóa; ô mới tách bằng dấu phẩy) ==
+劍俠五行, 武俠, 武俠手遊, 武俠RPG, 手遊, 手機遊戲, 動作遊戲, 動作RPG, 角色扮演, 離線遊戲, 單機手遊, 自動戰鬥, 掛機手遊, 江湖, 門派, 五行, 仙俠, 世界首領, 擂台, 武林大會, 坐騎, 靈獸, 免費遊戲, Android遊戲, 新遊推薦, 台灣手遊, 港澳手遊, wuxia game, wuxia RPG, mobile RPG, offline RPG, JianXiaWuXing
+
+== Thumbnail (1280x720; tạo lại: FF=... node tool/promo/zh_Hant/thumbs.js trong thư mục làm việc) ==
+- store/youtube/zh-thumb-A-tuyet-ky.png  — 一招絕技 橫掃全場！ (video 16:9)
+- store/youtube/zh-thumb-B-nhu-lai.png   — 如來神掌 五大門派任你選 (video 1:1)
+- store/youtube/zh-thumb-C-the-gioi.png  — 世界首領 全服高手一較高下 (dự phòng / A-B test)
+Shorts 9:16: thumbnail chọn khung trong app YouTube, không tải ảnh riêng.

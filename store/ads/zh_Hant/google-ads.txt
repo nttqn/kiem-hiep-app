@@ -1,0 +1,25 @@
+Google Ads – chiến dịch ứng dụng (App campaign) 劍俠五行, nhắm TW / HK / MO
+Ngôn ngữ: Chinese (traditional). Google tính chữ Hán = 2 ký tự.
+
+== Dòng tiêu đề (≤30) ==
+劍俠五行：武俠動作RPG        (21)
+五大門派任你選               (14)
+一招絕技橫掃全場             (16)
+離線也能玩的武俠手遊         (20)
+每日世界首領等你挑戰         (20)
+
+== Nội dung mô tả (≤90) ==
+金木水火土五大門派，五行相剋，以巧破力，成就武林至尊！          (54)
+華麗技能特效，邊跑邊打或一鍵自動戰鬥，輕鬆練功升級。            (52)
+世界首領、擂台、武林大會，與全服高手一較高下。                  (46)
+支援離線遊玩與雲端存檔，坐騎、靈獸、俠客夥伴等你收集。          (54)
+繁體中文版上線，專屬中文世界頻道，免費下載立即開戰！            (52)
+
+== Hình ảnh (store/ads/zh_Hant/) ==
+Ngang 1.91:1 (1200x628): zh-ads-L1-tuyet-ky.png, zh-ads-L2-thu-cuoi.png
+Vuông 1:1 (1200x1200):  zh-ads-S1-the-gioi.png, zh-ads-S2-mon-phai.png
+Dọc 4:5 (1200x1500):    zh-ads-P1-hoa-son.png, zh-ads-P2-nhu-lai.png
+Tạo lại: FF=... node tool/promo/zh_Hant/ads.js (trong thư mục làm việc của trailer).
+
+== Video (YouTube, Không công khai) ==
+16:9, 9:16, 1:1 trong store/video/kiem-hiep-zh-*.mp4
