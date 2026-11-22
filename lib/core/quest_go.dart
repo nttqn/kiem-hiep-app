@@ -1,6 +1,7 @@
 import 'content.dart';
 import 'festival.dart' show festMapPrefix;
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Where the story quest wants the hero next, when that is not where they
 /// are (1.14.0). Players who left the autopilot running on a field kept
@@ -13,7 +14,7 @@ class QuestGo {
   final DungeonDef? dungeon;
   final MapDef? map;
 
-  String get label => dungeon != null ? 'Vào ải ${dungeon!.name}' : 'Đến ${map!.name}';
+  String get label => dungeon != null ? tr('Vào ải {dungeonName}', {'dungeonName': tr(dungeon!.name)}) : tr('Đến {mapName}', {'mapName': tr(map!.name)});
   String get id => dungeon?.id ?? map!.id;
 }
 

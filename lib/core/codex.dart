@@ -7,6 +7,7 @@ import 'items.dart';
 import 'lore.dart' show loreBonusLabel;
 import 'sects.dart';
 import 'tam_ma.dart' show fmtThousands;
+import 'i18n.dart';
 
 /// Đồ giám Truyền thuyết (1.19.0): a book of what the hero has met.
 ///
@@ -26,7 +27,7 @@ int codexTierOf(int level) => (level ~/ 10).clamp(0, codexTiers - 1);
 
 /// The tier's material name and level range, as items are named.
 String codexTierName(int t) => tierName(t * 10);
-String codexTierRange(int t) => t == codexTiers - 1 ? 'Cấp 90+' : 'Cấp ${t * 10}–${t * 10 + 9}';
+String codexTierRange(int t) => t == codexTiers - 1 ? tr('Cấp 90+') : tr('Cấp {p0}–{p1}', {'p0': t * 10, 'p1': t * 10 + 9});
 
 String codexGearKey(int tier, Slot slot) => 'g$tier.${slot.index}';
 String codexGearPage(int tier) => 'g$tier';
@@ -145,26 +146,26 @@ extension Codex on HeroData {
       final i = codexLands.indexWhere((m) => m.id == page.substring(2));
       final g = codexLandGold(math.max(0, i));
       gold += g;
-      lines.add('+${fmtThousands(g)} lượng');
+      lines.add(tr('+{p0} lượng', {'p0': fmtThousands(g)}));
       final b = codexLandBonus[page.substring(2)];
       if (b != null) lines.add(loreBonusLabel(b.$1, b.$2));
       if (codexLandAll && seasonTitles.add(codexLandTitle)) {
-        lines.add('Vạn thú phổ trọn bộ! Danh hiệu « $codexLandTitle »');
+        lines.add(tr('Vạn thú phổ trọn bộ! Danh hiệu « {codexLandTitle} »', {'codexLandTitle': codexLandTitle}));
       }
     } else {
       final t = int.parse(page.substring(1));
       final g = codexGearGold(t);
       gold += g;
-      lines.add('+${fmtThousands(g)} lượng');
+      lines.add(tr('+{p0} lượng', {'p0': fmtThousands(g)}));
       final e = codexGearEssence(t);
       if (e > 0) {
         essence += e;
-        lines.add('+$e Tinh Hoa');
+        lines.add(tr('+{e} Tinh Hoa', {'e': e}));
       }
       final b = codexGearBonus[t];
       lines.add(loreBonusLabel(b.$1, b.$2));
       if (codexGearAll && seasonTitles.add(codexGearTitle)) {
-        lines.add('Thần binh phổ trọn bộ! Danh hiệu « $codexGearTitle »');
+        lines.add(tr('Thần binh phổ trọn bộ! Danh hiệu « {codexGearTitle} »', {'codexGearTitle': codexGearTitle}));
       }
     }
     recompute();

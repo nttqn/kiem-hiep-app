@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'gems.dart';
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Sư đồ (1.19.0): a strong hero (level [mentorMinLevel] or reborn) takes
 /// up to [mentorMaxDisciples] new heroes (no rebirth, level up to
@@ -31,7 +32,7 @@ const int truyenCongEssence = 1;
 const List<int> mentorMilestones = [20, 30, 40, 50, 60, 70, 80, 90, 99];
 int get mentorSteps => mentorMilestones.length + 1;
 
-String mentorStepName(int i) => i >= mentorMilestones.length ? 'Xuất sư' : 'Cấp ${mentorMilestones[i]}';
+String mentorStepName(int i) => i >= mentorMilestones.length ? tr('Xuất sư') : tr('Cấp {p0}', {'p0': mentorMilestones[i]});
 
 /// Steps a hero at [level] with [rebirths] has passed.
 int mentorStepsReached(int level, int rebirths) =>
@@ -161,12 +162,12 @@ extension Mentor on HeroData {
     if (g.gems > 0) addGem(Gem(hanh, g.gemTier), g.gems);
     soulPills += g.pills;
     final lines = [
-      'Quà sư môn · ${mentorStepName(i)}',
-      '+${g.gold} lượng, +${g.pots} bình máu, +${g.pots ~/ 2} bình nội lực',
+      tr('Quà sư môn · {p0}', {'p0': mentorStepName(i)}),
+      tr('+{gold} lượng, +{pots} bình máu, +{p0} bình nội lực', {'gold': g.gold, 'pots': g.pots, 'p0': g.pots ~/ 2}),
       if (g.gems > 0) '+${g.gems} ${Gem(hanh, g.gemTier).name}',
-      if (g.pills > 0) '+${g.pills} Linh Phách Đơn',
+      if (g.pills > 0) tr('+{pills} Linh Phách Đơn', {'pills': g.pills}),
     ];
-    if (i == mentorSteps - 1 && seasonTitles.add(discipleTitle)) lines.add('Danh hiệu « $discipleTitle »');
+    if (i == mentorSteps - 1 && seasonTitles.add(discipleTitle)) lines.add(tr('Danh hiệu « {discipleTitle} »', {'discipleTitle': discipleTitle}));
     return lines;
   }
 
@@ -228,11 +229,11 @@ extension Mentor on HeroData {
     d.paid += due;
     essence += ess;
     divineIron += iron;
-    final lines = ['Đệ tử ${d.name}: ${mentorStepName(d.paid - 1)}', '+$ess Tinh Hoa', if (iron > 0) '+$iron Thần Thiết'];
+    final lines = [tr('Đệ tử {dName}: {p0}', {'dName': d.name, 'p0': mentorStepName(d.paid - 1)}), tr('+{ess} Tinh Hoa', {'ess': ess}), if (iron > 0) tr('+{iron} Thần Thiết', {'iron': iron})];
     if (graduatedNow) {
       sdGraduates++;
-      if (seasonTitles.add(mentorTitle1)) lines.add('Danh hiệu « $mentorTitle1 »');
-      if (sdGraduates >= 3 && seasonTitles.add(mentorTitle3)) lines.add('Danh hiệu « $mentorTitle3 »');
+      if (seasonTitles.add(mentorTitle1)) lines.add(tr('Danh hiệu « {mentorTitle1} »', {'mentorTitle1': mentorTitle1}));
+      if (sdGraduates >= 3 && seasonTitles.add(mentorTitle3)) lines.add(tr('Danh hiệu « {mentorTitle3} »', {'mentorTitle3': mentorTitle3}));
     }
     return lines;
   }

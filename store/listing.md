@@ -56,6 +56,24 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.21.0, ≤ 500 ký tự)
+1.21.0 – Tiếng Trung phồn thể
+• Thêm ngôn ngữ 繁體中文: máy để tiếng Trung Đài Loan, Hồng Kông, Macau tự mở bằng phồn thể; đổi ngôn ngữ ở nút quả cầu màn chọn nhân vật hoặc trong Cài đặt.
+• Kênh Thế Giới tách theo ngôn ngữ.
+• Lọc từ ngữ không phù hợp cho kênh bang, tên bang và tên nhân vật.
+
+## What's new (1.21.0, en-US)
+1.21.0 – Traditional Chinese
+• New language: 繁體中文. Phones set to Chinese (Taiwan, Hong Kong, Macau) open in it; switch any time from the globe on the hero list or in Settings.
+• World chat is now split by language.
+• Profanity filter now also covers guild chat, guild names and hero names.
+
+## 更新內容（1.21.0，zh-TW）
+1.21.0 – 繁體中文版
+• 新增繁體中文：裝置語言為台灣、香港、澳門中文時自動使用；可在角色選擇畫面的地球按鈕或設定中切換語言。
+• 世界頻道依語言分開。
+• 幫會頻道、幫會名稱與角色名稱加入不當字詞過濾。
+
 ## Có gì mới (bản 1.20.0, ≤ 500 ký tự)
 1.20.0 – Kỳ ngộ, Kết duyên
 • Kỳ ngộ: đánh quái ngoài bản đồ thỉnh thoảng gặp ẩn sĩ truyền công, rương cổ, tiên nhân chỉ lộ, bí kíp, thiên thạch… hoặc cao thủ ẩn danh, ma đầu chặn đường. Tối đa 5 lần mỗi ngày.

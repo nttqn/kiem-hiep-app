@@ -14,6 +14,7 @@ import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import 'world_boss_screen.dart' show BossPreview;
+import '../core/i18n.dart';
 
 const _goldTint = Color(0xFFFFD34A);
 
@@ -86,7 +87,7 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Thưởng xếp hạng Boss Hoàng Kim', style: titleStyle(20)),
+        title: Text(tr('Thưởng xếp hạng Boss Hoàng Kim'), style: titleStyle(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +97,7 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
             for (final l in lines.skip(1)) Text('• $l', style: body),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
     if (mounted) setState(() {});
@@ -122,7 +123,7 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Boss Hoàng Kim',
+      title: tr('Boss Hoàng Kim'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -148,25 +149,25 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(boss.name, style: titleStyle(19, color: _goldTint), textAlign: TextAlign.center, maxLines: 1),
+          Text(tr(boss.name), style: titleStyle(19, color: _goldTint), textAlign: TextAlign.center, maxLines: 1),
           Expanded(child: Center(child: FittedBox(child: BossPreview(def: boss, size: 150)))),
           if (s >= 0) ...[
-            Text('Đang xuất hiện · còn ${_clock(goldBossLeft())}',
+            Text(tr('Đang xuất hiện · còn {p0}', {'p0': _clock(goldBossLeft())}),
                 style: bold.copyWith(color: const Color(0xFF8CE07A)), textAlign: TextAlign.center),
-            Text('Lượt còn: $left/$goldBossRuns', style: small, textAlign: TextAlign.center),
+            Text(tr('Lượt còn: {left}/{goldBossRuns}', {'left': left, 'goldBossRuns': goldBossRuns}), style: small, textAlign: TextAlign.center),
           ] else ...[
-            Text('Xuất hiện sau ${_clock(wait)}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+            Text(tr('Xuất hiện sau {p0}', {'p0': _clock(wait)}), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
             Text('Khung ${goldBossSessionLabel(next)}', style: small, textAlign: TextAlign.center),
           ],
           const SizedBox(height: 6),
           LButton(
             label: !open
-                ? 'Mở ở cấp $goldBossOpenLevel'
+                ? tr('Mở ở cấp {goldBossOpenLevel}', {'goldBossOpenLevel': goldBossOpenLevel})
                 : s < 0
-                    ? 'Chưa đến giờ'
+                    ? tr('Chưa đến giờ')
                     : left > 0
-                        ? 'Khiêu chiến'
-                        : 'Hết lượt khung này',
+                        ? tr('Khiêu chiến')
+                        : tr('Hết lượt khung này'),
             icon: Icons.whatshot,
             enabled: open && left > 0,
             onTap: _fight,
@@ -184,18 +185,18 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Hôm nay: ${fmt(h.gbTotal)}', style: titleStyle(18, color: const Color(0xFFFF9A5A))),
-          Text('Cao nhất một lượt: ${fmt(h.gbBest)}', style: small),
+          Text(tr('Hôm nay: {p0}', {'p0': fmt(h.gbTotal)}), style: titleStyle(18, color: const Color(0xFFFF9A5A))),
+          Text(tr('Cao nhất một lượt: {p0}', {'p0': fmt(h.gbBest)}), style: small),
           const SizedBox(height: 6),
           Expanded(
             child: ListView(
               children: [
-                Text('Mỗi ngày 2 khung: ${[for (var i = 0; i < goldBossSessions.length; i++) goldBossSessionLabel(i)].join(' và ')}. '
-                    'Mỗi khung $goldBossRuns lượt, mỗi lượt ${goldBossTime.round()} giây.',
+                Text(tr('Mỗi ngày 2 khung: {p0}. '
+                    'Mỗi khung {goldBossRuns} lượt, mỗi lượt {p1} giây.', {'p0': [for (var i = 0; i < goldBossSessions.length; i++) goldBossSessionLabel(i)].join(tr(' và ')), 'goldBossRuns': goldBossRuns, 'p1': goldBossTime.round()}),
                     style: body.copyWith(fontSize: 13)),
                 const SizedBox(height: 6),
-                Text('Tham gia', style: bold.copyWith(color: goldLight)),
-                Text('Gây sát thương trong một khung: +$goldBossJoinShards Mảnh Hoàng Kim (mỗi khung một lần).',
+                Text(tr('Tham gia'), style: bold.copyWith(color: goldLight)),
+                Text(tr('Gây sát thương trong một khung: +{goldBossJoinShards} Mảnh Hoàng Kim (mỗi khung một lần).', {'goldBossJoinShards': goldBossJoinShards}),
                     style: body.copyWith(fontSize: 13)),
                 for (var i = 0; i < goldBossSessions.length; i++)
                   Row(
@@ -204,18 +205,18 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
                           size: 15, color: h.gbPaid & (1 << i) != 0 ? const Color(0xFF8CE07A) : creamDim),
                       const SizedBox(width: 5),
                       Expanded(
-                        child: Text('Khung ${goldBossSessionLabel(i)} · ${h.gbRunsIn(i)}/$goldBossRuns lượt',
+                        child: Text(tr('Khung {p0} · {p1}/{goldBossRuns} lượt', {'p0': goldBossSessionLabel(i), 'p1': h.gbRunsIn(i), 'goldBossRuns': goldBossRuns}),
                             style: small.copyWith(fontSize: 12)),
                       ),
                     ],
                   ),
                 const SizedBox(height: 6),
-                Text('Xếp hạng sát thương trong ngày (nhận vào hôm sau)', style: bold.copyWith(color: goldLight)),
+                Text(tr('Xếp hạng sát thương trong ngày (nhận vào hôm sau)'), style: bold.copyWith(color: goldLight)),
                 for (var i = 0; i < goldRankBrackets.length; i++) _bracket(i),
                 const SizedBox(height: 6),
-                Text('Lịch xuất hiện', style: bold.copyWith(color: goldLight)),
+                Text(tr('Lịch xuất hiện'), style: bold.copyWith(color: goldLight)),
                 for (var i = 0; i < goldBossMobs.length; i++)
-                  Text('${days[i]}: ${goldBossMobs[i].name}',
+                  Text('${tr(days[i])}: ${tr(goldBossMobs[i].name)}',
                       style: small.copyWith(
                           fontSize: 12, color: goldBossMobs[i].id == today ? _goldTint : creamDim)),
               ],
@@ -238,7 +239,7 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
           SizedBox(width: 74, child: Text(label, style: bold.copyWith(fontSize: 12, color: i == 0 ? _goldTint : cream))),
           Expanded(
             child: Text(
-              '${r.shards} Mảnh Hoàng Kim · ${r.iron} Thần Thiết${r.title.isNotEmpty ? ' · « ${r.title} »' : ''}',
+              tr('{shards} Mảnh Hoàng Kim · {iron} Thần Thiết{p0}', {'shards': r.shards, 'iron': r.iron, 'p0': r.title.isNotEmpty ? ' · « ${tr(r.title)} »' : ''}),
               style: small.copyWith(fontSize: 11.5),
             ),
           ),
@@ -254,18 +255,18 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Đăng nhập để lên bảng xếp hạng và nhận thưởng hạng',
+          Text(tr('Đăng nhập để lên bảng xếp hạng và nhận thưởng hạng'),
               style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          LButton(label: 'Đăng nhập', small: true, color: jade, onTap: () => showCloudPanel(context)),
+          LButton(label: tr('Đăng nhập'), small: true, color: jade, onTap: () => showCloudPanel(context)),
         ],
       );
     } else if (_loadFailed) {
-      content = Center(child: Text('Không tải được, thử lại sau.', style: small));
+      content = Center(child: Text(tr('Không tải được, thử lại sau.'), style: small));
     } else if (_rows == null) {
       content = const Center(child: CircularProgressIndicator(color: goldLight));
     } else if (_rows!.isEmpty) {
-      content = Center(child: Text('Chưa ai khiêu chiến hôm nay.', style: small, textAlign: TextAlign.center));
+      content = Center(child: Text(tr('Chưa ai khiêu chiến hôm nay.'), style: small, textAlign: TextAlign.center));
     } else {
       content = ListView.builder(
         itemCount: _rows!.length,
@@ -306,8 +307,8 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Xếp hạng hôm nay', style: titleStyle(18)),
-          if (_place != null) Text('Hạng của bạn: #$_place', style: bold.copyWith(color: goldLight)),
+          Text(tr('Xếp hạng hôm nay'), style: titleStyle(18)),
+          if (_place != null) Text(tr('Hạng của bạn: #{_place}', {'_place': _place}), style: bold.copyWith(color: goldLight)),
           const SizedBox(height: 4),
           Expanded(child: content),
         ],

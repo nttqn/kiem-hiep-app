@@ -37,6 +37,7 @@ import 'ma_vuc.dart';
 import 'tang_bao.dart';
 import 'weather.dart';
 import 'world_boss.dart' show vnDayKey;
+import 'i18n.dart';
 
 const double heroRadius = 18;
 
@@ -359,8 +360,11 @@ class VfxCue {
 
 class GameEvent {
   GameEvent(this.kind, {this.text = '', this.color = 0xFFFFF3C4,
-      this.big = false, this.value = 0});
+      this.big = false, this.value = 0, this.cue});
   final EvKind kind;
+
+  /// See [Notice.cue].
+  final String? cue;
   final String text;
   final int color;
   final bool big;
@@ -638,7 +642,7 @@ class World {
       _newMobs.add(add);
       fx.add(Fx('spark_mob_${def.hanh.name}', add.x, add.y - 20, life: 0.4));
     }
-    events.add(GameEvent(EvKind.boss, text: '${m.def.name} gọi đồng bọn!', color: 0xFFFF6A4A, big: true));
+    events.add(GameEvent(EvKind.boss, text: tr('{defName} gọi đồng bọn!', {'defName': tr(m.def.name)}), color: 0xFFFF6A4A, big: true));
   }
 
   // ------------------------------------------------------------ pet
@@ -734,7 +738,7 @@ class World {
     helper = c;
     fx.add(Fx('spark_mob_${r.hanh.name}', c.x, c.y - 20, life: 0.6));
     _sfx('levelup');
-    events.add(GameEvent(EvKind.notice, text: '${r.name} đến trợ chiến!', color: r.hanh.color, big: true));
+    events.add(GameEvent(EvKind.notice, text: tr('{rName} đến trợ chiến!', {'rName': tr(r.name)}), color: r.hanh.color, big: true));
   }
 
   void _updateCompanion(double dt) {
@@ -1042,7 +1046,7 @@ class World {
       hero.addHerb(n.tier);
       hero.onHerbPicked();
       fx.add(Fx('potionHp', n.x, n.y, life: 0.5));
-      events.add(GameEvent(EvKind.loot, text: 'Hái được ${herbNames[n.tier]}', color: herbColors[n.tier]));
+      events.add(GameEvent(EvKind.loot, text: tr('Hái được {p0}', {'p0': tr(herbNames[n.tier])}), color: herbColors[n.tier]));
       _sfx('loot');
     }
   }
@@ -1105,12 +1109,12 @@ class World {
       mobs.add(m);
       boss = m;
       introBoss = m;
-      events.add(GameEvent(EvKind.boss, text: '${def.name} xuất hiện!',
+      events.add(GameEvent(EvKind.boss, text: tr('{defName} xuất hiện!', {'defName': tr(def.name)}),
           color: 0xFFFF6A4A, big: true));
       return;
     }
     events.add(GameEvent(EvKind.wave,
-        text: 'Đợt ${wave + 1}/${d.waves.length}', big: true));
+        text: tr('Đợt {p0}/{wavesLength}', {'p0': wave + 1, 'wavesLength': d.waves.length}), big: true));
     _pending = _has(NmAffix.swarm) ? (d.waves[wave] * 1.5).round() : d.waves[wave];
     _pendingT = 0;
   }
@@ -1157,7 +1161,7 @@ class World {
     mobs.add(m);
     boss = m;
     introBoss = m;
-    events.add(GameEvent(EvKind.boss, text: '${def.name} giáng thế!', color: 0xFFFF6A4A, big: true));
+    events.add(GameEvent(EvKind.boss, text: tr('{defName} giáng thế!', {'defName': tr(def.name)}), color: 0xFFFF6A4A, big: true));
   }
 
   /// Hung Thú: the land's beast grown huge, its HP and attack set by the
@@ -1197,7 +1201,7 @@ class World {
     mobs.add(m);
     boss = m;
     introBoss = m;
-    events.add(GameEvent(EvKind.boss, text: '${b.name} thức tỉnh!', color: 0xFFFF6A4A, big: true));
+    events.add(GameEvent(EvKind.boss, text: tr('{bName} thức tỉnh!', {'bName': tr(b.name)}), color: 0xFFFF6A4A, big: true));
   }
 
   /// The beast's blows: a chain of slams after the hero, a ring around
@@ -1209,7 +1213,7 @@ class World {
       m.atk *= 1.4;
       m.speedMul = 1.25;
       _shake(10);
-      events.add(GameEvent(EvKind.boss, text: '${m.def.name} cuồng nộ!', color: 0xFFFF3A2A, big: true));
+      events.add(GameEvent(EvKind.boss, text: tr('{defName} cuồng nộ!', {'defName': tr(m.def.name)}), color: 0xFFFF3A2A, big: true));
     }
     m.bossCd -= dt;
     if (m.bossCd > 0) return;
@@ -1274,14 +1278,14 @@ class World {
       m.guardUntil = time + 3;
       m.guardPct = 0.6;
       fx.add(Fx('earthShield', m.x, m.y, life: 3, radius: 60));
-      _text(m.x, m.y - 80, 'Hộ thể!', 0xFFFFD34A, big: true);
+      _text(m.x, m.y - 80, tr('Hộ thể!'), 0xFFFFD34A, big: true);
     }
     if (_tm(TmAffix.rage) && !_tmRaged && m.hp < m.maxHp * 0.4) {
       _tmRaged = true;
       m.atk *= 1.5;
       m.speedMul = 1.3;
       _shake(8);
-      events.add(GameEvent(EvKind.boss, text: 'Tâm Ma cuồng nộ!', color: 0xFFFF3A2A, big: true));
+      events.add(GameEvent(EvKind.boss, text: tr('Tâm Ma cuồng nộ!'), color: 0xFFFF3A2A, big: true));
     }
     if (_thorns > 0 && time >= _thornsAt) {
       _thornsAt = time + 0.5;
@@ -1341,7 +1345,7 @@ class World {
     mobs.add(m);
     boss = m;
     introBoss = m;
-    events.add(GameEvent(EvKind.boss, text: dungeon!.isKiep ? 'Tâm ma hiện hình!' : '${r.name} lên lôi đài!', color: 0xFFFF6A4A, big: true));
+    events.add(GameEvent(EvKind.boss, text: dungeon!.isKiep ? tr('Tâm ma hiện hình!') : tr('{rName} lên lôi đài!', {'rName': tr(r.name)}), color: 0xFFFF6A4A, big: true));
   }
 
   void _endArena(bool won) {
@@ -1362,7 +1366,7 @@ class World {
             : d.isTamMa
                 ? hero.tamMaResult(won, d.tamMa, rng)
                 : hero.arenaResult(won, d.rival!);
-    events.add(won ? GameEvent(EvKind.cleared, value: 1) : GameEvent(EvKind.failed, text: 'Thua trận'));
+    events.add(won ? GameEvent(EvKind.cleared, value: 1) : GameEvent(EvKind.failed, text: tr('Thua trận')));
   }
 
   /// Tower floors past level 99 make monsters tougher instead.
@@ -1412,7 +1416,7 @@ class World {
     hero.tbdSpot = TbdSpot(map.id, x, y);
     _sfx('loot');
     events.add(GameEvent(EvKind.notice,
-        text: 'Tàng Bảo Đồ chỉ về phía ${compassWord(p.x, p.y, x, y)}: tìm dấu X trên bản đồ nhỏ',
+        text: tr('Tàng Bảo Đồ chỉ về phía {p0}: tìm dấu X trên bản đồ nhỏ', {'p0': compassWord(p.x, p.y, x, y)}),
         color: 0xFFFFD34A, big: true));
   }
 
@@ -1420,7 +1424,7 @@ class World {
     if (_ambush.isNotEmpty && !mobs.any((m) => _ambush.contains(m.uid) && m.alive)) {
       _ambush.clear();
       _tbdChest(_ambushX, _ambushY, math.min(hero.level, map.maxLv));
-      events.add(GameEvent(EvKind.wave, text: 'Đã dẹp phục binh, rương báu là của bạn!', color: 0xFFFFD34A, big: true));
+      events.add(GameEvent(EvKind.wave, text: tr('Đã dẹp phục binh, rương báu là của bạn!'), color: 0xFFFFD34A, big: true));
     }
     final s = digSpot;
     final p = player;
@@ -1438,7 +1442,7 @@ class World {
         hero.tbdPortal(vnDayKey());
         fx.add(Fx('buddha', s.x, s.y, life: 1, radius: 200));
         events.add(GameEvent(EvKind.wave,
-            text: 'Cổng Bí cảnh hé mở! +1 lượt thám hiểm hôm nay', color: 0xFF8CE0C8, big: true));
+            text: tr('Cổng Bí cảnh hé mở! +1 lượt thám hiểm hôm nay'), color: 0xFF8CE0C8, big: true));
       case TbdOutcome.ambush:
         _ambushX = s.x;
         _ambushY = s.y;
@@ -1453,18 +1457,18 @@ class World {
           mobs.add(m);
           fx.add(Fx('spark_mob_${def.hanh.name}', m.x, m.y - 20, life: 0.4));
         }
-        events.add(GameEvent(EvKind.boss, text: 'Phục binh! Hạ hết để lấy rương', color: 0xFFFF6A4A, big: true));
+        events.add(GameEvent(EvKind.boss, text: tr('Phục binh! Hạ hết để lấy rương'), color: 0xFFFF6A4A, big: true));
       case TbdOutcome.guardian:
         final def = mobById[map.mobs.last]!;
         final m = Mob(_uid++, def, lv + 1, s.x + 60, s.y)
           ..eliteKey = 'tbd_guard'
-          ..eliteName = 'Hộ Bảo Tinh Anh'
+          ..eliteName = tr('Hộ Bảo Tinh Anh')
           ..state = MobState.chase;
         m.maxHp *= 8 * map.mul;
         m.hp = m.maxHp;
         m.atk *= 1.4 * map.mul;
         mobs.add(m);
-        events.add(GameEvent(EvKind.boss, text: 'Hộ Bảo Tinh Anh trỗi dậy canh giữ kho báu!', color: 0xFFFF6A4A, big: true));
+        events.add(GameEvent(EvKind.boss, text: tr('Hộ Bảo Tinh Anh trỗi dậy canh giữ kho báu!'), color: 0xFFFF6A4A, big: true));
     }
   }
 
@@ -1488,7 +1492,7 @@ class World {
     if (land != null && rng.nextDouble() < loreTreasureChance) _lore(land.id);
     fx.add(Fx('buddha', x, y, life: 0.6, radius: 90));
     _sfx('loot');
-    events.add(GameEvent(EvKind.loot, text: 'Đào được rương báu: +$g lượng', color: 0xFFFFD34A));
+    events.add(GameEvent(EvKind.loot, text: tr('Đào được rương báu: +{g} lượng', {'g': g}), color: 0xFFFFD34A));
   }
 
   // ------------------------------------------------------------ kỳ ngộ
@@ -1524,7 +1528,7 @@ class World {
         _kyPending = k;
       default:
     }
-    events.add(GameEvent(EvKind.wave, text: 'Kỳ ngộ · ${k.label}', color: 0xFFFFD34A, big: true));
+    events.add(GameEvent(EvKind.wave, text: tr('Kỳ ngộ · {kLabel}', {'kLabel': tr(k.label)}), color: 0xFFFFD34A, big: true));
     final say = [...lines, ...hero.kyTitles()];
     if (say.isNotEmpty) events.add(GameEvent(EvKind.loot, text: say.join(' · '), color: 0xFFFFE8A0));
     if (k == KyNgo.caoThu || k == KyNgo.maDau) {
@@ -1579,12 +1583,12 @@ class World {
           )));
     }
     drops.add(Drop(m.x, m.y + 30, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(lv, boss: true) + 1))));
-    final lines = <String>['Đã hạ ${m.eliteName}!'];
+    final lines = <String>[tr('Đã hạ {eliteName}!', {'eliteName': m.eliteName})];
     final ess = hero.kyFightEssence(k);
-    if (ess > 0) lines.add('+$ess Tinh Hoa');
+    if (ess > 0) lines.add(tr('+{ess} Tinh Hoa', {'ess': ess}));
     if (maDau && lv >= bossShardLevel && rng.nextDouble() < kyMaDauShardChance) {
       hero.goldShards++;
-      lines.add('+1 Mảnh Hoàng Kim');
+      lines.add(tr('+1 Mảnh Hoàng Kim'));
     }
     events.add(GameEvent(EvKind.wave, text: lines.join(' · '), color: 0xFFFFD34A, big: true));
   }
@@ -1632,7 +1636,7 @@ class World {
       final def = mobById[map.mobs[rng.nextInt(map.mobs.length)]]!;
       final m = Mob(_uid++, def, d.level + 1, p.x + 80, p.y + 20)
         ..eliteKey = 'realm_guard'
-        ..eliteName = 'Hộ Trận Sứ';
+        ..eliteName = tr('Hộ Trận Sứ');
       m.maxHp *= 6;
       m.hp = m.maxHp;
       m.atk *= 1.4;
@@ -1676,7 +1680,7 @@ class World {
     }
     if (time > d.timeLimit) {
       finished = true;
-      events.add(GameEvent(EvKind.failed, text: 'Hết giờ!'));
+      events.add(GameEvent(EvKind.failed, text: tr('Hết giờ!')));
       return;
     }
     if (time >= _fogCheck) {
@@ -1708,7 +1712,7 @@ class World {
     if (!_eventsTold && time > 3) {
       _eventsTold = true;
       events.add(GameEvent(EvKind.notice,
-          text: 'Biến cố: ${realm!.events.map((e) => e.label).join(' · ')}', color: 0xFFB8F0E0, big: true));
+          text: tr('Biến cố: {p0}', {'p0': realm!.events.map((e) => e.label).join(' · ')}), color: 0xFFB8F0E0, big: true));
     }
     if (hasEvent(RealmEvent.starfall) && !_starsFell && time >= _starAt && player.alive) {
       _starsFell = true;
@@ -1720,7 +1724,7 @@ class World {
         fx.add(Fx('buddha', x, y, life: 0.7, radius: 70));
       }
       _shake(5);
-      events.add(GameEvent(EvKind.wave, text: 'Mưa sao băng! Nhặt rương sao quanh bạn', color: 0xFFFFE08A, big: true));
+      events.add(GameEvent(EvKind.wave, text: tr('Mưa sao băng! Nhặt rương sao quanh bạn'), color: 0xFFFFE08A, big: true));
       _pauseAuto();
     }
     if (hasEvent(RealmEvent.wanderer) && !_wandererCame && time >= wandererAt && player.alive) {
@@ -1731,13 +1735,13 @@ class World {
       final def = mobById[map.mobs.last]!;
       final m = Mob(_uid++, def, dungeon!.level + 2, x, y)
         ..eliteKey = 'realm_hunter'
-        ..eliteName = 'Ma Đầu Lang Bạt'
+        ..eliteName = tr('Ma Đầu Lang Bạt')
         ..state = MobState.chase;
       m.maxHp *= 9;
       m.hp = m.maxHp;
       m.atk *= 1.5;
       mobs.add(m);
-      events.add(GameEvent(EvKind.boss, text: 'Ma Đầu Lang Bạt đang truy đuổi bạn!', color: 0xFFFF6A4A, big: true));
+      events.add(GameEvent(EvKind.boss, text: tr('Ma Đầu Lang Bạt đang truy đuổi bạn!'), color: 0xFFFF6A4A, big: true));
       _pauseAuto();
     }
     // The thương nhân or the mật thất coming into sight is the player's to
@@ -1747,7 +1751,7 @@ class World {
       if (o.done || _seen.contains(o) || !revealedAt(o.x, o.y)) continue;
       _seen.add(o);
       events.add(GameEvent(EvKind.notice,
-          text: o.kind == PoiKind.merchant ? 'Phát hiện Thương nhân bí ẩn gần đây!' : 'Phát hiện cửa Mật thất gần đây!',
+          text: o.kind == PoiKind.merchant ? tr('Phát hiện Thương nhân bí ẩn gần đây!') : tr('Phát hiện cửa Mật thất gần đây!'),
           color: 0xFFB8F0E0, big: true));
       _pauseAuto();
     }
@@ -1763,7 +1767,7 @@ class World {
     if (!auto || !pauseAutoOnEvents) return;
     auto = false;
     engaged = false;
-    events.add(GameEvent(EvKind.loot, text: 'Biến cố! Đã tắt tự động, hãy tự thao tác', color: 0xFFFFD34A));
+    events.add(GameEvent(EvKind.loot, text: tr('Biến cố! Đã tắt tự động, hãy tự thao tác'), color: 0xFFFFD34A));
   }
 
   /// A lever pulled: right in turn lights it, wrong locks them all again.
@@ -1777,7 +1781,7 @@ class World {
       if (vaultStep >= order.length) {
         _openVault();
       } else {
-        events.add(GameEvent(EvKind.loot, text: 'Cơ quan ${vaultSymbols[o.index]} đã mở ($vaultStep/3)', color: 0xFF9FE8FF));
+        events.add(GameEvent(EvKind.loot, text: tr('Cơ quan {p0} đã mở ({vaultStep}/3)', {'p0': vaultSymbols[o.index], 'vaultStep': vaultStep}), color: 0xFF9FE8FF));
       }
       return;
     }
@@ -1787,7 +1791,7 @@ class World {
     }
     _shake(4);
     events.add(GameEvent(EvKind.notice,
-        text: vaultHintKnown ? 'Sai thứ tự! Cơ quan khóa lại ($vaultHint)' : 'Sai thứ tự! Hãy đọc bia khắc trên cửa mật thất',
+        text: vaultHintKnown ? tr('Sai thứ tự! Cơ quan khóa lại ({vaultHint})', {'vaultHint': vaultHint}) : tr('Sai thứ tự! Hãy đọc bia khắc trên cửa mật thất'),
         color: 0xFFFF8A7A));
   }
 
@@ -1812,7 +1816,7 @@ class World {
     fx.add(Fx('buddha', v.x, v.y, life: 1, radius: 200));
     _lore();
     _shake(6);
-    events.add(GameEvent(EvKind.wave, text: 'Mật thất đã mở! +$g lượng', color: 0xFFFFD34A, big: true));
+    events.add(GameEvent(EvKind.wave, text: tr('Mật thất đã mở! +{g} lượng', {'g': g}), color: 0xFFFFD34A, big: true));
   }
 
   void _openStar(Poi o) {
@@ -1827,7 +1831,7 @@ class World {
     }
     fx.add(Fx('buddha', o.x, o.y, life: 0.5, radius: 60));
     _sfx('loot');
-    events.add(GameEvent(EvKind.loot, text: 'Rương sao: +$g lượng', color: 0xFFFFE08A));
+    events.add(GameEvent(EvKind.loot, text: tr('Rương sao: +{g} lượng', {'g': g}), color: 0xFFFFE08A));
   }
 
   void _endRealm() {
@@ -1881,13 +1885,13 @@ class World {
         case PoiKind.merchant:
           o.done = true;
           _sfx('loot');
-          events.add(GameEvent(EvKind.merchant, text: 'Thương nhân bí ẩn'));
+          events.add(GameEvent(EvKind.merchant, text: tr('Thương nhân bí ẩn')));
         case PoiKind.vault:
           if (!vaultHintKnown) {
             vaultHintKnown = true;
-            events.add(GameEvent(EvKind.notice, text: 'Bia khắc trên cửa: $vaultHint', color: 0xFF9FE8FF, big: true));
+            events.add(GameEvent(EvKind.notice, text: tr('Bia khắc trên cửa: {vaultHint}', {'vaultHint': vaultHint}), color: 0xFF9FE8FF, big: true));
           } else {
-            _nag('Mở cơ quan theo thứ tự: $vaultHint');
+            _nag(tr('Mở cơ quan theo thứ tự: {vaultHint}', {'vaultHint': vaultHint}));
           }
         case PoiKind.star:
           _openStar(o);
@@ -1897,7 +1901,7 @@ class World {
           _openChest(o);
         case PoiKind.pillar:
           if (mobs.any((m) => m.uid == o.guard && m.alive)) {
-            _nag('Hạ Hộ Trận Sứ trước đã');
+            _nag(tr('Hạ Hộ Trận Sứ trước đã'));
             continue;
           }
           o.done = true;
@@ -1905,7 +1909,7 @@ class World {
           fx.add(Fx('buddha', o.x, o.y, life: 0.8, radius: 160));
           _sfx('loot');
           events.add(GameEvent(EvKind.wave,
-              text: 'Trận nhãn $pillarsLit/$realmPillars đã sáng', color: 0xFF9FE8FF, big: true));
+              text: tr('Trận nhãn {pillarsLit}/{realmPillars} đã sáng', {'pillarsLit': pillarsLit, 'realmPillars': realmPillars}), color: 0xFF9FE8FF, big: true));
           if (lairOpen) _openLair();
         case PoiKind.shrine:
           o.done = true;
@@ -1914,10 +1918,10 @@ class World {
           fx.add(Fx('buddha', o.x, o.y, life: 0.8, radius: 120));
           _sfx('loot');
           if (rng.nextDouble() < loreShrineChance) _lore();
-          events.add(GameEvent(EvKind.notice, text: 'Bia cổ ban phúc: ${b.label}', color: 0xFF8CE07A, big: true));
+          events.add(GameEvent(EvKind.notice, text: tr('Bia cổ ban phúc: {bLabel}', {'bLabel': tr(b.label)}), color: 0xFF8CE07A, big: true));
         case PoiKind.captive:
           if (mobs.any((m) => m.alive && _d2(m.x, m.y, o.x, o.y) < 240 * 240)) {
-            _nag('Quái còn canh giữ, hãy dẹp chúng trước');
+            _nag(tr('Quái còn canh giữ, hãy dẹp chúng trước'));
             continue;
           }
           o.done = true;
@@ -1957,7 +1961,7 @@ class World {
     fx.add(Fx('buddha', o.x, o.y, life: 0.6, radius: 90));
     _sfx('loot');
     events.add(GameEvent(EvKind.loot,
-        text: 'Rương báu $chestsOpened/$realmChests: +${g.toString()} lượng, +2 ${herbNames[_herbTier]}',
+        text: tr('Rương báu {chestsOpened}/{realmChests}: +{p0} lượng, +2 {p1}', {'chestsOpened': chestsOpened, 'realmChests': realmChests, 'p0': g.toString(), 'p1': tr(herbNames[_herbTier])}),
         color: 0xFFFFD34A));
   }
 
@@ -1982,7 +1986,7 @@ class World {
     _shake(8);
     introBoss = m;
     events.add(GameEvent(EvKind.boss,
-        text: 'Phong ấn đã phá! ${def.name} hiện thân ở phía đông', color: 0xFFFF6A4A, big: true));
+        text: tr('Phong ấn đã phá! {defName} hiện thân ở phía đông', {'defName': tr(def.name)}), color: 0xFFFF6A4A, big: true));
   }
 
   /// Where the autopilot heads between fights: the nearest place of
@@ -2041,7 +2045,7 @@ class World {
       _sky();
       if (night != wasNight) {
         events.add(GameEvent(EvKind.notice,
-            text: night ? 'Màn đêm buông xuống: Dạ Yêu bắt đầu xuất hiện' : 'Trời đã sáng',
+            text: night ? tr('Màn đêm buông xuống: Dạ Yêu bắt đầu xuất hiện') : tr('Trời đã sáng'),
             color: 0xFFB8C8F0, big: true));
       }
     }
@@ -2089,7 +2093,7 @@ class World {
     }
     for (final n in hero.notices) {
       events.add(GameEvent(EvKind.notice, text: n.text, color: n.color,
-          big: n.big));
+          big: n.big, cue: n.cue));
     }
     hero.notices.clear();
   }
@@ -2112,7 +2116,7 @@ class World {
       m.hp = m.maxHp;
       m.atk *= w.atkMul;
       mobs.add(m);
-      events.add(GameEvent(EvKind.boss, text: 'Tinh anh ${w.name} xuất hiện!', color: 0xFFFFD34A, big: true));
+      events.add(GameEvent(EvKind.boss, text: tr('Tinh anh {wName} xuất hiện!', {'wName': tr(w.name)}), color: 0xFFFFD34A, big: true));
     }
   }
 
@@ -2150,7 +2154,7 @@ class World {
       bossRespawnAt = -1;
       _spawnBoss();
       events.add(GameEvent(EvKind.boss,
-          text: '${boss!.def.name} đã xuất hiện ở phía đông!',
+          text: tr('{defName} đã xuất hiện ở phía đông!', {'defName': tr(boss!.def.name)}),
           color: 0xFFFF6A4A, big: true));
     }
   }
@@ -2171,7 +2175,7 @@ class World {
     }
     if (time > d.timeLimit && !finished) {
       finished = true;
-      events.add(GameEvent(EvKind.failed, text: 'Hết giờ!'));
+      events.add(GameEvent(EvKind.failed, text: tr('Hết giờ!')));
       return;
     }
     _trickle(dt);
@@ -2437,7 +2441,7 @@ class World {
       fx: look.burstFx,
       hanh: hero.hanh,
     ));
-    _text(t.x, t.y - 120, 'Thần Binh Giáng Thế', divineColor(lv));
+    _text(t.x, t.y - 120, tr('Thần Binh Giáng Thế'), divineColor(lv));
   }
 
   /// A full Hoàng Kim set: now and then a basic attack sets off the set's
@@ -3116,27 +3120,27 @@ class World {
             rng: rng,
           )));
       drops.add(Drop(m.x - 30, m.y, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(m.level, boss: true) + 1))));
-      events.add(GameEvent(EvKind.wave, text: 'Đã hạ Ma Đầu Lang Bạt!', color: 0xFFFFD34A, big: true));
+      events.add(GameEvent(EvKind.wave, text: tr('Đã hạ Ma Đầu Lang Bạt!'), color: 0xFFFFD34A, big: true));
     }
     hero.gainExp(xp);
     if (m.def.boss) {
       final tamed = hero.rollPet(m.def.id, rng);
       if (tamed != null) {
         events.add(GameEvent(EvKind.notice,
-            text: 'Thu phục linh thú: ${tamed.name}!', color: 0xFFFFD34A, big: true));
+            text: tr('Thu phục linh thú: {tamedName}!', {'tamedName': tr(tamed.name)}), color: 0xFFFFD34A, big: true));
         if (pet == null) _spawnPet();
       }
     }
     if (m.big && m.level >= bossShardLevel && dungeon?.isTower != true && rng.nextDouble() < bossShardChance) {
       hero.goldShards++;
-      events.add(GameEvent(EvKind.loot, text: 'Nhặt được 1 Mảnh Hoàng Kim', color: goldItemColor));
+      events.add(GameEvent(EvKind.loot, text: tr('Nhặt được 1 Mảnh Hoàng Kim'), color: goldItemColor));
     }
     // Cửu U Ma Vực: Thần Thiết from any kill now and then, the boss's always.
     if (dungeon == null && map.rebirths > 0) {
       final iron = m.def.boss ? bossIronOf(map.rebirths) : (rng.nextDouble() < ironChanceOf(map.rebirths) ? 1 : 0);
       if (iron > 0) {
         hero.divineIron += iron;
-        events.add(GameEvent(EvKind.loot, text: 'Nhặt được $iron Thần Thiết', color: 0xFF9FD8FF));
+        events.add(GameEvent(EvKind.loot, text: tr('Nhặt được {iron} Thần Thiết', {'iron': iron}), color: 0xFF9FD8FF));
       }
       if (m.def.boss) {
         hero.unlockCostumes();
@@ -3148,12 +3152,12 @@ class World {
       final iron = m.def.boss ? kunlunBossIron : (rng.nextDouble() < kunlunIronChance ? 1 : 0);
       if (iron > 0) {
         hero.divineIron += iron;
-        events.add(GameEvent(EvKind.loot, text: 'Nhặt được $iron Thần Thiết', color: 0xFF9FD8FF));
+        events.add(GameEvent(EvKind.loot, text: tr('Nhặt được {iron} Thần Thiết', {'iron': iron}), color: 0xFF9FD8FF));
       }
       final ess = m.def.boss ? kunlunBossEssence : (rng.nextDouble() < kunlunEssenceChance ? 1 : 0);
       if (ess > 0) {
         hero.essence += ess;
-        events.add(GameEvent(EvKind.loot, text: 'Nhặt được $ess Tinh Hoa', color: 0xFFE8B8FF));
+        events.add(GameEvent(EvKind.loot, text: tr('Nhặt được {ess} Tinh Hoa', {'ess': ess}), color: 0xFFE8B8FF));
       }
     }
     // A side land's boss counts toward its mount.
@@ -3168,7 +3172,7 @@ class World {
     }
     if (m.big && hero.manualOpen && dungeon?.isTower != true &&
         rng.nextDouble() < (m.def.boss ? bossPageChance : elitePageChance)) {
-      events.add(GameEvent(EvKind.loot, text: 'Nhặt được ${hero.gainManualPage(rng)}', color: 0xFFC88CFF));
+      events.add(GameEvent(EvKind.loot, text: tr('Nhặt được {p0}', {'p0': hero.gainManualPage(rng)}), color: 0xFFC88CFF));
     }
     // Ma khí Bạo liệt: the body bursts a moment later.
     if (_has(NmAffix.volatile) && m != boss) {
@@ -3186,7 +3190,7 @@ class World {
     }
     if (mode == WorldMode.field) {
       if (hero.rollTreasureMap(vnDayKey(), m.big, rng)) {
-        events.add(GameEvent(EvKind.loot, text: 'Nhặt được Tàng Bảo Đồ (${hero.tbdMaps})', color: 0xFFFFD34A));
+        events.add(GameEvent(EvKind.loot, text: tr('Nhặt được Tàng Bảo Đồ ({tbdMaps})', {'tbdMaps': hero.tbdMaps}), color: 0xFFFFD34A));
       }
       if (!isFestMap(map) && m.eliteKey != kyMaDauKey && m.eliteKey != kyCaoThuKey) {
         final k = hero.rollKy(vnDayKey(), m.big, rng, force: debugKy);
@@ -3254,7 +3258,7 @@ class World {
     final p = player;
     if (!p.alive || p.dashT > 0) return;
     if (rng.nextDouble() < st.dodge) {
-      _text(p.x, p.y - 60, 'Né', 0xFFB8E0FF);
+      _text(p.x, p.y - 60, tr('Né'), 0xFFB8E0FF);
       return;
     }
     var dmg = raw * hanhFactor(from, hero.hanh);
@@ -3283,7 +3287,7 @@ class World {
         _endArena(false);
       } else if (mode == WorldMode.dungeon && dungeonRevived) {
         finished = true;
-        events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));
+        events.add(GameEvent(EvKind.failed, text: tr('Trọng thương!')));
       } else {
         // The screen offers a revive (an ad in dungeons) or a way out.
         hero.deaths++;
@@ -3316,14 +3320,14 @@ class World {
       }
     }
     fx.add(Fx('buddha', p.x, p.y, life: 0.8, radius: 260));
-    _text(p.x, p.y - 70, 'Hồi sinh!', 0xFFFFD34A, big: true);
+    _text(p.x, p.y - 70, tr('Hồi sinh!'), 0xFFFFD34A, big: true);
   }
 
   /// Leaving a dungeon after falling: the run counts as failed.
   void giveUp() {
     if (finished) return;
     finished = true;
-    events.add(GameEvent(EvKind.failed, text: 'Trọng thương!'));
+    events.add(GameEvent(EvKind.failed, text: tr('Trọng thương!')));
   }
 
   /// Field death: back on your feet at the map entrance, EXP docked.
@@ -3781,22 +3785,22 @@ class World {
     d.taken = true;
     if (d.gold > 0) {
       hero.gold += d.gold;
-      _text(player.x, player.y - 80, '+${d.gold} lượng', 0xFFFFD34A);
+      _text(player.x, player.y - 80, tr('+{gold} lượng', {'gold': d.gold}), 0xFFFFD34A);
       _sfx('coin');
     }
     if (d.potion == 1) {
       hero.hpPots++;
-      _text(player.x, player.y - 80, '+1 Kim Sang Dược', 0xFFFF8A8A);
+      _text(player.x, player.y - 80, tr('+1 Kim Sang Dược'), 0xFFFF8A8A);
     }
     if (d.potion == 2) {
       hero.mpPots++;
-      _text(player.x, player.y - 80, '+1 Ngưng Thần Đan', 0xFF8AB8FF);
+      _text(player.x, player.y - 80, tr('+1 Ngưng Thần Đan'), 0xFF8AB8FF);
     }
     final gem = d.gem;
     if (gem != null) {
       hero.addGem(gem);
       events.add(GameEvent(EvKind.loot,
-          text: 'Nhặt được ${gem.name}', color: gem.hanh.color));
+          text: tr('Nhặt được {gemName}', {'gemName': tr(gem.name)}), color: gem.hanh.color));
       _sfx('loot');
     }
     final it = d.item;
@@ -3808,22 +3812,22 @@ class World {
         _bagFullTold = true;
         events.add(GameEvent(EvKind.bagFull,
             text: hero.lastEssence == 0
-                ? 'Túi đồ đầy! Đồ nhặt thêm sẽ tự bán. Bấm ba lô để dọn túi.'
-                : 'Túi đồ đầy! Đồ nhặt thêm sẽ tự phân giải (đổi ở Hành trang → Túi đầy). Bấm ba lô để dọn túi.',
+                ? tr('Túi đồ đầy! Đồ nhặt thêm sẽ tự bán. Bấm ba lô để dọn túi.')
+                : tr('Túi đồ đầy! Đồ nhặt thêm sẽ tự phân giải (đổi ở Hành trang → Túi đầy). Bấm ba lô để dọn túi.'),
             color: 0xFFFF8A7A));
       }
       events.add(GameEvent(EvKind.loot,
           text: kept
-              ? 'Nhặt được ${it.name} [${it.rarityLabel}]'
+              ? tr('Nhặt được {itName} [{rarityLabel}]', {'itName': tr(it.name), 'rarityLabel': it.rarityLabel})
               : hero.lastEssence > 0
-                  ? 'Đã phân giải ${it.name} (+${hero.lastEssence} Tinh Hoa)'
-                  : 'Đã bán ${it.name} (+${it.sellPrice} lượng)',
+                  ? tr('Đã phân giải {itName} (+{lastEssence} Tinh Hoa)', {'itName': tr(it.name), 'lastEssence': hero.lastEssence})
+                  : tr('Đã bán {itName} (+{sellPrice} lượng)', {'itName': tr(it.name), 'sellPrice': it.sellPrice}),
           color: it.color));
       _sfx('loot');
       if (kept && hero.autoCfg.gear && hero.autoEquip() > 0) {
         hero.recompute();
         player.maxHp = st.maxHp;
-        events.add(GameEvent(EvKind.loot, text: 'Đã mặc ${it.name}', color: it.color));
+        events.add(GameEvent(EvKind.loot, text: tr('Đã mặc {itName}', {'itName': tr(it.name)}), color: it.color));
       }
     }
   }

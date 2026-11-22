@@ -2,6 +2,7 @@ import 'arena.dart';
 import 'gold_boss.dart';
 import 'hanh.dart';
 import 'luan_hoi.dart';
+import 'i18n.dart';
 
 /// Body plans the renderer knows how to draw.
 enum Body { quad, human, serpent, bug, flyer, brute }
@@ -762,13 +763,13 @@ class QuestDef {
 
   String get goal => switch (type) {
         QuestType.kill =>
-          'Hạ $count ${mobById[target]!.name} (${_mapOfMob(target)})',
+          tr('Hạ {count} {p0} ({p1})', {'count': count, 'p0': tr(mobById[target]!.name), 'p1': tr(_mapOfMob(target))}),
         QuestType.boss =>
-          'Đánh bại ${mobById[target]!.name} (${_mapOfMob(target)})',
-        QuestType.dungeon => 'Vượt ải ${dungeonById[target]!.name}',
-        QuestType.level => 'Đạt cấp $count',
+          tr('Đánh bại {p0} ({p1})', {'p0': tr(mobById[target]!.name), 'p1': tr(_mapOfMob(target))}),
+        QuestType.dungeon => tr('Vượt ải {p0}', {'p0': tr(dungeonById[target]!.name)}),
+        QuestType.level => tr('Đạt cấp {count}', {'count': count}),
         QuestType.elite =>
-          'Hạ tinh anh ${eliteById[target]!.name} (${mapById[eliteById[target]!.map]!.name})',
+          tr('Hạ tinh anh {p0} ({p1})', {'p0': tr(eliteById[target]!.name), 'p1': tr(mapById[eliteById[target]!.map]!.name)}),
       };
 }
 

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'hero.dart';
 import 'sects.dart' show Bonus;
+import 'i18n.dart';
 
 /// Kết duyên (1.20.0): two heroes of different accounts, Hảo hữu of each
 /// other and level [bondMinLevel] (or reborn), become phu thê.
@@ -101,11 +102,11 @@ extension Bond on HeroData {
     final before = bondRingAt(kdLove);
     kdLove += bondLovePer;
     final after = bondRingAt(kdLove);
-    final lines = <String>['+$bondLovePer Tình ý (${loveWayNames[w]})'];
+    final lines = <String>[tr('+{bondLovePer} Tình ý ({p0})', {'bondLovePer': bondLovePer, 'p0': tr(loveWayNames[w] ?? '')})];
     if (after > before) {
-      lines.add('Nhẫn Đồng Tâm lên cấp $after');
+      lines.add(tr('Nhẫn Đồng Tâm lên cấp {after}', {'after': after}));
       bondTitles.forEach((need, t) {
-        if (after >= need && seasonTitles.add(t)) lines.add('Danh hiệu « $t »');
+        if (after >= need && seasonTitles.add(t)) lines.add(tr('Danh hiệu « {t} »', {'t': t}));
       });
       recompute();
     }

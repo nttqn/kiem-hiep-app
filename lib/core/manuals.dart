@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'hanh.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Bí kíp võ công: pages found on bosses, in Ải Ác Mộng, in the sky of a
 /// lucky catch, or traded for cống hiến at the sect. Pages of one skill's
@@ -113,9 +114,9 @@ String manualEffect(SkillDef s, ManualKind k, int lv, Hanh hanh) {
   final n = math.max(1, lv);
   String pc(double v) => '${(v * 100).round()}%';
   return switch (k) {
-    ManualKind.power => '+${pc((_support(s) ? 0.08 : 0.06) * n)} uy lực',
-    ManualKind.swift => '−${pc(0.05 * n)} hồi chiêu và nội lực',
-    ManualKind.endure => '+${pc(0.12 * n)} thời gian hiệu lực',
+    ManualKind.power => tr('+{p0} uy lực', {'p0': pc((_support(s) ? 0.08 : 0.06) * n)}),
+    ManualKind.swift => tr('−{p0} hồi chiêu và nội lực', {'p0': pc(0.05 * n)}),
+    ManualKind.endure => tr('+{p0} thời gian hiệu lực', {'p0': pc(0.12 * n)}),
     ManualKind.wide => () {
         final more = (n >= 3 ? 1 : 0) + (n >= 5 ? 1 : 0);
         final extra = switch (s.kind) {
@@ -123,16 +124,16 @@ String manualEffect(SkillDef s, ManualKind k, int lv, Hanh hanh) {
           SkillKind.radial => 2 * more,
           _ => 0,
         };
-        return '+${pc(0.07 * n)} tầm và vùng${extra > 0 ? ', +$extra đạn' : ''}';
+        return tr('+{p0} tầm và vùng{p1}', {'p0': pc(0.07 * n), 'p1': extra > 0 ? tr(', +{extra} đạn', {'extra': extra}) : ''});
       }(),
     ManualKind.phase => s.status != Status.none
-        ? '+${pc(0.12 * n)} hiệu ứng sẵn có'
+        ? tr('+{p0} hiệu ứng sẵn có', {'p0': pc(0.12 * n)})
         : switch (hanh) {
-            Hanh.kim => 'Choáng ${(0.4 + 0.1 * n).toStringAsFixed(1)} giây',
-            Hanh.moc => 'Trúng độc 4 giây',
-            Hanh.thuy => 'Làm chậm ${pc(0.25 + 0.05 * n)}',
-            Hanh.hoa => 'Thiêu đốt 3 giây',
-            Hanh.tho => 'Choáng ${(0.5 + 0.1 * n).toStringAsFixed(1)} giây, đẩy lùi',
+            Hanh.kim => tr('Choáng {p0} giây', {'p0': (0.4 + 0.1 * n).toStringAsFixed(1)}),
+            Hanh.moc => tr('Trúng độc 4 giây'),
+            Hanh.thuy => tr('Làm chậm {p0}', {'p0': pc(0.25 + 0.05 * n)}),
+            Hanh.hoa => tr('Thiêu đốt 3 giây'),
+            Hanh.tho => tr('Choáng {p0} giây, đẩy lùi', {'p0': (0.5 + 0.1 * n).toStringAsFixed(1)}),
           },
   };
 }
@@ -150,8 +151,8 @@ String manualPageName(SectDef sect, String key) {
   final parts = key.split(':');
   final s = sect.skills.where((s) => s.id == parts[0]).firstOrNull;
   final k = int.tryParse(parts.length > 1 ? parts[1] : '');
-  if (s == null || k == null || k < 0 || k >= ManualKind.values.length) return 'Bí kíp';
-  return 'Bí kíp ${s.name} · ${manualKinds[ManualKind.values[k]]!.name}';
+  if (s == null || k == null || k < 0 || k >= ManualKind.values.length) return tr('Bí kíp');
+  return tr('Bí kíp {sName} · {p0}', {'sName': tr(s.name), 'p0': tr(manualKinds[ManualKind.values[k]]!.name)});
 }
 
 // Where pages come from.

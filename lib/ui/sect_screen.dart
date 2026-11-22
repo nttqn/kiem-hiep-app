@@ -14,6 +14,7 @@ import 'lists.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Sư môn: the hero's chức vị and khảo hạch, the day's chain of duties, and
 /// Tàng Kinh Các where cống hiến is spent.
@@ -37,7 +38,7 @@ class _SectScreenState extends State<SectScreen> {
   Widget build(BuildContext context) {
     h.sectRollDay(vnDayKey(), _rng);
     return SubScreen(
-      title: 'Sư môn · ${h.sect.name}',
+      title: tr('Sư môn · {sectName}', {'sectName': tr(h.sect.name)}),
       // Side panels narrow on a small phone so the duty keeps its room.
       child: LayoutBuilder(builder: (_, box) {
         final side = (box.maxWidth * 0.31).clamp(180.0, 250.0);
@@ -70,16 +71,16 @@ class _SectScreenState extends State<SectScreen> {
           Expanded(
             child: ListView(
               children: [
-          Text('Chức vị', style: small),
-          Text(sectRanks[h.sectRank].name, style: titleStyle(20)),
+          Text(tr('Chức vị'), style: small),
+          Text(tr(sectRanks[h.sectRank].name), style: titleStyle(20)),
           const SizedBox(height: 4),
           if (bonus.isEmpty)
-            Text('Chưa có thưởng chức vị', style: small.copyWith(fontSize: 11))
+            Text(tr('Chưa có thưởng chức vị'), style: small.copyWith(fontSize: 11))
           else
             Text(bonus.entries.map((e) => '${bonusLabel(e.key)} +${(e.value * 100).toStringAsFixed(1)}%').join(' · '),
                 style: small.copyWith(fontSize: 11, color: const Color(0xFF8CE07A))),
           const SizedBox(height: 8),
-          Text('Cống hiến tích lũy: ${fmt(h.sectContrib)}', style: bold.copyWith(fontSize: 13)),
+          Text(tr('Cống hiến tích lũy: {p0}', {'p0': fmt(h.sectContrib)}), style: bold.copyWith(fontSize: 13)),
           if (next != null) ...[
             const SizedBox(height: 4),
             Bar(
@@ -88,14 +89,14 @@ class _SectScreenState extends State<SectScreen> {
               height: 8,
             ),
             const SizedBox(height: 4),
-            Text('Lên ${next.name}: ${fmt(next.need)} cống hiến · cấp ${next.level}',
+            Text(tr('Lên {nextName}: {p0} cống hiến · cấp {level}', {'nextName': tr(next.name), 'p0': fmt(next.need), 'level': next.level}),
                 style: small.copyWith(fontSize: 11)),
             const SizedBox(height: 6),
-            Text('Khảo hạch: tỉ thí với ${sectExaminer(h.hanh, h.sectRank + 1)}',
+            Text(tr('Khảo hạch: tỉ thí với {p0}', {'p0': sectExaminer(h.hanh, h.sectRank + 1)}),
                 style: small.copyWith(fontSize: 11, color: cream)),
           ] else ...[
             const SizedBox(height: 8),
-            Text('Đã là Chưởng môn của ${h.sect.name}.', style: bold.copyWith(color: goldLight)),
+            Text(tr('Đã là Chưởng môn của {sectName}.', {'sectName': tr(h.sect.name)}), style: bold.copyWith(color: goldLight)),
           ],
               ],
             ),
@@ -103,7 +104,7 @@ class _SectScreenState extends State<SectScreen> {
           if (next != null) ...[
             const SizedBox(height: 4),
             LButton(
-              label: 'Khảo hạch',
+              label: tr('Khảo hạch'),
               icon: Icons.sports_kabaddi,
               color: seal,
               enabled: h.sectCanTrial,
@@ -134,20 +135,20 @@ class _SectScreenState extends State<SectScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('Nhiệm vụ sư môn',
+                child: Text(tr('Nhiệm vụ sư môn'),
                     style: titleStyle(18), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               const SizedBox(width: 6),
-              Text('Hôm nay ${h.sectDone}/$sectDutiesPerDay', style: bold.copyWith(fontSize: 13)),
+              Text(tr('Hôm nay {sectDone}/{sectDutiesPerDay}', {'sectDone': h.sectDone, 'sectDutiesPerDay': sectDutiesPerDay}), style: bold.copyWith(fontSize: 13)),
             ],
           ),
           if (d == null) ...[
             const SizedBox(height: 4),
-            Text('Mỗi ngày $sectDutiesPerDay việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.',
+            Text(tr('Mỗi ngày {sectDutiesPerDay} việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.', {'sectDutiesPerDay': sectDutiesPerDay}),
                 style: small.copyWith(fontSize: 11)),
             Expanded(
               child: Center(
-                child: Text('Hôm nay đã xong hết việc. Mai quay lại nhé!',
+                child: Text(tr('Hôm nay đã xong hết việc. Mai quay lại nhé!'),
                     style: body.copyWith(color: creamDim), textAlign: TextAlign.center),
               ),
             ),
@@ -158,7 +159,7 @@ class _SectScreenState extends State<SectScreen> {
               child: ListView(
                 children: [
             const SizedBox(height: 4),
-            Text('Mỗi ngày $sectDutiesPerDay việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.',
+            Text(tr('Mỗi ngày {sectDutiesPerDay} việc nối nhau; việc thứ 5 và 10 là truy bắt phản đồ, thưởng gấp đôi.', {'sectDutiesPerDay': sectDutiesPerDay}),
                 style: small.copyWith(fontSize: 11)),
             const SizedBox(height: 8),
             Panel(
@@ -172,12 +173,12 @@ class _SectScreenState extends State<SectScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(d.goal, style: bold.copyWith(color: goldLight)),
+                        Text(tr(d.goal), style: bold.copyWith(color: goldLight)),
                         Text(
-                          d.kind == DutyKind.dungeon ? 'Ải hoặc tầng tháp bất kỳ' : 'Tại ${d.mapName}',
+                          d.kind == DutyKind.dungeon ? tr('Ải hoặc tầng tháp bất kỳ') : tr('Tại {mapName}', {'mapName': d.mapName}),
                           style: small,
                         ),
-                        if (d.count > 1) Text('Tiến độ ${d.progress}/${d.count}', style: small.copyWith(color: cream)),
+                        if (d.count > 1) Text(tr('Tiến độ {progress}/{count}', {'progress': d.progress, 'count': d.count}), style: small.copyWith(color: cream)),
                       ],
                     ),
                   ),
@@ -186,8 +187,8 @@ class _SectScreenState extends State<SectScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Thưởng: +${dutyContribution(h.sectDone)} cống hiến, '
-              '${fmt(dutyGold(h.level) * (dutyContribution(h.sectDone) > 25 ? 2 : 1))} lượng và kinh nghiệm',
+              tr('Thưởng: +{p0} cống hiến, '
+              '{p1} lượng và kinh nghiệm', {'p0': dutyContribution(h.sectDone), 'p1': fmt(dutyGold(h.level) * (dutyContribution(h.sectDone) > 25 ? 2 : 1))}),
               style: small.copyWith(color: cream),
             ),
                 ],
@@ -199,7 +200,7 @@ class _SectScreenState extends State<SectScreen> {
                 if (d.done)
                   Expanded(
                     child: LButton(
-                      label: 'Phục mệnh',
+                      label: tr('Phục mệnh'),
                       color: jade,
                       onTap: () {
                         final lines = h.sectClaim(_rng);
@@ -211,7 +212,7 @@ class _SectScreenState extends State<SectScreen> {
                     ),
                   )
                 else ...[
-                  Expanded(child: LButton(label: 'Đi ngay', small: true, color: jade, onTap: () => _go(d))),
+                  Expanded(child: LButton(label: tr('Đi ngay'), small: true, color: jade, onTap: () => _go(d))),
                   const SizedBox(width: 6),
                   // Short label: on small phones "Đi ngay" needs the room.
                   LButton(
@@ -256,8 +257,8 @@ class _SectScreenState extends State<SectScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Tàng Kinh Các', style: titleStyle(18)),
-          Text('Cống hiến: ${fmt(h.sectCoins)}', style: bold.copyWith(color: goldLight)),
+          Text(tr('Tàng Kinh Các'), style: titleStyle(18)),
+          Text(tr('Cống hiến: {p0}', {'p0': fmt(h.sectCoins)}), style: bold.copyWith(color: goldLight)),
           const SizedBox(height: 6),
           Expanded(
             child: ListView(
@@ -274,7 +275,7 @@ class _SectScreenState extends State<SectScreen> {
   Widget _offer(SectOffer o) {
     final locked = h.sectRank < o.rank;
     final name = switch (o.kind) {
-      SectWare.gem => 'Ngọc ngũ hành bậc ${sectGemTier(h.sectRank)}',
+      SectWare.gem => tr('Ngọc ngũ hành bậc {p0}', {'p0': sectGemTier(h.sectRank)}),
       _ => o.name,
     };
     final pageLocked = o.kind == SectWare.page && !h.manualOpen;
@@ -291,15 +292,15 @@ class _SectScreenState extends State<SectScreen> {
                   Text(name, style: bold.copyWith(fontSize: 12.5), maxLines: 2),
                   Text(
                     locked
-                        ? 'Cần chức ${sectRanks[o.rank].name}'
-                        : (pageLocked ? 'Bí kíp mở ở cấp $manualOpenLevel' : '${o.price} cống hiến'),
+                        ? tr('Cần chức {p0}', {'p0': tr(sectRanks[o.rank].name)})
+                        : (pageLocked ? tr('Bí kíp mở ở cấp {manualOpenLevel}', {'manualOpenLevel': manualOpenLevel}) : tr('{price} cống hiến', {'price': o.price})),
                     style: small.copyWith(fontSize: 11, color: locked || pageLocked ? const Color(0xFFFF8A7A) : creamDim),
                   ),
                 ],
               ),
             ),
             LButton(
-              label: 'Đổi',
+              label: tr('Đổi'),
               small: true,
               color: jade,
               enabled: !locked && !pageLocked && h.sectCoins >= o.price,
@@ -326,7 +327,7 @@ Future<String?> pickManualPage(BuildContext context, HeroData h) {
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Chọn trang bí kíp', style: titleStyle(18)),
+      title: Text(tr('Chọn trang bí kíp'), style: titleStyle(18)),
       content: SizedBox(
         width: 560,
         height: 260,
@@ -337,12 +338,12 @@ Future<String?> pickManualPage(BuildContext context, HeroData h) {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
                   children: [
-                    SizedBox(width: 130, child: Text(sect.skills[i].name, style: bold.copyWith(fontSize: 12.5))),
+                    SizedBox(width: 130, child: Text(tr(sect.skills[i].name), style: bold.copyWith(fontSize: 12.5))),
                     for (final k in manualKindsFor(sect.skills[i]))
                       Padding(
                         padding: const EdgeInsets.only(right: 4),
                         child: LButton(
-                          label: '${manualKinds[k]!.name} ${h.manualPagesOf(manualKey(sect.skills[i].id, k))}',
+                          label: '${tr(manualKinds[k]!.name)} ${h.manualPagesOf(manualKey(sect.skills[i].id, k))}',
                           small: true,
                           color: const Color(0xFF5A3A7A),
                           onTap: () => Navigator.pop(ctx, manualKey(sect.skills[i].id, k)),
@@ -354,7 +355,7 @@ Future<String?> pickManualPage(BuildContext context, HeroData h) {
           ],
         ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Hủy')))],
     ),
   );
 }

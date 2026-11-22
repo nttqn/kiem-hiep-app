@@ -10,6 +10,7 @@ import '../core/world_boss.dart' show vnDayKey;
 import '../services/guild.dart';
 import '../services/leaderboard.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// A hero that may be called in, and why they are on the list.
 class HelperPick {
@@ -81,7 +82,7 @@ class _HelperDialogState extends State<_HelperDialog> {
     final signed = GuildService.instance.myRow != null;
     return AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Mời trợ chiến', style: titleStyle(20)),
+      title: Text(tr('Mời trợ chiến'), style: titleStyle(20)),
       // Fits a short landscape phone (760x344): the list scrolls.
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       titlePadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -92,10 +93,10 @@ class _HelperDialogState extends State<_HelperDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Còn $left/${h.helpCap} lượt hôm nay · người được mời nhận Hiệp nghĩa',
+            Text(tr('Còn {left}/{helpCap} lượt hôm nay · người được mời nhận Hiệp nghĩa', {'left': left, 'helpCap': h.helpCap}),
                 style: small.copyWith(fontSize: 11.5), maxLines: 1, overflow: TextOverflow.ellipsis),
             if (!signed)
-              Text('Đăng nhập để mời Hảo hữu, đồng môn bang',
+              Text(tr('Đăng nhập để mời Hảo hữu, đồng môn bang'),
                   style: small.copyWith(fontSize: 11.5, color: goldLight), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),
             Expanded(
@@ -108,7 +109,7 @@ class _HelperDialogState extends State<_HelperDialog> {
                   final list = snap.data ?? const <HelperPick>[];
                   if (list.isEmpty) {
                     return Center(
-                      child: Text('Chưa tìm được ai. Kiểm tra mạng rồi thử lại.',
+                      child: Text(tr('Chưa tìm được ai. Kiểm tra mạng rồi thử lại.'),
                           style: body, textAlign: TextAlign.center),
                     );
                   }
@@ -123,7 +124,7 @@ class _HelperDialogState extends State<_HelperDialog> {
           ],
         ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đánh một mình'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đánh một mình')))],
     );
   }
 
@@ -147,18 +148,18 @@ class _HelperDialogState extends State<_HelperDialog> {
               children: [
                 Text(e.name, style: bold.copyWith(fontSize: 13), overflow: TextOverflow.ellipsis),
                 Text(
-                    '${helperSourceNames[p.source]} · ${sectOf(hanh).name} · Cấp ${e.level}'
-                    '${e.rebirths > 0 ? ' · CS${e.rebirths}' : ''} · Lực chiến ${fmt(e.power)}',
+                    tr('{p0} · {p1} · Cấp {level}'
+                    '{p2} · Lực chiến {p3}', {'p0': tr(helperSourceNames[p.source] ?? ''), 'p1': tr(sectOf(hanh).name), 'level': e.level, 'p2': e.rebirths > 0 ? tr(' · CS{rebirths}', {'rebirths': e.rebirths}) : '', 'p3': fmt(e.power)}),
                     style: small.copyWith(fontSize: 11),
                     overflow: TextOverflow.ellipsis),
-                Text('Sức trợ chiến ×${mul.toStringAsFixed(1)}',
+                Text(tr('Sức trợ chiến ×{p0}', {'p0': mul.toStringAsFixed(1)}),
                     style: small.copyWith(fontSize: 11, color: goldLight)),
               ],
             ),
           ),
           const SizedBox(width: 6),
           LButton(
-            label: used ? 'Đã mời' : 'Mời',
+            label: used ? tr('Đã mời') : tr('Mời'),
             small: true,
             color: jade,
             enabled: !used && anyLeft,

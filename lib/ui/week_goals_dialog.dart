@@ -8,6 +8,7 @@ import '../core/world_boss.dart';
 import '../services/analytics.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Mục tiêu 7 ngày: a tab per day, its three goals, and the chest for all.
 Future<void> showWeekGoalsDialog(BuildContext context) {
@@ -54,15 +55,15 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
       backgroundColor: lacquer,
       scrollable: true,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-      title: Text('Mục tiêu 7 ngày', style: titleStyle(20)),
+      title: Text(tr('Mục tiêu 7 ngày'), style: titleStyle(20)),
       content: SizedBox(
         width: 640,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Mỗi ngày mở thêm 3 mục tiêu, làm lúc nào cũng được. Xong cả 21 mục nhận Rương 7 ngày '
-                'và ngoại trang ${costumeById[weekChestCostume]!.name}, không có ở đâu khác.',
+            Text(tr('Mỗi ngày mở thêm 3 mục tiêu, làm lúc nào cũng được. Xong cả 21 mục nhận Rương 7 ngày '
+                'và ngoại trang {p0}, không có ở đâu khác.', {'p0': tr(costumeById[weekChestCostume]!.name)}),
                 style: small.copyWith(fontSize: 11.5)),
             const SizedBox(height: 8),
             Row(
@@ -79,7 +80,7 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Text(
-                  _tab == open + 1 ? 'Mở sau ${_untilTomorrow()} (0 giờ ngày mai).' : 'Mở vào ngày $_tab của bạn.',
+                  _tab == open + 1 ? tr('Mở sau {p0} (0 giờ ngày mai).', {'p0': _untilTomorrow()}) : tr('Mở vào ngày {_tab} của bạn.', {'_tab': _tab}),
                   style: bold.copyWith(color: goldLight),
                   textAlign: TextAlign.center,
                 ),
@@ -95,13 +96,13 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Rương 7 ngày ($done/${weekGoals.length}): ${fmt(weekChestGold)} lượng, '
-                    '$weekChestGems ngọc bậc $weekChestGemTier, $weekChestPills Tẩy Tủy Đan, $weekChestIron Thần Thiết',
+                    tr('Rương 7 ngày ({done}/{weekGoalsLength}): {p0} lượng, '
+                    '{weekChestGems} ngọc bậc {weekChestGemTier}, {weekChestPills} Tẩy Tủy Đan, {weekChestIron} Thần Thiết', {'done': done, 'weekGoalsLength': weekGoals.length, 'p0': fmt(weekChestGold), 'weekChestGems': weekChestGems, 'weekChestGemTier': weekChestGemTier, 'weekChestPills': weekChestPills, 'weekChestIron': weekChestIron}),
                     style: small.copyWith(fontSize: 11.5, color: cream),
                   ),
                 ),
                 LButton(
-                  label: h.weekChest ? 'Đã nhận' : 'Mở rương',
+                  label: h.weekChest ? tr('Đã nhận') : tr('Mở rương'),
                   small: true,
                   color: jade,
                   enabled: h.canClaimWeekChest(_today),
@@ -115,12 +116,12 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
             ),
             if (_got != null) ...[
               const SizedBox(height: 8),
-              Text('Đã nhận: ${_got!.join(', ')}', style: body.copyWith(fontSize: 12.5, color: const Color(0xFF8CE07A))),
+              Text(tr('Đã nhận: {p0}', {'p0': _got!.join(', ')}), style: body.copyWith(fontSize: 12.5, color: const Color(0xFF8CE07A))),
             ],
           ],
         ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng')))],
     );
   }
 
@@ -128,7 +129,7 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
   String _untilTomorrow() {
     final now = vnNow();
     final left = DateTime.utc(now.year, now.month, now.day + 1).difference(DateTime.utc(now.year, now.month, now.day, now.hour, now.minute));
-    return '${left.inHours} giờ ${left.inMinutes % 60} phút';
+    return tr('{inHours} giờ {p0} phút', {'inHours': left.inHours, 'p0': left.inMinutes % 60});
   }
 
   Widget _dayTab(int d, int open) {
@@ -156,7 +157,7 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
                 if (d > open) Icon(Icons.lock, size: 12, color: c),
                 if (allDone) Icon(Icons.check_circle, size: 13, color: c),
                 const SizedBox(width: 2),
-                Text('Ngày $d', style: bold.copyWith(fontSize: 12, color: c)),
+                Text(tr('Ngày {d}', {'d': d}), style: bold.copyWith(fontSize: 12, color: c)),
               ],
             ),
             if (ready)
@@ -176,9 +177,9 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
     final taken = h.weekClaimed.contains(g.id);
     final p = math.min(g.progress(h), g.goal);
     final reward = [
-      '${fmt(g.gold)} lượng',
-      if (g.pots > 0) '${g.pots} bình máu + nội lực',
-      if (g.gems > 0) '${g.gems} ngọc bậc ${g.gemTier}',
+      tr('{p0} lượng', {'p0': fmt(g.gold)}),
+      if (g.pots > 0) tr('{pots} bình máu + nội lực', {'pots': g.pots}),
+      if (g.gems > 0) tr('{gems} ngọc bậc {gemTier}', {'gems': g.gems, 'gemTier': g.gemTier}),
     ].join(' · ');
     return Container(
       margin: const EdgeInsets.only(bottom: 5),
@@ -194,7 +195,7 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(g.name, style: bold.copyWith(fontSize: 13, color: goldLight)),
+                Text(tr(g.name), style: bold.copyWith(fontSize: 13, color: goldLight)),
                 Text(reward, style: small.copyWith(fontSize: 11, color: cream)),
                 const SizedBox(height: 3),
                 Bar(value: p / g.goal, color: jade, height: 9, label: '${fmt(p)}/${fmt(g.goal)}'),
@@ -206,7 +207,7 @@ class _WeekGoalsDialogState extends State<_WeekGoalsDialog> {
             const Icon(Icons.check_circle, color: Color(0xFF8CE07A))
           else
             LButton(
-              label: 'Nhận',
+              label: tr('Nhận'),
               small: true,
               color: jade,
               enabled: h.canClaimWeekGoal(g, _today),

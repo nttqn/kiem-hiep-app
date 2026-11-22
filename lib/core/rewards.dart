@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'content.dart';
 import 'hero.dart';
 import 'items.dart';
+import 'i18n.dart';
 
 // ------------------------------------------------------------- offline
 
@@ -47,12 +48,12 @@ class LoginGift {
 List<LoginGift> loginGifts(int level) {
   int g(double k) => ((200 + level * 40) * k).round();
   return [
-    LoginGift(GiftKind.gold, 'Lượng', amount: g(1)),
+    LoginGift(GiftKind.gold, tr('Lượng'), amount: g(1)),
     const LoginGift(GiftKind.hpPots, 'Kim Sang Dược', amount: 20),
-    LoginGift(GiftKind.gold, 'Lượng', amount: g(1.5)),
+    LoginGift(GiftKind.gold, tr('Lượng'), amount: g(1.5)),
     const LoginGift(GiftKind.mpPots, 'Ngưng Thần Đan', amount: 20),
     const LoginGift(GiftKind.item, 'Trang bị Quý', rarity: Rarity.rare),
-    LoginGift(GiftKind.gold, 'Lượng', amount: g(3)),
+    LoginGift(GiftKind.gold, tr('Lượng'), amount: g(3)),
     const LoginGift(GiftKind.item, 'Trang bị Hiếm', rarity: Rarity.epic),
   ];
 }
@@ -66,13 +67,13 @@ String? claimLoginGift(HeroData h, String today, math.Random rng) {
   switch (gift.kind) {
     case GiftKind.gold:
       h.gold += gift.amount;
-      line = '+${gift.amount} lượng';
+      line = tr('+{amount} lượng', {'amount': gift.amount});
     case GiftKind.hpPots:
       h.hpPots += gift.amount;
-      line = '+${gift.amount} Kim Sang Dược';
+      line = tr('+{amount} Kim Sang Dược', {'amount': gift.amount});
     case GiftKind.mpPots:
       h.mpPots += gift.amount;
-      line = '+${gift.amount} Ngưng Thần Đan';
+      line = tr('+{amount} Ngưng Thần Đan', {'amount': gift.amount});
     case GiftKind.item:
       final it = makeItem(
         slot: Slot.values[rng.nextInt(Slot.values.length)],
@@ -82,7 +83,7 @@ String? claimLoginGift(HeroData h, String today, math.Random rng) {
         rng: rng,
       );
       h.addItem(it);
-      line = '${it.name} [${it.rarity.label}]';
+      line = '${tr(it.name)} [${tr(it.rarity.label)}]';
   }
   h.lastLoginDate = today;
   h.loginDay = (h.loginDay + 1) % 7;

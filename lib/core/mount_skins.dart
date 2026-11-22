@@ -1,6 +1,7 @@
 import 'clock.dart';
 import 'hero.dart';
 import 'mounts.dart';
+import 'i18n.dart';
 
 /// Ngoại hình thú cưỡi (1.7.0): new colours and an aura for a mount the
 /// hero owns. Looks only: the mount's stats stay the same.
@@ -30,16 +31,16 @@ class MountSkin {
   final int need;
 
   String get howTo => switch (source) {
-        SkinSource.gold => '${fmtNeed(need)} lượng',
-        SkinSource.arena => '${fmtNeed(need)} Uy danh',
-        SkinSource.iron => '$need Thần Thiết',
-        SkinSource.tower => 'Vượt Tháp tầng $need',
-        SkinSource.fest => 'Đổi ở cửa hàng Lễ hội Đông Chí',
+        SkinSource.gold => tr('{p0} lượng', {'p0': fmtNeed(need)}),
+        SkinSource.arena => tr('{p0} Uy danh', {'p0': fmtNeed(need)}),
+        SkinSource.iron => tr('{need} Thần Thiết', {'need': need}),
+        SkinSource.tower => tr('Vượt Tháp tầng {need}', {'need': need}),
+        SkinSource.fest => tr('Đổi ở cửa hàng Lễ hội Đông Chí'),
       };
 }
 
 String fmtNeed(int n) {
-  if (n >= 1000000 && n % 1000000 == 0) return '${n ~/ 1000000} triệu';
+  if (n >= 1000000 && n % 1000000 == 0) return tr('{p0} triệu', {'p0': n ~/ 1000000});
   if (n >= 1000 && n % 1000 == 0) return '${n ~/ 1000}k';
   return '$n';
 }

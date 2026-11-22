@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'content.dart';
 import 'gems.dart';
+import 'i18n.dart';
 
 /// Tháp Thử Luyện: an endless climb. Each floor is a one-wave arena built on
 /// the fly; every fifth floor ends with that region's boss. Monster level
@@ -29,7 +30,7 @@ DungeonDef towerFloor(int f) {
   final map = maps[((f - 1) ~/ 5) % maps.length];
   return DungeonDef(
     id: towerId,
-    name: 'Tháp Thử Luyện · Tầng $f',
+    name: tr('Tháp Thử Luyện · Tầng {f}', {'f': f}),
     mapId: map.id,
     level: towerLevel(f),
     waves: [math.min(14, 6 + f ~/ 8)],

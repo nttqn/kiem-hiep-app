@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'hanh.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Lưu phái (1.11.0): after the first rebirth each sect splits into two
 /// schools. A school reshapes two or three of the sect's skills and carries
@@ -145,16 +146,16 @@ SkillDef applyBranch(SkillDef s, BranchDef? b) {
 String branchBonusLabel(Bonus b, double v) {
   final pct = '+${(v * 100).toStringAsFixed(1)}%';
   return switch (b) {
-    Bonus.hpPct => 'Sinh lực $pct',
-    Bonus.mpPct => 'Nội lực $pct',
-    Bonus.atkPct => 'Công lực $pct',
-    Bonus.defPct => 'Phòng thủ $pct',
-    Bonus.crit => 'Chí mạng $pct',
-    Bonus.critDmg => 'ST chí mạng $pct',
-    Bonus.skillDmg => 'ST kỹ năng $pct',
-    Bonus.aspd => 'Tốc đánh $pct',
-    Bonus.dotPct => 'ST độc/đốt $pct',
-    Bonus.cdr => 'Giảm hồi chiêu $pct',
-    _ => '${b.name} $pct',
+    Bonus.hpPct => tr('Sinh lực {pct}', {'pct': pct}),
+    Bonus.mpPct => tr('Nội lực {pct}', {'pct': pct}),
+    Bonus.atkPct => tr('Công lực {pct}', {'pct': pct}),
+    Bonus.defPct => tr('Phòng thủ {pct}', {'pct': pct}),
+    Bonus.crit => tr('Chí mạng {pct}', {'pct': pct}),
+    Bonus.critDmg => tr('ST chí mạng {pct}', {'pct': pct}),
+    Bonus.skillDmg => tr('ST kỹ năng {pct}', {'pct': pct}),
+    Bonus.aspd => tr('Tốc đánh {pct}', {'pct': pct}),
+    Bonus.dotPct => tr('ST độc/đốt {pct}', {'pct': pct}),
+    Bonus.cdr => tr('Giảm hồi chiêu {pct}', {'pct': pct}),
+    _ => '${tr(b.name)} $pct',
   };
 }

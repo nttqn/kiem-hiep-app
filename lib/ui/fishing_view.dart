@@ -12,6 +12,7 @@ import '../services/save.dart';
 import '../services/sound.dart';
 import 'fish_book.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 enum _Fs { ready, waiting, bite, reel, caught, escaped }
 
@@ -86,7 +87,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
         }
       case _Fs.bite:
         if (_t > _biteEnd) {
-          _escape('Cá đã nhả mồi. Phải giật nhanh hơn!');
+          _escape(tr('Cá đã nhả mồi. Phải giật nhanh hơn!'));
           return;
         }
       case _Fs.reel:
@@ -125,7 +126,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
   void _strike() {
     switch (_state) {
       case _Fs.waiting:
-        _escape('Giật sớm quá, cá hoảng sợ bỏ đi.');
+        _escape(tr('Giật sớm quá, cá hoảng sợ bỏ đi.'));
       case _Fs.bite:
         SoundService.instance.cue('hit');
         setState(() {
@@ -135,7 +136,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
       case _Fs.reel:
         final w = fishZone[_rar];
         if ((_needle - _zone).abs() > w / 2) {
-          _escape('Trượt nhịp, ${_fish!.name} vùng thoát!');
+          _escape(tr('Trượt nhịp, {_fishName} vùng thoát!', {'_fishName': tr(_fish!.name)}));
           return;
         }
         SoundService.instance.cue('hit');
@@ -192,7 +193,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
               children: [
                 const Icon(Icons.phishing, color: goldLight),
                 const SizedBox(width: 6),
-                Text('Câu cá', style: titleStyle(22)),
+                Text(tr('Câu cá'), style: titleStyle(22)),
                 const SizedBox(width: 10),
                 Visibility(
                   visible: !playing,
@@ -200,14 +201,14 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                   maintainAnimation: true,
                   maintainState: true,
                   child: LButton(
-                    label: 'Ngư phổ',
+                    label: tr('Ngư phổ'),
                     small: true,
                     color: const Color(0xFF2E6A8A),
                     onTap: () => showFishBook(context, h).then((_) => setState(() {})),
                   ),
                 ),
                 const Spacer(),
-                Text('Mồi câu: $bait', style: bold.copyWith(color: bait > 0 ? cream : const Color(0xFFFF8A7A))),
+                Text(tr('Mồi câu: {bait}', {'bait': bait}), style: bold.copyWith(color: bait > 0 ? cream : const Color(0xFFFF8A7A))),
               ],
             ),
             const SizedBox(height: 6),
@@ -237,9 +238,9 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
               children: [
                 Expanded(
                   child: playing
-                      ? LButton(label: 'Giật cần!', color: seal, onTap: _strike)
+                      ? LButton(label: tr('Giật cần!'), color: seal, onTap: _strike)
                       : LButton(
-                          label: _state == _Fs.ready ? 'Thả câu' : 'Câu tiếp',
+                          label: _state == _Fs.ready ? tr('Thả câu') : tr('Câu tiếp'),
                           color: jade,
                           enabled: bait > 0,
                           onTap: _cast,
@@ -252,7 +253,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: LButton(
-                      label: '+$fishAdBait mồi',
+                      label: tr('+{fishAdBait} mồi', {'fishAdBait': fishAdBait}),
                       icon: Icons.ondemand_video,
                       small: true,
                       color: const Color(0xFF7A5A1A),
@@ -260,7 +261,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                       onTap: _adBait,
                     ),
                   ),
-                LButton(label: 'Rời đi', small: true, color: const Color(0xFF5A4A3A), onTap: playing ? null : widget.onClose),
+                LButton(label: tr('Rời đi'), small: true, color: const Color(0xFF5A4A3A), onTap: playing ? null : widget.onClose),
               ],
             ),
           ],
@@ -273,17 +274,17 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
     switch (_state) {
       case _Fs.ready:
         return Text(
-          'Thả câu rồi chờ phao chìm. Khi thấy "!", chạm Giật cần thật nhanh; sau đó chạm mỗi lần kim chạy vào vạch xanh. '
-          'Cá càng quý vạch càng hẹp.',
+          tr('Thả câu rồi chờ phao chìm. Khi thấy "!", chạm Giật cần thật nhanh; sau đó chạm mỗi lần kim chạy vào vạch xanh. '
+          'Cá càng quý vạch càng hẹp.'),
           style: small,
         );
       case _Fs.waiting:
-        return Center(child: Text('Đang chờ cá cắn câu…', style: body.copyWith(color: creamDim)));
+        return Center(child: Text(tr('Đang chờ cá cắn câu…'), style: body.copyWith(color: creamDim)));
       case _Fs.bite:
-        return Center(child: Text('CẮN CÂU! Giật ngay!', style: titleStyle(22, color: const Color(0xFFFF8A5A))));
+        return Center(child: Text(tr('CẮN CÂU! Giật ngay!'), style: titleStyle(22, color: const Color(0xFFFF8A5A))));
       case _Fs.reel:
         return Center(
-          child: Text('Kéo cá: ${_hits + 1}/${fishHits[_rar]} · chạm khi kim vào vạch xanh',
+          child: Text(tr('Kéo cá: {p0}/{p1} · chạm khi kim vào vạch xanh', {'p0': _hits + 1, 'p1': fishHits[_rar]}),
               style: bold.copyWith(color: cream)),
         );
       case _Fs.caught:
@@ -291,8 +292,8 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${f.name} [${fishRarityNames[f.rarity.index]}]', style: bold.copyWith(color: c, fontSize: 16)),
-            Text(f.desc, style: small.copyWith(fontStyle: FontStyle.italic), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text('${f.name} [${tr(fishRarityNames[f.rarity.index])}]', style: bold.copyWith(color: c, fontSize: 16)),
+            Text(tr(f.desc), style: small.copyWith(fontStyle: FontStyle.italic), maxLines: 1, overflow: TextOverflow.ellipsis),
             Text(_lines.join(' · '), style: small.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         );

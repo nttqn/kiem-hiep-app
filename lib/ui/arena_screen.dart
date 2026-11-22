@@ -15,6 +15,7 @@ import 'dai_hoi_screen.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Lôi đài: the hero's standing, three challengers, and the Uy danh shop.
 class ArenaScreen extends StatefulWidget {
@@ -61,7 +62,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Thưởng xếp hạng mùa', style: titleStyle(20)),
+        title: Text(tr('Thưởng xếp hạng mùa'), style: titleStyle(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +72,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
             for (final l in lines.skip(1)) Text('• $l', style: body),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
     if (mounted) setState(() {});
@@ -88,19 +89,19 @@ class _ArenaScreenState extends State<ArenaScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Kết thúc mùa ${r[0]}', style: titleStyle(20)),
+        title: Text(tr('Kết thúc mùa {p0}', {'p0': r[0]}), style: titleStyle(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Hạng cuối mùa: ${tier.name} (${r[2]} điểm)', style: bold.copyWith(color: Color(tier.color))),
+            Text(tr('Hạng cuối mùa: {tierName} ({p0} điểm)', {'tierName': tr(tier.name), 'p0': r[2]}), style: bold.copyWith(color: Color(tier.color))),
             const SizedBox(height: 6),
             for (final l in lines) Text('• $l', style: body),
             const SizedBox(height: 6),
-            Text('Mùa ${arenaSeasonOf(_day)} bắt đầu với ${h.arenaPoints} điểm.', style: small),
+            Text(tr('Mùa {p0} bắt đầu với {arenaPoints} điểm.', {'p0': arenaSeasonOf(_day), 'arenaPoints': h.arenaPoints}), style: small),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
     h.arenaSeasonResult = const [];
@@ -126,8 +127,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Mùa $season · còn ${arenaSeasonDaysLeft(_day)} ngày', style: titleStyle(18)),
-                      Text('Thưởng theo hạng lúc hết mùa (cần đấu ít nhất 1 trận trong mùa):',
+                      Text(tr('Mùa {season} · còn {p0} ngày', {'season': season, 'p0': arenaSeasonDaysLeft(_day)}), style: titleStyle(18)),
+                      Text(tr('Thưởng theo hạng lúc hết mùa (cần đấu ít nhất 1 trận trong mùa):'),
                           style: small.copyWith(fontSize: 11)),
                       const SizedBox(height: 4),
                       Expanded(
@@ -138,13 +139,13 @@ class _ArenaScreenState extends State<ArenaScreen> {
                         ),
                       ),
                       Text(
-                        'Thêm theo thứ hạng trên bảng: hạng 1 « Lôi Đài Bá Chủ » +1500 Uy danh +20 Thần Thiết; '
-                        'top 3 « Lôi Đài Tam Hùng » +1000, +12; top 10 « Lôi Đài Thập Kiệt » +600, +6; top 50 +300, +3.',
+                        tr('Thêm theo thứ hạng trên bảng: hạng 1 « Lôi Đài Bá Chủ » +1500 Uy danh +20 Thần Thiết; '
+                        'top 3 « Lôi Đài Tam Hùng » +1000, +12; top 10 « Lôi Đài Thập Kiệt » +600, +6; top 50 +300, +3.'),
                         style: small.copyWith(fontSize: 10.5, color: goldLight),
                       ),
                       Text(
-                        'Sang mùa mới: điểm = 1000 + một nửa phần vượt 1000. '
-                        'Hết mùa ở Bạch Kim mở ngoại trang Lôi Đài Bá Chủ, ở Võ Lâm Chí Tôn mở Chí Tôn Chiến Bào.',
+                        tr('Sang mùa mới: điểm = 1000 + một nửa phần vượt 1000. '
+                        'Hết mùa ở Bạch Kim mở ngoại trang Lôi Đài Bá Chủ, ở Võ Lâm Chí Tôn mở Chí Tôn Chiến Bào.'),
                         style: small.copyWith(fontSize: 10.5),
                       ),
                     ],
@@ -174,11 +175,11 @@ class _ArenaScreenState extends State<ArenaScreen> {
       ),
       child: Row(
         children: [
-          SizedBox(width: 108, child: Text(t.name, style: bold.copyWith(fontSize: 12, color: Color(t.color)))),
+          SizedBox(width: 108, child: Text(tr(t.name), style: bold.copyWith(fontSize: 12, color: Color(t.color)))),
           Expanded(
             child: Text(
-              '${fmt(r.coins)} Uy danh · ${fmt(r.gold)} lượng'
-              '${r.shards > 0 ? ' · ${r.shards} mảnh HK' : ''}${r.gemTier > 0 ? ' · ngọc ${r.gemTier}' : ''}',
+              tr('{p0} Uy danh · {p1} lượng'
+              '{p2}{p3}', {'p0': fmt(r.coins), 'p1': fmt(r.gold), 'p2': r.shards > 0 ? tr(' · {shards} mảnh HK', {'shards': r.shards}) : '', 'p3': r.gemTier > 0 ? tr(' · ngọc {gemTier}', {'gemTier': r.gemTier}) : ''}),
               style: small.copyWith(fontSize: 10.5, color: cream),
             ),
           ),
@@ -192,18 +193,18 @@ class _ArenaScreenState extends State<ArenaScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Cao thủ mùa này', style: bold.copyWith(color: goldLight)),
+        Text(tr('Cao thủ mùa này'), style: bold.copyWith(color: goldLight)),
         const SizedBox(height: 4),
         Expanded(
           child: !lb.available
-              ? Text('Đăng nhập (nút mây ở Thành) để xem và lên bảng Lôi đài.', style: small)
+              ? Text(tr('Đăng nhập (nút mây ở Thành) để xem và lên bảng Lôi đài.'), style: small)
               : FutureBuilder<LbPage>(
                   future: lb.top(LbBoard.arena, limit: 30),
                   builder: (_, snap) {
-                    if (snap.hasError) return Text('Không tải được bảng.', style: small);
+                    if (snap.hasError) return Text(tr('Không tải được bảng.'), style: small);
                     final rows = snap.data?.rows;
                     if (rows == null) return const Center(child: CircularProgressIndicator(color: goldLight));
-                    if (rows.isEmpty) return Text('Chưa ai lên bảng mùa này.', style: small);
+                    if (rows.isEmpty) return Text(tr('Chưa ai lên bảng mùa này.'), style: small);
                     return ListView(
                       children: [
                         for (var i = 0; i < rows.length; i++)
@@ -262,10 +263,10 @@ class _ArenaScreenState extends State<ArenaScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Lôi đài',
+      title: tr('Lôi đài'),
       actions: [
         LButton(
-          label: 'Võ Lâm Đại Hội',
+          label: tr('Võ Lâm Đại Hội'),
           icon: Icons.emoji_events,
           small: true,
           color: const Color(0xFF8A2A1A),
@@ -303,35 +304,35 @@ class _ArenaScreenState extends State<ArenaScreen> {
           Expanded(
             child: ListView(
               children: [
-          Text(tier.name, style: titleStyle(22, color: Color(tier.color)), textAlign: TextAlign.center),
-          Text('${h.arenaPoints} điểm', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+          Text(tr(tier.name), style: titleStyle(22, color: Color(tier.color)), textAlign: TextAlign.center),
+          Text(tr('{arenaPoints} điểm', {'arenaPoints': h.arenaPoints}), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           if (next != null)
-            Text('Lên ${next.name}: ${next.min} điểm', style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
+            Text(tr('Lên {nextName}: {min} điểm', {'nextName': tr(next.name), 'min': next.min}), style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
           const SizedBox(height: 6),
-          Text('Uy danh: ${fmt(h.arenaCoins)}', style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
-          Text('Thắng: ${h.arenaWins} trận', style: small, textAlign: TextAlign.center),
+          Text(tr('Uy danh: {p0}', {'p0': fmt(h.arenaCoins)}), style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
+          Text(tr('Thắng: {arenaWins} trận', {'arenaWins': h.arenaWins}), style: small, textAlign: TextAlign.center),
           const SizedBox(height: 4),
           LButton(
-            label: 'Mùa ${arenaSeasonOf(_day)} · còn ${arenaSeasonDaysLeft(_day)} ngày',
+            label: tr('Mùa {p0} · còn {p1} ngày', {'p0': arenaSeasonOf(_day), 'p1': arenaSeasonDaysLeft(_day)}),
             icon: Icons.emoji_events,
             small: true,
             color: const Color(0xFF5A3A7A),
             onTap: _seasonInfo,
           ),
           const SizedBox(height: 4),
-          Text('Mỗi trận ${arenaTime.round()} giây, tối đa $arenaPotions bình máu.',
+          Text(tr('Mỗi trận {p0} giây, tối đa {arenaPotions} bình máu.', {'p0': arenaTime.round(), 'arenaPotions': arenaPotions}),
               style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
               ],
             ),
           ),
           const SizedBox(height: 4),
-          Text('Lượt đấu còn: ${h.arenaFightsLeft}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+          Text(tr('Lượt đấu còn: {arenaFightsLeft}', {'arenaFightsLeft': h.arenaFightsLeft}), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           if (h.arenaAds < arenaAdFights) ...[
             const SizedBox(height: 6),
             ValueListenableBuilder<bool>(
               valueListenable: AdsService.instance.rewardedReady,
               builder: (_, ready, _) => LButton(
-                label: 'Quảng cáo: +1 lượt',
+                label: tr('Quảng cáo: +1 lượt'),
                 icon: Icons.ondemand_video,
                 small: true,
                 color: const Color(0xFF8A5A10),
@@ -348,7 +349,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
           ],
           const SizedBox(height: 6),
           LButton(
-            label: salary ? 'Bổng lộc hôm nay' : 'Đã nhận bổng lộc',
+            label: salary ? tr('Bổng lộc hôm nay') : tr('Đã nhận bổng lộc'),
             icon: Icons.paid,
             small: true,
             color: jade,
@@ -356,8 +357,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
             onTap: () {
               if (!h.arenaClaimSalary(_day)) return;
               SaveService.instance.save();
-              _toast('+${arenaDailyCoins(h.arenaTier)} Uy danh, '
-                  '+${fmt(arenaDailyGold(h.arenaTier, h.level))} lượng');
+              _toast(tr('+{p0} Uy danh, '
+                  '+{p1} lượng', {'p0': arenaDailyCoins(h.arenaTier), 'p1': fmt(arenaDailyGold(h.arenaTier, h.level))}));
               setState(() {});
             },
           ),
@@ -375,14 +376,14 @@ class _ArenaScreenState extends State<ArenaScreen> {
         children: [
           Row(
             children: [
-              Text('Khiêu chiến', style: titleStyle(18)),
+              Text(tr('Khiêu chiến'), style: titleStyle(18)),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('Lực chiến của bạn: ${fmt(h.power)}',
+                child: Text(tr('Lực chiến của bạn: {p0}', {'p0': fmt(h.power)}),
                     style: small.copyWith(color: goldLight), overflow: TextOverflow.ellipsis),
               ),
               IconButton(
-                tooltip: 'Đổi đối thủ',
+                tooltip: tr('Đổi đối thủ'),
                 onPressed: rivals == null
                     ? null
                     : () {
@@ -410,10 +411,10 @@ class _ArenaScreenState extends State<ArenaScreen> {
   Widget _rival(ArenaRival r) {
     final ratio = r.power / math.max(1, h.power);
     final (label, colr) = ratio < 0.9
-        ? ('Dễ', const Color(0xFF8CE07A))
+        ? (tr('Dễ'), const Color(0xFF8CE07A))
         : ratio <= 1.1
-            ? ('Ngang tài', goldLight)
-            : ('Khó', const Color(0xFFFF8A6A));
+            ? (tr('Ngang tài'), goldLight)
+            : (tr('Khó'), const Color(0xFFFF8A6A));
     final left = h.arenaFightsLeft;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -427,13 +428,13 @@ class _ArenaScreenState extends State<ArenaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(r.name, style: bold.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
-            Text(sectOf(r.hanh).name,
+            Text(r.bot ? tr(r.name) : r.name, style: bold.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+            Text(tr(sectOf(r.hanh).name),
                 style: small.copyWith(fontSize: 10.5, color: hanhColor(r.hanh)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center),
-            Text('${r.rebirths > 0 ? 'CS${r.rebirths} · ' : ''}Cấp ${r.level}',
+            Text(tr('{p0}Cấp {level}', {'p0': r.rebirths > 0 ? tr('CS{rebirths} · ', {'rebirths': r.rebirths}) : '', 'level': r.level}),
                 style: small.copyWith(fontSize: 10.5),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -444,19 +445,19 @@ class _ArenaScreenState extends State<ArenaScreen> {
                     hanh: r.hanh, female: r.female, scale: 1.6, gear: rivalGear(r), rebirths: r.rebirths, mount: r.mountDef),
               ),
             ),
-            Text('LC ${fmt(r.power)}',
+            Text(tr('LC {p0}', {'p0': fmt(r.power)}),
                 style: small.copyWith(fontSize: 11, color: goldLight),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center),
-            Text(r.bot ? '$label · giang hồ' : '$label · người chơi',
+            Text(r.bot ? tr('{label} · giang hồ', {'label': label}) : tr('{label} · người chơi', {'label': label}),
                 style: small.copyWith(fontSize: 10.5, color: colr),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center),
             const SizedBox(height: 4),
             LButton(
-              label: left > 0 ? 'Đấu' : 'Hết lượt',
+              label: left > 0 ? tr('Đấu') : tr('Hết lượt'),
               small: true,
               color: seal,
               enabled: left > 0,
@@ -474,8 +475,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Tiệm Uy danh', style: titleStyle(18)),
-          Text('Uy danh: ${fmt(h.arenaCoins)}', style: bold.copyWith(color: goldLight)),
+          Text(tr('Tiệm Uy danh'), style: titleStyle(18)),
+          Text(tr('Uy danh: {p0}', {'p0': fmt(h.arenaCoins)}), style: bold.copyWith(color: goldLight)),
           const SizedBox(height: 6),
           Expanded(
             child: ListView(
@@ -491,17 +492,17 @@ class _ArenaScreenState extends State<ArenaScreen> {
                     ),
                     child: Row(
                       children: [
-                        Expanded(child: Text(o.name, style: small.copyWith(fontSize: 11.5, color: cream))),
+                        Expanded(child: Text(tr(o.name), style: small.copyWith(fontSize: 11.5, color: cream))),
                         const SizedBox(width: 6),
                         LButton(
-                          label: o.kind == ArenaWare.mount && h.ownsMount(o.id) ? 'Đã có' : fmt(o.price),
+                          label: o.kind == ArenaWare.mount && h.ownsMount(o.id) ? tr('Đã có') : fmt(o.price),
                           small: true,
                           color: jade,
                           enabled: h.arenaCoins >= o.price && !(o.kind == ArenaWare.mount && h.ownsMount(o.id)),
                           onTap: () {
                             if (!h.arenaBuy(o, _rng)) return;
                             SaveService.instance.save();
-                            _toast('Đã đổi ${o.name}');
+                            _toast(tr('Đã đổi {oName}', {'oName': tr(o.name)}));
                             setState(() {});
                           },
                         ),

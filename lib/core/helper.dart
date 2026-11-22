@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'bond.dart';
 import 'content.dart';
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Trợ chiến (1.14.0): call another player's hero (a friend, a bang
 /// member, or any stronger player from the board) into an ải as an ally run
@@ -79,9 +80,9 @@ extension HelperCalls on HeroData {
     hnTotal += n;
     final g = hiepNghiaGold(level, rebirths) * n;
     gold += g;
-    final lines = ['+$n Hiệp nghĩa (tổng $hnTotal)', '+$g lượng'];
+    final lines = [tr('+{n} Hiệp nghĩa (tổng {hnTotal})', {'n': n, 'hnTotal': hnTotal}), tr('+{g} lượng', {'g': g})];
     hiepNghiaTitles.forEach((need, t) {
-      if (before < need && hnTotal >= need && seasonTitles.add(t)) lines.add('Danh hiệu « $t »');
+      if (before < need && hnTotal >= need && seasonTitles.add(t)) lines.add(tr('Danh hiệu « {t} »', {'t': t}));
     });
     return lines;
   }

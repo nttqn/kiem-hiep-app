@@ -1,5 +1,6 @@
 import 'chat.dart';
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Đổi tên (1.5.0): a rewarded ad renames the hero, once a week. The old
 /// names are kept so cloud sync still knows it is the same character.
@@ -18,10 +19,10 @@ extension Rename on HeroData {
   /// Why [raw] cannot be the new name, or null when it can.
   String? renameProblem(String raw) {
     final n = raw.trim();
-    if (n.isEmpty) return 'Hãy nhập tên mới.';
-    if (n.runes.length > nameMaxLength) return 'Tên tối đa $nameMaxLength ký tự.';
-    if (n == name) return 'Tên mới trùng tên hiện tại.';
-    if (chatCensor(n) != n) return 'Tên có từ ngữ không phù hợp.';
+    if (n.isEmpty) return tr('Hãy nhập tên mới.');
+    if (n.runes.length > nameMaxLength) return tr('Tên tối đa {nameMaxLength} ký tự.', {'nameMaxLength': nameMaxLength});
+    if (n == name) return tr('Tên mới trùng tên hiện tại.');
+    if (chatCensor(n) != n) return tr('Tên có từ ngữ không phù hợp.');
     return null;
   }
 

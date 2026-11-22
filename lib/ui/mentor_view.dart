@@ -9,6 +9,7 @@ import '../services/guild.dart';
 import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 const _sdTint = Color(0xFFFFC88A);
 
@@ -71,7 +72,7 @@ class _MentorViewState extends State<MentorView> {
           case 'ok' || 'tc':
             if (m.from == h.sdPending) {
               h.masterAccepted();
-              _toast('${m.name} đã nhận bạn làm đệ tử!');
+              _toast(tr('{mName} đã nhận bạn làm đệ tử!', {'mName': m.name}));
             }
             if (m.from == h.sdMaster) {
               if (m.kind == 'tc' && m.day == day && h.sdTcDay != day) h.sdTcReady = true;
@@ -82,14 +83,14 @@ class _MentorViewState extends State<MentorView> {
           case 'bye':
             if (m.from == h.sdMaster) {
               h.leaveMaster();
-              _toast('${m.name} đã cho bạn rời sư môn.');
+              _toast(tr('{mName} đã cho bạn rời sư môn.', {'mName': m.name}));
             } else if (m.from == h.sdPending) {
               h.sdPending = '';
               h.sdPendingName = '';
-              _toast('${m.name} chưa nhận đệ tử lúc này.');
+              _toast(tr('{mName} chưa nhận đệ tử lúc này.', {'mName': m.name}));
             } else if (h.discipleOf(m.from) != null) {
               h.dropDisciple(m.from);
-              _toast('Đệ tử ${m.name} đã rời sư môn.');
+              _toast(tr('Đệ tử {mName} đã rời sư môn.', {'mName': m.name}));
             }
             await gs.mentorDrop(m.from);
         }
@@ -107,7 +108,7 @@ class _MentorViewState extends State<MentorView> {
       if (h.canBaiSu && h.sdPending.isEmpty) await _findMasters();
       await _save();
     } catch (_) {
-      _toast('Không tải được, thử lại sau.');
+      _toast(tr('Không tải được, thử lại sau.'));
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -145,12 +146,12 @@ class _MentorViewState extends State<MentorView> {
   Future<void> _ask(_Candidate c) => _run('ask', () async {
         if (!h.canBaiSu || h.sdPending.isNotEmpty) return;
         if (!await gs.mentorSend(h, c.row, 'req', _day)) {
-          _toast('Không gửi được, thử lại sau.');
+          _toast(tr('Không gửi được, thử lại sau.'));
           return;
         }
         h.askMaster(c.row, c.name, c.hanh);
         await _save();
-        _toast('Đã xin bái ${c.name} làm sư phụ. Chờ người ấy nhận lời.');
+        _toast(tr('Đã xin bái {cName} làm sư phụ. Chờ người ấy nhận lời.', {'cName': tr(c.name)}));
       });
 
   Future<void> _cancelAsk() => _run('ask', () async {
@@ -165,19 +166,19 @@ class _MentorViewState extends State<MentorView> {
 
   Future<void> _accept(MentorMsg m) => _run('r${m.from}', () async {
         if (!h.acceptDisciple(m.from, m.name, m.hanh, m.level)) {
-          _toast(h.seatFree ? 'Không nhận được đệ tử này (cấp quá $discipleMaxLevel?).' : 'Đã đủ $mentorMaxDisciples đệ tử.');
+          _toast(h.seatFree ? tr('Không nhận được đệ tử này (cấp quá {discipleMaxLevel}?).', {'discipleMaxLevel': discipleMaxLevel}) : tr('Đã đủ {mentorMaxDisciples} đệ tử.', {'mentorMaxDisciples': mentorMaxDisciples}));
           return;
         }
         if (!await gs.mentorSend(h, m.from, 'ok', _day)) {
           h.dropDisciple(m.from);
-          _toast('Không gửi được, thử lại sau.');
+          _toast(tr('Không gửi được, thử lại sau.'));
           return;
         }
         await gs.mentorDrop(m.from);
         _requests = [..._requests]..remove(m);
         if (h.sdListing) await gs.mentorList(h, true, h.activeDisciples);
         await _save();
-        _toast('Đã nhận ${m.name} làm đệ tử.');
+        _toast(tr('Đã nhận {mName} làm đệ tử.', {'mName': m.name}));
       });
 
   Future<void> _reject(MentorMsg m) => _run('r${m.from}', () async {
@@ -189,12 +190,12 @@ class _MentorViewState extends State<MentorView> {
   Future<void> _truyenCong(Disciple d) => _run('t${d.row}', () async {
         if (!h.canTruyenCong(d.row, _day)) return;
         if (!await gs.mentorSend(h, d.row, 'tc', _day)) {
-          _toast('Không gửi được, thử lại sau.');
+          _toast(tr('Không gửi được, thử lại sau.'));
           return;
         }
         h.sentTruyenCong(d.row, _day);
         await _save();
-        _toast('Đã truyền công cho ${d.name}. +$truyenCongEssence Tinh Hoa');
+        _toast(tr('Đã truyền công cho {dName}. +{truyenCongEssence} Tinh Hoa', {'dName': d.name, 'truyenCongEssence': truyenCongEssence}));
       });
 
   Future<void> _truyenCongAll() => _run('tall', () async {
@@ -206,7 +207,7 @@ class _MentorViewState extends State<MentorView> {
           n++;
         }
         await _save();
-        _toast(n > 0 ? 'Đã truyền công cho $n đệ tử. +${n * truyenCongEssence} Tinh Hoa' : 'Không gửi được, thử lại sau.');
+        _toast(n > 0 ? tr('Đã truyền công cho {n} đệ tử. +{p0} Tinh Hoa', {'n': n, 'p0': n * truyenCongEssence}) : tr('Không gửi được, thử lại sau.'));
       });
 
   Future<void> _pay(Disciple d) async {
@@ -218,8 +219,8 @@ class _MentorViewState extends State<MentorView> {
   }
 
   Future<void> _release(Disciple d) async {
-    final ok = await _confirm(d.graduated ? 'Xóa ${d.name} khỏi danh sách?' : 'Cho ${d.name} rời sư môn?',
-        d.graduated ? 'Đệ tử đã xuất sư.' : 'Phần thưởng mốc chưa nhận sẽ mất.');
+    final ok = await _confirm(d.graduated ? tr('Xóa {dName} khỏi danh sách?', {'dName': d.name}) : tr('Cho {dName} rời sư môn?', {'dName': d.name}),
+        d.graduated ? tr('Đệ tử đã xuất sư.') : tr('Phần thưởng mốc chưa nhận sẽ mất.'));
     if (!ok) return;
     await _run('x${d.row}', () async {
       if (!d.graduated) await gs.mentorSend(h, d.row, 'bye', _day);
@@ -230,7 +231,7 @@ class _MentorViewState extends State<MentorView> {
   }
 
   Future<void> _leave() async {
-    final ok = await _confirm('Rời sư môn?', 'Bạn sẽ mất +${(discipleExpBonus * 100).round()}% EXP và quà các mốc sau.');
+    final ok = await _confirm(tr('Rời sư môn?'), tr('Bạn sẽ mất +{p0}% EXP và quà các mốc sau.', {'p0': (discipleExpBonus * 100).round()}));
     if (!ok) return;
     await _run('leave', () async {
       await gs.mentorSend(h, h.sdMaster, 'bye', _day);
@@ -253,13 +254,13 @@ class _MentorViewState extends State<MentorView> {
     if (xp <= 0) return;
     await gs.mentorDrop(h.sdMaster);
     await _save();
-    _toast('Sư phụ truyền công: +${fmt(xp)} kinh nghiệm');
+    _toast(tr('Sư phụ truyền công: +{p0} kinh nghiệm', {'p0': fmt(xp)}));
     if (mounted) setState(() {});
   }
 
   Future<void> _toggleListing(bool on) => _run('list', () async {
         if (!await gs.mentorList(h, on, h.activeDisciples)) {
-          _toast('Không cập nhật được, thử lại sau.');
+          _toast(tr('Không cập nhật được, thử lại sau.'));
           return;
         }
         h.sdListing = on;
@@ -274,8 +275,8 @@ class _MentorViewState extends State<MentorView> {
           title: Text(title, style: titleStyle(18, color: cream)),
           content: Text(text, style: body),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đồng ý')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Đồng ý'))),
           ],
         ),
       ) ??
@@ -304,8 +305,8 @@ class _MentorViewState extends State<MentorView> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      'Bái sư: nhân vật chưa chuyển sinh, cấp $discipleMaxLevel trở xuống.\n'
-                      'Nhận đệ tử: cấp $mentorMinLevel trở lên hoặc đã chuyển sinh.',
+                      tr('Bái sư: nhân vật chưa chuyển sinh, cấp {discipleMaxLevel} trở xuống.\n'
+                      'Nhận đệ tử: cấp {mentorMinLevel} trở lên hoặc đã chuyển sinh.', {'discipleMaxLevel': discipleMaxLevel, 'mentorMinLevel': mentorMinLevel}),
                       style: body,
                       textAlign: TextAlign.center,
                     ),
@@ -325,25 +326,25 @@ class _MentorViewState extends State<MentorView> {
         padding: const EdgeInsets.all(10),
         child: ListView(
           children: [
-            Text('Sư đồ', style: titleStyle(17, color: _sdTint)),
+            Text(tr('Sư đồ'), style: titleStyle(17, color: _sdTint)),
             const SizedBox(height: 4),
             Text(
-              'Đệ tử (chưa chuyển sinh, cấp ≤ $discipleMaxLevel khi bái sư):\n'
-              '• +${(discipleExpBonus * 100).round()}% EXP quái đến khi xuất sư (chuyển sinh lần đầu)\n'
-              '• Quà ở mỗi mốc ${mentorMilestones.first}, ${mentorMilestones[1]}… ${mentorMilestones.last} và xuất sư\n'
-              '• Mỗi ngày nhận Truyền công: +${(truyenCongShare * 100).round()}% EXP cấp hiện tại',
+              tr('Đệ tử (chưa chuyển sinh, cấp ≤ {discipleMaxLevel} khi bái sư):\n'
+              '• +{p0}% EXP quái đến khi xuất sư (chuyển sinh lần đầu)\n'
+              '• Quà ở mỗi mốc {first}, {p1}… {last} và xuất sư\n'
+              '• Mỗi ngày nhận Truyền công: +{p2}% EXP cấp hiện tại', {'discipleMaxLevel': discipleMaxLevel, 'p0': (discipleExpBonus * 100).round(), 'first': mentorMilestones.first, 'p1': mentorMilestones[1], 'last': mentorMilestones.last, 'p2': (truyenCongShare * 100).round()}),
               style: small.copyWith(fontSize: 11),
             ),
             const SizedBox(height: 6),
             Text(
-              'Sư phụ (cấp $mentorMinLevel+ hoặc đã chuyển sinh), tối đa $mentorMaxDisciples đệ tử:\n'
+              tr('Sư phụ (cấp {mentorMinLevel}+ hoặc đã chuyển sinh), tối đa {mentorMaxDisciples} đệ tử:\n'
               '• Tinh Hoa và Thần Thiết mỗi khi đệ tử qua một mốc, nhiều nhất lúc xuất sư\n'
-              '• +$truyenCongEssence Tinh Hoa mỗi lần truyền công\n'
-              '• Danh hiệu « $mentorTitle1 » (1 đệ tử xuất sư), « $mentorTitle3 » (3)',
+              '• +{truyenCongEssence} Tinh Hoa mỗi lần truyền công\n'
+              '• Danh hiệu « {mentorTitle1} » (1 đệ tử xuất sư), « {mentorTitle3} » (3)', {'mentorMinLevel': mentorMinLevel, 'mentorMaxDisciples': mentorMaxDisciples, 'truyenCongEssence': truyenCongEssence, 'mentorTitle1': mentorTitle1, 'mentorTitle3': mentorTitle3}),
               style: small.copyWith(fontSize: 11),
             ),
             const SizedBox(height: 6),
-            Text('Tiến độ của đệ tử đọc từ Bảng xếp hạng, nên đệ tử cần hiện trên bảng.',
+            Text(tr('Tiến độ của đệ tử đọc từ Bảng xếp hạng, nên đệ tử cần hiện trên bảng.'),
                 style: small.copyWith(fontSize: 10.5, color: creamDim)),
           ],
         ),
@@ -356,11 +357,11 @@ class _MentorViewState extends State<MentorView> {
       final reached = h.discipleStepsReached;
       final next = h.sdGiftNext < mentorSteps ? h.sdGiftNext : -1;
       return [
-        Text('Sư phụ', style: titleStyle(16, color: _sdTint)),
-        _personRow(h.sdMasterName, h.sdMasterHanh, h.rebirths > 0 ? 'Đã xuất sư' : '+${(discipleExpBonus * 100).round()}% EXP quái',
+        Text(tr('Sư phụ'), style: titleStyle(16, color: _sdTint)),
+        _personRow(h.sdMasterName, h.sdMasterHanh, h.rebirths > 0 ? tr('Đã xuất sư') : tr('+{p0}% EXP quái', {'p0': (discipleExpBonus * 100).round()}),
             trailing: [
               if (h.rebirths == 0)
-                LButton(label: 'Rời', small: true, color: seal, enabled: !_busy.contains('leave'), onTap: _leave),
+                LButton(label: tr('Rời'), small: true, color: seal, enabled: !_busy.contains('leave'), onTap: _leave),
             ]),
         const SizedBox(height: 4),
         Row(
@@ -368,15 +369,15 @@ class _MentorViewState extends State<MentorView> {
             Expanded(
               child: Text(
                 h.sdTcReady && h.sdTcDay != day
-                    ? 'Sư phụ đã truyền công hôm nay.'
+                    ? tr('Sư phụ đã truyền công hôm nay.')
                     : h.sdTcDay == day
-                        ? 'Đã nhận Truyền công hôm nay.'
-                        : 'Chưa có Truyền công hôm nay.',
+                        ? tr('Đã nhận Truyền công hôm nay.')
+                        : tr('Chưa có Truyền công hôm nay.'),
                 style: small.copyWith(fontSize: 11.5),
               ),
             ),
             LButton(
-              label: 'Nhận Truyền công',
+              label: tr('Nhận Truyền công'),
               small: true,
               color: jade,
               enabled: h.sdTcReady && h.sdTcDay != day && h.rebirths == 0,
@@ -390,29 +391,29 @@ class _MentorViewState extends State<MentorView> {
             Expanded(
               child: Text(
                 next < 0
-                    ? 'Đã nhận hết quà sư môn.'
+                    ? tr('Đã nhận hết quà sư môn.')
                     : h.discipleGiftReady
-                        ? 'Quà mốc ${mentorStepName(next)} đã sẵn sàng.'
-                        : 'Mốc tiếp: ${mentorStepName(next)} (đã qua $reached/$mentorSteps mốc)',
+                        ? tr('Quà mốc {p0} đã sẵn sàng.', {'p0': mentorStepName(next)})
+                        : tr('Mốc tiếp: {p0} (đã qua {reached}/{mentorSteps} mốc)', {'p0': mentorStepName(next), 'reached': reached, 'mentorSteps': mentorSteps}),
                 style: small.copyWith(fontSize: 11.5),
               ),
             ),
-            LButton(label: 'Nhận quà', small: true, color: jade, enabled: h.discipleGiftReady, onTap: _takeGift),
+            LButton(label: tr('Nhận quà'), small: true, color: jade, enabled: h.discipleGiftReady, onTap: _takeGift),
           ],
         ),
       ];
     }
     if (h.sdPending.isNotEmpty) {
       return [
-        Text('Đang xin bái sư', style: titleStyle(16, color: _sdTint)),
-        _personRow(h.sdPendingName, h.sdPendingHanh, 'Chờ người ấy nhận lời',
-            trailing: [LButton(label: 'Hủy', small: true, color: seal, enabled: !_busy.contains('ask'), onTap: _cancelAsk)]),
+        Text(tr('Đang xin bái sư'), style: titleStyle(16, color: _sdTint)),
+        _personRow(h.sdPendingName, h.sdPendingHanh, tr('Chờ người ấy nhận lời'),
+            trailing: [LButton(label: tr('Hủy'), small: true, color: seal, enabled: !_busy.contains('ask'), onTap: _cancelAsk)]),
       ];
     }
     return [
       Row(
         children: [
-          Expanded(child: Text('Tìm sư phụ', style: titleStyle(16, color: _sdTint))),
+          Expanded(child: Text(tr('Tìm sư phụ'), style: titleStyle(16, color: _sdTint))),
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: goldLight, size: 20)),
         ],
       ),
@@ -420,7 +421,7 @@ class _MentorViewState extends State<MentorView> {
         Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            'Chưa thấy ai đang nhận đệ tử. Kết bạn với người chơi cấp $mentorMinLevel+ trên Bảng xếp hạng rồi quay lại đây.',
+            tr('Chưa thấy ai đang nhận đệ tử. Kết bạn với người chơi cấp {mentorMinLevel}+ trên Bảng xếp hạng rồi quay lại đây.', {'mentorMinLevel': mentorMinLevel}),
             style: body.copyWith(fontSize: 12.5),
             textAlign: TextAlign.center,
           ),
@@ -430,9 +431,9 @@ class _MentorViewState extends State<MentorView> {
           _personRow(
             c.name,
             c.hanh,
-            '${c.rebirths > 0 ? 'CS${c.rebirths} · ' : ''}Cấp ${c.level} · LC ${fmt(c.power)}'
-            '${c.friend ? ' · bạn bè' : ' · ${c.seats}/$mentorMaxDisciples đệ tử'}',
-            trailing: [LButton(label: 'Bái sư', small: true, color: jade, enabled: !_busy.contains('ask'), onTap: () => _ask(c))],
+            tr('{p0}Cấp {level} · LC {p1}'
+            '{p2}', {'p0': c.rebirths > 0 ? tr('CS{rebirths} · ', {'rebirths': c.rebirths}) : '', 'level': c.level, 'p1': fmt(c.power), 'p2': c.friend ? tr(' · bạn bè') : tr(' · {seats}/{mentorMaxDisciples} đệ tử', {'seats': c.seats, 'mentorMaxDisciples': mentorMaxDisciples})}),
+            trailing: [LButton(label: tr('Bái sư'), small: true, color: jade, enabled: !_busy.contains('ask'), onTap: () => _ask(c))],
           ),
     ];
   }
@@ -444,21 +445,21 @@ class _MentorViewState extends State<MentorView> {
     return [
       Row(
         children: [
-          Expanded(child: Text('Đệ tử ${h.activeDisciples}/$mentorMaxDisciples', style: titleStyle(16, color: _sdTint))),
-          Text('Nhận đệ tử', style: small.copyWith(fontSize: 11.5)),
+          Expanded(child: Text(tr('Đệ tử {activeDisciples}/{mentorMaxDisciples}', {'activeDisciples': h.activeDisciples, 'mentorMaxDisciples': mentorMaxDisciples}), style: titleStyle(16, color: _sdTint))),
+          Text(tr('Nhận đệ tử'), style: small.copyWith(fontSize: 11.5)),
           Switch(
             value: h.sdListing,
             activeThumbColor: jade,
             onChanged: _busy.contains('list') ? null : _toggleListing,
           ),
-          LButton(label: 'Truyền công', small: true, color: jade, enabled: canTc && !_busy.contains('tall'), onTap: _truyenCongAll),
+          LButton(label: tr('Truyền công'), small: true, color: jade, enabled: canTc && !_busy.contains('tall'), onTap: _truyenCongAll),
         ],
       ),
       if (h.disciples.isEmpty)
         Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            'Chưa có đệ tử. Bật "Nhận đệ tử" để tân thủ tìm thấy bạn; bạn bè cấp thấp cũng có thể xin bái sư.',
+            tr('Chưa có đệ tử. Bật "Nhận đệ tử" để tân thủ tìm thấy bạn; bạn bè cấp thấp cũng có thể xin bái sư.'),
             style: body.copyWith(fontSize: 12.5),
             textAlign: TextAlign.center,
           ),
@@ -466,17 +467,17 @@ class _MentorViewState extends State<MentorView> {
       for (final d in h.disciples) _discipleRow(d, day),
       if (_requests.isNotEmpty) ...[
         const SizedBox(height: 6),
-        Text('Xin bái sư (${_requests.length})', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+        Text(tr('Xin bái sư ({_requestsLength})', {'_requestsLength': _requests.length}), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
         for (final m in _requests)
-          _personRow(m.name, m.hanh, 'Cấp ${m.level}', trailing: [
+          _personRow(m.name, m.hanh, tr('Cấp {level}', {'level': m.level}), trailing: [
             LButton(
-                label: 'Nhận',
+                label: tr('Nhận'),
                 small: true,
                 color: jade,
                 enabled: h.seatFree && !_busy.contains('r${m.from}'),
                 onTap: () => _accept(m)),
             const SizedBox(width: 4),
-            LButton(label: 'Từ chối', small: true, color: seal, enabled: !_busy.contains('r${m.from}'), onTap: () => _reject(m)),
+            LButton(label: tr('Từ chối'), small: true, color: seal, enabled: !_busy.contains('r${m.from}'), onTap: () => _reject(m)),
           ]),
       ],
     ];
@@ -489,15 +490,15 @@ class _MentorViewState extends State<MentorView> {
       d.name,
       d.hanh,
       d.graduated
-          ? 'Đã xuất sư'
-          : 'Cấp ${d.level}${next != null ? ' · mốc tiếp: $next' : ''}',
+          ? tr('Đã xuất sư')
+          : tr('Cấp {level}{p0}', {'level': d.level, 'p0': next != null ? tr(' · mốc tiếp: {next}', {'next': next}) : ''}),
       onTap: () => _release(d),
       trailing: [
         if (due > 0)
-          LButton(label: 'Nhận thưởng', small: true, color: const Color(0xFF8A4A1A), onTap: () => _pay(d))
+          LButton(label: tr('Nhận thưởng'), small: true, color: const Color(0xFF8A4A1A), onTap: () => _pay(d))
         else if (!d.graduated)
           LButton(
-            label: h.canTruyenCong(d.row, day) ? 'Truyền công' : 'Đã truyền',
+            label: h.canTruyenCong(d.row, day) ? tr('Truyền công') : tr('Đã truyền'),
             small: true,
             color: jade,
             enabled: h.canTruyenCong(d.row, day) && !_busy.contains('t${d.row}'),
@@ -528,7 +529,7 @@ class _MentorViewState extends State<MentorView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name, style: bold.copyWith(fontSize: 12.5, color: cream), overflow: TextOverflow.ellipsis),
-                  Text('${sectOf(hn).name} · $line',
+                  Text('${tr(sectOf(hn).name)} · $line',
                       style: small.copyWith(fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),

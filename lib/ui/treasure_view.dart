@@ -10,6 +10,7 @@ import '../services/analytics.dart';
 import '../services/save.dart';
 import 'gem_tab.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Kỳ Trân Các: the day's six rare wares, a paid refresh, and one free
 /// refresh a day for a rewarded ad.
@@ -45,8 +46,8 @@ class _TreasureViewState extends State<TreasureView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kỳ Trân Các', style: titleStyle(20)),
-                    Text('Hàng quý đổi mỗi ngày: ngọc Ngũ Hành và trang bị Sử thi, Truyền thuyết theo cấp của bạn.',
+                    Text(tr('Kỳ Trân Các'), style: titleStyle(20)),
+                    Text(tr('Hàng quý đổi mỗi ngày: ngọc Ngũ Hành và trang bị Sử thi, Truyền thuyết theo cấp của bạn.'),
                         style: small.copyWith(fontSize: 11.5)),
                   ],
                 ),
@@ -55,7 +56,7 @@ class _TreasureViewState extends State<TreasureView> {
                 ValueListenableBuilder<bool>(
                   valueListenable: AdsService.instance.rewardedReady,
                   builder: (_, ready, _) => LButton(
-                    label: 'Làm mới miễn phí',
+                    label: tr('Làm mới miễn phí'),
                     icon: Icons.ondemand_video,
                     small: true,
                     color: const Color(0xFF8A5A10),
@@ -64,17 +65,17 @@ class _TreasureViewState extends State<TreasureView> {
                       final earned = await AdsService.instance.showRewarded();
                       if (!earned || !mounted) return;
                       h.treasureRefresh(_day, free: true);
-                      _done('Đã làm mới hàng.');
+                      _done(tr('Đã làm mới hàng.'));
                     },
                   ),
                 ),
               const SizedBox(width: 6),
               LButton(
-                label: 'Làm mới ${fmt(cost)}',
+                label: tr('Làm mới {p0}', {'p0': fmt(cost)}),
                 small: true,
                 enabled: h.gold >= cost,
                 onTap: () {
-                  if (h.treasureRefresh(_day)) _done('Đã làm mới hàng (-${fmt(cost)} lượng).');
+                  if (h.treasureRefresh(_day)) _done(tr('Đã làm mới hàng (-{p0} lượng).', {'p0': fmt(cost)}));
                 },
               ),
             ],
@@ -109,8 +110,8 @@ class _TreasureViewState extends State<TreasureView> {
             Expanded(
               child: Text(
                 h.nextRebirthPills > 0
-                    ? 'Linh Phách Đơn: ${h.soulPills}/${h.nextRebirthPills} viên cần cho Chuyển sinh ${h.rebirths + 1}. Đổi ra Thần Thiết sẽ phải tích lại.'
-                    : 'Linh Phách Đơn: ${h.soulPills} viên, ngưng tụ từ EXP dư ở cấp $maxLevel.',
+                    ? tr('Linh Phách Đơn: {soulPills}/{nextRebirthPills} viên cần cho Chuyển sinh {p0}. Đổi ra Thần Thiết sẽ phải tích lại.', {'soulPills': h.soulPills, 'nextRebirthPills': h.nextRebirthPills, 'p0': h.rebirths + 1})
+                    : tr('Linh Phách Đơn: {soulPills} viên, ngưng tụ từ EXP dư ở cấp {maxLevel}.', {'soulPills': h.soulPills, 'maxLevel': maxLevel}),
                 style: small.copyWith(fontSize: 11),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -118,14 +119,14 @@ class _TreasureViewState extends State<TreasureView> {
             ),
             const SizedBox(width: 6),
             LButton(
-              label: '$soulPillsPerIron viên → 1 Thần Thiết',
+              label: tr('{soulPillsPerIron} viên → 1 Thần Thiết', {'soulPillsPerIron': soulPillsPerIron}),
               small: true,
               color: const Color(0xFF2F6E8A),
               enabled: h.soulPills >= soulPillsPerIron,
               onTap: () {
                 if (!h.soulToIron()) return;
                 Analytics.instance.log('soul_to_iron', {'left': h.soulPills});
-                _done('Đã đổi $soulPillsPerIron Linh Phách Đơn lấy 1 Thần Thiết.');
+                _done(tr('Đã đổi {soulPillsPerIron} Linh Phách Đơn lấy 1 Thần Thiết.', {'soulPillsPerIron': soulPillsPerIron}));
               },
             ),
           ],
@@ -136,11 +137,11 @@ class _TreasureViewState extends State<TreasureView> {
     final bought = h.shopBought.contains(i);
     final it = o.item;
     final g = o.gem;
-    final name = g?.name ?? it!.name;
+    final name = tr(g?.name ?? it!.name);
     final color = g != null ? hanhColor(g.hanh) : rarityColor(it!.rarity);
     final desc = g != null
         ? gemEffectText(g, banMenh: g.hanh == h.hanh)
-        : '${it!.rarity.label} · cấp ${it.level} · ${it.bonus.length} dòng phụ';
+        : tr('{rarityLabel} · cấp {level} · {bonusLength} dòng phụ', {'rarityLabel': tr(it!.rarity.label), 'level': it.level, 'bonusLength': it.bonus.length});
     return Opacity(
       opacity: bought ? 0.5 : 1,
       child: Panel(
@@ -159,7 +160,7 @@ class _TreasureViewState extends State<TreasureView> {
                   Text(desc, style: small.copyWith(fontSize: 10.5), maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   bought
-                      ? Text('Đã mua', style: bold.copyWith(fontSize: 12, color: creamDim))
+                      ? Text(tr('Đã mua'), style: bold.copyWith(fontSize: 12, color: creamDim))
                       : LButton(
                           label: fmt(o.price),
                           small: true,
@@ -168,11 +169,11 @@ class _TreasureViewState extends State<TreasureView> {
                           onTap: () {
                             if (h.treasureBuy(_day, i)) {
                               Analytics.instance.log('treasure_buy', {'kind': g != null ? 'gem' : 'gear', 'price': o.price});
-                              _done('Đã mua $name.');
+                              _done(tr('Đã mua {name}.', {'name': name}));
                             } else {
                               setState(() => _msg = it != null && h.bag.length >= bagSize
-                                  ? 'Hành trang đã đầy.'
-                                  : 'Không đủ lượng.');
+                                  ? tr('Hành trang đã đầy.')
+                                  : tr('Không đủ lượng.'));
                             }
                           },
                         ),

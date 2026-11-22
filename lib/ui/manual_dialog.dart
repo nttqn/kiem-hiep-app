@@ -4,6 +4,7 @@ import '../core/hero.dart';
 import '../core/manuals.dart';
 import '../core/sects.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// A skill's bí kíp: each school with its pages, level and effect, and
 /// which one the skill wears.
@@ -16,7 +17,7 @@ Future<void> showManualDialog(BuildContext context, HeroData h, SkillDef sk) {
         return AlertDialog(
           backgroundColor: lacquer,
           insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-          title: Text('Bí kíp · ${sk.name}', style: titleStyle(18)),
+          title: Text(tr('Bí kíp · {skName}', {'skName': tr(sk.name)}), style: titleStyle(18)),
           content: SizedBox(
             width: 560,
             child: Column(
@@ -24,8 +25,8 @@ Future<void> showManualDialog(BuildContext context, HeroData h, SkillDef sk) {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Trang bí kíp rơi từ boss, tinh anh, Ải Ác Mộng, cá huyền thoại, hoặc đổi ở Tàng Kinh Các (Sư môn). '
-                  'Mỗi chiêu dùng một thiên; đổi thiên miễn phí.',
+                  tr('Trang bí kíp rơi từ boss, tinh anh, Ải Ác Mộng, cá huyền thoại, hoặc đổi ở Tàng Kinh Các (Sư môn). '
+                  'Mỗi chiêu dùng một thiên; đổi thiên miễn phí.'),
                   style: small.copyWith(fontSize: 11),
                 ),
                 const SizedBox(height: 8),
@@ -48,9 +49,9 @@ Future<void> showManualDialog(BuildContext context, HeroData h, SkillDef sk) {
                   h.setManual(sk.id, null);
                   setState(() {});
                 },
-                child: const Text('Tháo bí kíp'),
+                child: Text(tr('Tháo bí kíp')),
               ),
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng'))),
           ],
         );
       },
@@ -77,25 +78,25 @@ Widget _row(HeroData h, SkillDef sk, ManualKind k, bool worn, VoidCallback chang
               children: [
                 Row(
                   children: [
-                    Text('${def.name} thiên', style: bold.copyWith(color: lv > 0 ? const Color(0xFFE0C8FF) : creamDim)),
+                    Text(tr('{defName} thiên', {'defName': tr(def.name)}), style: bold.copyWith(color: lv > 0 ? const Color(0xFFE0C8FF) : creamDim)),
                     const SizedBox(width: 8),
-                    Text(lv > 0 ? 'Tầng $lv/$maxManualLevel' : 'Chưa lĩnh ngộ',
+                    Text(lv > 0 ? tr('Tầng {lv}/{maxManualLevel}', {'lv': lv, 'maxManualLevel': maxManualLevel}) : tr('Chưa lĩnh ngộ'),
                         style: small.copyWith(color: lv > 0 ? cream : creamDim)),
                   ],
                 ),
                 Text(
-                  '${manualEffect(sk, k, lv, h.hanh)}${lv == 0 ? ' (tầng 1)' : ''}',
+                  '${manualEffect(sk, k, lv, h.hanh)}${lv == 0 ? tr(' (tầng 1)') : ''}',
                   style: small.copyWith(fontSize: 11, color: lv > 0 ? const Color(0xFF8CE07A) : creamDim),
                 ),
                 Text(
-                  toNext > 0 ? '$pages trang · thêm $toNext trang lên tầng ${lv + 1}' : '$pages trang · đã đại thành',
+                  toNext > 0 ? tr('{pages} trang · thêm {toNext} trang lên tầng {p0}', {'pages': pages, 'toNext': toNext, 'p0': lv + 1}) : tr('{pages} trang · đã đại thành', {'pages': pages}),
                   style: small.copyWith(fontSize: 10.5),
                 ),
               ],
             ),
           ),
           LButton(
-            label: worn ? 'Đang dùng' : 'Dùng',
+            label: worn ? tr('Đang dùng') : tr('Dùng'),
             small: true,
             color: worn ? jade : const Color(0xFF5A3A7A),
             enabled: lv > 0 && !worn,

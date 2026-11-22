@@ -9,6 +9,7 @@ import 'hero.dart';
 import 'live_event.dart';
 import 'mount_skins.dart';
 import 'world_boss.dart' show vnDayKey;
+import 'i18n.dart';
 
 /// Lễ hội theo mùa (1.11.0): a festival runs for a few weeks with its own
 /// land (monsters at the hero's level), a currency dropped there, three
@@ -189,16 +190,16 @@ const int festOpenLevel = 10;
 
 /// Short labels of a shop item for [h].
 String festItemLabel(FestDef f, FestItem it, HeroData h) => switch (it.reward) {
-      FestReward.costume => 'Ngoại trang ${costumeById[f.costume]?.name ?? ''}',
-      FestReward.skin => 'Ngoại hình thú cưỡi ${skinById[f.skin]?.name ?? ''}',
-      FestReward.title => 'Danh hiệu « ${f.title} »',
-      FestReward.gold => '${_dots(festGold(h))} lượng',
-      FestReward.gems => '${it.n} Ngọc ${gemTierNames[festGemTier(h) - 1]}',
-      FestReward.stones => '${it.n} Tinh Thạch',
-      FestReward.shards => '${it.n} Mảnh Hoàng Kim',
-      FestReward.iron => '${it.n} Thần Thiết',
-      FestReward.souls => '${it.n} Hung Thú Tinh Phách',
-      FestReward.soulPills => '${it.n} Linh Phách Đơn',
+      FestReward.costume => tr('Ngoại trang {p0}', {'p0': costumeById[f.costume]?.name ?? ''}),
+      FestReward.skin => tr('Ngoại hình thú cưỡi {p0}', {'p0': skinById[f.skin]?.name ?? ''}),
+      FestReward.title => tr('Danh hiệu « {fTitle} »', {'fTitle': tr(f.title)}),
+      FestReward.gold => tr('{p0} lượng', {'p0': _dots(festGold(h))}),
+      FestReward.gems => tr('{n} Ngọc {p0}', {'n': it.n, 'p0': tr(gemTierNames[festGemTier(h) - 1])}),
+      FestReward.stones => tr('{n} Tinh Thạch', {'n': it.n}),
+      FestReward.shards => tr('{n} Mảnh Hoàng Kim', {'n': it.n}),
+      FestReward.iron => tr('{n} Thần Thiết', {'n': it.n}),
+      FestReward.souls => tr('{n} Hung Thú Tinh Phách', {'n': it.n}),
+      FestReward.soulPills => tr('{n} Linh Phách Đơn', {'n': it.n}),
       FestReward.pill => pillById[it.pill]?.name ?? it.pill,
     };
 
@@ -245,9 +246,9 @@ extension FestExtras on HeroData {
 
   /// The day's tasks: (label, done, ready to claim, coins).
   List<(String, int, int, int)> festTaskList() => [
-        ('Hạ $festKillsA quái lễ hội', math.min(festKills, festKillsA), festKillsA, festTaskCoins),
-        ('Hạ $festKillsB quái lễ hội', math.min(festKills, festKillsB), festKillsB, festTaskCoins),
-        ('Hạ boss lễ hội 1 lần', math.min(festBoss, 1), 1, festBossTaskCoins),
+        (tr('Hạ {festKillsA} quái lễ hội', {'festKillsA': festKillsA}), math.min(festKills, festKillsA), festKillsA, festTaskCoins),
+        (tr('Hạ {festKillsB} quái lễ hội', {'festKillsB': festKillsB}), math.min(festKills, festKillsB), festKillsB, festTaskCoins),
+        (tr('Hạ boss lễ hội 1 lần'), math.min(festBoss, 1), 1, festBossTaskCoins),
       ];
 
   bool festTaskTaken(int i) => festTasks & (1 << i) != 0;
@@ -339,6 +340,6 @@ extension FestExtras on HeroData {
     festCoins += festPackCoins;
     starStones += festPackStones;
     festPack = true;
-    return ['+$festPackCoins ${f.coin}', '+$festPackStones Tinh Thạch'];
+    return ['+$festPackCoins ${f.coin}', tr('+{festPackStones} Tinh Thạch', {'festPackStones': festPackStones})];
   }
 }

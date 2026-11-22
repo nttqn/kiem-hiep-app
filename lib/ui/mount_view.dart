@@ -13,6 +13,7 @@ import '../render/art_chibi.dart';
 import '../render/art_figures.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Thú cưỡi: buy, earn, feed and ride.
 class MountView extends StatefulWidget {
@@ -65,7 +66,7 @@ class _MountViewState extends State<MountView> {
             Row(
               children: [
                 Expanded(
-                  child: Text(m.name,
+                  child: Text(tr(m.name),
                       style: titleStyle(m.name.length > 12 ? 13.5 : 16, color: owned ? goldLight : creamDim),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
@@ -115,14 +116,14 @@ class _MountViewState extends State<MountView> {
                 }),
               ),
             ),
-            Text(m.desc, style: small.copyWith(fontSize: 10.5), maxLines: 3, overflow: TextOverflow.ellipsis),
+            Text(tr(m.desc), style: small.copyWith(fontSize: 10.5), maxLines: 3, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-            Text(owned ? 'Cấp $lv/$maxMountLevel' : m.howTo, style: bold.copyWith(fontSize: 12, color: cream)),
+            Text(owned ? tr('Cấp {lv}/{maxMountLevel}', {'lv': lv, 'maxMountLevel': maxMountLevel}) : m.howTo, style: bold.copyWith(fontSize: 12, color: cream)),
             Text(m.bonusText(lv), style: small.copyWith(fontSize: 10.5)),
             const SizedBox(height: 6),
             if (owned) ...[
               LButton(
-                label: ridden ? 'Xuống ngựa' : 'Cưỡi',
+                label: ridden ? tr('Xuống ngựa') : tr('Cưỡi'),
                 small: true,
                 color: ridden ? jade : seal,
                 onTap: () {
@@ -132,7 +133,7 @@ class _MountViewState extends State<MountView> {
               ),
               const SizedBox(height: 4),
               LButton(
-                label: lv >= maxMountLevel ? 'Tối đa' : 'Nâng ${fmt(mountLevelCost(lv))}',
+                label: lv >= maxMountLevel ? tr('Tối đa') : tr('Nâng {p0}', {'p0': fmt(mountLevelCost(lv))}),
                 small: true,
                 color: const Color(0xFF7A5A1A),
                 enabled: lv < maxMountLevel && h.gold >= mountLevelCost(lv),
@@ -142,7 +143,7 @@ class _MountViewState extends State<MountView> {
               ),
             ] else if (m.source == MountSource.gold)
               LButton(
-                label: h.mountsOpen ? 'Mua ${fmt(m.need)}' : 'Mở ở cấp $mountOpenLevel',
+                label: h.mountsOpen ? tr('Mua {p0}', {'p0': fmt(m.need)}) : tr('Mở ở cấp {mountOpenLevel}', {'mountOpenLevel': mountOpenLevel}),
                 small: true,
                 color: jade,
                 enabled: h.mountsOpen && h.gold >= m.need,
@@ -153,14 +154,14 @@ class _MountViewState extends State<MountView> {
             else
               Text(
                 switch (m.source) {
-                  MountSource.tower => 'Tầng cao nhất: ${h.towerBest}/${m.need}',
-                  MountSource.rebirth => 'Đã chuyển sinh: ${h.rebirths}/${m.need}',
-                  MountSource.abyss => 'Đã hạ Ma Tôn: ${h.abyssBossKills}/${m.need}',
-                  MountSource.sea => 'Đã hạ Long Vương: ${h.seaBossKills}/${m.need}',
-                  MountSource.west => 'Đã hạ Pháp Vương: ${h.westBossKills}/${m.need}',
-                  MountSource.south => 'Đã hạ Cổ Vương: ${h.southBossKills}/${m.need}',
-                  MountSource.kunlun => 'Đã hạ Kỳ Lân: ${h.kunlunBossKills}/${m.need}',
-                  _ => 'Uy danh: ${fmt(h.arenaCoins)}/${fmt(m.need)}',
+                  MountSource.tower => tr('Tầng cao nhất: {towerBest}/{need}', {'towerBest': h.towerBest, 'need': m.need}),
+                  MountSource.rebirth => tr('Đã chuyển sinh: {rebirths}/{need}', {'rebirths': h.rebirths, 'need': m.need}),
+                  MountSource.abyss => tr('Đã hạ Ma Tôn: {abyssBossKills}/{need}', {'abyssBossKills': h.abyssBossKills, 'need': m.need}),
+                  MountSource.sea => tr('Đã hạ Long Vương: {seaBossKills}/{need}', {'seaBossKills': h.seaBossKills, 'need': m.need}),
+                  MountSource.west => tr('Đã hạ Pháp Vương: {westBossKills}/{need}', {'westBossKills': h.westBossKills, 'need': m.need}),
+                  MountSource.south => tr('Đã hạ Cổ Vương: {southBossKills}/{need}', {'southBossKills': h.southBossKills, 'need': m.need}),
+                  MountSource.kunlun => tr('Đã hạ Kỳ Lân: {kunlunBossKills}/{need}', {'kunlunBossKills': h.kunlunBossKills, 'need': m.need}),
+                  _ => tr('Uy danh: {p0}/{p1}', {'p0': fmt(h.arenaCoins), 'p1': fmt(m.need)}),
                 },
                 style: small.copyWith(fontSize: 10.5, color: creamDim),
                 textAlign: TextAlign.center,
@@ -227,8 +228,8 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Ngoại hình · ${m.name}', style: titleStyle(18, color: goldLight)),
-            Text(owned ? 'Chỉ đổi dáng vẻ, chỉ số giữ nguyên.' : 'Cần có ${m.name} trước.',
+            Text(tr('Ngoại hình · {mName}', {'mName': tr(m.name)}), style: titleStyle(18, color: goldLight)),
+            Text(owned ? tr('Chỉ đổi dáng vẻ, chỉ số giữ nguyên.') : tr('Cần có {mName} trước.', {'mName': tr(m.name)}),
                 style: small.copyWith(fontSize: 11)),
             const SizedBox(height: 6),
             SizedBox(
@@ -238,11 +239,11 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                 shrinkWrap: true,
                 children: [
                   card(
-                    name: 'Nguyên bản',
+                    name: tr('Nguyên bản'),
                     look: m,
                     on: worn == null,
                     action: LButton(
-                      label: worn == null ? 'Đang dùng' : 'Dùng',
+                      label: worn == null ? tr('Đang dùng') : tr('Dùng'),
                       small: true,
                       color: jade,
                       enabled: owned && worn != null,
@@ -258,7 +259,7 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                       note: h.ownsSkin(s.id) ? null : s.howTo,
                       action: h.ownsSkin(s.id)
                           ? LButton(
-                              label: worn == s.id ? 'Đang dùng' : 'Dùng',
+                              label: worn == s.id ? tr('Đang dùng') : tr('Dùng'),
                               small: true,
                               color: jade,
                               enabled: worn != s.id,
@@ -269,9 +270,9 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                               children: [
                                 LButton(
                                   label: switch (s.source) {
-                                    SkinSource.tower => 'Nhận',
-                                    SkinSource.fest => 'Lễ hội',
-                                    _ => 'Đổi',
+                                    SkinSource.tower => tr('Nhận'),
+                                    SkinSource.fest => tr('Lễ hội'),
+                                    _ => tr('Đổi'),
                                   },
                                   small: true,
                                   color: seal,
@@ -281,11 +282,11 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
                                 if (owned) ...[
                                   const SizedBox(height: 3),
                                   h.trialAt(GameClock.nowMs())?.id == s.id
-                                      ? Text('Đang mặc thử', style: small.copyWith(fontSize: 10.5, color: jade))
+                                      ? Text(tr('Đang mặc thử'), style: small.copyWith(fontSize: 10.5, color: jade))
                                       : ValueListenableBuilder<bool>(
                                           valueListenable: AdsService.instance.rewardedReady,
                                           builder: (_, ready, _) => LButton(
-                                            label: 'Mặc thử',
+                                            label: tr('Mặc thử'),
                                             small: true,
                                             color: const Color(0xFF8A5A10),
                                             enabled: ready,
@@ -304,7 +305,7 @@ class _MountSkinDialogState extends State<MountSkinDialog> {
             ),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+              child: TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng'))),
             ),
           ],
         ),

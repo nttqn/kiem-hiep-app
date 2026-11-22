@@ -6,6 +6,7 @@ import 'core/newbie.dart';
 import 'services/ads.dart';
 import 'services/chat.dart';
 import 'services/cloud.dart';
+import 'services/language.dart';
 import 'services/leaderboard.dart';
 import 'services/notify.dart';
 import 'services/perf.dart';
@@ -15,6 +16,7 @@ import 'services/save.dart';
 import 'services/sound.dart';
 import 'ui/theme.dart';
 import 'ui/title_screen.dart';
+import 'core/i18n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,7 @@ Future<void> main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   // Not awaited: a slow or broken audio asset must never delay the first frame.
   SoundService.instance.init();
+  await LanguageService.instance.load();
   await LiteMode.instance.load();
   await ViewRange.instance.load();
   await SaveService.instance.load();
@@ -67,10 +70,10 @@ void _onHeroTakenOver() {
     barrierDismissible: false,
     builder: (d) => AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Đang chơi trên máy khác', style: titleStyle(20)),
+      title: Text(tr('Đang chơi trên máy khác'), style: titleStyle(20)),
       content: Text(
-        'Nhân vật này vừa được mở trên một điện thoại khác cùng tài khoản. '
-        'Để hai máy không ghi đè tiến trình của nhau, máy này sẽ ngừng lưu lên mây và quay về màn hình chọn nhân vật.',
+        tr('Nhân vật này vừa được mở trên một điện thoại khác cùng tài khoản. '
+        'Để hai máy không ghi đè tiến trình của nhau, máy này sẽ ngừng lưu lên mây và quay về màn hình chọn nhân vật.'),
         style: body,
       ),
       actions: [
@@ -80,7 +83,7 @@ void _onHeroTakenOver() {
             AdsService.navigatorKey.currentState
                 ?.pushAndRemoveUntil(MaterialPageRoute<void>(builder: (_) => const TitleScreen()), (_) => false);
           },
-          child: const Text('Về chọn nhân vật'),
+          child: Text(tr('Về chọn nhân vật')),
         ),
       ],
     ),
@@ -92,6 +95,15 @@ class KiemHiepApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuilt on a language change for the task title; the screens are
+    // replaced by [switchLanguage] itself.
+    return ValueListenableBuilder(
+      valueListenable: LanguageService.instance.lang,
+      builder: (context, _, _) => _app(),
+    );
+  }
+
+  Widget _app() {
     return MaterialApp(
       navigatorKey: AdsService.navigatorKey,
       title: gameTitle,

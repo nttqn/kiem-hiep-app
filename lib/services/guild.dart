@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../core/chat.dart' show chatCensor, chatClean;
 import '../core/guild.dart';
 import '../core/guild_war.dart';
 import '../core/hero.dart';
 import '../core/mentor.dart' show mentorMaxDisciples;
 import 'leaderboard.dart';
 import 'save.dart';
+import '../core/i18n.dart';
 
 /// A bang as read from `guilds/{id}`.
 class GuildInfo {
@@ -196,8 +198,9 @@ class GuildService extends ChangeNotifier {
   /// "thử lại sau").
   static String? badName(String name) {
     final k = nameKey(name);
-    if (k.contains('/')) return 'Tên bang không được có dấu /';
-    if (k == '.' || k == '..' || (k.startsWith('__') && k.endsWith('__'))) return 'Tên bang này không dùng được';
+    if (k.contains('/')) return tr('Tên bang không được có dấu /');
+    if (k == '.' || k == '..' || (k.startsWith('__') && k.endsWith('__'))) return tr('Tên bang này không dùng được');
+    if (chatCensor(name) != name) return tr('Tên có từ ngữ không phù hợp.');
     return null;
   }
 
@@ -206,12 +209,12 @@ class GuildService extends ChangeNotifier {
     if (e is FirebaseException) {
       return switch (e.code) {
         'permission-denied' =>
-          'Máy chủ không nhận bang này. Thử một tên khác chỉ có chữ, số và khoảng trắng; nếu vẫn bị, hãy báo cho nhà phát triển.',
-        'unavailable' || 'deadline-exceeded' => 'Mạng yếu, chưa lập được bang. Thử lại sau.',
-        _ => 'Không lập được bang (${e.code}). Thử lại sau.',
+          tr('Máy chủ không nhận bang này. Thử một tên khác chỉ có chữ, số và khoảng trắng; nếu vẫn bị, hãy báo cho nhà phát triển.'),
+        'unavailable' || 'deadline-exceeded' => tr('Mạng yếu, chưa lập được bang. Thử lại sau.'),
+        _ => tr('Không lập được bang ({code}). Thử lại sau.', {'code': e.code}),
       };
     }
-    return 'Mạng yếu, chưa lập được bang. Thử lại sau.';
+    return tr('Mạng yếu, chưa lập được bang. Thử lại sau.');
   }
 
   // ------------------------------------------------------------ reads
@@ -287,12 +290,12 @@ class GuildService extends ChangeNotifier {
   /// message (taken name, offline).
   Future<(String?, String?)> create(HeroData h, String name, {String notice = '', bool open = true}) async {
     final u = uid, row = myRow;
-    if (u == null || row == null) return (null, 'Cần đăng nhập');
+    if (u == null || row == null) return (null, tr('Cần đăng nhập'));
     name = name.trim();
     final bad = badName(name);
     if (bad != null) return (null, bad);
     try {
-      if (await find(name) != null) return (null, 'Tên bang đã có người dùng');
+      if (await find(name) != null) return (null, tr('Tên bang đã có người dùng'));
     } catch (e) {
       return (null, createErrorText(e));
     }
@@ -445,6 +448,7 @@ class GuildService extends ChangeNotifier {
   }
 
   Future<void> setSettings(GuildInfo g, {String? notice, bool? open, int? minLv}) async {
+    if (notice != null) notice = chatCensor(notice);
     final m = {'notice': ?notice, 'open': ?open, 'minLv': ?minLv};
     if (m.isEmpty) return;
     if (debug) {
@@ -500,16 +504,16 @@ class GuildService extends ChangeNotifier {
         .snapshots()
         .map((s) => [
               for (final d in s.docs.reversed)
-                GuildChat(d.id, d.data()['row'] as String? ?? '', d.data()['name'] as String? ?? '',
-                    d.data()['text'] as String? ?? '', (d.data()['at'] as Timestamp?)?.toDate()),
+                GuildChat(d.id, d.data()['row'] as String? ?? '', chatCensor(d.data()['name'] as String? ?? ''),
+                    chatCensor(d.data()['text'] as String? ?? ''), (d.data()['at'] as Timestamp?)?.toDate()),
             ]);
   }
 
   Future<bool> say(String gid, HeroData h, String text) async {
     final u = uid, row = myRow;
-    text = text.trim();
+    // One line, within the length, swear words starred (as Kênh Thế Giới).
+    text = chatClean(text);
     if (u == null || row == null || text.isEmpty) return false;
-    if (text.length > 120) text = text.substring(0, 120);
     if (debug) {
       (_dChat[gid] ??= []).add(GuildChat('${_dChat[gid]!.length}', row, h.name, text, DateTime.now()));
       return true;
@@ -518,7 +522,7 @@ class GuildService extends ChangeNotifier {
       await _guilds.doc(gid).collection('chat').add({
         'row': row,
         'uid': u,
-        'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
+        'name': chatCensor(h.name.length > 24 ? h.name.substring(0, 24) : h.name),
         'text': text,
         'at': FieldValue.serverTimestamp(),
       }).timeout(_t);

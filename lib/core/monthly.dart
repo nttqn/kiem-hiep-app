@@ -1,4 +1,5 @@
 import 'items.dart';
+import 'i18n.dart';
 
 /// Điểm danh tháng: every day the login gift is taken counts toward the
 /// calendar month, and five marks along the way pay out by themselves, the
@@ -44,13 +45,16 @@ String monthOf(String day) {
 
 /// Short labels of [m] for a hero at [level], for the board.
 List<String> monthlyLabels(MonthlyMark m, int level) => [
-      if (m.goldK > 0) '${_dots(m.gold(level))} lượng',
-      if (m.item != null) 'Trang bị ${m.item!.label}',
-      if (m.gems > 0) '${m.gems} ngọc bậc ${m.gemTier}',
-      if (m.iron > 0) '${m.iron} Thần Thiết',
-      if (m.shards > 0) '${m.shards} Mảnh Hoàng Kim',
-      if (m.pots > 0) '${m.pots} bình máu + nội lực',
-      if (m.pills > 0) '${m.pills} Tẩy Tủy Đan',
+      if (m.goldK > 0) tr('{p0} lượng', {'p0': _dots(m.gold(level))}),
+      if (m.item != null) monthlyItemLabel(m.item!),
+      if (m.gems > 0) tr('{gems} ngọc bậc {gemTier}', {'gems': m.gems, 'gemTier': m.gemTier}),
+      if (m.iron > 0) tr('{iron} Thần Thiết', {'iron': m.iron}),
+      if (m.shards > 0) tr('{shards} Mảnh Hoàng Kim', {'shards': m.shards}),
+      if (m.pots > 0) tr('{pots} bình máu + nội lực', {'pots': m.pots}),
+      if (m.pills > 0) tr('{pills} Tẩy Tủy Đan', {'pills': m.pills}),
     ];
+
+/// The gear line of a mark (also how the UI finds it to colour it).
+String monthlyItemLabel(Rarity r) => tr('Trang bị {rarity}', {'rarity': tr(r.label)});
 
 String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');

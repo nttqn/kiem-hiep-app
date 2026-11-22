@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Thần binh: after the first rebirth the hero awakens their weapon slot
 /// level by level with Thần Thiết (from the hard end of the game: Ác Mộng
@@ -65,12 +66,12 @@ Map<Bonus, double> divineBonuses(int lv) {
 /// Stage name: Linh binh, Bảo binh, Thánh binh, Thần binh, then Tiên binh
 /// at the very top.
 String divineStage(int lv) => switch (lv) {
-      <= 0 => 'Phàm binh',
-      < 4 => 'Linh binh',
-      < 7 => 'Bảo binh',
-      < divineTier2From => 'Thánh binh',
-      < divineMax => 'Thần binh',
-      _ => 'Tiên binh',
+      <= 0 => tr('Phàm binh'),
+      < 4 => tr('Linh binh'),
+      < 7 => tr('Bảo binh'),
+      < divineTier2From => tr('Thánh binh'),
+      < divineMax => tr('Thần binh'),
+      _ => tr('Tiên binh'),
     };
 
 /// Weapon glow by stage, 0 below level 1.
@@ -86,16 +87,16 @@ int divineColor(int lv) => switch (lv) {
 
 /// What reaching level [lv] adds, for the UI.
 String divineLevelText(int lv) {
-  if (lv > divineMax) return '+${(divineTienStat * 100).toStringAsFixed(1)}% công, sinh lực';
-  final parts = ['+${(divineStatPerLv * 100).toStringAsFixed(1)}% công, sinh lực'];
-  if (lv == divineStrikeLevel) parts.add('mở Thần Binh Giáng Thế');
-  if (lv > divineStrikeLevel) parts.add('Giáng Thế mạnh hơn');
+  if (lv > divineMax) return tr('+{p0}% công, sinh lực', {'p0': (divineTienStat * 100).toStringAsFixed(1)});
+  final parts = [tr('+{p0}% công, sinh lực', {'p0': (divineStatPerLv * 100).toStringAsFixed(1)})];
+  if (lv == divineStrikeLevel) parts.add(tr('mở Thần Binh Giáng Thế'));
+  if (lv > divineStrikeLevel) parts.add(tr('Giáng Thế mạnh hơn'));
   final m = divineMarks[lv];
   if (m != null) {
     parts.add(switch (m.$1) {
-      Bonus.crit => '+${(m.$2 * 100).round()}% bạo kích',
-      Bonus.critDmg => '+${(m.$2 * 100).round()}% sát thương bạo kích',
-      Bonus.skillDmg => '+${(m.$2 * 100).round()}% sát thương kỹ năng',
+      Bonus.crit => tr('+{p0}% bạo kích', {'p0': (m.$2 * 100).round()}),
+      Bonus.critDmg => tr('+{p0}% sát thương bạo kích', {'p0': (m.$2 * 100).round()}),
+      Bonus.skillDmg => tr('+{p0}% sát thương kỹ năng', {'p0': (m.$2 * 100).round()}),
       _ => '',
     });
   }

@@ -8,6 +8,7 @@ import '../services/analytics.dart';
 import '../services/mail.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Hòm thư: the developer's gifts still open, each claimed once per hero.
 Future<void> showMailDialog(BuildContext context) {
@@ -56,13 +57,13 @@ class _MailDialogState extends State<_MailDialog> {
     return AlertDialog(
       backgroundColor: lacquer,
       insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-      title: Text('Hòm thư', style: titleStyle(20)),
+      title: Text(tr('Hòm thư'), style: titleStyle(20)),
       content: SizedBox(
         width: 560,
         child: mails.isEmpty
             ? Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Text('Chưa có thư nào. Quà từ nhà phát triển sẽ gửi tới đây.',
+                child: Text(tr('Chưa có thư nào. Quà từ nhà phát triển sẽ gửi tới đây.'),
                     style: body, textAlign: TextAlign.center),
               )
             : Column(
@@ -87,9 +88,9 @@ class _MailDialogState extends State<_MailDialog> {
                 _claim(m);
               }
             },
-            child: const Text('Nhận tất cả'),
+            child: Text(tr('Nhận tất cả')),
           ),
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng'))),
       ],
     );
   }
@@ -114,27 +115,27 @@ class _MailDialogState extends State<_MailDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(m.title, style: bold.copyWith(color: can ? goldLight : cream)),
+                  Text(tr(m.title), style: bold.copyWith(color: can ? goldLight : cream)),
                   if (m.body.isNotEmpty) Text(m.body, style: body.copyWith(fontSize: 12.5)),
                   if (m.rewards.isNotEmpty)
-                    Text('Quà: ${m.rewards.join(' · ')}',
+                    Text(tr('Quà: {p0}', {'p0': m.rewards.join(' · ')}),
                         style: small.copyWith(fontSize: 11.5, color: const Color(0xFF8CE07A))),
                   if (m.until.isNotEmpty)
-                    Text('Hạn nhận đến hết ngày ${_day(m.until)}', style: small.copyWith(fontSize: 10.5)),
+                    Text(tr('Hạn nhận đến hết ngày {p0}', {'p0': _day(m.until)}), style: small.copyWith(fontSize: 10.5)),
                   if (got != null && got.isNotEmpty)
-                    Text('Đã nhận: ${got.join(', ')}', style: small.copyWith(fontSize: 11, color: cream)),
+                    Text(tr('Đã nhận: {p0}', {'p0': got.join(', ')}), style: small.copyWith(fontSize: 11, color: cream)),
                 ],
               ),
             ),
             const SizedBox(width: 6),
             if (taken)
-              Text('Đã nhận', style: small)
+              Text(tr('Đã nhận'), style: small)
             else if (tooLow)
-              Text('Cần cấp ${m.minLevel}', style: small)
+              Text(tr('Cần cấp {minLevel}', {'minLevel': m.minLevel}), style: small)
             else if (m.rewards.isNotEmpty)
-              LButton(label: 'Nhận', small: true, color: jade, enabled: can, onTap: () => _claim(m))
+              LButton(label: tr('Nhận'), small: true, color: jade, enabled: can, onTap: () => _claim(m))
             else
-              LButton(label: 'Đã đọc', small: true, color: lacquerLight, enabled: can, onTap: () => _claim(m)),
+              LButton(label: tr('Đã đọc'), small: true, color: lacquerLight, enabled: can, onTap: () => _claim(m)),
           ],
         ),
       ),

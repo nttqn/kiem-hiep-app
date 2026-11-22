@@ -18,6 +18,7 @@ import 'leaderboard.dart';
 import 'presence.dart';
 import 'save.dart';
 import 'sync_plan.dart';
+import '../core/i18n.dart';
 
 /// Online save: the character slots mirrored to Firestore under the signed-in
 /// player (`users/{uid}/slots/{0..2}`), so reinstalling or changing phone
@@ -189,16 +190,16 @@ class CloudSave extends ChangeNotifier {
       return user != null;
     } on GoogleSignInException catch (e) {
       if (e.code != GoogleSignInExceptionCode.canceled) _logFail('gsi_${e.code.name}', e.description);
-      message = e.code == GoogleSignInExceptionCode.canceled ? null : 'Đăng nhập Google thất bại (${e.code.name})';
+      message = e.code == GoogleSignInExceptionCode.canceled ? null : tr('Đăng nhập Google thất bại ({codeName})', {'codeName': tr(e.code.name)});
     } on FirebaseAuthException catch (e) {
       _logFail('fb_${e.code}', e.message);
       message = e.code == 'web-context-canceled' || e.code == 'canceled'
           ? null
-          : 'Không đăng nhập được (${e.code}), thử lại sau';
+          : tr('Không đăng nhập được ({code}), thử lại sau', {'code': e.code});
     } catch (e) {
       debugPrint('sign-in failed: $e');
       _logFail('other', e);
-      message = 'Không đăng nhập được, thử lại sau';
+      message = tr('Không đăng nhập được, thử lại sau');
     }
     busy = false;
     notifyListeners();
@@ -221,7 +222,7 @@ class CloudSave extends ChangeNotifier {
   }
 
   /// Shown in the UI: email, else the provider's display name.
-  String get who => user?.email ?? user?.displayName ?? 'Đã đăng nhập';
+  String get who => user?.email ?? user?.displayName ?? tr('Đã đăng nhập');
 
   // ------------------------------------------------------------ data
 
@@ -386,7 +387,7 @@ class CloudSave extends ChangeNotifier {
       lastSync = DateTime.now();
     } catch (e) {
       debugPrint('sync failed: $e');
-      message = 'Không kết nối được máy chủ, sẽ thử lại sau';
+      message = tr('Không kết nối được máy chủ, sẽ thử lại sau');
     }
     busy = false;
     notifyListeners();
@@ -566,13 +567,13 @@ class CloudSave extends ChangeNotifier {
       // keeps them from going straight back up.
       await SaveService.instance.setOwner(null, '');
       await signOut();
-      message = 'Đã xóa bản lưu trên mây và đăng xuất. Nhân vật trên máy vẫn còn.';
+      message = tr('Đã xóa bản lưu trên mây và đăng xuất. Nhân vật trên máy vẫn còn.');
       notifyListeners();
       return true;
     } catch (e) {
       debugPrint('wipe failed: $e');
       busy = false;
-      message = 'Chưa xóa được bản lưu trên mây, thử lại sau.';
+      message = tr('Chưa xóa được bản lưu trên mây, thử lại sau.');
       notifyListeners();
       return false;
     }
@@ -629,13 +630,13 @@ class CloudSave extends ChangeNotifier {
       lastSync = null;
       // The heroes left here belong to no account now.
       await SaveService.instance.setOwner(null, '');
-      message = 'Đã xóa tài khoản và dữ liệu trên mây.';
+      message = tr('Đã xóa tài khoản và dữ liệu trên mây.');
       busy = false;
       notifyListeners();
       return true;
     } catch (e) {
       debugPrint('delete account failed: $e');
-      message = 'Chưa xóa được tài khoản, thử lại sau.';
+      message = tr('Chưa xóa được tài khoản, thử lại sau.');
       busy = false;
       notifyListeners();
       return false;

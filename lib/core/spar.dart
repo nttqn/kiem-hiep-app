@@ -1,6 +1,7 @@
 import 'arena.dart';
 import 'content.dart';
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Tỉ thí (1.13.0): a friendly duel with another player's hero, picked from
 /// a board ("Xem thông tin"). Fought like Lôi đài against their copy, in
@@ -11,7 +12,7 @@ const int sparLossCoins = 3;
 
 DungeonDef sparDef(ArenaRival r) => DungeonDef(
       id: 'spar',
-      name: 'Tỉ thí · ${r.name}',
+      name: tr('Tỉ thí · {rName}', {'rName': tr(r.name)}),
       mapId: 'hoason',
       level: r.level,
       waves: const [],
@@ -45,6 +46,6 @@ extension Spar on HeroData {
     final coins = won ? sparWinCoins : sparLossCoins;
     arenaCoins += coins;
     if (won) sparWins++;
-    return [won ? 'Thắng Tỉ thí!' : 'Thua Tỉ thí, lần sau sẽ khác.', '+$coins Uy danh', 'Đã thắng $sparWins trận Tỉ thí'];
+    return [won ? tr('Thắng Tỉ thí!') : tr('Thua Tỉ thí, lần sau sẽ khác.'), tr('+{coins} Uy danh', {'coins': coins}), tr('Đã thắng {sparWins} trận Tỉ thí', {'sparWins': sparWins})];
   }
 }

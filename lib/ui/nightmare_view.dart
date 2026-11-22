@@ -9,6 +9,7 @@ import '../services/ads.dart';
 import '../services/save.dart';
 import 'play_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Ải Ác Mộng: the eighteen nightmares, opened one after another, each with
 /// this week's ma khí.
@@ -39,21 +40,21 @@ class _NightmareViewState extends State<NightmareView> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Quái mạnh hơn nhiều, boss gọi đồng bọn khi yếu máu, ma khí đổi mỗi thứ Hai. '
-                  'Thưởng Mảnh Hoàng Kim, ngọc, trang bí kíp, từ ải 7 có Thần Thiết; lần vượt đầu tiên thưởng lớn.',
+                  tr('Quái mạnh hơn nhiều, boss gọi đồng bọn khi yếu máu, ma khí đổi mỗi thứ Hai. '
+                  'Thưởng Mảnh Hoàng Kim, ngọc, trang bí kíp, từ ải 7 có Thần Thiết; lần vượt đầu tiên thưởng lớn.'),
                   style: small.copyWith(fontSize: 11.5, color: cream),
                 ),
               ),
               const SizedBox(width: 10),
               Column(
                 children: [
-                  Text('Lượt thưởng', style: small.copyWith(fontSize: 11)),
+                  Text(tr('Lượt thưởng'), style: small.copyWith(fontSize: 11)),
                   Text('${h.nmRunsLeft}/${h.nmPaidToday}', style: titleStyle(20)),
                   if (h.nmAds < nightmareAdRuns)
                     ValueListenableBuilder<bool>(
                       valueListenable: AdsService.instance.rewardedReady,
                       builder: (_, ready, _) => LButton(
-                        label: '+1 lượt',
+                        label: tr('+1 lượt'),
                         icon: Icons.ondemand_video,
                         small: true,
                         color: const Color(0xFF8A5A10),
@@ -98,11 +99,11 @@ class _NightmareViewState extends State<NightmareView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Ác Mộng ${i + 1}: ${dungeons[i].name}',
+                        Text(tr('Ác Mộng {p0}: {p1}', {'p0': i + 1, 'p1': tr(dungeons[i].name)}),
                             style: bold.copyWith(color: const Color(0xFFF2B8E0)), overflow: TextOverflow.ellipsis),
-                        Text('Quái cấp ${d.level} · ${d.map.name}', style: small, overflow: TextOverflow.ellipsis),
+                        Text(tr('Quái cấp {level} · {mapName}', {'level': d.level, 'mapName': tr(d.map.name)}), style: small, overflow: TextOverflow.ellipsis),
                         Text(
-                          'Lực chiến đề nghị ${fmt(nightmarePower(i))}',
+                          tr('Lực chiến đề nghị {p0}', {'p0': fmt(nightmarePower(i))}),
                           style: small.copyWith(
                             fontSize: 11.5,
                             color: power >= nightmarePower(i)
@@ -113,13 +114,13 @@ class _NightmareViewState extends State<NightmareView> {
                           ),
                         ),
                         Text(
-                          'Thưởng ${fmt(nightmareGold(i, 3))} lượng · ${nightmareShards(i, 3)} mảnh · ngọc bậc ${nightmareGemTier(i)}'
-                          '${nightmareIron(i) > 0 ? ' · ${nightmareIron(i)} Thần Thiết' : ''}',
+                          tr('Thưởng {p0} lượng · {p1} mảnh · ngọc bậc {p2}'
+                          '{p3}', {'p0': fmt(nightmareGold(i, 3)), 'p1': nightmareShards(i, 3), 'p2': nightmareGemTier(i), 'p3': nightmareIron(i) > 0 ? tr(' · {p0} Thần Thiết', {'p0': nightmareIron(i)}) : ''}),
                           style: small.copyWith(fontSize: 11, color: goldLight),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text('Ma khí ${a.name}: ${a.desc}',
+                        Text(tr('Ma khí {aName}: {desc}', {'aName': tr(a.name), 'desc': tr(a.desc)}),
                             style: small.copyWith(color: cream, fontSize: 11),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis),
@@ -130,7 +131,7 @@ class _NightmareViewState extends State<NightmareView> {
                               Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
                             const Spacer(),
                             Text(
-                              open ? (stars == 0 ? 'Chưa vượt' : '${d.timeLimit.round()} giây') : 'Vượt Ác Mộng $i trước',
+                              open ? (stars == 0 ? tr('Chưa vượt') : tr('{p0} giây', {'p0': d.timeLimit.round()})) : tr('Vượt Ác Mộng {i} trước', {'i': i}),
                               style: small,
                             ),
                           ],

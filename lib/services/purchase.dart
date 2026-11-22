@@ -17,6 +17,7 @@ import 'analytics.dart';
 import 'cloud.dart';
 import 'play_verify.dart';
 import 'save.dart';
+import '../core/i18n.dart';
 
 /// One line of the purchase history.
 class PurchaseLog {
@@ -25,13 +26,13 @@ class PurchaseLog {
   final DateTime at;
 
   String get product => switch (sku) {
-        skuMonthCard => 'Nguyệt thẻ',
-        skuStarter => 'Gói tân thủ',
-        skuNoAds => 'Bỏ quảng cáo',
-        skuStarPack => 'Gói Thăng Tinh',
-        skuPass => 'Lệnh Bài Hào Kiệt',
-        skuFest => 'Gói lễ hội',
-        skuGoldPack => 'Hòm Ngân Lượng',
+        skuMonthCard => tr('Nguyệt thẻ'),
+        skuStarter => tr('Gói tân thủ'),
+        skuNoAds => tr('Bỏ quảng cáo'),
+        skuStarPack => tr('Gói Thăng Tinh'),
+        skuPass => tr('Lệnh Bài Hào Kiệt'),
+        skuFest => tr('Gói lễ hội'),
+        skuGoldPack => tr('Hòm Ngân Lượng'),
         _ => sku,
       };
 
@@ -133,8 +134,8 @@ class PurchaseService {
   /// back Gói bỏ quảng cáo when this Play account genuinely owns it, and
   /// re-delivers any purchase left unfinished. The line to show.
   Future<String> restoreNow() async {
-    if (!_supported) return 'Chỉ khôi phục được trên điện thoại.';
-    if (!available) return 'Không kết nối được cửa hàng. Kiểm tra mạng và tài khoản cửa hàng rồi thử lại.';
+    if (!_supported) return tr('Chỉ khôi phục được trên điện thoại.');
+    if (!available) return tr('Không kết nối được cửa hàng. Kiểm tra mạng và tài khoản cửa hàng rồi thử lại.');
     try {
       // Unfinished consumables come back through the stream; ids already
       // given are skipped there.
@@ -143,12 +144,12 @@ class PurchaseService {
       debugPrint('restore: $e');
     }
     if (defaultTargetPlatform != TargetPlatform.android) {
-      return 'Đã gửi yêu cầu khôi phục tới App Store.';
+      return tr('Đã gửi yêu cầu khôi phục tới App Store.');
     }
     try {
       final add = InAppPurchase.instance.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
       final r = await add.queryPastPurchases();
-      if (r.error != null) return 'Google Play chưa trả lời. Thử lại sau ít phút.';
+      if (r.error != null) return tr('Google Play chưa trả lời. Thử lại sau ít phút.');
       final owns = r.pastPurchases.any((p) =>
           p.productID == skuNoAds &&
           p.billingClientPurchase.purchaseState == PurchaseStateWrapper.purchased &&
@@ -157,13 +158,13 @@ class PurchaseService {
       if (owns) {
         AdsService.instance.setAdFree(true);
         changed.value++;
-        return 'Đã khôi phục Gói bỏ quảng cáo.';
+        return tr('Đã khôi phục Gói bỏ quảng cáo.');
       }
-      return 'Tài khoản Google Play đang dùng trên máy này chưa mua Gói bỏ quảng cáo. '
+      return tr('Tài khoản Google Play đang dùng trên máy này chưa mua Gói bỏ quảng cáo. '
           'Nếu bạn mua bằng tài khoản khác, hãy chuyển sang tài khoản đó trong Play Store rồi thử lại. '
-          'Các gói khác đã vào nhân vật ngay lúc mua (xem Lịch sử nạp).';
+          'Các gói khác đã vào nhân vật ngay lúc mua (xem Lịch sử nạp).');
     } catch (e) {
-      return 'Không khôi phục được: $e';
+      return tr('Không khôi phục được: {e}', {'e': e});
     }
   }
 
@@ -208,7 +209,7 @@ class PurchaseService {
       if (!ok) busy.value = false;
     } catch (e) {
       busy.value = false;
-      message.value = 'Không mở được cửa hàng: $e';
+      message.value = tr('Không mở được cửa hàng: {e}', {'e': e});
     }
   }
 
@@ -222,10 +223,10 @@ class PurchaseService {
       switch (p.status) {
         case PurchaseStatus.pending:
           busy.value = true;
-          message.value = 'Giao dịch đang chờ xác nhận…';
+          message.value = tr('Giao dịch đang chờ xác nhận…');
         case PurchaseStatus.error:
           busy.value = false;
-          message.value = 'Giao dịch lỗi: ${p.error?.message ?? 'không rõ'}';
+          message.value = tr('Giao dịch lỗi: {p0}', {'p0': p.error?.message ?? tr('không rõ')});
         case PurchaseStatus.canceled:
           busy.value = false;
         case PurchaseStatus.purchased || PurchaseStatus.restored:
@@ -235,7 +236,7 @@ class PurchaseService {
             await _deliver(p);
           } else {
             Analytics.instance.log('iap_bad', {'sku': p.productID, 'why': why, 'v': appVersion});
-            message.value = 'Giao dịch không hợp lệ: Google Play không xác nhận giao dịch này.';
+            message.value = tr('Giao dịch không hợp lệ: Google Play không xác nhận giao dịch này.');
           }
       }
       if (p.pendingCompletePurchase) {
@@ -254,9 +255,9 @@ class PurchaseService {
       // Restored every start; granting again is harmless.
       AdsService.instance.setAdFree(true);
       if (p.status == PurchaseStatus.purchased) {
-        message.value = 'Đã bỏ quảng cáo! Phần thưởng quảng cáo nay nhận ngay, không cần xem.';
+        message.value = tr('Đã bỏ quảng cáo! Phần thưởng quảng cáo nay nhận ngay, không cần xem.');
         Analytics.instance.log('iap_done', {'sku': p.productID, 'v': appVersion});
-        await _addLog(p.productID, p.purchaseID ?? '', 'Cả tài khoản');
+        await _addLog(p.productID, p.purchaseID ?? '', tr('Cả tài khoản'));
       }
       return;
     }
@@ -270,8 +271,8 @@ class PurchaseService {
       await _addLog(p.productID, p.purchaseID ?? '', save.hero.name);
     } else {
       _queue.add(p.productID);
-      message.value = 'Đã mua! Quà sẽ vào nhân vật bạn chọn tiếp theo.';
-      await _addLog(p.productID, p.purchaseID ?? '', 'Nhân vật vào thành tiếp theo');
+      message.value = tr('Đã mua! Quà sẽ vào nhân vật bạn chọn tiếp theo.');
+      await _addLog(p.productID, p.purchaseID ?? '', tr('Nhân vật vào thành tiếp theo'));
     }
     await _persist();
   }
@@ -313,18 +314,18 @@ class PurchaseService {
     switch (sku) {
       case skuMonthCard:
         h.addMonthCard(vnDayKey());
-        text = 'Đã kích hoạt Nguyệt thẻ cho ${h.name}: ${h.cardDaysLeft(vnDayKey())} ngày.';
+        text = tr('Đã kích hoạt Nguyệt thẻ cho {hName}: {p0} ngày.', {'hName': h.name, 'p0': h.cardDaysLeft(vnDayKey())});
       case skuStarter:
-        text = 'Gói tân thủ cho ${h.name}: ${h.grantStarter().join(', ')}';
+        text = tr('Gói tân thủ cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantStarter().join(', ')});
       case skuStarPack:
-        text = 'Gói Thăng Tinh cho ${h.name}: ${h.grantStarPack().join(', ')}';
+        text = tr('Gói Thăng Tinh cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantStarPack().join(', ')});
       case skuGoldPack:
-        text = 'Hòm Ngân Lượng cho ${h.name}: ${h.grantGoldPack().join(', ')}';
+        text = tr('Hòm Ngân Lượng cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantGoldPack().join(', ')});
       case skuFest:
-        text = 'Gói lễ hội cho ${h.name}: ${h.grantFestPack().join(', ')}';
+        text = tr('Gói lễ hội cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantFestPack().join(', ')});
       case skuPass:
         h.grantPass(vnDayKey());
-        text = 'Đã mở Lệnh Bài Hào Kiệt mùa ${h.passSeason} cho ${h.name}. Nhận thưởng trong Lệnh Bài.';
+        text = tr('Đã mở Lệnh Bài Hào Kiệt mùa {passSeason} cho {hName}. Nhận thưởng trong Lệnh Bài.', {'passSeason': h.passSeason, 'hName': h.name});
       default:
         return '';
     }

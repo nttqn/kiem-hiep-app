@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/chat.dart' show chatCensor;
 import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/sects.dart';
@@ -7,6 +8,7 @@ import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
 import 'town_screen.dart';
+import '../core/i18n.dart';
 
 class CreateScreen extends StatefulWidget {
   const CreateScreen({super.key, required this.slot});
@@ -59,7 +61,7 @@ class _CreateScreenState extends State<CreateScreen> {
                             onPressed: () => Navigator.pop(context),
                             icon: const Icon(Icons.arrow_back, color: goldLight),
                           ),
-                          Text('Chọn môn phái', style: titleStyle(18)),
+                          Text(tr('Chọn môn phái'), style: titleStyle(18)),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -111,9 +113,9 @@ class _CreateScreenState extends State<CreateScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _GenderChip(label: 'Nam', on: !_female, onTap: () => setState(() => _female = false)),
+                          _GenderChip(label: tr('Nam'), on: !_female, onTap: () => setState(() => _female = false)),
                           const SizedBox(width: 8),
-                          _GenderChip(label: 'Nữ', on: _female, onTap: () => setState(() => _female = true)),
+                          _GenderChip(label: tr('Nữ'), on: _female, onTap: () => setState(() => _female = true)),
                         ],
                       ),
                     ],
@@ -129,31 +131,31 @@ class _CreateScreenState extends State<CreateScreen> {
                       children: [
                         Row(
                           children: [
-                            Expanded(child: Text(s.name, style: titleStyle(24, color: hanhColor(_hanh)))),
+                            Expanded(child: Text(tr(s.name), style: titleStyle(24, color: hanhColor(_hanh)))),
                             _HanhBadge(hanh: _hanh),
                           ],
                         ),
-                        Text(s.tagline, style: body.copyWith(fontStyle: FontStyle.italic, color: goldLight)),
+                        Text(tr(s.tagline), style: body.copyWith(fontStyle: FontStyle.italic, color: goldLight)),
                         const SizedBox(height: 6),
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(s.desc, style: body),
+                                Text(tr(s.desc), style: body),
                                 const SizedBox(height: 6),
-                                Text('Lối đánh: ${s.role}', style: small.copyWith(color: cream)),
+                                Text(tr('Lối đánh: {role}', {'role': tr(s.role)}), style: small.copyWith(color: cream)),
                                 Row(
                                   children: [
-                                    Text('Độ khó: ', style: small.copyWith(color: cream)),
+                                    Text(tr('Độ khó: '), style: small.copyWith(color: cream)),
                                     for (var i = 0; i < 3; i++)
                                       Icon(i < s.difficulty ? Icons.star : Icons.star_border,
                                           size: 15, color: goldLight),
                                   ],
                                 ),
                                 Text(
-                                  'Khắc ${_hanh.overcomes.label} (+25% sát thương) · '
-                                  'bị ${_hanh.overcomeBy.label} khắc',
+                                  tr('Khắc {overcomesLabel} (+25% sát thương) · '
+                                  'bị {overcomeByLabel} khắc', {'overcomesLabel': tr(_hanh.overcomes.label), 'overcomeByLabel': tr(_hanh.overcomeBy.label)}),
                                   style: small.copyWith(color: cream),
                                 ),
                                 const SizedBox(height: 6),
@@ -163,7 +165,7 @@ class _CreateScreenState extends State<CreateScreen> {
                                   children: [
                                     for (final sk in s.skills)
                                       Tooltip(
-                                        message: '${sk.name} (cấp ${sk.unlock}): ${sk.desc}',
+                                        message: tr('{skName} (cấp {unlock}): {desc}', {'skName': tr(sk.name), 'unlock': sk.unlock, 'desc': tr(sk.desc)}),
                                         child: SizedBox(
                                           width: 34,
                                           height: 34,
@@ -189,7 +191,7 @@ class _CreateScreenState extends State<CreateScreen> {
                                   decoration: InputDecoration(
                                     counterText: '',
                                     isDense: true,
-                                    hintText: _defaultNames[_hanh]![_female ? 1 : 0],
+                                    hintText: tr(_defaultNames[_hanh]![_female ? 1 : 0]),
                                     hintStyle: small,
                                     filled: true,
                                     fillColor: lacquerDeep,
@@ -202,7 +204,7 @@ class _CreateScreenState extends State<CreateScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            LButton(label: 'Nhập môn', onTap: _create),
+                            LButton(label: tr('Nhập môn'), onTap: _create),
                           ],
                         ),
                       ],
@@ -219,7 +221,13 @@ class _CreateScreenState extends State<CreateScreen> {
 
   Future<void> _create() async {
     var name = _name.text.trim();
-    if (name.isEmpty) name = _defaultNames[_hanh]![_female ? 1 : 0];
+    if (name.isEmpty) name = tr(_defaultNames[_hanh]![_female ? 1 : 0]);
+    // The name shows on boards and in every chat: no swear words.
+    if (chatCensor(name) != name) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Tên có từ ngữ không phù hợp.'))));
+      return;
+    }
     final h = HeroData(name: name, hanh: _hanh, female: _female);
     h.refreshDaily(todayKey());
     await SaveService.instance.create(widget.slot, h);
@@ -255,8 +263,8 @@ class _SectTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(sect.name, style: bold.copyWith(fontSize: 14)),
-                  Text(sect.role.split(' · ').first, style: small.copyWith(fontSize: 11)),
+                  Text(tr(sect.name), style: bold.copyWith(fontSize: 14)),
+                  Text(tr(sect.role).split(' · ').first, style: small.copyWith(fontSize: 11)),
                 ],
               ),
             ),
@@ -284,7 +292,7 @@ class _HanhBadge extends StatelessWidget {
         gradient: RadialGradient(colors: [Color.lerp(c, Colors.white, 0.3)!, Color.lerp(c, Colors.black, 0.4)!]),
         border: Border.all(color: goldLight, width: 1.2),
       ),
-      child: Text(hanh.label, style: TextStyle(fontSize: size * 0.3, fontWeight: FontWeight.w800, color: Colors.white)),
+      child: Text(tr(hanh.label), style: TextStyle(fontSize: size * 0.3, fontWeight: FontWeight.w800, color: Colors.white)),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Thú cưỡi: the hero rides one on every map. Each mount adds running speed
 /// and one stat; feeding (gold) raises its level and both bonuses.
@@ -53,27 +54,27 @@ class MountDef {
   double bonusAt(int lv) => base + perLv * (lv - 1);
 
   String get bonusName => switch (bonus) {
-        Bonus.hpPct => 'Sinh lực',
-        Bonus.defPct => 'Phòng thủ',
-        Bonus.atkPct => 'Công lực',
-        Bonus.crit => 'Chí mạng',
-        Bonus.skillDmg => 'Uy lực kỹ năng',
+        Bonus.hpPct => tr('Sinh lực'),
+        Bonus.defPct => tr('Phòng thủ'),
+        Bonus.atkPct => tr('Công lực'),
+        Bonus.crit => tr('Chí mạng'),
+        Bonus.skillDmg => tr('Uy lực kỹ năng'),
         _ => bonus.name,
       };
 
-  String bonusText(int lv) => 'Tốc chạy +${(moveAt(lv) * 100).round()}% · '
-      '$bonusName +${(bonusAt(lv) * 100).toStringAsFixed(1)}%';
+  String bonusText(int lv) => tr('Tốc chạy +{p0}% · '
+      '{bonusName} +{p1}%', {'p0': (moveAt(lv) * 100).round(), 'bonusName': bonusName, 'p1': (bonusAt(lv) * 100).toStringAsFixed(1)});
 
   String get howTo => switch (source) {
-        MountSource.gold => 'Mua: ${_thousands(need)} lượng',
-        MountSource.tower => 'Vượt Tháp Thử Luyện tầng $need',
-        MountSource.arena => 'Đổi ${_thousands(need)} Uy danh ở Lôi đài',
-        MountSource.rebirth => 'Chuyển sinh lần $need',
-        MountSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
-        MountSource.sea => 'Hạ Đông Hải Long Vương $need lần (Đông Hải Quần Đảo)',
-        MountSource.west => 'Hạ Xích Sa Pháp Vương $need lần (Tây Vực Cổ Đạo)',
-        MountSource.south => 'Hạ Vạn Độc Cổ Vương $need lần (Miêu Cương Cổ Lâm)',
-        MountSource.kunlun => 'Hạ Băng Ngọc Kỳ Lân $need lần (Côn Lôn Tiên Cảnh)',
+        MountSource.gold => tr('Mua: {p0} lượng', {'p0': _thousands(need)}),
+        MountSource.tower => tr('Vượt Tháp Thử Luyện tầng {need}', {'need': need}),
+        MountSource.arena => tr('Đổi {p0} Uy danh ở Lôi đài', {'p0': _thousands(need)}),
+        MountSource.rebirth => tr('Chuyển sinh lần {need}', {'need': need}),
+        MountSource.abyss => tr('Hạ Cửu U Ma Tôn {need} lần (Cửu U Ma Vực)', {'need': need}),
+        MountSource.sea => tr('Hạ Đông Hải Long Vương {need} lần (Đông Hải Quần Đảo)', {'need': need}),
+        MountSource.west => tr('Hạ Xích Sa Pháp Vương {need} lần (Tây Vực Cổ Đạo)', {'need': need}),
+        MountSource.south => tr('Hạ Vạn Độc Cổ Vương {need} lần (Miêu Cương Cổ Lâm)', {'need': need}),
+        MountSource.kunlun => tr('Hạ Băng Ngọc Kỳ Lân {need} lần (Côn Lôn Tiên Cảnh)', {'need': need}),
       };
 }
 

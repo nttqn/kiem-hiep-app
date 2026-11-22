@@ -14,6 +14,7 @@ import 'backdrop.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Võ Lâm Đại Hội: this week's bracket of eight and the hero's next duel.
 class DaiHoiScreen extends StatefulWidget {
@@ -34,7 +35,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
     final paid = h.daiHoiRoll(_week);
     if (paid.isNotEmpty) {
       SaveService.instance.save();
-      WidgetsBinding.instance.addPostFrameCallback((_) => _tell('Thưởng Đại Hội tuần trước', paid));
+      WidgetsBinding.instance.addPostFrameCallback((_) => _tell(tr('Thưởng Đại Hội tuần trước'), paid));
     }
   }
 
@@ -48,7 +49,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [for (final l in lines) Text(l, style: bold.copyWith(color: cream))],
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
         ),
       );
 
@@ -87,17 +88,17 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
     await SaveService.instance.save();
     if (!mounted) return;
     setState(() {});
-    if (lines.isNotEmpty) await _tell('Thưởng Đại Hội', lines);
+    if (lines.isNotEmpty) await _tell(tr('Thưởng Đại Hội'), lines);
   }
 
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Võ Lâm Đại Hội',
+      title: tr('Võ Lâm Đại Hội'),
       actions: [
         Padding(
           padding: const EdgeInsets.only(left: 8),
-          child: Text('Còn ${huntDaysLeft(vnDayKey())} ngày', style: bold.copyWith(color: goldLight)),
+          child: Text(tr('Còn {p0} ngày', {'p0': huntDaysLeft(vnDayKey())}), style: bold.copyWith(color: goldLight)),
         ),
       ],
       child: Row(
@@ -142,18 +143,18 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
             Expanded(
               child: ListView(
                 children: [
-            Text('Đại hội tuần này', style: titleStyle(22)),
+            Text(tr('Đại hội tuần này'), style: titleStyle(22)),
             const SizedBox(height: 6),
             Text(
-              'Mỗi tuần tám cao thủ tranh ngôi Minh Chủ: bạn và bảy người khác, '
+              tr('Mỗi tuần tám cao thủ tranh ngôi Minh Chủ: bạn và bảy người khác, '
               'phần lớn là bản sao nhân vật của người chơi thật trên bảng xếp hạng. '
               'Đấu loại trực tiếp ba trận: Tứ kết, Bán kết, Chung kết, mỗi vòng đối thủ mạnh hơn. '
-              'Các cặp khác phân thắng thua theo lực chiến.',
+              'Các cặp khác phân thắng thua theo lực chiến.'),
               style: body.copyWith(fontSize: 13.5),
             ),
             const SizedBox(height: 6),
-            Text('Thua một trận được đấu lại một lần (xem quảng cáo). Vô địch nhận danh hiệu « $daiHoiTitle » '
-                'và lên bảng xếp hạng Minh Chủ.',
+            Text(tr('Thua một trận được đấu lại một lần (xem quảng cáo). Vô địch nhận danh hiệu « {daiHoiTitle} » '
+                'và lên bảng xếp hạng Minh Chủ.', {'daiHoiTitle': daiHoiTitle}),
                 style: small.copyWith(color: goldLight)),
                 ],
               ),
@@ -161,7 +162,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
             const SizedBox(height: 6),
             Center(
               child: LButton(
-                label: _busy ? 'Đang tìm đối thủ…' : 'Ghi danh',
+                label: _busy ? tr('Đang tìm đối thủ…') : tr('Ghi danh'),
                 icon: Icons.how_to_reg,
                 color: jade,
                 enabled: !_busy,
@@ -184,7 +185,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
           Expanded(flex: 5, child: _column(daiHoiRounds[0], qf, sf)),
           Expanded(flex: 5, child: _column(daiHoiRounds[1], sf, fi)),
           Expanded(flex: 5, child: _column(daiHoiRounds[2], fi, champ)),
-          Expanded(flex: 4, child: _column('Minh Chủ', champ, const [])),
+          Expanded(flex: 4, child: _column(tr('Minh Chủ'), champ, const [])),
         ],
       ),
     );
@@ -253,15 +254,15 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!h.daiHoiOpen)
-            Text('Mở ở cấp $daiHoiOpenLevel.', style: bold.copyWith(color: cream))
+            Text(tr('Mở ở cấp {daiHoiOpenLevel}.', {'daiHoiOpenLevel': daiHoiOpenLevel}), style: bold.copyWith(color: cream))
           else if (!h.dhEntered)
-            Text('Chưa ghi danh tuần này.', style: bold.copyWith(color: cream), textAlign: TextAlign.center)
+            Text(tr('Chưa ghi danh tuần này.'), style: bold.copyWith(color: cream), textAlign: TextAlign.center)
           else if (h.dhWins >= 3) ...[
             Icon(Icons.emoji_events, size: 64, color: goldLight.withValues(alpha: 0.9)),
-            Text('Bạn là Minh Chủ tuần này!', style: titleStyle(18), textAlign: TextAlign.center),
-            Text('Thứ Hai tuần sau mở đại hội mới.', style: small, textAlign: TextAlign.center),
+            Text(tr('Bạn là Minh Chủ tuần này!'), style: titleStyle(18), textAlign: TextAlign.center),
+            Text(tr('Thứ Hai tuần sau mở đại hội mới.'), style: small, textAlign: TextAlign.center),
           ] else if (h.dhOut) ...[
-            Text('Dừng bước ở ${daiHoiRounds[h.dhWins]}', style: titleStyle(18, color: const Color(0xFFFF8A6A)),
+            Text(tr('Dừng bước ở {p0}', {'p0': daiHoiRounds[h.dhWins]}), style: titleStyle(18, color: const Color(0xFFFF8A6A)),
                 textAlign: TextAlign.center),
             const SizedBox(height: 6),
             if (h.dhUnpaid) ...[
@@ -269,7 +270,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
                 ValueListenableBuilder<bool>(
                   valueListenable: AdsService.instance.rewardedReady,
                   builder: (_, ready, _) => LButton(
-                    label: 'Đấu lại (quảng cáo)',
+                    label: tr('Đấu lại (quảng cáo)'),
                     icon: Icons.ondemand_video,
                     small: true,
                     color: const Color(0xFF8A5A10),
@@ -278,14 +279,14 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
                   ),
                 ),
               const SizedBox(height: 6),
-              LButton(label: 'Nhận thưởng', icon: Icons.redeem, small: true, color: jade, onTap: _collect),
+              LButton(label: tr('Nhận thưởng'), icon: Icons.redeem, small: true, color: jade, onTap: _collect),
             ] else
-              Text('Đã nhận thưởng. Hẹn tuần sau!', style: small, textAlign: TextAlign.center),
+              Text(tr('Đã nhận thưởng. Hẹn tuần sau!'), style: small, textAlign: TextAlign.center),
           ] else if (foe != null) ...[
-            Text('${daiHoiRounds[h.dhWins]}: đối thủ', style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
+            Text(tr('{p0}: đối thủ', {'p0': daiHoiRounds[h.dhWins]}), style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
             Text(foe.name, style: titleStyle(18, color: cream), textAlign: TextAlign.center, maxLines: 1,
                 overflow: TextOverflow.ellipsis),
-            Text('${sectOf(foe.hanh).name} · Cấp ${foe.level} · ${fmt(foe.power)}',
+            Text(tr('{p0} · Cấp {level} · {p1}', {'p0': tr(sectOf(foe.hanh).name), 'level': foe.level, 'p1': fmt(foe.power)}),
                 style: small.copyWith(fontSize: 11, color: hanhColor(foe.hanh)), textAlign: TextAlign.center),
             Expanded(
               child: FittedBox(
@@ -298,12 +299,12 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
                     mount: foe.mountDef),
               ),
             ),
-            LButton(label: 'Vào trận', icon: Icons.sports_kabaddi, color: jade, onTap: _fight),
+            LButton(label: tr('Vào trận'), icon: Icons.sports_kabaddi, color: jade, onTap: _fight),
           ],
           if (foe == null) const Spacer(),
           const SizedBox(height: 6),
           _prizes(),
-          Text('Đã vô địch: ${h.dhChamps} lần', style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
+          Text(tr('Đã vô địch: {dhChamps} lần', {'dhChamps': h.dhChamps}), style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -312,8 +313,8 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
   Widget _prizes() {
     final champ = daiHoiPrize(3, h.level);
     return Text(
-      'Vô địch: ${champ.coins} Uy danh, ${fmt(champ.gold)} lượng, ngọc cấp ${champ.gemTier}, '
-      '${champ.shards} Mảnh Hoàng Kim, ${champ.iron} Thần Thiết. Vòng nào cũng có thưởng.',
+      tr('Vô địch: {coins} Uy danh, {p0} lượng, ngọc cấp {gemTier}, '
+      '{shards} Mảnh Hoàng Kim, {iron} Thần Thiết. Vòng nào cũng có thưởng.', {'coins': champ.coins, 'p0': fmt(champ.gold), 'gemTier': champ.gemTier, 'shards': champ.shards, 'iron': champ.iron}),
       style: small.copyWith(fontSize: 10.5, color: goldLight),
       textAlign: TextAlign.center,
     );

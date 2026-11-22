@@ -1,7 +1,25 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/chat.dart';
+import 'package:kiem_hiep/core/i18n.dart';
 
 void main() {
+  test('Chinese swears are starred anywhere, everyday words are not', () {
+    expect(chatCensor('你這個幹你娘的'), '你這個***的');
+    expect(chatCensor('幹 你.娘'), '*****');
+    expect(chatCensor('他媽的好難'), '***好難');
+    expect(chatCensor('傻逼吧'), '**吧');
+    expect(chatCensor('靠北喔 e04'), '**喔 ***');
+    // 幹, 操 and 草 alone are ordinary words.
+    expect(chatCensor('你在幹嘛？操作很難，草地上'), '你在幹嘛？操作很難，草地上');
+    expect(chatCensor('劍俠五行 武林大會'), '劍俠五行 武林大會');
+  });
+
+  test('each language has its own world channel', () {
+    // Vietnamese keeps the old path, shared with older app versions.
+    expect(chatMsgsPath(Lang.vi), 'chat/msgs');
+    expect(chatMsgsPath(Lang.zhHant), 'chat/rooms/zh_Hant');
+  });
+
   test('swear words are starred, everyday words are not', () {
     expect(chatCensor('đm thằng này'), '** thằng này');
     expect(chatCensor('Vui quá VCL!'), 'Vui quá ***!');

@@ -8,6 +8,7 @@ import '../services/analytics.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Hiệp khách: meet, befriend and take along a companion of each sect.
 class CompanionView extends StatefulWidget {
@@ -41,8 +42,8 @@ class _CompanionViewState extends State<CompanionView> {
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
           child: Text(
-            'Hiệp khách đi cùng ở bãi luyện công và vượt ải (không vào tháp, Lôi đài, Boss Thế Giới). '
-            'Quái không đánh họ; tặng quà để tăng hảo cảm, mở thêm chiêu và nghe chuyện của họ.',
+            tr('Hiệp khách đi cùng ở bãi luyện công và vượt ải (không vào tháp, Lôi đài, Boss Thế Giới). '
+            'Quái không đánh họ; tặng quà để tăng hảo cảm, mở thêm chiêu và nghe chuyện của họ.'),
             style: small.copyWith(fontSize: 11),
           ),
         ),
@@ -124,11 +125,11 @@ class _CompanionViewState extends State<CompanionView> {
     return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(c.name,
+            Text(tr(c.name),
                 style: titleStyle(c.name.length > 12 ? 14 : 16, color: owned ? goldLight : creamDim),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
-            Text(c.title,
+            Text(tr(c.title),
                 style: small.copyWith(
                     fontSize: 10.5,
                     color: hanhColor(c.hanh),
@@ -165,17 +166,17 @@ class _CompanionViewState extends State<CompanionView> {
   List<Widget> _cardFoot(CompanionDef c, bool owned, int bond, bool along, bool met, int skills) {
     return [
             Text(
-              owned ? 'Hảo cảm $bond/$maxBond' : (met ? 'Mời: ${fmt(c.price)} lượng' : 'Gặp ở cấp ${c.unlock}'),
+              owned ? tr('Hảo cảm {bond}/{maxBond}', {'bond': bond, 'maxBond': maxBond}) : (met ? tr('Mời: {p0} lượng', {'p0': fmt(c.price)}) : tr('Gặp ở cấp {unlock}', {'unlock': c.unlock})),
               style: bold.copyWith(fontSize: 12, color: cream),
             ),
             Text('${bonusLabel(c.bonus)} +${(c.bonusAt(bond) * 100).toStringAsFixed(1)}%',
                 style: small.copyWith(fontSize: 10.5)),
-            Text('Đòn đánh ${(companionHit(bond) * 100).round()}% · $skills chiêu',
+            Text(tr('Đòn đánh {p0}% · {skills} chiêu', {'p0': (companionHit(bond) * 100).round(), 'skills': skills}),
                 style: small.copyWith(fontSize: 10.5)),
             const SizedBox(height: 5),
             if (owned) ...[
               LButton(
-                label: along ? 'Đang đi cùng' : 'Đồng hành',
+                label: along ? tr('Đang đi cùng') : tr('Đồng hành'),
                 small: true,
                 color: along ? jade : seal,
                 onTap: () {
@@ -185,7 +186,7 @@ class _CompanionViewState extends State<CompanionView> {
               ),
               const SizedBox(height: 4),
               LButton(
-                label: bond >= maxBond ? 'Tri kỷ' : 'Quà ${fmt(bondCost(bond))}',
+                label: bond >= maxBond ? tr('Tri kỷ') : tr('Quà {p0}', {'p0': fmt(bondCost(bond))}),
                 small: true,
                 color: const Color(0xFF7A5A1A),
                 enabled: bond < maxBond && h.gold >= bondCost(bond),
@@ -198,7 +199,7 @@ class _CompanionViewState extends State<CompanionView> {
               ),
             ] else
               LButton(
-                label: met ? 'Mời đồng hành' : 'Chưa gặp',
+                label: met ? tr('Mời đồng hành') : tr('Chưa gặp'),
                 small: true,
                 color: jade,
                 enabled: met && h.gold >= c.price,
@@ -218,7 +219,7 @@ class _CompanionViewState extends State<CompanionView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('${c.name} · ${c.title}', style: titleStyle(18)),
+        title: Text('${tr(c.name)} · ${tr(c.title)}', style: titleStyle(18)),
         content: SizedBox(
           width: 520,
           child: SingleChildScrollView(
@@ -226,13 +227,13 @@ class _CompanionViewState extends State<CompanionView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(c.desc, style: small.copyWith(fontStyle: FontStyle.italic)),
+                Text(tr(c.desc), style: small.copyWith(fontStyle: FontStyle.italic)),
                 const SizedBox(height: 8),
                 for (var i = 0; i < c.stories.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Text(
-                      bond >= storyBonds[i] ? '• ${c.stories[i]}' : '• (Hảo cảm ${storyBonds[i]} để nghe tiếp)',
+                      bond >= storyBonds[i] ? '• ${tr(c.stories[i])}' : tr('• (Hảo cảm {p0} để nghe tiếp)', {'p0': storyBonds[i]}),
                       style: body.copyWith(height: 1.35, color: bond >= storyBonds[i] ? cream : creamDim),
                     ),
                   ),
@@ -240,7 +241,7 @@ class _CompanionViewState extends State<CompanionView> {
             ),
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
   }

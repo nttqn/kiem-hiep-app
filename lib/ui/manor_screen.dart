@@ -14,6 +14,7 @@ import '../services/ads.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Trang viên: the fields on the left, the silkworm house, the estate and
 /// its keepsakes on the right.
@@ -58,20 +59,20 @@ class _ManorScreenState extends State<ManorScreen> {
 
   static String left(int ms) {
     final s = (ms / 1000).ceil();
-    if (s >= 3600) return '${s ~/ 3600} giờ ${(s % 3600) ~/ 60} phút';
-    if (s >= 60) return '${s ~/ 60} phút ${s % 60} giây';
-    return '$s giây';
+    if (s >= 3600) return tr('{p0} giờ {p1} phút', {'p0': s ~/ 3600, 'p1': (s % 3600) ~/ 60});
+    if (s >= 60) return tr('{p0} phút {p1} giây', {'p0': s ~/ 60, 'p1': s % 60});
+    return tr('{s} giây', {'s': s});
   }
 
   @override
   Widget build(BuildContext context) {
     final ripe = m.plots.take(m.openPlots).where((p) => p.ready(_now)).length;
     return SubScreen(
-      title: 'Trang viên · Cấp ${m.level}',
+      title: tr('Trang viên · Cấp {level}', {'level': m.level}),
       actions: [
         Padding(
           padding: const EdgeInsets.only(left: 8),
-          child: Text('Tơ tằm: ${fmt(m.silk)}', style: bold.copyWith(color: const Color(0xFFE8E0FF))),
+          child: Text(tr('Tơ tằm: {p0}', {'p0': fmt(m.silk)}), style: bold.copyWith(color: const Color(0xFFE8E0FF))),
         ),
       ],
       child: Row(
@@ -85,7 +86,7 @@ class _ManorScreenState extends State<ManorScreen> {
                 children: [
                   Row(
                     children: [
-                      Text('Ruộng linh thảo', style: titleStyle(18)),
+                      Text(tr('Ruộng linh thảo'), style: titleStyle(18)),
                       const Spacer(),
                       if (h.manorHasGrowing(_now) && h.manorAdsLeft(vnDayKey()) > 0)
                         Padding(
@@ -93,20 +94,20 @@ class _ManorScreenState extends State<ManorScreen> {
                           child: ValueListenableBuilder<bool>(
                             valueListenable: AdsService.instance.rewardedReady,
                             builder: (_, ready, _) => LButton(
-                              label: 'Nhanh 1 giờ (${h.manorAdsLeft(vnDayKey())})',
+                              label: tr('Nhanh 1 giờ ({p0})', {'p0': h.manorAdsLeft(vnDayKey())}),
                               icon: Icons.ondemand_video,
                               small: true,
                               color: const Color(0xFF8A5A10),
                               enabled: ready,
                               onTap: () async {
                                 if (!await AdsService.instance.showRewarded() || !mounted) return;
-                                if (h.hurryManor(vnDayKey(), _now)) _done('Linh thảo lớn nhanh thêm 1 giờ!');
+                                if (h.hurryManor(vnDayKey(), _now)) _done(tr('Linh thảo lớn nhanh thêm 1 giờ!'));
                               },
                             ),
                           ),
                         ),
                       LButton(
-                        label: ripe > 0 ? 'Thu hoạch ($ripe)' : 'Chưa có ruộng chín',
+                        label: ripe > 0 ? tr('Thu hoạch ({ripe})', {'ripe': ripe}) : tr('Chưa có ruộng chín'),
                         icon: Icons.agriculture,
                         small: true,
                         color: jade,
@@ -152,12 +153,12 @@ class _ManorScreenState extends State<ManorScreen> {
     final ready = p.ready(now);
     final unlockAt = [for (var l = 1; l <= manorMaxLevel; l++) if (manorPlotsAt(l) > i) l].firstOrNull ?? manorMaxLevel;
     final label = locked
-        ? 'Mở ở trang viên cấp $unlockAt'
+        ? tr('Mở ở trang viên cấp {unlockAt}', {'unlockAt': unlockAt})
         : p.empty
-            ? 'Trống · chạm để gieo'
+            ? tr('Trống · chạm để gieo')
             : ready
-                ? '${herbNames[p.tier]} đã chín!'
-                : '${herbNames[p.tier]} · còn ${left(p.readyAt - now)}';
+                ? tr('{p0} đã chín!', {'p0': tr(herbNames[p.tier])})
+                : tr('{p0} · còn {p1}', {'p0': tr(herbNames[p.tier]), 'p1': left(p.readyAt - now)});
     return GestureDetector(
       onTap: locked
           ? null
@@ -202,7 +203,7 @@ class _ManorScreenState extends State<ManorScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Gieo hạt', style: titleStyle(20)),
+        title: Text(tr('Gieo hạt'), style: titleStyle(20)),
         // Scrolls: on a short phone the last crop (Huyết sâm) sat under the
         // Đóng button and could not be tapped (1.8.1 review).
         content: SizedBox(
@@ -222,11 +223,11 @@ class _ManorScreenState extends State<ManorScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(c.name, style: bold.copyWith(fontSize: 13.5)),
+                            Text(tr(c.name), style: bold.copyWith(fontSize: 13.5)),
                             Text(
                               h.cropOpen(c)
-                                  ? '${left(cropMinutes(c, m.level) * 60000)} · thu ${cropYield(m.level)} cây'
-                                  : 'Mở ở cấp ${c.openLv}',
+                                  ? tr('{p0} · thu {p1} cây', {'p0': left(cropMinutes(c, m.level) * 60000), 'p1': cropYield(m.level)})
+                                  : tr('Mở ở cấp {openLv}', {'openLv': c.openLv}),
                               style: small.copyWith(fontSize: 11),
                             ),
                           ],
@@ -243,17 +244,17 @@ class _ManorScreenState extends State<ManorScreen> {
                     ],
                   ),
                 ),
-              Text('Linh thảo dùng để luyện đan. Ruộng lớn theo giờ thật, kể cả khi tắt game.',
+              Text(tr('Linh thảo dùng để luyện đan. Ruộng lớn theo giờ thật, kể cả khi tắt game.'),
                   style: small.copyWith(fontSize: 11)),
             ],
            ),
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
     if (c == null || !mounted) return;
-    if (h.manorSow(i, c, _now)) _done('Đã gieo ${c.name}');
+    if (h.manorSow(i, c, _now)) _done(tr('Đã gieo {cName}', {'cName': tr(c.name)}));
   }
 
   Widget _silkCard() {
@@ -269,30 +270,30 @@ class _ManorScreenState extends State<ManorScreen> {
             children: [
               const Icon(Icons.house_siding, color: Color(0xFFE8E0FF), size: 22),
               const SizedBox(width: 6),
-              Text('Nhà tằm', style: titleStyle(17)),
+              Text(tr('Nhà tằm'), style: titleStyle(17)),
             ],
           ),
-          Text('Nhả ${silkPerHour(m.level).toStringAsFixed(1)} tơ mỗi giờ, chứa tối đa ${silkStoreHours.round()} giờ.',
+          Text(tr('Nhả {p0} tơ mỗi giờ, chứa tối đa {p1} giờ.', {'p0': silkPerHour(m.level).toStringAsFixed(1), 'p1': silkStoreHours.round()}),
               style: small.copyWith(fontSize: 11)),
           const SizedBox(height: 4),
-          Text(full ? 'Đã đầy: $waiting tơ' : 'Đang chờ: $waiting tơ',
+          Text(full ? tr('Đã đầy: {waiting} tơ', {'waiting': waiting}) : tr('Đang chờ: {waiting} tơ', {'waiting': waiting}),
               style: bold.copyWith(color: full ? const Color(0xFFFF9A6A) : cream)),
           const SizedBox(height: 4),
           LButton(
-            label: 'Thu tơ',
+            label: tr('Thu tơ'),
             icon: Icons.inventory,
             small: true,
             color: jade,
             enabled: waiting > 0,
-            onTap: () => _done('+${h.manorCollectSilk(_now)} Tơ tằm'),
+            onTap: () => _done(tr('+{p0} Tơ tằm', {'p0': h.manorCollectSilk(_now)})),
           ),
           const SizedBox(height: 6),
           LButton(
-            label: 'Bán 10 tơ (+${fmt(10 * silkPrice(h.level))})',
+            label: tr('Bán 10 tơ (+{p0})', {'p0': fmt(10 * silkPrice(h.level))}),
             small: true,
             color: const Color(0xFF8A5A10),
             enabled: m.silk >= 10,
-            onTap: () => _done('+${fmt(h.manorSellSilk(10))} lượng'),
+            onTap: () => _done(tr('+{p0} lượng', {'p0': fmt(h.manorSellSilk(10))})),
           ),
         ],
       ),
@@ -310,35 +311,35 @@ class _ManorScreenState extends State<ManorScreen> {
             children: [
               const Icon(Icons.villa, color: goldLight, size: 22),
               const SizedBox(width: 6),
-              Text('Trang viên', style: titleStyle(17)),
+              Text(tr('Trang viên'), style: titleStyle(17)),
             ],
           ),
           Text(
             maxed
-                ? 'Đã đạt cấp tối đa.'
-                : 'Lên cấp ${m.level + 1}: ${manorPlotsAt(m.level + 1)} ruộng, cây lớn nhanh hơn, nhiều tơ hơn, '
-                    'mở thêm đồ bày biện.',
+                ? tr('Đã đạt cấp tối đa.')
+                : tr('Lên cấp {p0}: {p1} ruộng, cây lớn nhanh hơn, nhiều tơ hơn, '
+                    'mở thêm đồ bày biện.', {'p0': m.level + 1, 'p1': manorPlotsAt(m.level + 1)}),
             style: small.copyWith(fontSize: 11),
           ),
           if (!maxed) ...[
             const SizedBox(height: 2),
-            Text('Cần ${fmt(manorUpGold(m.level))} lượng và ${manorUpSilk(m.level)} tơ.',
+            Text(tr('Cần {p0} lượng và {p1} tơ.', {'p0': fmt(manorUpGold(m.level)), 'p1': manorUpSilk(m.level)}),
                 style: bold.copyWith(fontSize: 12, color: goldLight)),
             const SizedBox(height: 4),
             LButton(
-              label: 'Nâng cấp',
+              label: tr('Nâng cấp'),
               icon: Icons.upgrade,
               small: true,
               color: jade,
               enabled: h.manorCanUpgrade,
               onTap: () {
-                if (h.manorUpgrade(_now)) _done('Trang viên lên cấp ${m.level}!');
+                if (h.manorUpgrade(_now)) _done(tr('Trang viên lên cấp {level}!', {'level': m.level}));
               },
             ),
           ],
           const SizedBox(height: 6),
           LButton(
-            label: 'Bày biện (${m.keepsakesOwned.length}/${keepsakes.length})',
+            label: tr('Bày biện ({keepsakesOwnedLength}/{keepsakesLength})', {'keepsakesOwnedLength': m.keepsakesOwned.length, 'keepsakesLength': keepsakes.length}),
             icon: Icons.chair,
             small: true,
             color: const Color(0xFF5A3A7A),
@@ -355,14 +356,14 @@ class _ManorScreenState extends State<ManorScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
           backgroundColor: lacquer,
-          title: Text('Bày biện', style: titleStyle(20)),
+          title: Text(tr('Bày biện'), style: titleStyle(20)),
           content: SizedBox(
             width: 480,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Mỗi món mua bằng tơ tằm, bày trong sảnh và cộng chỉ số mãi mãi. Hiện có ${fmt(m.silk)} tơ.',
+                  Text(tr('Mỗi món mua bằng tơ tằm, bày trong sảnh và cộng chỉ số mãi mãi. Hiện có {p0} tơ.', {'p0': fmt(m.silk)}),
                       style: small.copyWith(fontSize: 11.5)),
                   const SizedBox(height: 6),
                   for (final k in keepsakes)
@@ -377,14 +378,14 @@ class _ManorScreenState extends State<ManorScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${k.name} · ${bonusLabel(k.bonus)} +${_pct(k.value)}', style: bold.copyWith(fontSize: 13)),
-                                Text(k.desc, style: small.copyWith(fontSize: 10.5)),
+                                Text('${tr(k.name)} · ${bonusLabel(k.bonus)} +${_pct(k.value)}', style: bold.copyWith(fontSize: 13)),
+                                Text(tr(k.desc), style: small.copyWith(fontSize: 10.5)),
                               ],
                             ),
                           ),
                           if (!m.keepsakesOwned.contains(k.id))
                             LButton(
-                              label: m.level < k.openLv ? 'TV cấp ${k.openLv}' : '${k.silk} tơ',
+                              label: m.level < k.openLv ? tr('TV cấp {openLv}', {'openLv': k.openLv}) : tr('{silk} tơ', {'silk': k.silk}),
                               small: true,
                               color: jade,
                               enabled: m.level >= k.openLv && m.silk >= k.silk,
@@ -403,7 +404,7 @@ class _ManorScreenState extends State<ManorScreen> {
               ),
             ),
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
         ),
       ),
     );

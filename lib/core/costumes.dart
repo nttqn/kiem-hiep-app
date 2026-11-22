@@ -1,5 +1,6 @@
 import 'arena.dart';
 import 'sect_duty.dart';
+import 'i18n.dart';
 
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
@@ -35,19 +36,19 @@ class CostumeDef {
   final int robe, trim, pants, cape, blade, glow, aura, armor;
 
   String get howTo => switch (source) {
-        CostumeSource.tower => 'Vượt Tháp Thử Luyện tầng $need',
-        CostumeSource.rebirth => 'Chuyển sinh lần $need',
-        CostumeSource.level => 'Đạt cấp $need',
-        CostumeSource.worldBoss => 'Boss Thế Giới: nhận mốc ${const ['100 nghìn', '500 nghìn', '2 triệu', '6 triệu', '15 triệu'][need]} sát thương',
-        CostumeSource.gold => 'Mua với ${_thousands(need)} lượng',
-        CostumeSource.arena => 'Kết thúc một mùa Lôi đài ở hạng ${arenaTiers[need].name}',
-        CostumeSource.sect => 'Sư môn: đạt chức ${sectRanks[need].name}',
-        CostumeSource.abyss => 'Hạ Cửu U Ma Tôn $need lần (Cửu U Ma Vực)',
-        CostumeSource.week => 'Mở Rương 7 ngày (đủ 21 Mục tiêu 7 ngày)',
-        CostumeSource.bloodSea => 'Hạ Huyết Hải Ma Đế $need lần (U Minh Huyết Hải)',
-        CostumeSource.pass => 'Lệnh Bài: bậc 30 nhánh Hào Kiệt (mùa ${need + 1}, ${need + 4}, ${need + 7}…)',
-        CostumeSource.fest => 'Đổi ở cửa hàng lễ hội',
-        CostumeSource.firstPay => 'Quà nạp đầu (mua bất kỳ gói nào trong Ưu đãi)',
+        CostumeSource.tower => tr('Vượt Tháp Thử Luyện tầng {need}', {'need': need}),
+        CostumeSource.rebirth => tr('Chuyển sinh lần {need}', {'need': need}),
+        CostumeSource.level => tr('Đạt cấp {need}', {'need': need}),
+        CostumeSource.worldBoss => tr('Boss Thế Giới: nhận mốc {p0} sát thương', {'p0': const ['100 nghìn', '500 nghìn', '2 triệu', '6 triệu', '15 triệu'][need]}),
+        CostumeSource.gold => tr('Mua với {p0} lượng', {'p0': _thousands(need)}),
+        CostumeSource.arena => tr('Kết thúc một mùa Lôi đài ở hạng {p0}', {'p0': tr(arenaTiers[need].name)}),
+        CostumeSource.sect => tr('Sư môn: đạt chức {p0}', {'p0': tr(sectRanks[need].name)}),
+        CostumeSource.abyss => tr('Hạ Cửu U Ma Tôn {need} lần (Cửu U Ma Vực)', {'need': need}),
+        CostumeSource.week => tr('Mở Rương 7 ngày (đủ 21 Mục tiêu 7 ngày)'),
+        CostumeSource.bloodSea => tr('Hạ Huyết Hải Ma Đế {need} lần (U Minh Huyết Hải)', {'need': need}),
+        CostumeSource.pass => tr('Lệnh Bài: bậc 30 nhánh Hào Kiệt (mùa {p0}, {p1}, {p2}…)', {'p0': need + 1, 'p1': need + 4, 'p2': need + 7}),
+        CostumeSource.fest => tr('Đổi ở cửa hàng lễ hội'),
+        CostumeSource.firstPay => tr('Quà nạp đầu (mua bất kỳ gói nào trong Ưu đãi)'),
       };
 }
 

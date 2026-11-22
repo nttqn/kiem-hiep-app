@@ -62,6 +62,7 @@ import '../services/purchase.dart';
 import 'theme.dart';
 import 'title_screen.dart';
 import 'week_goals_dialog.dart';
+import '../core/i18n.dart';
 
 class TownScreen extends StatefulWidget {
   const TownScreen({super.key, this.firstVisit = false});
@@ -122,9 +123,9 @@ class _TownScreenState extends State<TownScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: lacquer,
-          title: Text('Quà đã mua', style: titleStyle(20)),
+          title: Text(tr('Quà đã mua'), style: titleStyle(20)),
           content: Text(bought, style: body),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
         ),
       );
     }
@@ -153,7 +154,7 @@ class _TownScreenState extends State<TownScreen> {
             for (final l in lines) Text('• $l', style: bold.copyWith(color: goldLight)),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
   }
@@ -168,9 +169,9 @@ class _TownScreenState extends State<TownScreen> {
     await SaveService.instance.save();
     Analytics.instance.log('legacy_gift', {'from_cs': src.rebirths, 'bonus': (h.legacyExp * 100).round()});
     await _gotDialog(
-      'Truyền thừa',
-      '${src.name} truyền lại kinh nghiệm giang hồ cho ${h.name}: nhận thêm '
-          '${(h.legacyExp * 100).round()}% EXP quái cho tới khi theo kịp ${src.name}.',
+      tr('Truyền thừa'),
+      tr('{srcName} truyền lại kinh nghiệm giang hồ cho {hName}: nhận thêm '
+          '{p0}% EXP quái cho tới khi theo kịp {srcName}.', {'srcName': src.name, 'hName': h.name, 'p0': (h.legacyExp * 100).round()}),
       lines,
     );
   }
@@ -188,8 +189,8 @@ class _TownScreenState extends State<TownScreen> {
     await save.save();
     Analytics.instance.log('comeback', {'days': days, 'tier': tier, 'lv': h.level, 'cs': h.rebirths});
     await _gotDialog(
-      'Quà hồi quy',
-      'Mừng ${h.name} trở lại giang hồ sau $days ngày! Quà đón chào và vài ngày luyện công nhanh hơn để bắt kịp:',
+      tr('Quà hồi quy'),
+      tr('Mừng {hName} trở lại giang hồ sau {days} ngày! Quà đón chào và vài ngày luyện công nhanh hơn để bắt kịp:', {'hName': h.name, 'days': days}),
       lines,
     );
   }
@@ -211,8 +212,8 @@ class _TownScreenState extends State<TownScreen> {
       lines.addAll(h.addLove(LoveWay.helped, vnDayKey()));
     }
     await SaveService.instance.save();
-    final who = names.length <= 3 ? names.join(', ') : '${names.take(3).join(', ')} và ${names.length - 3} người khác';
-    await _gotDialog('Hiệp nghĩa', '$who đã mời ${h.name} trợ chiến.', lines);
+    final who = names.length <= 3 ? names.join(', ') : tr('{p0} và {p1} người khác', {'p0': names.take(3).join(', '), 'p1': names.length - 3});
+    await _gotDialog(tr('Hiệp nghĩa'), tr('{who} đã mời {hName} trợ chiến.', {'who': who, 'hName': h.name}), lines);
   }
 
   /// Last week's Săn quái place and its reward, once the board can be
@@ -230,7 +231,7 @@ class _TownScreenState extends State<TownScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Thưởng Săn quái tuần', style: titleStyle(20)),
+        title: Text(tr('Thưởng Săn quái tuần'), style: titleStyle(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +241,7 @@ class _TownScreenState extends State<TownScreen> {
             for (final l in lines.skip(1)) Text('• $l', style: body),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
   }
@@ -263,8 +264,8 @@ class _TownScreenState extends State<TownScreen> {
         _banner(
           icon: Icons.wifi_off,
           color: const Color(0xFF9FD8FF),
-          title: 'Ngày mới đang chờ',
-          text: 'Kết nối mạng để nhận quà, nhiệm vụ và lượt khiêu chiến của ngày mới. Vẫn chơi bình thường khi chưa có mạng.',
+          title: tr('Ngày mới đang chờ'),
+          text: tr('Kết nối mạng để nhận quà, nhiệm vụ và lượt khiêu chiến của ngày mới. Vẫn chơi bình thường khi chưa có mạng.'),
         ),
       // 1.12.0: Boss Hoàng Kim while a session is open, or its board
       // reward waiting.
@@ -272,11 +273,11 @@ class _TownScreenState extends State<TownScreen> {
         _banner(
           icon: Icons.workspace_premium,
           color: const Color(0xFFFFD34A),
-          title: goldBossSessionAt() >= 0 ? 'Boss Hoàng Kim xuất hiện!' : 'Boss Hoàng Kim',
+          title: goldBossSessionAt() >= 0 ? tr('Boss Hoàng Kim xuất hiện!') : tr('Boss Hoàng Kim'),
           text: goldBossSessionAt() >= 0
-              ? '${goldBossOf().name} đang giáng thế · còn ${goldBossLeft().inMinutes + 1} phút · lượt còn ${h.gbRunsLeft}'
-              : 'Thưởng xếp hạng hôm qua đang chờ nhận.',
-          action: goldBossSessionAt() >= 0 ? 'Vào' : 'Nhận',
+              ? tr('{p0} đang giáng thế · còn {p1} phút · lượt còn {gbRunsLeft}', {'p0': tr(goldBossOf().name), 'p1': goldBossLeft().inMinutes + 1, 'gbRunsLeft': h.gbRunsLeft})
+              : tr('Thưởng xếp hạng hôm qua đang chờ nhận.'),
+          action: goldBossSessionAt() >= 0 ? tr('Vào') : tr('Nhận'),
           onTap: () async {
             await Navigator.of(context).push(fadeRoute(const GoldBossScreen()));
             if (mounted) setState(() {});
@@ -287,11 +288,11 @@ class _TownScreenState extends State<TownScreen> {
         _banner(
           icon: Icons.ac_unit,
           color: const Color(0xFFBFE8FF),
-          title: fest.name,
+          title: tr(fest.name),
           text: festOn(day) != null
-              ? '${fest.landName} đang mở đến ${dayLabel(fest.until)} · có ${fmt(h.festId == fest.id ? h.festCoins : 0)} ${fest.coin}'
-              : 'Đã kết thúc, đổi ${fest.coin} lấy quà đến hết ${dayLabel(dayAfter(fest.until, fest.shopDays))}',
-          action: h.festTasksReady > 0 ? 'Nhận' : 'Vào',
+              ? tr('{landName} đang mở đến {p0} · có {p1} {coin}', {'landName': fest.landName, 'p0': dayLabel(fest.until), 'p1': fmt(h.festId == fest.id ? h.festCoins : 0), 'coin': fest.coin})
+              : tr('Đã kết thúc, đổi {coin} lấy quà đến hết {p0}', {'coin': fest.coin, 'p0': dayLabel(dayAfter(fest.until, fest.shopDays))}),
+          action: h.festTasksReady > 0 ? tr('Nhận') : tr('Vào'),
           onTap: () async {
             await Navigator.of(context).push(fadeRoute(const FestScreen()));
             if (mounted) setState(() {});
@@ -302,14 +303,14 @@ class _TownScreenState extends State<TownScreen> {
         _banner(
           icon: Icons.auto_awesome,
           color: const Color(0xFFFFB86B),
-          title: 'Hồi quy: +${(comebackExp * 100).round()}% EXP và lượng',
-          text: 'Từ quái, đến hết ngày ${dayLabel(h.comebackUntil)}. Tranh thủ luyện công bắt kịp giang hồ!',
+          title: tr('Hồi quy: +{p0}% EXP và lượng', {'p0': (comebackExp * 100).round()}),
+          text: tr('Từ quái, đến hết ngày {p0}. Tranh thủ luyện công bắt kịp giang hồ!', {'p0': dayLabel(h.comebackUntil)}),
         ),
       if (steps.isNotEmpty)
         _banner(
           icon: Icons.lightbulb,
           color: const Color(0xFFFFE08A),
-          title: 'Nên làm: ${steps.first.title}',
+          title: tr('Nên làm: {firstTitle}', {'firstTitle': tr(steps.first.title)}),
           text: steps.first.text,
           action: steps.first.action,
           onTap: () => _doStep(steps.first),
@@ -319,12 +320,12 @@ class _TownScreenState extends State<TownScreen> {
           icon: Icons.redeem,
           color: const Color(0xFF8CE07A),
           title: h.newbieReady(day)
-              ? 'Quà tân thủ · ngày ${h.newbieClaimed + 1}/$newbieDays'
-              : 'Quà tân thủ · đã nhận ${h.newbieClaimed}/$newbieDays',
+              ? tr('Quà tân thủ · ngày {p0}/{newbieDays}', {'p0': h.newbieClaimed + 1, 'newbieDays': newbieDays})
+              : tr('Quà tân thủ · đã nhận {newbieClaimed}/{newbieDays}', {'newbieClaimed': h.newbieClaimed, 'newbieDays': newbieDays}),
           text: h.newbieReady(day)
-              ? 'Quà hôm nay đang chờ! Đủ 7 ngày nhận Thú cưỡi Bạch Mã.'
-              : 'Đã nhận hôm nay, mai quay lại nhận tiếp nhé.',
-          action: h.newbieReady(day) ? 'Nhận' : 'Xem',
+              ? tr('Quà hôm nay đang chờ! Đủ 7 ngày nhận Thú cưỡi Bạch Mã.')
+              : tr('Đã nhận hôm nay, mai quay lại nhận tiếp nhé.'),
+          action: h.newbieReady(day) ? tr('Nhận') : tr('Xem'),
           onTap: () async {
             await showNewbieDialog(context);
             if (mounted) setState(() {});
@@ -334,11 +335,11 @@ class _TownScreenState extends State<TownScreen> {
         _banner(
           icon: Icons.flag,
           color: goldLight,
-          title: 'Mục tiêu 7 ngày · ${h.weekClaimed.length}/${weekGoals.length}',
+          title: tr('Mục tiêu 7 ngày · {weekClaimedLength}/{weekGoalsLength}', {'weekClaimedLength': h.weekClaimed.length, 'weekGoalsLength': weekGoals.length}),
           text: h.weekGoalsReady(day) > 0
-              ? '${h.weekGoalsReady(day)} phần thưởng đang chờ nhận!'
-              : 'Làm mục tiêu mỗi ngày, đủ 21 mục mở Rương 7 ngày.',
-          action: h.weekGoalsReady(day) > 0 ? 'Nhận' : 'Xem',
+              ? tr('{p0} phần thưởng đang chờ nhận!', {'p0': h.weekGoalsReady(day)})
+              : tr('Làm mục tiêu mỗi ngày, đủ 21 mục mở Rương 7 ngày.'),
+          action: h.weekGoalsReady(day) > 0 ? tr('Nhận') : tr('Xem'),
           onTap: () async {
             await showWeekGoalsDialog(context);
             if (mounted) setState(() {});
@@ -349,7 +350,7 @@ class _TownScreenState extends State<TownScreen> {
         _banner(
           icon: Icons.celebration,
           color: const Color(0xFFFFB03A),
-          title: e.name,
+          title: tr(e.name),
           text: [if (e.desc.isNotEmpty) e.desc, e.perks.join(' · ')].join(' · '),
         ),
     ].take(2).toList();
@@ -431,7 +432,7 @@ class _TownScreenState extends State<TownScreen> {
         if (!mounted) return;
         setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Đã mặc $n món tốt hơn. Lực chiến ${fmt(h.power)}'),
+          content: Text(tr('Đã mặc {n} món tốt hơn. Lực chiến {p0}', {'n': n, 'p0': fmt(h.power)})),
           duration: const Duration(seconds: 2),
         ));
       case StepKind.points:
@@ -459,11 +460,11 @@ class _TownScreenState extends State<TownScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Nên làm gì tiếp', style: titleStyle(20)),
+        title: Text(tr('Nên làm gì tiếp'), style: titleStyle(20)),
         content: SizedBox(
           width: 440,
           child: steps.isEmpty
-              ? Text('Mọi việc đã xong, hãy luyện công hoặc thử thách bản thân!', style: body)
+              ? Text(tr('Mọi việc đã xong, hãy luyện công hoặc thử thách bản thân!'), style: body)
               : SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -475,8 +476,8 @@ class _TownScreenState extends State<TownScreen> {
                             children: [
                               Expanded(
                                 child: Text.rich(TextSpan(children: [
-                                  TextSpan(text: '${s.title}  ', style: bold.copyWith(fontSize: 13, color: goldLight)),
-                                  TextSpan(text: s.text, style: small.copyWith(fontSize: 12, color: cream)),
+                                  TextSpan(text: '${tr(s.title)}  ', style: bold.copyWith(fontSize: 13, color: goldLight)),
+                                  TextSpan(text: tr(s.text), style: small.copyWith(fontSize: 12, color: cream)),
                                 ])),
                               ),
                               const SizedBox(width: 6),
@@ -496,7 +497,7 @@ class _TownScreenState extends State<TownScreen> {
                   ),
                 ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
   }
@@ -552,27 +553,27 @@ class _TownScreenState extends State<TownScreen> {
                           children: [
                             // Shrinks rather than push the icons off a narrow screen.
                             Expanded(
-                              child: Text('Thành Lạc An',
+                              child: Text(tr('Thành Lạc An'),
                                   style: titleStyle(24), maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                             IconButton(
-                              tooltip: 'Túi đồ',
+                              tooltip: tr('Túi đồ'),
                               onPressed: () => _go(const BagScreen()),
                               icon: Badge(
                                 // Nearly full: pickups would start selling themselves.
                                 isLabelVisible: h.bag.length >= bagSize - 10,
-                                label: Text(h.bag.length >= bagSize ? 'Đầy' : '${h.bag.length}'),
+                                label: Text(h.bag.length >= bagSize ? tr('Đầy') : '${h.bag.length}'),
                                 backgroundColor: seal,
                                 child: const Icon(Icons.backpack_outlined, color: goldLight),
                               ),
                             ),
                             IconButton(
-                              tooltip: 'Nên làm gì tiếp',
+                              tooltip: tr('Nên làm gì tiếp'),
                               onPressed: _showSteps,
                               icon: const Icon(Icons.lightbulb_outline, color: goldLight),
                             ),
                             IconButton(
-                              tooltip: 'Bảng tin',
+                              tooltip: tr('Bảng tin'),
                               onPressed: () async {
                                 await showNewsDialog(context);
                                 if (mounted) setState(() {});
@@ -585,7 +586,7 @@ class _TownScreenState extends State<TownScreen> {
                               ),
                             ),
                             IconButton(
-                              tooltip: 'Hòm thư',
+                              tooltip: tr('Hòm thư'),
                               onPressed: () async {
                                 await showMailDialog(context);
                                 if (mounted) setState(() {});
@@ -598,13 +599,13 @@ class _TownScreenState extends State<TownScreen> {
                               ),
                             ),
                             IconButton(
-                              tooltip: 'Kênh Thế Giới',
+                              tooltip: tr('Kênh Thế Giới'),
                               onPressed: () => _go(const ChatScreen()),
                               icon: const Icon(Icons.forum_outlined, color: goldLight),
                             ),
                             const SettingsButton(),
                             IconButton(
-                              tooltip: 'Đổi nhân vật',
+                              tooltip: tr('Đổi nhân vật'),
                               onPressed: () => Navigator.of(context)
                                   .pushReplacement(fadeRoute(const TitleScreen())),
                               icon: const Icon(Icons.people_alt_outlined, color: goldLight),
@@ -649,26 +650,26 @@ class _TownScreenState extends State<TownScreen> {
           ),
           Text(h.name, style: titleStyle(20, color: cream)),
           if (h.title.isNotEmpty)
-            Text('« ${h.title} »', style: small.copyWith(color: goldLight, fontStyle: FontStyle.italic)),
+            Text('« ${tr(h.title)} »', style: small.copyWith(color: goldLight, fontStyle: FontStyle.italic)),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text('${h.sect.name} · Cấp ${h.level}', style: body.copyWith(color: hanhColor(h.hanh)), maxLines: 1),
+            child: Text(tr('{sectName} · Cấp {level}', {'sectName': tr(h.sect.name), 'level': h.level}), style: body.copyWith(color: hanhColor(h.hanh)), maxLines: 1),
           ),
-          Text('Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
+          Text(tr('Lực chiến {p0}', {'p0': fmt(h.power)}), style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           if (h.rebirths > 0)
-            Text('Chuyển sinh lần ${h.rebirths}', style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
+            Text(tr('Chuyển sinh lần {rebirths}', {'rebirths': h.rebirths}), style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
           // Mệt mỏi, from an hour before monster EXP starts to drop.
           if (h.fatigueDay == vnDayKey() && h.fatigueSec >= fatigueStart - 3600)
             Text(
               fatigueMul(h.fatigueSec) < 1
-                  ? 'Mệt mỏi: EXP quái ${(fatigueMul(h.fatigueSec) * 100).round()}%'
-                  : 'Đã luyện ${fatigueLabel(h.fatigueSec)} hôm nay',
+                  ? tr('Mệt mỏi: EXP quái {p0}%', {'p0': (fatigueMul(h.fatigueSec) * 100).round()})
+                  : tr('Đã luyện {p0} hôm nay', {'p0': fatigueLabel(h.fatigueSec)}),
               style: small.copyWith(fontSize: 11, color: const Color(0xFFF0C060)),
             ),
           // Truyền thừa (1.14.0) from a stronger hero of this account.
           if (h.legacyExp > 0)
             Text(
-              'Truyền thừa: +${(h.legacyExp * 100).round()}% EXP quái (từ ${h.legacyFrom})',
+              tr('Truyền thừa: +{p0}% EXP quái (từ {legacyFrom})', {'p0': (h.legacyExp * 100).round(), 'legacyFrom': h.legacyFrom}),
               style: small.copyWith(fontSize: 11, color: const Color(0xFF9FE0C0)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -679,19 +680,19 @@ class _TownScreenState extends State<TownScreen> {
               value: h.daoProgress,
               color: Color(daoColor(h.daoLv)),
               height: 13,
-              label: h.daoWaiting ? '${daoName(h.daoLv)} · VIÊN MÃN' : daoName(h.daoLv),
+              label: h.daoWaiting ? tr('{p0} · VIÊN MÃN', {'p0': daoName(h.daoLv)}) : daoName(h.daoLv),
             )
           else
             Bar(
               value: (h.exp / h.expNeeded).clamp(0.0, 1.0),
               color: expGold,
               height: 13,
-              label: h.expFull ? 'ĐẦY' : '${fmt(h.exp)} / ${fmt(h.expNeeded)}',
+              label: h.expFull ? tr('ĐẦY') : '${fmt(h.exp)} / ${fmt(h.expNeeded)}',
             ),
           if (h.level >= maxLevel) ...[
             const SizedBox(height: 6),
             LButton(
-              label: h.daoOpen ? (h.canKiep ? 'Độ kiếp!' : 'Ngộ Đạo') : h.canRebirth ? 'Chuyển sinh!' : 'Chuyển sinh',
+              label: h.daoOpen ? (h.canKiep ? tr('Độ kiếp!') : tr('Ngộ Đạo')) : h.canRebirth ? tr('Chuyển sinh!') : tr('Chuyển sinh'),
               icon: h.daoOpen ? Icons.auto_awesome : Icons.autorenew,
               small: true,
               color: h.canRebirth || h.canKiep ? seal : const Color(0xFF5A4A3A),
@@ -745,19 +746,19 @@ class _TownScreenState extends State<TownScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${h.questLabel}: ${q.title}',
+                Text('${tr(h.questLabel)}: ${tr(q.title)}',
                     style: bold.copyWith(color: goldLight)),
                 Text(
                   locked
-                      ? 'Cần đạt cấp ${q.minLv} để nhận nhiệm vụ này.'
-                      : '${q.goal}'
+                      ? tr('Cần đạt cấp {minLv} để nhận nhiệm vụ này.', {'minLv': q.minLv})
+                      : '${tr(q.goal)}'
                           '${q.type == QuestType.kill ? '  (${h.mainProgress}/${q.count})' : ''}',
                   style: body.copyWith(fontSize: 13),
                 ),
               ],
             ),
           ),
-          if (!locked) LButton(label: 'Đi ngay', small: true, color: jade, onTap: _goQuest),
+          if (!locked) LButton(label: tr('Đi ngay'), small: true, color: jade, onTap: _goQuest),
         ],
       ),
     );
@@ -813,7 +814,7 @@ class _TownScreenState extends State<TownScreen> {
       final f = townFeatureById[id]!;
       final ok = h.featureIsOpen(id);
       return _Tile(
-        f.label,
+        tr(f.label),
         icon,
         ok
             ? () {
@@ -822,7 +823,7 @@ class _TownScreenState extends State<TownScreen> {
               }
             : () => ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text('${f.label} mở ở cấp ${f.openLv}'))),
+              ..showSnackBar(SnackBar(content: Text(tr('{fLabel} mở ở cấp {openLv}', {'fLabel': tr(f.label), 'openLv': f.openLv})))),
         badge: ok ? badge : 0,
         lockedAt: ok ? 0 : f.openLv,
         fresh: h.featureIsNew(id),
@@ -928,7 +929,7 @@ class _Tile extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(color: const Color(0xFF2E8A4A), borderRadius: BorderRadius.circular(6)),
-                child: Text('MỚI', style: bold.copyWith(fontSize: 9, color: Colors.white)),
+                child: Text(tr('MỚI'), style: bold.copyWith(fontSize: 9, color: Colors.white)),
               ),
             ),
           if (badge > 0)
@@ -956,7 +957,7 @@ void showGuide(BuildContext context) {
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Bí kíp nhập môn', style: titleStyle(20)),
+      title: Text(tr('Bí kíp nhập môn'), style: titleStyle(20)),
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
@@ -964,7 +965,7 @@ void showGuide(BuildContext context) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '• Kéo bên trái màn hình để di chuyển. Giữ nút lớn bên phải để đánh, '
+                tr('• Kéo bên trái màn hình để di chuyển. Giữ nút lớn bên phải để đánh, '
                 'chạm các nút nhỏ để ra chiêu.\n'
                 '• Bật TỰ ĐỘNG để nhân vật tự tìm quái, ra chiêu và uống thuốc. '
                 'Di chuyển tay sẽ tạm dừng tự động.\n'
@@ -976,12 +977,12 @@ void showGuide(BuildContext context) {
                 '• Vượt ải càng nhanh càng được nhiều sao. Đầu lĩnh có đòn đánh lan '
                 'báo trước bằng vòng đỏ — hãy tránh ra!\n'
                 '• Thợ rèn cường hóa trang bị tới +10, thất bại chỉ mất bạc.\n'
-                '• Ra bản đồ luyện công nhặt Tàng Bảo Đồ, vào Vượt ải → Bí cảnh để thám hiểm.',
+                '• Ra bản đồ luyện công nhặt Tàng Bảo Đồ, vào Vượt ải → Bí cảnh để thám hiểm.'),
                 style: body.copyWith(height: 1.45),
               ),
               const Divider(color: gold, height: 18),
               // The version and where to write, as the last line.
-              Text('Phiên bản $appVersion · Hỗ trợ: $supportEmail', style: small.copyWith(color: creamDim)),
+              Text(tr('Phiên bản {appVersion} · Hỗ trợ: {supportEmail}', {'appVersion': appVersion, 'supportEmail': supportEmail}), style: small.copyWith(color: creamDim)),
             ],
           ),
         ),
@@ -990,9 +991,9 @@ void showGuide(BuildContext context) {
         if (AdsService.instance.privacyOptionsRequired.value)
           TextButton(
             onPressed: AdsService.instance.showPrivacyOptions,
-            child: const Text('Tùy chọn quảng cáo'),
+            child: Text(tr('Tùy chọn quảng cáo')),
           ),
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đã hiểu')),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đã hiểu'))),
       ],
     ),
   );

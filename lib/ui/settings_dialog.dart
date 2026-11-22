@@ -8,9 +8,11 @@ import '../services/save.dart';
 import '../services/sound.dart';
 import 'auto_dialog.dart';
 import 'cloud_panel.dart';
+import 'language_picker.dart';
 import 'stats_screen.dart';
 import 'theme.dart';
 import 'town_screen.dart' show showGuide;
+import '../core/i18n.dart';
 
 /// The town's gear button: the guide, cloud sign-in and the switches that
 /// used to crowd the top bar.
@@ -23,7 +25,7 @@ class SettingsButton extends StatelessWidget {
     return ListenableBuilder(
       listenable: cloud,
       builder: (context, _) => IconButton(
-        tooltip: 'Cài đặt',
+        tooltip: tr('Cài đặt'),
         onPressed: () => showSettings(context),
         icon: Badge(
           // A cloud copy waiting for a choice.
@@ -47,11 +49,11 @@ Future<void> showPurchaseHistory(BuildContext context) async {
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Lịch sử nạp', style: titleStyle(20)),
+      title: Text(tr('Lịch sử nạp'), style: titleStyle(20)),
       content: SizedBox(
         width: 460,
         child: list.isEmpty
-            ? Text('Chưa có giao dịch nào trên máy này.', style: body)
+            ? Text(tr('Chưa có giao dịch nào trên máy này.'), style: body)
             : SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -67,8 +69,8 @@ Future<void> showPurchaseHistory(BuildContext context) async {
                           children: [
                             Text('${e.product} · ${two(e.at.day)}/${two(e.at.month)}/${e.at.year} ${two(e.at.hour)}:${two(e.at.minute)}',
                                 style: bold.copyWith(color: goldLight)),
-                            Text('Nhận bởi: ${e.hero}', style: small.copyWith(color: cream)),
-                            if (e.order.isNotEmpty) SelectableText('Mã đơn: ${e.order}', style: small.copyWith(fontSize: 11)),
+                            Text(tr('Nhận bởi: {hero}', {'hero': e.hero}), style: small.copyWith(color: cream)),
+                            if (e.order.isNotEmpty) SelectableText(tr('Mã đơn: {order}', {'order': e.order}), style: small.copyWith(fontSize: 11)),
                           ],
                         ),
                       ),
@@ -76,7 +78,7 @@ Future<void> showPurchaseHistory(BuildContext context) async {
                 ),
               ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
     ),
   );
 }
@@ -96,9 +98,9 @@ Future<void> showRestorePurchases(BuildContext context) async {
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Khôi phục giao dịch', style: titleStyle(20)),
+      title: Text(tr('Khôi phục giao dịch'), style: titleStyle(20)),
       content: SizedBox(width: 420, child: Text(text, style: body)),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
     ),
   );
 }
@@ -108,7 +110,7 @@ Future<void> showSettings(BuildContext context) {
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: lacquer,
-      title: Text('Cài đặt', style: titleStyle(20)),
+      title: Text(tr('Cài đặt'), style: titleStyle(20)),
       content: SizedBox(
         width: 420,
         child: SingleChildScrollView(
@@ -116,8 +118,17 @@ Future<void> showSettings(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             children: [
               _Link(
+                icon: Icons.translate,
+                label: tr('Ngôn ngữ · 語言'),
+                value: currentLang.label,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  pickLanguage(context, inTown: true);
+                },
+              ),
+              _Link(
                 icon: Icons.help_outline,
-                label: 'Bí kíp nhập môn',
+                label: tr('Bí kíp nhập môn'),
                 onTap: () {
                   Navigator.pop(ctx);
                   showGuide(context);
@@ -126,7 +137,7 @@ Future<void> showSettings(BuildContext context) {
               if (SaveService.instance.active >= 0) ...[
                 _Link(
                   icon: Icons.tune,
-                  label: 'Cài đặt tự đánh',
+                  label: tr('Cài đặt tự đánh'),
                   onTap: () {
                     Navigator.pop(ctx);
                     showAutoSettings(context, SaveService.instance.hero);
@@ -134,7 +145,7 @@ Future<void> showSettings(BuildContext context) {
                 ),
                 _Link(
                   icon: Icons.query_stats,
-                  label: 'Thống kê và kỷ lục',
+                  label: tr('Thống kê và kỷ lục'),
                   onTap: () {
                     Navigator.pop(ctx);
                     Navigator.of(context).push(fadeRoute(const StatsScreen()));
@@ -149,8 +160,8 @@ Future<void> showSettings(BuildContext context) {
                   final on = cloud.user != null;
                   return _Link(
                     icon: on ? Icons.cloud_done : Icons.cloud_off,
-                    label: 'Lưu trữ đám mây',
-                    value: cloud.switchPending ? 'Cần chọn tài khoản' : cloud.conflicts.isNotEmpty ? 'Cần chọn bản lưu' : (on ? 'Đã đăng nhập' : 'Chưa đăng nhập'),
+                    label: tr('Lưu trữ đám mây'),
+                    value: cloud.switchPending ? tr('Cần chọn tài khoản') : cloud.conflicts.isNotEmpty ? tr('Cần chọn bản lưu') : (on ? tr('Đã đăng nhập') : tr('Chưa đăng nhập')),
                     onTap: () {
                       Navigator.pop(ctx);
                       showCloudPanel(context);
@@ -165,8 +176,8 @@ Future<void> showSettings(BuildContext context) {
                     ? const SizedBox.shrink()
                     : _Link(
                         icon: Icons.person_remove,
-                        label: 'Xóa tài khoản',
-                        value: 'Xóa vĩnh viễn',
+                        label: tr('Xóa tài khoản'),
+                        value: tr('Xóa vĩnh viễn'),
                         onTap: () {
                           Navigator.pop(ctx);
                           confirmDeleteAccount(context);
@@ -175,7 +186,7 @@ Future<void> showSettings(BuildContext context) {
               ),
               _Link(
                 icon: Icons.receipt_long,
-                label: 'Lịch sử nạp',
+                label: tr('Lịch sử nạp'),
                 onTap: () {
                   Navigator.pop(ctx);
                   showPurchaseHistory(context);
@@ -183,8 +194,8 @@ Future<void> showSettings(BuildContext context) {
               ),
               _Link(
                 icon: Icons.restore,
-                label: 'Khôi phục giao dịch',
-                value: 'Bỏ quảng cáo',
+                label: tr('Khôi phục giao dịch'),
+                value: tr('Bỏ quảng cáo'),
                 onTap: () {
                   Navigator.pop(ctx);
                   showRestorePurchases(context);
@@ -195,7 +206,7 @@ Future<void> showSettings(BuildContext context) {
                 valueListenable: SoundService.instance.musicOn,
                 builder: (_, on, _) => _Toggle(
                   icon: on ? Icons.music_note : Icons.music_off,
-                  label: 'Nhạc nền',
+                  label: tr('Nhạc nền'),
                   on: on,
                   onChanged: (_) => SoundService.instance.toggleMusic(),
                 ),
@@ -204,7 +215,7 @@ Future<void> showSettings(BuildContext context) {
                 valueListenable: SoundService.instance.sfxOn,
                 builder: (_, on, _) => _Toggle(
                   icon: on ? Icons.volume_up : Icons.volume_off,
-                  label: 'Tiếng hiệu ứng',
+                  label: tr('Tiếng hiệu ứng'),
                   on: on,
                   onChanged: (_) => SoundService.instance.toggleSfx(),
                 ),
@@ -213,8 +224,8 @@ Future<void> showSettings(BuildContext context) {
                 valueListenable: LiteMode.instance.on,
                 builder: (_, on, _) => _Toggle(
                   icon: Icons.speed,
-                  label: 'Chế độ máy yếu',
-                  hint: 'Bỏ rung màn hình, hiệu ứng mờ và trang trí',
+                  label: tr('Chế độ máy yếu'),
+                  hint: tr('Bỏ rung màn hình, hiệu ứng mờ và trang trí'),
                   on: on,
                   onChanged: (_) => LiteMode.instance.toggle(),
                 ),
@@ -225,8 +236,8 @@ Future<void> showSettings(BuildContext context) {
                   final on = NotifyService.instance.enabled;
                   return _Toggle(
                     icon: on ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
-                    label: 'Thông báo nhắc',
-                    hint: 'Bế quan đầy, quà mới mỗi tối',
+                    label: tr('Thông báo nhắc'),
+                    hint: tr('Bế quan đầy, quà mới mỗi tối'),
                     on: on,
                     onChanged: (v) => NotifyService.instance.setEnabled(v),
                   );
@@ -236,7 +247,7 @@ Future<void> showSettings(BuildContext context) {
           ),
         ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
     ),
   );
 }

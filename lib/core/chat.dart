@@ -1,4 +1,6 @@
-/// Kênh Thế Giới: one public chat for every signed-in player. The rules
+import 'i18n.dart';
+
+/// Kênh Thế Giới: one public chat per language ([chatMsgsPath]). The rules
 /// here are mirrored by the server's (database.rules.json), which is what
 /// actually enforces them.
 const int chatMaxLen = 120;
@@ -90,7 +92,32 @@ const _swears = {
   'đm', 'dm', 'đmm', 'dmm', 'đcm', 'dcm', 'đcmm', 'dcmm', 'đkm', 'dkm', 'vcl', 'vkl', 'vcc', 'vl',
   'clm', 'cmm', 'cmn', 'cc', 'loz', 'lìn', 'đjt', 'djt', 'dit', 'đit', 'cak', 'kak',
   'fuck', 'fucking', 'fck', 'shit', 'bitch', 'dick', 'pussy', 'cunt',
+  // Taiwanese net slang written in Latin letters (e04 = 幹你娘, g8 = 雞巴).
+  'e04', 'g8', 'sb',
 };
+
+// Chinese has no spaces between words, so these are found anywhere in the
+// text, also with spaces or symbols slipped between the characters
+// ("幹 你.娘"). Traditional and Simplified, Taiwan and Hong Kong slang.
+// Characters that are also everyday words alone (幹 in 幹嘛, 操 in 操作,
+// 草, 靠) are only caught inside the phrases below.
+const _cjkSwears = [
+  '幹你娘', '幹您娘', '幹恁娘', '幹拎娘', '幹林娘', '干你娘', '姦你娘', '幹你老師', '幹你老母', '淦',
+  '操你媽', '操你妈', '操你娘', '操你祖宗', '肏', '屌你老母', '屌你', '屌', '屄', '閪', '𨳒', '撚',
+  '雞巴', '鸡巴', '機巴', '機八', '雞八', '雞掰', '機掰', '鸡掰', '雞歪', '機歪',
+  '他媽的', '他妈的', '你媽的', '你妈的', '媽的', '妈的', '你媽', '你妈', '尼瑪', '尼玛', '草泥馬', '草泥马',
+  '媽逼', '妈逼', '傻逼', '傻屄', '煞筆', '煞笔', '沙比', '傻B',
+  '賤人', '贱人', '賤貨', '贱货', '婊子', '臭婊', '王八蛋', '狗娘養的', '狗娘养的', '死全家',
+  '靠北', '靠杯', '靠夭', '三小', '仆街', '冚家鏟', '冚家铲', '腦殘', '脑残', '智障', '白癡', '白痴',
+];
+
+final RegExp _cjkSwear = () {
+  // Longest first, so 他媽的 is starred whole rather than just 媽的.
+  final terms = [..._cjkSwears]..sort((a, b) => b.runes.length.compareTo(a.runes.length));
+  const gap = r'[\s\p{P}\p{S}_]*';
+  String pattern(String t) => t.runes.map((r) => RegExp.escape(String.fromCharCode(r))).join(gap);
+  return RegExp(terms.map(pattern).join('|'), unicode: true, caseSensitive: false);
+}();
 
 // Repeated letters are folded first, so "địttt" and "vclll" are caught.
 final _word = RegExp(r'[\p{L}\p{M}\p{N}]+', unicode: true);
@@ -102,6 +129,13 @@ bool _isSwear(String w) {
   return _swears.contains(folded);
 }
 
-/// [text] with every swear word replaced by stars.
-String chatCensor(String text) =>
-    text.replaceAllMapped(_word, (m) => _isSwear(m[0]!) ? '*' * m[0]!.runes.length : m[0]!);
+/// [text] with every swear word replaced by stars: Vietnamese and English
+/// by whole words, Chinese anywhere in the text.
+String chatCensor(String text) => text
+    .replaceAllMapped(_word, (m) => _isSwear(m[0]!) ? '*' * m[0]!.runes.length : m[0]!)
+    .replaceAllMapped(_cjkSwear, (m) => '*' * m[0]!.runes.length);
+
+/// Where the world channel of players in [lang] lives in the Realtime
+/// Database. Vietnamese keeps the original path, so older app versions
+/// still share it; every other language has its own room.
+String chatMsgsPath(Lang lang) => lang == Lang.vi ? 'chat/msgs' : 'chat/rooms/${lang.code}';

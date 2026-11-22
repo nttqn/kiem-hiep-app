@@ -6,6 +6,7 @@ import 'hero.dart';
 import 'hero_look.dart';
 import 'sects.dart';
 import 'tam_ma.dart';
+import 'i18n.dart';
 
 /// Ngộ Đạo (1.12.0): the climb past the last rebirth. Once a hero is in
 /// the sixth life at level 99 with a full bar, EXP also builds Đạo hạnh
@@ -50,7 +51,7 @@ int daoStageOf(int lv) => lv <= 0 ? -1 : math.min((lv - 1) ~/ daoLayers, daoStag
 /// Tầng within its cảnh giới, 1..9 (and on past 9 in Chân Tiên).
 int daoLayerOf(int lv) => lv <= 0 ? 0 : lv - daoStageOf(lv) * daoLayers;
 
-String daoName(int lv) => lv <= 0 ? 'Chưa nhập đạo' : '${daoStages[daoStageOf(lv)].name} tầng ${daoLayerOf(lv)}';
+String daoName(int lv) => lv <= 0 ? tr('Chưa nhập đạo') : tr('{p0} tầng {p1}', {'p0': tr(daoStages[daoStageOf(lv)].name), 'p1': daoLayerOf(lv)});
 
 int daoColor(int lv) => lv <= 0 ? 0xFFB8A888 : daoStages[daoStageOf(lv)].color;
 
@@ -116,7 +117,7 @@ extension NgoDao on HeroData {
   ArenaRival kiepRival() {
     final m = ridingMount;
     return ArenaRival(
-      name: 'Tâm Ma Kiếp',
+      name: tr('Tâm Ma Kiếp'),
       hanh: hanh,
       level: level,
       rebirths: rebirths,
@@ -132,7 +133,7 @@ extension NgoDao on HeroData {
 
   DungeonDef kiepDef() => DungeonDef(
         id: 'kiep',
-        name: 'Độ Kiếp · ${daoStages[kiepStage].name}',
+        name: tr('Độ Kiếp · {p0}', {'p0': tr(daoStages[kiepStage].name)}),
         mapId: huyetHaiMap.id,
         level: level,
         waves: const [],
@@ -155,14 +156,14 @@ extension NgoDao on HeroData {
     final jade = kiepJade(kiepStage - 1);
     tienJade += jade;
     final name = daoName(daoLv);
-    notices.add(Notice('Độ kiếp thành công: $name!', color: daoColor(daoLv), big: true));
+    notices.add(Notice(tr('Độ kiếp thành công: {name}!', {'name': name}), color: daoColor(daoLv), big: true));
     recompute();
     gainDao(0);
     return [
-      'Bước vào $name',
-      '-$pills Linh Phách Đơn',
-      '+$jade Tiên Ngọc',
-      'Sinh lực, Công lực +${(daoStageHpAtk * 100).round()}% thêm',
+      tr('Bước vào {name}', {'name': name}),
+      tr('-{pills} Linh Phách Đơn', {'pills': pills}),
+      tr('+{jade} Tiên Ngọc', {'jade': jade}),
+      tr('Sinh lực, Công lực +{p0}% thêm', {'p0': (daoStageHpAtk * 100).round()}),
     ];
   }
 
@@ -177,13 +178,13 @@ extension NgoDao on HeroData {
       daoLv++;
       tienJade += daoLayerJade;
       up = true;
-      notices.add(Notice('Ngộ Đạo: ${daoName(daoLv)}', color: daoColor(daoLv), big: true));
+      notices.add(Notice(tr('Ngộ Đạo: {p0}', {'p0': daoName(daoLv)}), color: daoColor(daoLv), big: true));
     }
     if (daoAtGate(daoLv) && daoExp >= daoCost(daoLv)) {
       daoExp = daoCost(daoLv);
       if (!daoNotified) {
         daoNotified = true;
-        notices.add(Notice('Đạo hạnh viên mãn! Về Chuyển sinh để Độ kiếp vào ${daoStages[kiepStage].name}.',
+        notices.add(Notice(tr('Đạo hạnh viên mãn! Về Chuyển sinh để Độ kiếp vào {p0}.', {'p0': tr(daoStages[kiepStage].name)}),
             color: 0xFFFFD34A, big: true));
       }
     }

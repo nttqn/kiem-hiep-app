@@ -5,6 +5,7 @@ import '../core/hero.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Lưu phái: the sect's two schools side by side, the one taken, its Tu vi
 /// and what the next level costs.
@@ -19,7 +20,7 @@ Future<void> showBranchDialog(BuildContext context, HeroData h) {
           backgroundColor: lacquer,
           scrollable: true,
           insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-          title: Text('Lưu phái · ${h.sect.name}', style: titleStyle(18)),
+          title: Text(tr('Lưu phái · {sectName}', {'sectName': tr(h.sect.name)}), style: titleStyle(18)),
           content: SizedBox(
             width: 640,
             child: Column(
@@ -28,9 +29,9 @@ Future<void> showBranchDialog(BuildContext context, HeroData h) {
               children: [
                 Text(
                   h.branchOpen
-                      ? 'Chọn một phái hệ: đổi vài chiêu và thêm nội công riêng. '
-                          'Lần đầu miễn phí, đổi sau tốn ${fmt(branchSwitchCost(h.rebirths))} lượng; Tu vi giữ nguyên.'
-                      : 'Mở sau lần chuyển sinh đầu tiên.',
+                      ? tr('Chọn một phái hệ: đổi vài chiêu và thêm nội công riêng. '
+                          'Lần đầu miễn phí, đổi sau tốn {p0} lượng; Tu vi giữ nguyên.', {'p0': fmt(branchSwitchCost(h.rebirths))})
+                      : tr('Mở sau lần chuyển sinh đầu tiên.'),
                   style: small.copyWith(fontSize: 11),
                 ),
                 const SizedBox(height: 8),
@@ -53,7 +54,7 @@ Future<void> showBranchDialog(BuildContext context, HeroData h) {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng'))),
           ],
         );
       },
@@ -73,31 +74,31 @@ Widget _card(BuildContext context, HeroData h, BranchDef b, int i, VoidCallback 
       children: [
         Row(
           children: [
-            Expanded(child: Text(b.name, style: titleStyle(16).copyWith(color: taken ? goldLight : cream))),
+            Expanded(child: Text(tr(b.name), style: titleStyle(16).copyWith(color: taken ? goldLight : cream))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(color: hanhColor(h.hanh).withValues(alpha: 0.35), borderRadius: BorderRadius.circular(6)),
-              child: Text(b.role, style: bold.copyWith(fontSize: 11)),
+              child: Text(tr(b.role), style: bold.copyWith(fontSize: 11)),
             ),
           ],
         ),
         const SizedBox(height: 2),
-        Text(b.desc, style: small.copyWith(fontSize: 11)),
+        Text(tr(b.desc), style: small.copyWith(fontSize: 11)),
         const SizedBox(height: 4),
         for (final m in b.mods)
           Text('• ${skills[m.skill]?.name ?? m.skill}: ${m.note}', style: small.copyWith(fontSize: 11, color: cream)),
         const SizedBox(height: 4),
         Text(
-          'Nội công: ${[for (final e in branchBonus(b, taken ? h.branchLv : 1).entries) branchBonusLabel(e.key, e.value)].join(', ')}',
+          tr('Nội công: {p0}', {'p0': [for (final e in branchBonus(b, taken ? h.branchLv : 1).entries) branchBonusLabel(e.key, e.value)].join(', ')}),
           style: bold.copyWith(fontSize: 11, color: const Color(0xFF8CE07A)),
         ),
         const Spacer(),
         const SizedBox(height: 6),
         if (taken)
-          Center(child: Text('Đang theo phái này', style: bold.copyWith(color: goldLight)))
+          Center(child: Text(tr('Đang theo phái này'), style: bold.copyWith(color: goldLight)))
         else
           LButton(
-            label: cost == 0 ? 'Chọn phái này' : 'Đổi sang (${fmt(cost)} lượng)',
+            label: cost == 0 ? tr('Chọn phái này') : tr('Đổi sang ({p0} lượng)', {'p0': fmt(cost)}),
             small: true,
             color: jade,
             enabled: h.branchOpen && h.gold >= cost,
@@ -107,11 +108,11 @@ Widget _card(BuildContext context, HeroData h, BranchDef b, int i, VoidCallback 
                   context: context,
                   builder: (c) => AlertDialog(
                     backgroundColor: lacquer,
-                    title: Text('Đổi lưu phái?', style: titleStyle(18)),
-                    content: Text('Theo ${b.name} với ${fmt(cost)} lượng. Tu vi giữ nguyên.', style: body),
+                    title: Text(tr('Đổi lưu phái?'), style: titleStyle(18)),
+                    content: Text(tr('Theo {bName} với {p0} lượng. Tu vi giữ nguyên.', {'bName': tr(b.name), 'p0': fmt(cost)}), style: body),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Thôi')),
-                      TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Đổi')),
+                      TextButton(onPressed: () => Navigator.pop(c, false), child: Text(tr('Thôi'))),
+                      TextButton(onPressed: () => Navigator.pop(c, true), child: Text(tr('Đổi'))),
                     ],
                   ),
                 );
@@ -139,12 +140,12 @@ Widget _tuVi(BuildContext context, HeroData h, BranchDef b, VoidCallback changed
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Tu vi ${h.branchLv}/$maxBranchLevel', style: bold.copyWith(color: goldLight)),
+              Text(tr('Tu vi {branchLv}/{maxBranchLevel}', {'branchLv': h.branchLv, 'maxBranchLevel': maxBranchLevel}), style: bold.copyWith(color: goldLight)),
               Text(
                 top
-                    ? 'Đã viên mãn: nội công ×${branchMul(h.branchLv).toStringAsFixed(2)}'
-                    : 'Nội công ×${branchMul(h.branchLv).toStringAsFixed(2)} → ×${branchMul(h.branchLv + 1).toStringAsFixed(2)} · '
-                        '${fmt(branchGoldCost(h.branchLv))} lượng + ${branchIronCost(h.branchLv)} Thần Thiết (có ${h.divineIron})',
+                    ? tr('Đã viên mãn: nội công ×{p0}', {'p0': branchMul(h.branchLv).toStringAsFixed(2)})
+                    : tr('Nội công ×{p0} → ×{p1} · '
+                        '{p2} lượng + {p3} Thần Thiết (có {divineIron})', {'p0': branchMul(h.branchLv).toStringAsFixed(2), 'p1': branchMul(h.branchLv + 1).toStringAsFixed(2), 'p2': fmt(branchGoldCost(h.branchLv)), 'p3': branchIronCost(h.branchLv), 'divineIron': h.divineIron}),
                 style: small.copyWith(fontSize: 11),
               ),
             ],
@@ -152,7 +153,7 @@ Widget _tuVi(BuildContext context, HeroData h, BranchDef b, VoidCallback changed
         ),
         const SizedBox(width: 8),
         LButton(
-          label: 'Tu luyện',
+          label: tr('Tu luyện'),
           small: true,
           enabled: h.canRaiseBranch,
           onTap: () {

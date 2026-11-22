@@ -7,6 +7,7 @@ import 'hero.dart';
 import 'ngo_dao.dart';
 import 'tang_bao.dart' show tbdDailyDrops, tbdMaxHeld;
 import 'world_boss.dart' show vnDayKey;
+import 'i18n.dart';
 
 /// Túi đồ (1.15.0): everything a hero collects that is not gear, counted
 /// rather than slotted, so it never takes a bag slot. Each entry says what
@@ -15,9 +16,9 @@ enum BagKind { use, mat, coin }
 
 extension BagKindLabel on BagKind {
   String get label => switch (this) {
-        BagKind.use => 'Tiêu hao',
-        BagKind.mat => 'Nguyên liệu',
-        BagKind.coin => 'Tiền tệ',
+        BagKind.use => tr('Tiêu hao'),
+        BagKind.mat => tr('Nguyên liệu'),
+        BagKind.coin => tr('Tiền tệ'),
       };
 }
 
@@ -68,7 +69,7 @@ String herbRegions(int tier) => [
 
 String _mins(double sec) {
   final m = (sec / 60).ceil();
-  return m >= 60 ? '${m ~/ 60} giờ ${m % 60} phút' : '$m phút';
+  return m >= 60 ? tr('{p0} giờ {p1} phút', {'p0': m ~/ 60, 'p1': m % 60}) : tr('{m} phút', {'m': m});
 }
 
 /// The hero's bag entries: owned ones, plus the ones a hero at this stage
@@ -77,25 +78,25 @@ List<BagEntry> bagEntries(HeroData h) {
   final out = <BagEntry>[
     BagEntry(
       id: 'hp',
-      name: 'Kim Sang Dược',
+      name: tr('Kim Sang Dược'),
       kind: BagKind.use,
       count: h.hpPots,
       color: 0xFFE84B4A,
       art: 'item_hp',
       glyph: 'drink',
-      use: 'Hồi sinh lực trong trận (nút bình đỏ hoặc phím Q). Tự đánh cũng tự uống khi máu thấp.',
-      source: 'Mua ở Tiệm (Thành), luyện Hồi Xuân Đan, thưởng nhiệm vụ, quà đăng nhập, hòm thư.',
+      use: tr('Hồi sinh lực trong trận (nút bình đỏ hoặc phím Q). Tự đánh cũng tự uống khi máu thấp.'),
+      source: tr('Mua ở Tiệm (Thành), luyện Hồi Xuân Đan, thưởng nhiệm vụ, quà đăng nhập, hòm thư.'),
     ),
     BagEntry(
       id: 'mp',
-      name: 'Ngưng Thần Đan',
+      name: tr('Ngưng Thần Đan'),
       kind: BagKind.use,
       count: h.mpPots,
       color: 0xFF4A7AE8,
       art: 'item_mp',
       glyph: 'drink',
-      use: 'Hồi nội lực trong trận (nút bình xanh hoặc phím E) để tung chiêu liên tục.',
-      source: 'Mua ở Tiệm (Thành), luyện Hồi Xuân Đan, thưởng nhiệm vụ, quà đăng nhập, hòm thư.',
+      use: tr('Hồi nội lực trong trận (nút bình xanh hoặc phím E) để tung chiêu liên tục.'),
+      source: tr('Mua ở Tiệm (Thành), luyện Hồi Xuân Đan, thưởng nhiệm vụ, quà đăng nhập, hòm thư.'),
     ),
     for (final p in pills)
       if ((h.pills[p.id] ?? 0) > 0)
@@ -109,29 +110,29 @@ List<BagEntry> bagEntries(HeroData h) {
           pill: p,
           action: BagAction.pill,
           use: p.desc +
-              (p.kind == PillKind.buff ? ' Thời gian cộng dồn tối đa ${maxBuffMinutes ~/ 60} giờ.' : ''),
-          source: 'Luyện ở Luyện đan (Thành, từ cấp $alchemyOpenLevel) bằng thảo dược và lượng; '
-              'đôi khi có trong rương thưởng, Lệnh Bài và quà sự kiện.',
+              (p.kind == PillKind.buff ? tr(' Thời gian cộng dồn tối đa {p0} giờ.', {'p0': maxBuffMinutes ~/ 60}) : ''),
+          source: tr('Luyện ở Luyện đan (Thành, từ cấp {alchemyOpenLevel}) bằng thảo dược và lượng; '
+              'đôi khi có trong rương thưởng, Lệnh Bài và quà sự kiện.', {'alchemyOpenLevel': alchemyOpenLevel}),
           note: switch (p.kind) {
-            PillKind.buff => h.buffLeft(p.id) > 0 ? 'Đang có hiệu lực: còn ${_mins(h.buffLeft(p.id))}.' : '',
-            PillKind.potential => 'Đã dùng ${h.potentialPills}/$maxPotentialPills viên.',
+            PillKind.buff => h.buffLeft(p.id) > 0 ? tr('Đang có hiệu lực: còn {p0}.', {'p0': _mins(h.buffLeft(p.id))}) : '',
+            PillKind.potential => tr('Đã dùng {potentialPills}/{maxPotentialPills} viên.', {'potentialPills': h.potentialPills, 'maxPotentialPills': maxPotentialPills}),
             PillKind.potions => '',
           },
         ),
     if (h.tbdMaps > 0)
       BagEntry(
         id: 'tbd',
-        name: 'Tàng Bảo Đồ',
+        name: tr('Tàng Bảo Đồ'),
         kind: BagKind.use,
         count: h.tbdMaps,
         color: 0xFFD8A040,
         art: 'item_tbd',
         glyph: 'map',
-        use: 'Ra bản đồ luyện công, bấm nút "Tàng Bảo Đồ" để đọc: bản đồ đánh dấu một điểm đào. '
-            'Đến đó đào được rương, đôi khi gặp phục kích, thủ vệ hoặc lối vào bí cảnh.',
-        source: 'Quái ngoài bản đồ luyện công thỉnh thoảng rơi (boss và tinh anh rơi nhiều hơn), '
-            'tối đa $tbdDailyDrops tấm mỗi ngày, giữ tối đa $tbdMaxHeld tấm.',
-        note: h.tbdSpot != null ? 'Đang có một điểm đào chưa đào.' : '',
+        use: tr('Ra bản đồ luyện công, bấm nút "Tàng Bảo Đồ" để đọc: bản đồ đánh dấu một điểm đào. '
+            'Đến đó đào được rương, đôi khi gặp phục kích, thủ vệ hoặc lối vào bí cảnh.'),
+        source: tr('Quái ngoài bản đồ luyện công thỉnh thoảng rơi (boss và tinh anh rơi nhiều hơn), '
+            'tối đa {tbdDailyDrops} tấm mỗi ngày, giữ tối đa {tbdMaxHeld} tấm.', {'tbdDailyDrops': tbdDailyDrops, 'tbdMaxHeld': tbdMaxHeld}),
+        note: h.tbdSpot != null ? tr('Đang có một điểm đào chưa đào.') : '',
       ),
     for (var t = 0; t < herbNames.length; t++)
       if (h.herbs[t] > 0 || h.alchemyOpen)
@@ -143,9 +144,9 @@ List<BagEntry> bagEntries(HeroData h) {
           color: herbColors[t],
           art: 'herb_${t + 1}',
           glyph: 'herb',
-          use: 'Thảo dược bậc ${t + 1}: nguyên liệu luyện đan ở Luyện đan (Thành).',
-          source: 'Hái cây thuốc mọc trên bản đồ ${herbRegions(t)}; quái ở đó thỉnh thoảng rơi, '
-              'boss và tinh anh luôn rơi. Trồng thêm ở Trang viên.',
+          use: tr('Thảo dược bậc {p0}: nguyên liệu luyện đan ở Luyện đan (Thành).', {'p0': t + 1}),
+          source: tr('Hái cây thuốc mọc trên bản đồ {p0}; quái ở đó thỉnh thoảng rơi, '
+              'boss và tinh anh luôn rơi. Trồng thêm ở Trang viên.', {'p0': herbRegions(t)}),
         ),
     for (final e in (h.gemBag.entries.toList()..sort((a, b) => a.key.compareTo(b.key))))
       if (e.value > 0 && Gem.parse(e.key) != null)
@@ -156,85 +157,85 @@ List<BagEntry> bagEntries(HeroData h) {
           count: e.value,
           color: 0xFF9FD8FF,
           gem: Gem.parse(e.key),
-          use: 'Khảm vào lỗ ngọc của trang bị (Thợ rèn → Khảm ngọc). Ngọc cùng hành với phái được x1.5; '
-              'ghép 3 viên cùng loại thành 1 viên bậc cao hơn.',
-          source: 'Quái rơi ngẫu nhiên, boss luôn rơi; Ải Ác Mộng, Kỳ Trân Các, Lôi đài, Võ Lâm Đại Hội, '
-              'Lệnh Bài và hòm thư.',
+          use: tr('Khảm vào lỗ ngọc của trang bị (Thợ rèn → Khảm ngọc). Ngọc cùng hành với phái được x1.5; '
+              'ghép 3 viên cùng loại thành 1 viên bậc cao hơn.'),
+          source: tr('Quái rơi ngẫu nhiên, boss luôn rơi; Ải Ác Mộng, Kỳ Trân Các, Lôi đài, Võ Lâm Đại Hội, '
+              'Lệnh Bài và hòm thư.'),
         ),
     if (h.goldShards > 0 || h.goldOpen)
       BagEntry(
         id: 'shard',
-        name: 'Mảnh Hoàng Kim',
+        name: tr('Mảnh Hoàng Kim'),
         kind: BagKind.mat,
         count: h.goldShards,
         color: 0xFFFFC83A,
         art: 'mat_shard',
-        use: 'Rèn đồ Hoàng Kim theo bộ, đúc lại đồ Hoàng Kim lên cấp hiện tại và mua trong tiệm Hoàng Kim '
-            '(Thợ rèn → Hoàng Kim).',
-        source: 'Mốc sát thương Boss Thế Giới, Boss Hoàng Kim, Tháp Thử Luyện tầng 40 trở lên, Ải Ác Mộng, '
-            'rương Năng động tuần, thưởng mùa Lôi đài, boss và tinh anh cấp cao, Sư môn, Bang hội, Lệnh Bài.',
+        use: tr('Rèn đồ Hoàng Kim theo bộ, đúc lại đồ Hoàng Kim lên cấp hiện tại và mua trong tiệm Hoàng Kim '
+            '(Thợ rèn → Hoàng Kim).'),
+        source: tr('Mốc sát thương Boss Thế Giới, Boss Hoàng Kim, Tháp Thử Luyện tầng 40 trở lên, Ải Ác Mộng, '
+            'rương Năng động tuần, thưởng mùa Lôi đài, boss và tinh anh cấp cao, Sư môn, Bang hội, Lệnh Bài.'),
       ),
     if (h.soulPills > 0 || h.level >= maxLevel || h.rebirths > 0)
       BagEntry(
         id: 'soulpill',
-        name: 'Linh Phách Đơn',
+        name: tr('Linh Phách Đơn'),
         kind: BagKind.mat,
         count: h.soulPills,
         color: 0xFF9FE8FF,
         art: 'mat_soulpill',
         action: BagAction.soulToIron,
-        use: 'Cần để Chuyển sinh${h.daoOpen ? ' và Độ kiếp (Ngộ Đạo)' : ''}. '
-            'Đổi $soulPillsPerIron viên lấy 1 Thần Thiết.',
-        source: 'Ngưng tụ từ EXP dư khi đã đầy thanh kinh nghiệm ở cấp $maxLevel; Boss Bang, tiệm Bang hội, '
-            'Lệnh Bài, quà sự kiện.',
-        note: h.rebirths < maxRebirths ? 'Chuyển sinh ${h.rebirths + 1} cần ${h.nextRebirthPills} viên.' : '',
+        use: tr('Cần để Chuyển sinh{p0}. '
+            'Đổi {soulPillsPerIron} viên lấy 1 Thần Thiết.', {'p0': h.daoOpen ? tr(' và Độ kiếp (Ngộ Đạo)') : '', 'soulPillsPerIron': soulPillsPerIron}),
+        source: tr('Ngưng tụ từ EXP dư khi đã đầy thanh kinh nghiệm ở cấp {maxLevel}; Boss Bang, tiệm Bang hội, '
+            'Lệnh Bài, quà sự kiện.', {'maxLevel': maxLevel}),
+        note: h.rebirths < maxRebirths ? tr('Chuyển sinh {p0} cần {nextRebirthPills} viên.', {'p0': h.rebirths + 1, 'nextRebirthPills': h.nextRebirthPills}) : '',
       ),
     if (h.divineIron > 0 || h.rebirths > 0)
       BagEntry(
         id: 'iron',
-        name: 'Thần Thiết',
+        name: tr('Thần Thiết'),
         kind: BagKind.mat,
         count: h.divineIron,
         color: 0xFFB8C8E0,
         art: 'mat_iron',
-        use: 'Thức tỉnh Thần binh (Thợ rèn → Thần binh) và nâng Tu vi Lưu phái.',
-        source: 'Ải Ác Mộng 7 trở lên (vượt lần đầu được nhiều), mốc sát thương Boss Thế Giới, Tháp tầng 100+, '
-            'Boss Hoàng Kim, Lôi đài, Boss Bang, Võ Lâm Đại Hội; đổi từ Linh Phách Đơn.',
+        use: tr('Thức tỉnh Thần binh (Thợ rèn → Thần binh) và nâng Tu vi Lưu phái.'),
+        source: tr('Ải Ác Mộng 7 trở lên (vượt lần đầu được nhiều), mốc sát thương Boss Thế Giới, Tháp tầng 100+, '
+            'Boss Hoàng Kim, Lôi đài, Boss Bang, Võ Lâm Đại Hội; đổi từ Linh Phách Đơn.'),
       ),
     if (h.starStones > 0 || h.rebirths > 0)
       BagEntry(
         id: 'stone',
-        name: 'Tinh Thạch',
+        name: tr('Tinh Thạch'),
         kind: BagKind.mat,
         count: h.starStones,
         color: 0xFFC8A0FF,
         art: 'mat_stone',
-        use: 'Thăng Tinh trang bị đã cường hóa tối đa (bấm vào món đồ → Thăng Tinh), mỗi sao tăng chỉ số gốc.',
-        source: 'Tâm Ma Ảo Cảnh (lần đầu qua tầng), Ma Vực (tầng mới mỗi tuần), Thượng Cổ Hung Thú, '
-            'luyện hóa ngọc Thần/Tiên/Thánh, Lệnh Bài, tiệm Bang hội, Gói Thăng Tinh.',
+        use: tr('Thăng Tinh trang bị đã cường hóa tối đa (bấm vào món đồ → Thăng Tinh), mỗi sao tăng chỉ số gốc.'),
+        source: tr('Tâm Ma Ảo Cảnh (lần đầu qua tầng), Ma Vực (tầng mới mỗi tuần), Thượng Cổ Hung Thú, '
+            'luyện hóa ngọc Thần/Tiên/Thánh, Lệnh Bài, tiệm Bang hội, Gói Thăng Tinh.'),
       ),
     if (h.beastSouls > 0 || h.rebirths > 0)
       BagEntry(
         id: 'soul',
-        name: 'Hung Thú Tinh Phách',
+        name: tr('Hung Thú Tinh Phách'),
         kind: BagKind.mat,
         count: h.beastSouls,
         color: 0xFFFF7A5A,
         art: 'mat_soul',
-        use: 'Cùng Tinh Thạch để Thăng Tinh hai sao cuối (★4, ★5).',
-        source: 'Hạ Thượng Cổ Hung Thú lần đầu mỗi tuần ở mỗi độ khó, Lệnh Bài, Gói Thăng Tinh, quà sự kiện.',
+        use: tr('Cùng Tinh Thạch để Thăng Tinh hai sao cuối (★4, ★5).'),
+        source: tr('Hạ Thượng Cổ Hung Thú lần đầu mỗi tuần ở mỗi độ khó, Lệnh Bài, Gói Thăng Tinh, quà sự kiện.'),
       ),
     if (h.tienJade > 0 || h.daoOpen)
       BagEntry(
         id: 'jade',
-        name: 'Tiên Ngọc',
+        name: tr('Tiên Ngọc'),
         kind: BagKind.mat,
         count: h.tienJade,
         color: 0xFF7AE8C8,
         art: 'item_tienngoc',
         glyph: 'jade',
-        use: 'Luyện Tiên khí cho trang bị đang mặc (Ngộ Đạo → Tiên khí), mỗi phẩm tăng chỉ số gốc.',
-        source: 'Mỗi tầng Ngộ Đạo mới, mỗi lần Độ kiếp thắng, top bảng Boss Hoàng Kim, tiệm Bang hội, hòm thư.',
+        use: tr('Luyện Tiên khí cho trang bị đang mặc (Ngộ Đạo → Tiên khí), mỗi phẩm tăng chỉ số gốc.'),
+        source: tr('Mỗi tầng Ngộ Đạo mới, mỗi lần Độ kiếp thắng, top bảng Boss Hoàng Kim, tiệm Bang hội, hòm thư.'),
       ),
     if (h.arenaCoins > 0)
       BagEntry(
@@ -244,19 +245,19 @@ List<BagEntry> bagEntries(HeroData h) {
         count: h.arenaCoins,
         color: 0xFFFFD34A,
         glyph: 'arena',
-        use: 'Đổi đồ ở Tiệm Uy danh (Lôi đài) và mở một số thú cưỡi.',
-        source: 'Đấu Lôi đài, lương ngày theo bậc, thưởng mùa và thứ hạng, Võ Lâm Đại Hội.',
+        use: tr('Đổi đồ ở Tiệm Uy danh (Lôi đài) và mở một số thú cưỡi.'),
+        source: tr('Đấu Lôi đài, lương ngày theo bậc, thưởng mùa và thứ hạng, Võ Lâm Đại Hội.'),
       ),
     if (h.sectCoins > 0)
       BagEntry(
         id: 'sect',
-        name: 'Cống hiến Sư môn',
+        name: tr('Cống hiến Sư môn'),
         kind: BagKind.coin,
         count: h.sectCoins,
         color: 0xFFE8C547,
         glyph: 'sect',
-        use: 'Đổi trang bí kíp, Mảnh Hoàng Kim và vật phẩm ở Tàng Kinh Các (Sư môn).',
-        source: 'Làm nhiệm vụ Sư môn mỗi ngày (cứ nhiệm vụ thứ 5 được gấp đôi).',
+        use: tr('Đổi trang bí kíp, Mảnh Hoàng Kim và vật phẩm ở Tàng Kinh Các (Sư môn).'),
+        source: tr('Làm nhiệm vụ Sư môn mỗi ngày (cứ nhiệm vụ thứ 5 được gấp đôi).'),
       ),
     // 1.18.0: Tinh Hoa, from broken-down monster gear.
     if (h.essence > 0 || h.bag.any((it) => essenceOf(it) > 0))
@@ -268,10 +269,10 @@ List<BagEntry> bagEntries(HeroData h) {
         color: 0xFFB8F0FF,
         glyph: 'essence',
         action: BagAction.essenceShop,
-        use: 'Tẩy luyện định hướng (dòng mới chỉ ra nhóm Công hoặc Thủ), Khắc ấn dòng từ đồ rơi '
-            'lên đồ Hoàng Kim (Thợ rèn), đổi Mảnh Hoàng Kim và Thần Thiết mỗi tuần.',
-        source: 'Phân giải đồ rơi từ cấp $essenceMinLevel: Quý 1, Hiếm 3, Truyền thuyết 10 '
-            '(Hành trang → Phân giải, hoặc bật Tự phân giải).',
+        use: tr('Tẩy luyện định hướng (dòng mới chỉ ra nhóm Công hoặc Thủ), Khắc ấn dòng từ đồ rơi '
+            'lên đồ Hoàng Kim (Thợ rèn), đổi Mảnh Hoàng Kim và Thần Thiết mỗi tuần.'),
+        source: tr('Phân giải đồ rơi từ cấp {essenceMinLevel}: Quý 1, Hiếm 3, Truyền thuyết 10 '
+            '(Hành trang → Phân giải, hoặc bật Tự phân giải).', {'essenceMinLevel': essenceMinLevel}),
       ),
     // 1.17.0: the festival currency, while its shop is open.
     if (h.festCoins > 0 && festShopOn(vnDayKey())?.id == h.festId)
@@ -282,10 +283,10 @@ List<BagEntry> bagEntries(HeroData h) {
         count: h.festCoins,
         color: 0xFFBFE8FF,
         glyph: 'fest',
-        use: 'Đổi ngoại trang, thú cưỡi, danh hiệu và vật phẩm ở tiệm ${festById[h.festId]!.name}, '
-            'mở đến hết ngày ${dayLabel(dayAfter(festById[h.festId]!.until, festById[h.festId]!.shopDays))}.',
-        source: 'Hạ quái ở ${festById[h.festId]!.landName} (tối đa $festDayCap mỗi ngày), '
-            'nhiệm vụ ngày của lễ hội, Gói lễ hội.',
+        use: tr('Đổi ngoại trang, thú cưỡi, danh hiệu và vật phẩm ở tiệm {p0}, '
+            'mở đến hết ngày {p1}.', {'p0': tr(festById[h.festId]!.name), 'p1': dayLabel(dayAfter(festById[h.festId]!.until, festById[h.festId]!.shopDays))}),
+        source: tr('Hạ quái ở {p0} (tối đa {festDayCap} mỗi ngày), '
+            'nhiệm vụ ngày của lễ hội, Gói lễ hội.', {'p0': festById[h.festId]!.landName, 'festDayCap': festDayCap}),
       ),
     if (h.guildCoins > 0)
       BagEntry(
@@ -295,8 +296,8 @@ List<BagEntry> bagEntries(HeroData h) {
         count: h.guildCoins,
         color: 0xFF8AD8FF,
         glyph: 'guild',
-        use: 'Mua hàng trong tiệm Bang hội (làm mới mỗi thứ Hai).',
-        source: 'Điểm danh và quyên góp cho bang, đánh Boss Bang.',
+        use: tr('Mua hàng trong tiệm Bang hội (làm mới mỗi thứ Hai).'),
+        source: tr('Điểm danh và quyên góp cho bang, đánh Boss Bang.'),
       ),
   ];
   return out;

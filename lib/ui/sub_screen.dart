@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// A full-screen page over the dimmed backdrop with a title strip.
 class SubScreen extends StatelessWidget {
@@ -54,7 +55,7 @@ class SubScreen extends StatelessWidget {
                             Text(fmt(h.gold), style: bold),
                             if (!narrow) ...[
                               const SizedBox(width: 12),
-                              Text('Cấp ${h.level}', style: bold.copyWith(color: goldLight)),
+                              Text(tr('Cấp {level}', {'level': h.level}), style: bold.copyWith(color: goldLight)),
                             ],
                           ],
                         ),

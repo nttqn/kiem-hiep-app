@@ -11,6 +11,7 @@ import '../services/save.dart';
 import 'cloud_panel.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Kênh Thế Giới: the last hundred messages of every player, one message
 /// per ten minutes each.
@@ -83,25 +84,25 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Quy tắc Kênh Thế Giới', style: titleStyle(18)),
+        title: Text(tr('Quy tắc Kênh Thế Giới'), style: titleStyle(18)),
         content: SizedBox(
           width: 460,
           child: SingleChildScrollView(
             child: Text(
-              '• Mọi người chơi đều đọc được tin của bạn, kèm tên nhân vật, môn phái và cấp.\n'
-              '• Mỗi người gửi một tin mỗi ${chatCooldown.inMinutes} phút, tối đa $chatMaxLen chữ.\n'
+              tr('• Mọi người chơi đều đọc được tin của bạn, kèm tên nhân vật, môn phái và cấp.\n'
+              '• Mỗi người gửi một tin mỗi {inMinutes} phút, tối đa {chatMaxLen} chữ.\n'
               '• Không chửi bới, xúc phạm, quấy rối, phân biệt, nội dung người lớn, lừa đảo, '
               'quảng cáo hay để lộ thông tin cá nhân. Từ tục bị tự động che.\n'
               '• Chạm vào tin của người khác để Báo cáo hoặc Chặn. Tài khoản vi phạm sẽ bị cấm chat '
               'và tin bị xoá.\n'
-              '• Tin cũ tự xoá sau ${chatKeep.inDays} ngày.',
+              '• Tin cũ tự xoá sau {inDays} ngày.', {'inMinutes': chatCooldown.inMinutes, 'chatMaxLen': chatMaxLen, 'inDays': chatKeep.inDays}),
               style: body.copyWith(fontSize: 13),
             ),
           ),
         ),
         actions: [
-          if (ask) TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để sau')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(ask ? 'Đồng ý' : 'Đóng')),
+          if (ask) TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Để sau'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(ask ? tr('Đồng ý') : tr('Đóng'))),
         ],
       ),
     );
@@ -121,7 +122,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(children: [
               const Icon(Icons.flag, color: Color(0xFFF07A6A)),
               const SizedBox(width: 10),
-              Text('Báo cáo tin này', style: body),
+              Text(tr('Báo cáo tin này'), style: body),
             ]),
           ),
           SimpleDialogOption(
@@ -129,7 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(children: [
               const Icon(Icons.block, color: creamDim),
               const SizedBox(width: 10),
-              Text('Chặn người này (ẩn mọi tin của họ)', style: body),
+              Text(tr('Chặn người này (ẩn mọi tin của họ)'), style: body),
             ]),
           ),
         ],
@@ -137,10 +138,10 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     if (pick == 'report') {
       await chat.report(m);
-      _toast('Đã báo cáo, cảm ơn bạn. Tin đã được ẩn.');
+      _toast(tr('Đã báo cáo, cảm ơn bạn. Tin đã được ẩn.'));
     } else if (pick == 'block') {
       await chat.block(m.uid);
-      _toast('Đã chặn ${m.name}');
+      _toast(tr('Đã chặn {mName}', {'mName': m.name}));
     }
   }
 
@@ -156,12 +157,12 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 const Icon(Icons.forum, color: goldLight, size: 20),
                 const SizedBox(width: 6),
-                Expanded(child: Text('Kênh Thế Giới', style: titleStyle(16, color: cream))),
+                Expanded(child: Text(tr('Kênh Thế Giới'), style: titleStyle(16, color: cream))),
                 if (chat.wait > Duration.zero)
-                  Text('Gửi sau ${chatWaitLabel(chat.wait)}', style: small.copyWith(fontSize: 11, color: goldLight)),
+                  Text(tr('Gửi sau {p0}', {'p0': chatWaitLabel(chat.wait)}), style: small.copyWith(fontSize: 11, color: goldLight)),
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  tooltip: 'Đóng',
+                  tooltip: tr('Đóng'),
                   onPressed: widget.onClose,
                   icon: const Icon(Icons.close, color: cream),
                 ),
@@ -175,7 +176,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
     return SubScreen(
-      title: 'Kênh Thế Giới',
+      title: tr('Kênh Thế Giới'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -201,12 +202,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _list() {
     if (!chat.available) {
-      return Center(child: Text('Kênh chat cần kết nối mạng.', style: body));
+      return Center(child: Text(tr('Kênh chat cần kết nối mạng.'), style: body));
     }
     if (chat.error != null) return Center(child: Text(chat.error!, style: body));
     final rows = chat.visible;
     if (chat.loading && rows.isEmpty) return const Center(child: CircularProgressIndicator(color: goldLight));
-    if (rows.isEmpty) return Center(child: Text('Chưa có tin nào. Chào giang hồ một câu!', style: body));
+    if (rows.isEmpty) return Center(child: Text(tr('Chưa có tin nào. Chào giang hồ một câu!'), style: body));
     final me = chat.myUid;
     // Reversed so it opens at the newest and new lines push up from below.
     return ListView.builder(
@@ -249,7 +250,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     TextSpan(children: [
                       TextSpan(text: m.name, style: bold.copyWith(fontSize: 13, color: hanhColor(hn))),
                       TextSpan(
-                        text: '  ${sectOf(hn).name} · ${m.rebirths > 0 ? 'CS${m.rebirths} · ' : ''}Cấp ${m.level}',
+                        text: tr('  {p0} · {p1}Cấp {level}', {'p0': tr(sectOf(hn).name), 'p1': m.rebirths > 0 ? tr('CS{rebirths} · ', {'rebirths': m.rebirths}) : '', 'level': m.level}),
                         style: small.copyWith(fontSize: 10.5),
                       ),
                     ]),
@@ -272,14 +273,14 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!chat.canSend) {
       return Row(
         children: [
-          Expanded(child: Text('Đăng nhập để gửi tin (dùng chung tài khoản lưu đám mây).', style: small)),
+          Expanded(child: Text(tr('Đăng nhập để gửi tin (dùng chung tài khoản lưu đám mây).'), style: small)),
           if (CloudSave.instance.available)
-            LButton(label: 'Đăng nhập', small: true, color: jade, onTap: () => showCloudPanel(context)),
+            LButton(label: tr('Đăng nhập'), small: true, color: jade, onTap: () => showCloudPanel(context)),
         ],
       );
     }
     if (chat.banned) {
-      return Text('Tài khoản của bạn đã bị cấm chat.', style: small.copyWith(color: const Color(0xFFF07A6A)));
+      return Text(tr('Tài khoản của bạn đã bị cấm chat.'), style: small.copyWith(color: const Color(0xFFF07A6A)));
     }
     final w = chat.wait;
     return Row(
@@ -294,7 +295,7 @@ class _ChatScreenState extends State<ChatScreen> {
             decoration: InputDecoration(
               counterText: '',
               isDense: true,
-              hintText: w > Duration.zero ? 'Soạn sẵn, gửi được sau ${chatWaitLabel(w)}' : 'Nói gì đó với giang hồ…',
+              hintText: w > Duration.zero ? tr('Soạn sẵn, gửi được sau {p0}', {'p0': chatWaitLabel(w)}) : tr('Nói gì đó với giang hồ…'),
               hintStyle: small,
               filled: true,
               fillColor: lacquerDeep,
@@ -307,7 +308,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         const SizedBox(width: 8),
         LButton(
-          label: w > Duration.zero ? chatWaitLabel(w) : 'Gửi',
+          label: w > Duration.zero ? chatWaitLabel(w) : tr('Gửi'),
           icon: w > Duration.zero ? Icons.hourglass_bottom : Icons.send,
           small: true,
           width: 96,
@@ -329,27 +330,27 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               const Icon(Icons.forum, color: goldLight, size: 22),
               const SizedBox(width: 8),
-              Text('Kênh chung', style: titleStyle(17, color: cream)),
+              Text(tr('Kênh chung'), style: titleStyle(17, color: cream)),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Mỗi người ${chatCooldown.inMinutes} phút một tin. Hiện $chatShown tin gần nhất. '
-            'Chạm vào tin của người khác để báo cáo hoặc chặn.',
+            tr('Mỗi người {inMinutes} phút một tin. Hiện {chatShown} tin gần nhất. '
+            'Chạm vào tin của người khác để báo cáo hoặc chặn.', {'inMinutes': chatCooldown.inMinutes, 'chatShown': chatShown}),
             style: small.copyWith(fontSize: 11.5),
           ),
           const SizedBox(height: 8),
           if (chat.wait > Duration.zero)
-            Text('Gửi tiếp sau ${chatWaitLabel(chat.wait)}', style: titleStyle(15, color: goldLight)),
+            Text(tr('Gửi tiếp sau {p0}', {'p0': chatWaitLabel(chat.wait)}), style: titleStyle(15, color: goldLight)),
           const Spacer(),
           if (chat.blocked.isNotEmpty)
             TextButton(
               onPressed: chat.unblockAll,
-              child: Text('Bỏ chặn ${chat.blocked.length} người', style: small.copyWith(color: goldLight)),
+              child: Text(tr('Bỏ chặn {blockedLength} người', {'blockedLength': chat.blocked.length}), style: small.copyWith(color: goldLight)),
             ),
           TextButton(
             onPressed: _showRules,
-            child: Text('Quy tắc kênh chat', style: small.copyWith(color: goldLight)),
+            child: Text(tr('Quy tắc kênh chat'), style: small.copyWith(color: goldLight)),
           ),
         ],
       ),

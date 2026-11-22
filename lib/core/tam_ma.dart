@@ -8,6 +8,7 @@ import 'hero.dart';
 import 'pass_extras.dart';
 import 'premium.dart';
 import 'world_boss.dart';
+import 'i18n.dart';
 
 /// Tâm Ma Ảo Cảnh (1.8.0): a duel with the hero's own shadow, its sect,
 /// skills and mount. Each floor's shadow has a fixed lực chiến that grows
@@ -63,7 +64,7 @@ List<TmAffix> tamMaAffixes(int floor) {
 ArenaRival tamMaRival(HeroData h, int floor) {
   final m = h.ridingMount;
   return ArenaRival(
-    name: 'Tâm Ma',
+    name: tr('Tâm Ma'),
     hanh: h.hanh,
     level: h.level,
     rebirths: h.rebirths,
@@ -78,7 +79,7 @@ ArenaRival tamMaRival(HeroData h, int floor) {
 
 DungeonDef tamMaDef(HeroData h, int floor) => DungeonDef(
       id: 'tamma',
-      name: 'Tâm Ma Ảo Cảnh · Tầng $floor',
+      name: tr('Tâm Ma Ảo Cảnh · Tầng {floor}', {'floor': floor}),
       mapId: huyetHaiMap.id,
       level: h.level,
       waves: const [],
@@ -122,7 +123,7 @@ extension TamMa on HeroData {
     tmRollDay(vnDayKey());
     if (!won) {
       tmTries++;
-      return ['Mất 1 lượt khiêu chiến (còn $tmTriesLeft hôm nay)'];
+      return [tr('Mất 1 lượt khiêu chiến (còn {tmTriesLeft} hôm nay)', {'tmTriesLeft': tmTriesLeft})];
     }
     if (floor <= tmBest) return const ['Tầng đã vượt trước đây'];
     tmBest = floor;
@@ -131,7 +132,7 @@ extension TamMa on HeroData {
     final g = tamMaGold(floor);
     starStones += stones;
     gold += g;
-    final lines = ['+$stones Tinh Thạch', '+${fmtThousands(g)} lượng'];
+    final lines = [tr('+{stones} Tinh Thạch', {'stones': stones}), tr('+{p0} lượng', {'p0': fmtThousands(g)})];
     if (floor % 5 == 0) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], tamMaGemTier(floor));
       addGem(gem);
@@ -139,7 +140,7 @@ extension TamMa on HeroData {
     }
     if (floor % 10 == 0) {
       beastSouls++;
-      lines.add('+1 Hung Thú Tinh Phách');
+      lines.add(tr('+1 Hung Thú Tinh Phách'));
     }
     return lines;
   }

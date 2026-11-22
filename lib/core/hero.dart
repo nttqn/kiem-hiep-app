@@ -59,6 +59,7 @@ import 'world_boss.dart';
 import 'sects.dart';
 import 'stats.dart';
 import 'unlocks.dart';
+import 'i18n.dart';
 
 /// 1234567 as "1.234.567" (Vietnamese grouping) for reward lines.
 String _thousands(int v) {
@@ -213,11 +214,11 @@ class DailyQuest {
 
   String get goal => switch (type) {
         QuestType.kill => target == '*'
-            ? 'Hạ $count quái bất kỳ'
-            : 'Hạ $count ${mobById[target]!.name}'
-                ' (${mapOfMob(target)?.name ?? ''})',
-        QuestType.boss => 'Đánh bại ${mobById[target]!.name}',
-        QuestType.dungeon => 'Vượt ải bất kỳ $count lần',
+            ? tr('Hạ {count} quái bất kỳ', {'count': count})
+            : tr('Hạ {count} {p0}'
+                ' ({p1})', {'count': count, 'p0': tr(mobById[target]!.name), 'p1': mapOfMob(target)?.name ?? ''}),
+        QuestType.boss => tr('Đánh bại {p0}', {'p0': tr(mobById[target]!.name)}),
+        QuestType.dungeon => tr('Vượt ải bất kỳ {count} lần', {'count': count}),
         QuestType.level || QuestType.elite => '',
       };
 
@@ -244,10 +245,14 @@ class DailyQuest {
 
 /// What happened to the hero that the UI should announce.
 class Notice {
-  Notice(this.text, {this.color = 0xFFFFF3C4, this.big = false});
+  Notice(this.text, {this.color = 0xFFFFF3C4, this.big = false, this.cue});
   final String text;
   final int color;
   final bool big;
+
+  /// Sound to play with it ('levelup', 'quest'), so the UI never has to
+  /// read the (translated) text to pick one.
+  final String? cue;
 }
 
 /// Everything saved about one character.
@@ -331,20 +336,20 @@ class HeroData {
   String? takeGoneTally() {
     if (goneSold == 0 && goneSalv == 0) return null;
     final parts = [
-      if (goneSold > 0) 'bán $goneSold món (+${fmtThousands(goneGold)} lượng)',
-      if (goneSalv > 0) 'phân giải $goneSalv món (+$goneEss Tinh Hoa)',
+      if (goneSold > 0) tr('bán {goneSold} món (+{p0} lượng)', {'goneSold': goneSold, 'p0': fmtThousands(goneGold)}),
+      if (goneSalv > 0) tr('phân giải {goneSalv} món (+{goneEss} Tinh Hoa)', {'goneSalv': goneSalv, 'goneEss': goneEss}),
     ];
     goneSold = goneGold = goneSalv = goneEss = 0;
-    return 'Đồ nhặt được: đã ${parts.join(', ')}. Lỡ tay? Hành trang → Mua lại.';
+    return tr('Đồ nhặt được: đã {p0}. Lỡ tay? Hành trang → Mua lại.', {'p0': parts.join(', ')});
   }
 
   /// Takes [g] back into the bag for what it fetched; null when done, else
   /// why not.
   String? buyBack(GoneItem g) {
-    if (!gone.contains(g)) return 'Món này không còn.';
-    if (bag.length >= bagSize) return 'Hành trang đã đầy.';
-    if (gold < g.gold) return 'Không đủ lượng.';
-    if (essence < g.essence) return 'Không đủ Tinh Hoa.';
+    if (!gone.contains(g)) return tr('Món này không còn.');
+    if (bag.length >= bagSize) return tr('Hành trang đã đầy.');
+    if (gold < g.gold) return tr('Không đủ lượng.');
+    if (essence < g.essence) return tr('Không đủ Tinh Hoa.');
     gold -= g.gold;
     essence -= g.essence;
     gone.remove(g);
@@ -826,7 +831,7 @@ class HeroData {
   /// "Chính tuyến 12/56" or "Luân Hồi II · 3/12".
   String get questLabel => inLuanHoi
       ? '${chapterLabel(chapter)} · ${rbQuest + 1}/${luanHoi[chapter].quests.length}'
-      : 'Chính tuyến ${mainQuest + 1}/${mainQuests.length}';
+      : tr('Chính tuyến {p0}/{mainQuestsLength}', {'p0': mainQuest + 1, 'mainQuestsLength': mainQuests.length});
 
   bool get mainLocked => (currentMain?.minLv ?? 0) > level;
 
@@ -1072,8 +1077,8 @@ class HeroData {
       if (exp >= cap && rebirths < maxRebirths) {
         notices.add(Notice(
             nextRebirthPills > soulPills
-                ? 'Kinh nghiệm đã đầy! Tích đủ $nextRebirthPills Linh Phách Đơn để chuyển sinh.'
-                : 'Kinh nghiệm đã đầy! Về thành để chuyển sinh.',
+                ? tr('Kinh nghiệm đã đầy! Tích đủ {nextRebirthPills} Linh Phách Đơn để chuyển sinh.', {'nextRebirthPills': nextRebirthPills})
+                : tr('Kinh nghiệm đã đầy! Về thành để chuyển sinh.'),
             color: 0xFFFFD34A,
             big: true));
       }
@@ -1095,11 +1100,11 @@ class HeroData {
         autoLearn();
       }
       recompute();
-      notices.add(Notice('THĂNG CẤP $level!', color: 0xFFFFD34A, big: true));
+      notices.add(Notice(tr('THĂNG CẤP {level}!', {'level': level}), color: 0xFFFFD34A, big: true, cue: 'levelup'));
       _levelGifts(level - gained, level);
       if (rebirths == 0) {
         for (final f in featuresOpened(level - gained, level)) {
-          notices.add(Notice('Mở khóa: ${f.label}', color: 0xFF8CE07A, big: true));
+          notices.add(Notice(tr('Mở khóa: {fLabel}', {'fLabel': tr(f.label)}), color: 0xFF8CE07A, big: true));
         }
       }
       _checkLevelQuests();
@@ -1114,7 +1119,7 @@ class HeroData {
     while (soulExp >= per) {
       soulExp -= per;
       soulPills++;
-      notices.add(Notice('+1 Linh Phách Đơn ($soulPills)', color: 0xFF9FE8FF));
+      notices.add(Notice(tr('+1 Linh Phách Đơn ({soulPills})', {'soulPills': soulPills}), color: 0xFF9FE8FF));
     }
   }
 
@@ -1271,7 +1276,7 @@ class HeroData {
     // 1.19.0: Đồ giám keeps it even if it is sold or broken down below.
     lastCodexNew = codexNote(it);
     if (lastCodexNew) {
-      notices.add(Notice('Đồ giám: ghi nhận ${it.rarityLabel} ${codexTierName(codexTierOf(it.level))} · ${it.slot.label}',
+      notices.add(Notice(tr('Đồ giám: ghi nhận {rarityLabel} {p0} · {slotLabel}', {'rarityLabel': it.rarityLabel, 'p0': codexTierName(codexTierOf(it.level)), 'slotLabel': tr(it.slot.label)}),
           color: 0xFFFF8A3D));
     }
     // 1.18.0: Tự phân giải, and a full bag breaks down what it can.
@@ -1355,7 +1360,7 @@ class HeroData {
     soulPills -= nextRebirthPills;
     rebirths++;
     if (rebirths == branchOpenRebirths) {
-      notices.add(Notice('Mở Lưu phái: chọn một trong hai phái hệ ở Kỹ năng', color: 0xFFFFD34A, big: true));
+      notices.add(Notice(tr('Mở Lưu phái: chọn một trong hai phái hệ ở Kỹ năng'), color: 0xFFFFD34A, big: true));
     }
     // A new Luân Hồi chapter starts (after the main story, if unfinished).
     rbQuest = 0;
@@ -1370,7 +1375,7 @@ class HeroData {
     level = rebirthLevel;
     exp = 0;
     recompute();
-    notices.add(Notice('CHUYỂN SINH LẦN $rebirths!', color: 0xFFFFD34A, big: true));
+    notices.add(Notice(tr('CHUYỂN SINH LẦN {rebirths}!', {'rebirths': rebirths}), color: 0xFFFFD34A, big: true));
     unlockCostumes();
     // Bounties were rolled for level 99 maps: post new ones for level 10.
     bounties.clear();
@@ -1408,7 +1413,7 @@ class HeroData {
     final b = bounties.removeAt(i);
     gold += b.gold;
     addActivity(ActSource.bounty);
-    final lines = ['+${_thousands(b.exp)} kinh nghiệm', '+${_thousands(b.gold)} lượng'];
+    final lines = [tr('+{p0} kinh nghiệm', {'p0': _thousands(b.exp)}), tr('+{p0} lượng', {'p0': _thousands(b.gold)})];
     if (b.stars >= 4) {
       final it = makeItem(
           slot: Slot.values[rng.nextInt(Slot.values.length)],
@@ -1417,7 +1422,7 @@ class HeroData {
           sect: sect,
           rng: rng);
       addItem(it);
-      lines.add('${it.name} [${it.rarity.label}]');
+      lines.add('${tr(it.name)} [${tr(it.rarity.label)}]');
     }
     if (b.stars >= 5) {
       final g = Gem(Hanh.values[rng.nextInt(5)], dropTier(level, boss: true));
@@ -1458,7 +1463,7 @@ class HeroData {
       if (b.done || !matches(b)) continue;
       b.progress = math.min(b.count, b.progress + by);
       if (b.done) {
-        notices.add(Notice('Truy nã xong: ${b.goal} · về thành nhận thưởng', color: 0xFF8CE07A, big: true));
+        notices.add(Notice(tr('Truy nã xong: {goal} · về thành nhận thưởng', {'goal': tr(b.goal)}), color: 0xFF8CE07A, big: true));
       }
     }
   }
@@ -1535,7 +1540,7 @@ class HeroData {
 
   void _grantCostume(CostumeDef c, {bool quiet = false}) {
     if (!ownedCostumes.add(c.id) || quiet) return;
-    notices.add(Notice('Mở khóa ngoại trang: ${c.name}', color: 0xFFFFD34A, big: true));
+    notices.add(Notice(tr('Mở khóa ngoại trang: {cName}', {'cName': tr(c.name)}), color: 0xFFFFD34A, big: true));
   }
 
   /// Buys a gold outfit; false when not for sale, owned or too dear.
@@ -1561,15 +1566,15 @@ class HeroData {
   void _rewardMain(QuestDef q, math.Random rng) {
     final xp = expToNext(q.minLv) * q.expFactor;
     gold += q.gold;
-    notices.add(Notice('Hoàn thành: ${q.title}', color: 0xFF8CE07A,
-        big: true));
-    notices.add(Notice('+${xp.round()} kinh nghiệm · +${q.gold} lượng'));
+    notices.add(Notice(tr('Hoàn thành: {qTitle}', {'qTitle': tr(q.title)}), color: 0xFF8CE07A,
+        big: true, cue: 'quest'));
+    notices.add(Notice(tr('+{p0} kinh nghiệm · +{gold} lượng', {'p0': xp.round(), 'gold': q.gold})));
     if (q.item) {
       final slot = Slot.values[rng.nextInt(Slot.values.length)];
       final it = makeItem(
           slot: slot, level: level, rarity: Rarity.rare, sect: sect, rng: rng);
       addItem(it);
-      notices.add(Notice('Nhận ${it.name}', color: Rarity.rare.color));
+      notices.add(Notice(tr('Nhận {itName}', {'itName': tr(it.name)}), color: Rarity.rare.color));
     }
     if (mainQuest < mainQuests.length) {
       mainQuest++;
@@ -1578,7 +1583,7 @@ class HeroData {
       final ch = luanHoi[chapter];
       if (rbQuest >= ch.quests.length) {
         rbDone = math.max(rbDone, chapter + 1);
-        notices.add(Notice('Hoàn thành ${chapterLabel(chapter)}: ${ch.title}!', color: 0xFFFFD34A, big: true));
+        notices.add(Notice(tr('Hoàn thành {p0}: {chTitle}!', {'p0': chapterLabel(chapter), 'chTitle': tr(ch.title)}), color: 0xFFFFD34A, big: true, cue: 'quest'));
       }
     }
     mainProgress = 0;
@@ -1600,10 +1605,10 @@ class HeroData {
       if (d.progress >= d.count) {
         d.done = true;
         gold += d.gold;
-        notices.add(Notice('Hằng ngày xong: ${d.goal}', color: 0xFF8CE07A,
-            big: true));
+        notices.add(Notice(tr('Hằng ngày xong: {goal}', {'goal': tr(d.goal)}), color: 0xFF8CE07A,
+            big: true, cue: 'quest'));
         addActivity(ActSource.daily);
-        notices.add(Notice('+${d.exp} kinh nghiệm · +${d.gold} lượng'));
+        notices.add(Notice(tr('+{exp} kinh nghiệm · +{gold} lượng', {'exp': d.exp, 'gold': d.gold})));
         gainExp(d.exp.toDouble());
       }
     }
@@ -1639,7 +1644,7 @@ class HeroData {
     final xp = expToNext(level) * (first ? 0.15 : 0.05) * (0.8 + stars * 0.1);
     final g = ((150 + d.level * 30) * (first ? 1 : 0.4) * (0.7 + stars * 0.1))
         .round();
-    final lines = <String>['+${xp.round()} kinh nghiệm', '+$g lượng'];
+    final lines = <String>[tr('+{p0} kinh nghiệm', {'p0': xp.round()}), tr('+{g} lượng', {'g': g})];
     lastDungeonGold = g;
     lastDungeonExp = xp;
     gold += g;
@@ -1652,7 +1657,7 @@ class HeroData {
         rng: rng,
       );
       addItem(it);
-      lines.add('${it.name} [${it.rarity.label}]');
+      lines.add('${tr(it.name)} [${tr(it.rarity.label)}]');
     }
     gainExp(xp);
     return lines;
@@ -1674,7 +1679,7 @@ class HeroData {
     lastDungeonGold = g;
     lastDungeonExp = xp;
     gold += g;
-    final lines = <String>['+$g lượng', if (xp > 0) '+${xp.round()} kinh nghiệm'];
+    final lines = <String>[tr('+{g} lượng', {'g': g}), if (xp > 0) tr('+{p0} kinh nghiệm', {'p0': xp.round()})];
     if (towerBossFloor(floor)) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], towerGemTier(floor));
       addGem(gem);
@@ -1683,12 +1688,12 @@ class HeroData {
     final shards = towerGoldShards(floor);
     if (shards > 0) {
       goldShards += shards;
-      lines.add('+$shards Mảnh Hoàng Kim');
+      lines.add(tr('+{shards} Mảnh Hoàng Kim', {'shards': shards}));
     }
     final iron = towerIron(floor);
     if (iron > 0) {
       divineIron += iron;
-      lines.add('+$iron Thần Thiết');
+      lines.add(tr('+{iron} Thần Thiết', {'iron': iron}));
     }
     if (xp > 0) gainExp(xp);
     _progressDaily((d) => d.type == QuestType.dungeon);
@@ -1740,7 +1745,7 @@ class HeroData {
     lastDungeonExp = 0;
     _progressDaily((d) => d.type == QuestType.dungeon);
     addActivity(ActSource.worldBoss);
-    return ['Sát thương: ${_thousands(damage)}', '+${_thousands(g)} lượng'];
+    return [tr('Sát thương: {p0}', {'p0': _thousands(damage)}), tr('+{p0} lượng', {'p0': _thousands(g)})];
   }
 
   bool wbCanClaim(int i) => wbTotal >= worldBossMilestones[i] && wbClaimed & (1 << i) == 0;
@@ -1860,7 +1865,7 @@ class HeroData {
     mountLevels[m.id] = 1;
     if (activeMount.isEmpty) activeMount = m.id;
     recompute();
-    if (!quiet) notices.add(Notice('Nhận thú cưỡi: ${m.name}', color: 0xFFFFD34A, big: true));
+    if (!quiet) notices.add(Notice(tr('Nhận thú cưỡi: {mName}', {'mName': tr(m.name)}), color: 0xFFFFD34A, big: true));
   }
 
   bool get mountsOpen => level >= mountOpenLevel || rebirths > 0;
@@ -1992,7 +1997,7 @@ class HeroData {
     final after = fatigueMul(fatigueSec);
     if (after < before) {
       notices.add(Notice(
-        'Đã luyện công ${fatigueSec ~/ 3600} giờ hôm nay: EXP từ quái còn ${(after * 100).round()}%',
+        tr('Đã luyện công {p0} giờ hôm nay: EXP từ quái còn {p1}%', {'p0': fatigueSec ~/ 3600, 'p1': (after * 100).round()}),
         color: 0xFFF0C060,
         big: true,
       ));
@@ -2017,7 +2022,7 @@ class HeroData {
         buffs.remove(id);
         ended = true;
         final p = pillById[id];
-        if (p != null) notices.add(Notice('${p.name} đã hết tác dụng', color: 0xFFB8A890));
+        if (p != null) notices.add(Notice(tr('{pName} đã hết tác dụng', {'pName': tr(p.name)}), color: 0xFFB8A890));
       }
     }
     if (ended) recompute();
@@ -2070,10 +2075,10 @@ class HeroData {
     final r = arenaSeasonResult;
     if (r.length < 7) return const [];
     return [
-      '+${_thousands(r[3])} Uy danh',
-      '+${_thousands(r[4])} lượng',
-      if (r[5] > 0) '+${r[5]} Mảnh Hoàng Kim',
-      if (r[6] > 0) 'Ngọc cấp ${r[6]} (hành ngẫu nhiên)',
+      tr('+{p0} Uy danh', {'p0': _thousands(r[3])}),
+      tr('+{p0} lượng', {'p0': _thousands(r[4])}),
+      if (r[5] > 0) tr('+{p0} Mảnh Hoàng Kim', {'p0': r[5]}),
+      if (r[6] > 0) tr('Ngọc cấp {p0} (hành ngẫu nhiên)', {'p0': r[6]}),
     ];
   }
 
@@ -2107,8 +2112,8 @@ class HeroData {
     arenaSeasonFights++;
     if (won) arenaWins++;
     addActivity(ActSource.arena);
-    final lines = ['${pts >= 0 ? '+' : ''}$pts điểm Lôi đài ($arenaPoints)', '+$coins Uy danh'];
-    if (arenaTier > before) lines.add('Thăng hạng: ${arenaTiers[arenaTier].name}!');
+    final lines = [tr('{p0}{pts} điểm Lôi đài ({arenaPoints})', {'p0': pts >= 0 ? '+' : '', 'pts': pts, 'arenaPoints': arenaPoints}), tr('+{coins} Uy danh', {'coins': coins})];
+    if (arenaTier > before) lines.add(tr('Thăng hạng: {p0}!', {'p0': tr(arenaTiers[arenaTier].name)}));
     return lines;
   }
 
@@ -2263,17 +2268,17 @@ class HeroData {
     final lines = <String>[];
     if (c.gold > 0) {
       gold += c.gold;
-      lines.add('+${_thousands(c.gold)} lượng');
+      lines.add(tr('+{p0} lượng', {'p0': _thousands(c.gold)}));
     }
     if (c.potions > 0) {
       hpPots += c.potions;
       mpPots += c.potions;
-      lines.add('+${c.potions} Kim Sang Dược, +${c.potions} Ngưng Thần Đan');
+      lines.add(tr('+{potions} Kim Sang Dược, +{potions} Ngưng Thần Đan', {'potions': c.potions}));
     }
     if (c.herbs > 0) {
       final t = herbTier;
       addHerb(t, c.herbs);
-      lines.add('+${c.herbs} ${herbNames[t]}');
+      lines.add('+${c.herbs} ${tr(herbNames[t])}');
     }
     if (c.gemTier > 0) {
       final g = Gem(Hanh.values[rng.nextInt(5)], c.gemTier);
@@ -2282,7 +2287,7 @@ class HeroData {
     }
     if (c.coins > 0) {
       arenaCoins += c.coins;
-      lines.add('+${c.coins} Uy danh');
+      lines.add(tr('+{coins} Uy danh', {'coins': c.coins}));
     }
     if (c.pill.isNotEmpty) {
       pills[c.pill] = (pills[c.pill] ?? 0) + 1;
@@ -2290,7 +2295,7 @@ class HeroData {
     }
     if (c.shards > 0) {
       goldShards += c.shards;
-      lines.add('+${c.shards} Mảnh Hoàng Kim');
+      lines.add(tr('+{shards} Mảnh Hoàng Kim', {'shards': c.shards}));
     }
     return lines;
   }
@@ -2376,7 +2381,7 @@ class HeroData {
     final d = sectDuty;
     if (d == null || d.done || !matches(d)) return;
     d.progress = math.min(d.count, d.progress + by);
-    if (d.done) notices.add(Notice('Sư môn xong: ${d.goal} · về thành phục mệnh', color: 0xFF8CE07A, big: true));
+    if (d.done) notices.add(Notice(tr('Sư môn xong: {goal} · về thành phục mệnh', {'goal': tr(d.goal)}), color: 0xFF8CE07A, big: true));
   }
 
   void onHerbPicked() => _progressDuty((d) => d.kind == DutyKind.herb);
@@ -2396,7 +2401,7 @@ class HeroData {
     sectDone++;
     sectDuty = sectDone < sectDutiesPerDay ? _rollSectDuty(rng) : null;
     addActivity(ActSource.daily);
-    return ['+$c cống hiến', '+${_thousands(g)} lượng', if (xp > 0) '+${xp.round()} kinh nghiệm'];
+    return [tr('+{c} cống hiến', {'c': c}), tr('+{p0} lượng', {'p0': _thousands(g)}), if (xp > 0) tr('+{p0} kinh nghiệm', {'p0': xp.round()})];
   }
 
   /// Swaps an unfinished duty for another, for gold.
@@ -2486,18 +2491,18 @@ class HeroData {
     if (won) {
       dhWins++;
       arenaCoins += 20;
-      if (dhWins < 3) return ['Vào ${daiHoiRounds[dhWins]}!', '+20 Uy danh'];
+      if (dhWins < 3) return [tr('Vào {p0}!', {'p0': daiHoiRounds[dhWins]}), tr('+20 Uy danh')];
       dhChamps++;
       seasonTitles.add(daiHoiTitle);
-      notices.add(Notice('Vô địch Võ Lâm Đại Hội! Danh hiệu « $daiHoiTitle »', color: 0xFFFFD34A, big: true));
-      return ['Vô địch Võ Lâm Đại Hội!', ..._payDaiHoi()];
+      notices.add(Notice(tr('Vô địch Võ Lâm Đại Hội! Danh hiệu « {daiHoiTitle} »', {'daiHoiTitle': daiHoiTitle}), color: 0xFFFFD34A, big: true));
+      return [tr('Vô địch Võ Lâm Đại Hội!'), ..._payDaiHoi()];
     }
     dhOut = true;
     if (!dhRetried) {
       dhUnpaid = true;
-      return ['Dừng bước ở ${daiHoiRounds[dhWins]}.', 'Có thể đấu lại một lần, hoặc nhận thưởng ở Đại Hội.'];
+      return [tr('Dừng bước ở {p0}.', {'p0': daiHoiRounds[dhWins]}), tr('Có thể đấu lại một lần, hoặc nhận thưởng ở Đại Hội.')];
     }
-    return ['Dừng bước ở ${daiHoiRounds[dhWins]}.', ..._payDaiHoi()];
+    return [tr('Dừng bước ở {p0}.', {'p0': daiHoiRounds[dhWins]}), ..._payDaiHoi()];
   }
 
   /// After a loss: fight that match again (the ad was watched).
@@ -2520,14 +2525,14 @@ class HeroData {
     gold += p.gold;
     goldShards += p.shards;
     divineIron += p.iron;
-    final lines = ['+${p.coins} Uy danh', '+${_thousands(p.gold)} lượng'];
+    final lines = [tr('+{coins} Uy danh', {'coins': p.coins}), tr('+{p0} lượng', {'p0': _thousands(p.gold)})];
     if (p.gemTier > 0) {
       final gem = Gem(Hanh.values[math.Random().nextInt(5)], p.gemTier);
       addGem(gem);
       lines.add(gem.name);
     }
-    if (p.shards > 0) lines.add('+${p.shards} Mảnh Hoàng Kim');
-    if (p.iron > 0) lines.add('+${p.iron} Thần Thiết');
+    if (p.shards > 0) lines.add(tr('+{shards} Mảnh Hoàng Kim', {'shards': p.shards}));
+    if (p.iron > 0) lines.add(tr('+{iron} Thần Thiết', {'iron': p.iron}));
     return lines;
   }
 
@@ -2537,10 +2542,10 @@ class HeroData {
     sectRank++;
     final g = 2000 * sectRank * sectRank;
     gold += g;
-    notices.add(Notice('Thăng chức: ${sectRanks[sectRank].name}!', color: 0xFFFFD34A, big: true));
+    notices.add(Notice(tr('Thăng chức: {p0}!', {'p0': tr(sectRanks[sectRank].name)}), color: 0xFFFFD34A, big: true));
     unlockCostumes();
     recompute();
-    return ['Chức vị mới: ${sectRanks[sectRank].name}', '+${_thousands(g)} lượng'];
+    return [tr('Chức vị mới: {p0}', {'p0': tr(sectRanks[sectRank].name)}), tr('+{p0} lượng', {'p0': _thousands(g)})];
   }
 
   /// Buys from Tàng Kinh Các; [page] names the page for a page offer.
@@ -2639,15 +2644,15 @@ class HeroData {
     fishCaught[f.id] = (fishCaught[f.id] ?? 0) + 1;
     final g = f.price * (first ? 1 + fishFirstBonus : 1);
     gold += g;
-    final lines = ['+${_thousands(g)} lượng${first ? ' (lần đầu)' : ''}'];
+    final lines = [tr('+{p0} lượng{p1}', {'p0': _thousands(g), 'p1': first ? tr(' (lần đầu)') : ''})];
     if (f.rarity == FishRarity.rare && rng.nextDouble() < 0.3) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, 1 + f.mapIndex ~/ 2));
       addGem(gem);
-      lines.add('Trong bụng cá có ${gem.name}');
+      lines.add(tr('Trong bụng cá có {gemName}', {'gemName': tr(gem.name)}));
     }
     if (f.rarity == FishRarity.legend) {
       goldShards += 2;
-      lines.add('+2 Mảnh Hoàng Kim');
+      lines.add(tr('+2 Mảnh Hoàng Kim'));
       if (manualOpen) lines.add(gainManualPage(rng));
     }
     _progressDuty((d) => d.kind == DutyKind.fish);
@@ -2718,10 +2723,10 @@ class HeroData {
     final iron = (baseIron * EventBoost(day ?? vnDayKey()).iron).ceil();
     divineIron += iron;
     final lines = [
-      '+${_thousands(g)} lượng',
-      if (xp > 0) '+${xp.round()} kinh nghiệm',
-      '+$shards Mảnh Hoàng Kim',
-      if (iron > 0) '+$iron Thần Thiết',
+      tr('+{p0} lượng', {'p0': _thousands(g)}),
+      if (xp > 0) tr('+{p0} kinh nghiệm', {'p0': xp.round()}),
+      tr('+{shards} Mảnh Hoàng Kim', {'shards': shards}),
+      if (iron > 0) tr('+{iron} Thần Thiết', {'iron': iron}),
     ];
     if (first || rng.nextDouble() < nightmareGemChance(i)) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], nightmareGemTier(i));
@@ -2768,13 +2773,13 @@ class HeroData {
     final n = lorePagesOf(realm);
     if (n >= lorePagesPer) {
       recompute();
-      notices.add(Notice('Ký sự trọn chương "${c.title}": ${loreBonusLabel(c.bonus, c.value)}',
+      notices.add(Notice(tr('Ký sự trọn chương "{cTitle}": {p0}', {'cTitle': tr(c.title), 'p0': loreBonusLabel(c.bonus, c.value)}),
           color: 0xFFB8F0E0, big: true));
       if (loreAllDone && seasonTitles.add(loreTitle)) {
-        notices.add(Notice('Giang Hồ Ký Sự trọn bộ! Danh hiệu « $loreTitle »', color: 0xFFFFD34A, big: true));
+        notices.add(Notice(tr('Giang Hồ Ký Sự trọn bộ! Danh hiệu « {loreTitle} »', {'loreTitle': loreTitle}), color: 0xFFFFD34A, big: true));
       }
     }
-    return 'Trang Ký sự: ${c.title} ($n/$lorePagesPer)';
+    return tr('Trang Ký sự: {cTitle} ({n}/{lorePagesPer})', {'cTitle': tr(c.title), 'n': n, 'lorePagesPer': lorePagesPer});
   }
 
   // ------------------------------------------------------------- trang viên
@@ -2816,7 +2821,7 @@ class HeroData {
     for (var t = 0; t < got.length; t++) {
       if (got[t] == 0) continue;
       addHerb(t, got[t]);
-      lines.add('+${got[t]} ${herbNames[t]}');
+      lines.add('+${got[t]} ${tr(herbNames[t])}');
     }
     return lines;
   }
@@ -2874,16 +2879,16 @@ class HeroData {
     rec.totalDmg += r.dmg;
     final broke = <String>[];
     if (combat >= dpsRecordMinCombat && r.dps > rec.bestDps) {
-      if (rec.bestDps > 0) broke.add('Kỷ lục sát thương/giây mới: ${r.dps.round()}');
+      if (rec.bestDps > 0) broke.add(tr('Kỷ lục sát thương/giây mới: {p0}', {'p0': r.dps.round()}));
       rec.bestDps = r.dps;
       rec.bestDpsWhere = r.name;
     }
     if (r.bestHit > rec.bestHit) {
-      if (rec.bestHit > 0) broke.add('Kỷ lục đòn mạnh nhất mới: ${r.bestHit.round()}');
+      if (rec.bestHit > 0) broke.add(tr('Kỷ lục đòn mạnh nhất mới: {p0}', {'p0': r.bestHit.round()}));
       rec.bestHit = r.bestHit;
     }
     if (r.kills > rec.bestRunKills) {
-      if (rec.bestRunKills > 0 && r.kills >= 20) broke.add('Kỷ lục hạ quái một chuyến mới: ${r.kills}');
+      if (rec.bestRunKills > 0 && r.kills >= 20) broke.add(tr('Kỷ lục hạ quái một chuyến mới: {kills}', {'kills': r.kills}));
       rec.bestRunKills = r.kills;
     }
     return broke;
@@ -2973,14 +2978,14 @@ class HeroData {
           rng: rng,
         );
         addItem(it);
-        return '${it.name} [${it.rarity.label}]';
+        return '${tr(it.name)} [${tr(it.rarity.label)}]';
       case MerchantWare.gem:
         final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, dropTier(level, boss: true) + 1));
         addGem(gem);
         return gem.name;
       case MerchantWare.potions:
         hpPots += 20;
-        return '20 Kim Sang Dược';
+        return tr('20 Kim Sang Dược');
     }
   }
 
@@ -2990,7 +2995,7 @@ class HeroData {
     final xp = expToNext(this.level) * realmCaptiveExp;
     gold += g;
     gainExp(xp);
-    return ['+${xp.round()} kinh nghiệm', '+${_thousands(g)} lượng'];
+    return [tr('+{p0} kinh nghiệm', {'p0': xp.round()}), tr('+{p0} lượng', {'p0': _thousands(g)})];
   }
 
   /// Pays a finished run; the first clear of a realm adds an Epic item (a
@@ -3006,7 +3011,7 @@ class HeroData {
     gold += g;
     lastDungeonGold = g;
     lastDungeonExp = xp;
-    final lines = ['+${xp.round()} kinh nghiệm', '+${_thousands(g)} lượng'];
+    final lines = [tr('+{p0} kinh nghiệm', {'p0': xp.round()}), tr('+{p0} lượng', {'p0': _thousands(g)})];
     final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, dropTier(d.level, boss: true) + (stars >= 3 ? 1 : 0)));
     addGem(gem);
     lines.add(gem.name);
@@ -3019,7 +3024,7 @@ class HeroData {
         rng: rng,
       );
       addItem(it);
-      lines.add('${it.name} [${it.rarity.label}]');
+      lines.add('${tr(it.name)} [${tr(it.rarity.label)}]');
     }
     if (manualOpen && rng.nextDouble() < 0.5) lines.add(gainManualPage(rng));
     gainExp(xp);
@@ -3051,7 +3056,7 @@ class HeroData {
     gold -= divineGoldCost(divine);
     divine++;
     recompute();
-    notices.add(Notice('${divineStage(divine).toUpperCase()} TẦNG $divine!', color: divineColor(divine), big: true));
+    notices.add(Notice(tr('{p0} TẦNG {divine}!', {'p0': divineStage(divine).toUpperCase(), 'divine': divine}), color: divineColor(divine), big: true));
     return true;
   }
 
@@ -3080,7 +3085,7 @@ class HeroData {
     for (final e in levelGifts.entries) {
       if (e.key <= from || e.key > to) continue;
       final lines = _grantGift(e.value, math.Random());
-      notices.add(Notice('Quà mốc cấp ${e.key}: ${lines.join(', ')}', color: 0xFF8CE07A, big: true));
+      notices.add(Notice(tr('Quà mốc cấp {key}: {p0}', {'key': e.key, 'p0': lines.join(', ')}), color: 0xFF8CE07A, big: true));
     }
   }
 
@@ -3092,7 +3097,7 @@ class HeroData {
     if (g.costume.isNotEmpty) {
       final c = costumeById[g.costume];
       if (c != null && ownedCostumes.add(c.id)) {
-        lines.add('Ngoại trang ${c.name}');
+        lines.add(tr('Ngoại trang {cName}', {'cName': tr(c.name)}));
       } else {
         gold += newbieOwnedGold;
       }
@@ -3101,22 +3106,22 @@ class HeroData {
       final mt = mountById[g.mount];
       if (mt != null && !ownsMount(mt.id)) {
         _grantMount(mt, quiet: true);
-        lines.add('Thú cưỡi ${mt.name}');
+        lines.add(tr('Thú cưỡi {mtName}', {'mtName': tr(mt.name)}));
       } else {
         gold += newbieOwnedGold;
       }
     }
     if (gold > 0) {
       this.gold += gold;
-      lines.insert(0, '+${_thousands(gold)} lượng');
+      lines.insert(0, tr('+{p0} lượng', {'p0': _thousands(gold)}));
     }
     if (g.hpPots > 0) {
       hpPots += g.hpPots;
-      lines.add('+${g.hpPots} Kim Sang Dược');
+      lines.add(tr('+{hpPots} Kim Sang Dược', {'hpPots': g.hpPots}));
     }
     if (g.mpPots > 0) {
       mpPots += g.mpPots;
-      lines.add('+${g.mpPots} Ngưng Thần Đan');
+      lines.add(tr('+{mpPots} Ngưng Thần Đan', {'mpPots': g.mpPots}));
     }
     for (var i = 0; i < g.gems; i++) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], g.gemTier);
@@ -3132,7 +3137,7 @@ class HeroData {
         rng: rng,
       );
       addItem(it);
-      lines.add('${it.name} [${it.rarity.label}]');
+      lines.add('${tr(it.name)} [${tr(it.rarity.label)}]');
     }
     recompute();
     return lines;
@@ -3161,11 +3166,11 @@ class HeroData {
     if (!canClaimWeekGoal(g, today)) return const [];
     weekClaimed.add(g.id);
     gold += g.gold;
-    final lines = ['+${_thousands(g.gold)} lượng'];
+    final lines = [tr('+{p0} lượng', {'p0': _thousands(g.gold)})];
     if (g.pots > 0) {
       hpPots += g.pots;
       mpPots += g.pots;
-      lines.add('+${g.pots} Kim Sang Dược, +${g.pots} Ngưng Thần Đan');
+      lines.add(tr('+{pots} Kim Sang Dược, +{pots} Ngưng Thần Đan', {'pots': g.pots}));
     }
     for (var i = 0; i < g.gems; i++) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], g.gemTier);
@@ -3184,10 +3189,10 @@ class HeroData {
     final look = costumeById[weekChestCostume]!;
     _grantCostume(look);
     final lines = [
-      'Ngoại trang ${look.name}',
-      '+${_thousands(weekChestGold)} lượng',
-      '+$weekChestIron Thần Thiết',
-      '+$weekChestPills Tẩy Tủy Đan',
+      tr('Ngoại trang {lookName}', {'lookName': tr(look.name)}),
+      tr('+{p0} lượng', {'p0': _thousands(weekChestGold)}),
+      tr('+{weekChestIron} Thần Thiết', {'weekChestIron': weekChestIron}),
+      tr('+{weekChestPills} Tẩy Tủy Đan', {'weekChestPills': weekChestPills}),
     ];
     for (var i = 0; i < weekChestGems; i++) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], weekChestGemTier);
@@ -3208,8 +3213,8 @@ class HeroData {
     if (r == null) return const [];
     arenaCoins += r.coins;
     divineIron += r.iron;
-    final lines = ['Hạng $place mùa trước:', '+${_thousands(r.coins)} Uy danh', '+${r.iron} Thần Thiết'];
-    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    final lines = [tr('Hạng {place} mùa trước:', {'place': place}), tr('+{p0} Uy danh', {'p0': _thousands(r.coins)}), tr('+{iron} Thần Thiết', {'iron': r.iron})];
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add(tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}));
     return lines;
   }
 
@@ -3237,13 +3242,13 @@ class HeroData {
     final r = huntReward(place);
     if (r == null) return const [];
     divineIron += r.iron;
-    final lines = ['Hạng $place Săn quái tuần trước:', '+${r.iron} Thần Thiết'];
+    final lines = [tr('Hạng {place} Săn quái tuần trước:', {'place': place}), tr('+{iron} Thần Thiết', {'iron': r.iron})];
     for (var i = 0; i < r.gems; i++) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], r.gemTier);
       addGem(gem);
       lines.add(gem.name);
     }
-    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add(tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}));
     return lines;
   }
 
@@ -3264,11 +3269,11 @@ class HeroData {
     final lines = <String>[];
     for (final mk in monthlyMarks) {
       if (mk.days != monthDays) continue;
-      lines.add('Điểm danh ${mk.days} ngày:');
+      lines.add(tr('Điểm danh {days} ngày:', {'days': mk.days}));
       final g = mk.gold(level);
       if (g > 0) {
         gold += g;
-        lines.add('+${_thousands(g)} lượng');
+        lines.add(tr('+{p0} lượng', {'p0': _thousands(g)}));
       }
       for (var i = 0; i < mk.gems; i++) {
         final gem = Gem(Hanh.values[rng.nextInt(5)], mk.gemTier);
@@ -3277,20 +3282,20 @@ class HeroData {
       }
       if (mk.iron > 0) {
         divineIron += mk.iron;
-        lines.add('+${mk.iron} Thần Thiết');
+        lines.add(tr('+{iron} Thần Thiết', {'iron': mk.iron}));
       }
       if (mk.shards > 0) {
         goldShards += mk.shards;
-        lines.add('+${mk.shards} Mảnh Hoàng Kim');
+        lines.add(tr('+{shards} Mảnh Hoàng Kim', {'shards': mk.shards}));
       }
       if (mk.pots > 0) {
         hpPots += mk.pots;
         mpPots += mk.pots;
-        lines.add('+${mk.pots} Kim Sang Dược, +${mk.pots} Ngưng Thần Đan');
+        lines.add(tr('+{pots} Kim Sang Dược, +{pots} Ngưng Thần Đan', {'pots': mk.pots}));
       }
       if (mk.pills > 0) {
         pills['taytuy'] = (pills['taytuy'] ?? 0) + mk.pills;
-        lines.add('+${mk.pills} Tẩy Tủy Đan');
+        lines.add(tr('+{pills} Tẩy Tủy Đan', {'pills': mk.pills}));
       }
       if (mk.item != null) {
         final it = makeItem(
@@ -3301,7 +3306,7 @@ class HeroData {
           rng: rng,
         );
         addItem(it);
-        lines.add('${it.name} [${it.rarity.label}]');
+        lines.add('${tr(it.name)} [${tr(it.rarity.label)}]');
       }
     }
     return lines;
@@ -3319,7 +3324,7 @@ class HeroData {
     for (final m in mails) {
       if (m.jade > 0 && mailClaimed.contains(m.id) && mailJade.add(m.id)) {
         tienJade += m.jade;
-        out.add('+${m.jade} Tiên Ngọc (${m.title})');
+        out.add(tr('+{jade} Tiên Ngọc ({mTitle})', {'jade': m.jade, 'mTitle': tr(m.title)}));
       }
     }
     return out;
@@ -3338,13 +3343,13 @@ class HeroData {
     if (m.jade > 0) mailJade.add(m.id);
     if (m.card > 0) addCardDays(day, m.card);
     final lines = [
-      if (m.card > 0) '+${m.card} ngày Nguyệt thẻ',
-      if (m.gold > 0) '+${_thousands(m.gold)} lượng',
-      if (m.shards > 0) '+${m.shards} Mảnh Hoàng Kim',
-      if (m.iron > 0) '+${m.iron} Thần Thiết',
-      if (m.hpPots > 0) '+${m.hpPots} bình máu',
-      if (m.mpPots > 0) '+${m.mpPots} bình nội lực',
-      if (m.jade > 0) '+${m.jade} Tiên Ngọc',
+      if (m.card > 0) tr('+{card} ngày Nguyệt thẻ', {'card': m.card}),
+      if (m.gold > 0) tr('+{p0} lượng', {'p0': _thousands(m.gold)}),
+      if (m.shards > 0) tr('+{shards} Mảnh Hoàng Kim', {'shards': m.shards}),
+      if (m.iron > 0) tr('+{iron} Thần Thiết', {'iron': m.iron}),
+      if (m.hpPots > 0) tr('+{hpPots} bình máu', {'hpPots': m.hpPots}),
+      if (m.mpPots > 0) tr('+{mpPots} bình nội lực', {'mpPots': m.mpPots}),
+      if (m.jade > 0) tr('+{jade} Tiên Ngọc', {'jade': m.jade}),
     ];
     for (var i = 0; i < m.gems; i++) {
       final g = Gem(Hanh.values[rng.nextInt(5)], m.gemTier);

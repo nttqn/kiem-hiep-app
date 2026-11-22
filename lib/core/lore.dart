@@ -1,4 +1,5 @@
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Giang Hồ Ký Sự: a short story for each bí cảnh, five pages each, found
 /// while exploring. A whole chapter grants a small lasting bonus; all nine
@@ -132,14 +133,14 @@ int get lorePageCount => loreChapters.length * lorePagesPer;
 String loreBonusLabel(Bonus b, double v) {
   final pct = '+${(v * 100).toStringAsFixed(v * 100 % 1 == 0 ? 0 : 1)}%';
   return switch (b) {
-    Bonus.hpPct => 'Sinh lực $pct',
-    Bonus.atkPct => 'Công lực $pct',
-    Bonus.defPct => 'Phòng thủ $pct',
-    Bonus.crit => 'Chí mạng $pct',
-    Bonus.critDmg => 'Sát thương chí mạng $pct',
-    Bonus.skillDmg => 'Sát thương kỹ năng $pct',
-    Bonus.aspd => 'Tốc đánh $pct',
-    Bonus.dodge => 'Né tránh $pct',
+    Bonus.hpPct => tr('Sinh lực {pct}', {'pct': pct}),
+    Bonus.atkPct => tr('Công lực {pct}', {'pct': pct}),
+    Bonus.defPct => tr('Phòng thủ {pct}', {'pct': pct}),
+    Bonus.crit => tr('Chí mạng {pct}', {'pct': pct}),
+    Bonus.critDmg => tr('Sát thương chí mạng {pct}', {'pct': pct}),
+    Bonus.skillDmg => tr('Sát thương kỹ năng {pct}', {'pct': pct}),
+    Bonus.aspd => tr('Tốc đánh {pct}', {'pct': pct}),
+    Bonus.dodge => tr('Né tránh {pct}', {'pct': pct}),
     _ => pct,
   };
 }

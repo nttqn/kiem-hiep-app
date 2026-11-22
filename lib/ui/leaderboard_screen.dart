@@ -14,6 +14,7 @@ import 'endgame_screens.dart';
 import 'hero_card.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Server-wide rankings: combat power, tower floor, level with rebirths.
 class LeaderboardScreen extends StatefulWidget {
@@ -98,7 +99,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       });
     } catch (e) {
       if (!mounted || req != _req) return;
-      setState(() => _error = 'Không tải được bảng xếp hạng, thử lại sau.');
+      setState(() => _error = tr('Không tải được bảng xếp hạng, thử lại sau.'));
     }
   }
 
@@ -118,7 +119,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Không tải thêm được, thử lại sau.')));
+            .showSnackBar(SnackBar(content: Text(tr('Không tải thêm được, thử lại sau.'))));
       }
     }
     if (mounted) setState(() => _more = false);
@@ -141,8 +142,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       if (!onBoard) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(lb.submitError ??
-              'Nhân vật của bạn chưa có trên bảng; #$place là hạng tính theo số liệu của bạn. '
-                  'Mở lại bảng sau ít phút để gửi lại.'),
+              tr('Nhân vật của bạn chưa có trên bảng; #{place} là hạng tính theo số liệu của bạn. '
+                  'Mở lại bảng sau ít phút để gửi lại.', {'place': place})),
         ));
       }
       setState(() {
@@ -158,7 +159,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Không tải được, thử lại sau.')));
+            .showSnackBar(SnackBar(content: Text(tr('Không tải được, thử lại sau.'))));
       }
     }
     if (mounted) setState(() => _more = false);
@@ -175,7 +176,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       LbBoard.daiHoi: 'Minh Chủ',
     };
     return SubScreen(
-      title: 'Xếp hạng',
+      title: tr('Xếp hạng'),
       actions: [
         // The endgame boards (1.8.0) live on their own screens.
         for (final b in names.keys)
@@ -194,7 +195,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: _board == b ? goldLight : gold.withValues(alpha: 0.5)),
                 ),
-                child: Text(names[b]!, style: bold.copyWith(fontSize: 13)),
+                child: Text(tr(names[b]!), style: bold.copyWith(fontSize: 13)),
               ),
             ),
           ),
@@ -216,12 +217,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Đăng nhập để xem và lên bảng xếp hạng', style: bold.copyWith(color: cream)),
+            Text(tr('Đăng nhập để xem và lên bảng xếp hạng'), style: bold.copyWith(color: cream)),
             const SizedBox(height: 6),
-            Text('Bảng xếp hạng dùng chung tài khoản với lưu trữ đám mây.', style: small),
+            Text(tr('Bảng xếp hạng dùng chung tài khoản với lưu trữ đám mây.'), style: small),
             const SizedBox(height: 12),
             if (CloudSave.instance.available)
-              LButton(label: 'Đăng nhập', color: jade, onTap: () => showCloudPanel(context)),
+              LButton(label: tr('Đăng nhập'), color: jade, onTap: () => showCloudPanel(context)),
           ],
         ),
       );
@@ -229,7 +230,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (_error != null) return Center(child: Text(_error!, style: body));
     final rows = _rows;
     if (rows == null) return const Center(child: CircularProgressIndicator(color: goldLight));
-    if (rows.isEmpty) return Center(child: Text('Chưa có ai trên bảng. Hãy là người đầu tiên!', style: body));
+    if (rows.isEmpty) return Center(child: Text(tr('Chưa có ai trên bảng. Hãy là người đầu tiên!'), style: body));
     final me = lb.myUid;
     // The row standing for this hero when around it: their own, else the
     // first at or under their value.
@@ -256,9 +257,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ? const SizedBox(
                 width: 24, height: 24, child: CircularProgressIndicator(color: goldLight, strokeWidth: 2.5))
             : _around
-                ? LButton(label: 'Về top', icon: Icons.vertical_align_top, small: true, onTap: _load)
+                ? LButton(label: tr('Về top'), icon: Icons.vertical_align_top, small: true, onTap: _load)
                 : LButton(
-                    label: 'Xem thêm ${Leaderboard.pageSize}',
+                    label: tr('Xem thêm {pageSize}', {'pageSize': Leaderboard.pageSize}),
                     icon: Icons.expand_more,
                     small: true,
                     color: lacquerLight,
@@ -299,9 +300,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               children: [
                 Text(e.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis),
                 Text(
-                  '${sectOf(hn).name} · Cấp ${e.level}${e.rebirths > 0 ? ' · Chuyển sinh ${e.rebirths}' : ''}'
-                  '${e.dao > 0 && _board != LbBoard.rank ? ' · ${daoName(e.dao)}' : ''}'
-                  '${e.title.isNotEmpty ? ' · « ${e.title} »' : ''}',
+                  tr('{p0} · Cấp {level}{p1}'
+                  '{p2}'
+                  '{p3}', {'p0': tr(sectOf(hn).name), 'level': e.level, 'p1': e.rebirths > 0 ? tr(' · Chuyển sinh {rebirths}', {'rebirths': e.rebirths}) : '', 'p2': e.dao > 0 && _board != LbBoard.rank ? ' · ${daoName(e.dao)}' : '', 'p3': e.title.isNotEmpty ? ' · « ${e.title} »' : ''}),
                   style: small.copyWith(fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -316,11 +317,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   String _value(LbEntry e) => switch (_board) {
         LbBoard.power => fmt(e.power),
-        LbBoard.tower => 'Tầng ${e.tower}',
-        LbBoard.rank => e.dao > 0 ? daoName(e.dao) : e.rebirths > 0 ? 'CS${e.rebirths} · ${e.level}' : 'Cấp ${e.level}',
-        LbBoard.arena => '${e.arenaS % 100000} điểm',
-        LbBoard.hunt => '${fmt(e.wk % 1000000)} quái',
-        LbBoard.daiHoi => '${e.dhC} lần vô địch',
+        LbBoard.tower => tr('Tầng {tower}', {'tower': e.tower}),
+        LbBoard.rank => e.dao > 0 ? daoName(e.dao) : e.rebirths > 0 ? tr('CS{rebirths} · {level}', {'rebirths': e.rebirths, 'level': e.level}) : tr('Cấp {level}', {'level': e.level}),
+        LbBoard.arena => tr('{p0} điểm', {'p0': e.arenaS % 100000}),
+        LbBoard.hunt => tr('{p0} quái', {'p0': fmt(e.wk % 1000000)}),
+        LbBoard.daiHoi => tr('{dhC} lần vô địch', {'dhC': e.dhC}),
         LbBoard.tamMa || LbBoard.maVuc || LbBoard.beast => endgameBoardLabel(_board, e),
       };
 
@@ -341,29 +342,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             child: ListView(
               children: [
           Text(h.name, style: titleStyle(18, color: cream), overflow: TextOverflow.ellipsis),
-          Text('${h.sect.name} · Cấp ${h.level}', style: small.copyWith(color: hanhColor(h.hanh))),
+          Text(tr('{sectName} · Cấp {level}', {'sectName': tr(h.sect.name), 'level': h.level}), style: small.copyWith(color: hanhColor(h.hanh))),
           const SizedBox(height: 8),
-          _stat('Lực chiến', fmt(h.power)),
-          _stat('Tháp Thử Luyện', 'Tầng ${h.towerBest}'),
-          _stat('Chuyển sinh', '${h.rebirths}'),
-          if (h.daoLv > 0) _stat('Ngộ Đạo', daoName(h.daoLv)),
-          _stat('Lôi đài', '${h.arenaPoints} điểm'),
-          _stat('Săn quái tuần', fmt(h.huntKills)),
-          _stat('Minh Chủ', '${h.dhChamps} lần'),
+          _stat(tr('Lực chiến'), fmt(h.power)),
+          _stat(tr('Tháp Thử Luyện'), tr('Tầng {towerBest}', {'towerBest': h.towerBest})),
+          _stat(tr('Chuyển sinh'), '${h.rebirths}'),
+          if (h.daoLv > 0) _stat(tr('Ngộ Đạo'), daoName(h.daoLv)),
+          _stat(tr('Lôi đài'), tr('{arenaPoints} điểm', {'arenaPoints': h.arenaPoints})),
+          _stat(tr('Săn quái tuần'), fmt(h.huntKills)),
+          _stat(tr('Minh Chủ'), tr('{dhChamps} lần', {'dhChamps': h.dhChamps})),
           const SizedBox(height: 8),
           if (lb.available && !lb.hidden)
             Text(
                 _offBoard
                     ? (_board == LbBoard.arena
-                        ? 'Đấu một trận Lôi đài mùa này để lên bảng'
+                        ? tr('Đấu một trận Lôi đài mùa này để lên bảng')
                         : _board == LbBoard.daiHoi
-                        ? 'Vô địch Võ Lâm Đại Hội để lên bảng'
-                        : 'Hạ một con quái tuần này để lên bảng')
-                    : (_place == null ? 'Đang tính hạng…' : 'Hạng của bạn: #$_place'),
+                        ? tr('Vô địch Võ Lâm Đại Hội để lên bảng')
+                        : tr('Hạ một con quái tuần này để lên bảng'))
+                    : (_place == null ? tr('Đang tính hạng…') : tr('Hạng của bạn: #{_place}', {'_place': _place})),
                 style: titleStyle(_offBoard ? 14 : 17, color: goldLight)),
           if (lb.available && lb.hidden)
-            Text('Bạn đang ẩn khỏi bảng: tên không hiện ở bảng nào, kể cả Boss. '
-                'Tắt « Ẩn tôi khỏi bảng » bên dưới để hiện lại.',
+            Text(tr('Bạn đang ẩn khỏi bảng: tên không hiện ở bảng nào, kể cả Boss. '
+                'Tắt « Ẩn tôi khỏi bảng » bên dưới để hiện lại.'),
                 style: small.copyWith(color: hpRed, fontWeight: FontWeight.w700)),
           if (lb.available && !lb.hidden && lb.submitError != null)
             Padding(
@@ -374,26 +375,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                  'Bảng mới mỗi thứ Hai, còn ${huntDaysLeft(vnDayKey())} ngày. Top 50 nhận Thần Thiết và ngọc, '
-                  'hạng 1 thêm danh hiệu « Săn Quái Vương ».',
+                  tr('Bảng mới mỗi thứ Hai, còn {p0} ngày. Top 50 nhận Thần Thiết và ngọc, '
+                  'hạng 1 thêm danh hiệu « Săn Quái Vương ».', {'p0': huntDaysLeft(vnDayKey())}),
                   style: small.copyWith(fontSize: 10.5, color: goldLight)),
             ),
                 const SizedBox(height: 6),
                 Text(
-                    'Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp, điểm Lôi đài và số quái tuần. '
-                    'Chạm vào một nhân vật để xem thông tin hoặc báo cáo gian lận.',
+                    tr('Bảng hiện tên nhân vật, môn phái, cấp, lực chiến, tầng tháp, điểm Lôi đài và số quái tuần. '
+                    'Chạm vào một nhân vật để xem thông tin hoặc báo cáo gian lận.'),
                     style: small.copyWith(fontSize: 10.5)),
               ],
             ),
           ),
           if (_place != null && _rows != null && !_around) ...[
             const SizedBox(height: 4),
-            LButton(label: 'Vị trí của tôi', icon: Icons.my_location, small: true, color: jade, onTap: _showMe),
+            LButton(label: tr('Vị trí của tôi'), icon: Icons.my_location, small: true, color: jade, onTap: _showMe),
           ],
           if (lb.available)
             Row(
               children: [
-                Expanded(child: Text('Ẩn tôi khỏi bảng', style: small.copyWith(color: cream))),
+                Expanded(child: Text(tr('Ẩn tôi khỏi bảng'), style: small.copyWith(color: cream))),
                 Switch(
                   value: lb.hidden,
                   activeThumbColor: goldLight,
@@ -420,17 +421,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
         scrollable: true,
-        title: Text('Ẩn khỏi bảng xếp hạng?', style: titleStyle(20)),
+        title: Text(tr('Ẩn khỏi bảng xếp hạng?'), style: titleStyle(20)),
         content: Text(
-          'Tên của bạn sẽ bị gỡ khỏi mọi bảng (Lực chiến, Cấp độ, Lôi đài, Săn quái, Boss Thế Giới, '
-          'Boss Hoàng Kim…) và không được xếp hạng nhận thưởng tuần cho tới khi bạn tắt lại.',
+          tr('Tên của bạn sẽ bị gỡ khỏi mọi bảng (Lực chiến, Cấp độ, Lôi đài, Săn quái, Boss Thế Giới, '
+          'Boss Hoàng Kim…) và không được xếp hạng nhận thưởng tuần cho tới khi bạn tắt lại.'),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Hủy'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Ẩn', style: TextStyle(color: hpRed, fontWeight: FontWeight.w800)),
+            child: Text(tr('Ẩn'), style: TextStyle(color: hpRed, fontWeight: FontWeight.w800)),
           ),
         ],
       ),

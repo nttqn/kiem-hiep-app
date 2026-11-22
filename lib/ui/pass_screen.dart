@@ -14,6 +14,7 @@ import '../services/save.dart';
 import '../services/sound.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Lệnh Bài (1.10.0): the season's 30 tiers, the free track above and the
 /// Hào Kiệt (paid) track below.
@@ -74,7 +75,7 @@ class _PassScreenState extends State<PassScreen> {
     if (lines == null || lines.isEmpty) return;
     SoundService.instance.cue('loot');
     SaveService.instance.save();
-    _say('Nhận: ${lines.join(', ')}');
+    _say(tr('Nhận: {p0}', {'p0': lines.join(', ')}));
     setState(() {});
   }
 
@@ -82,14 +83,14 @@ class _PassScreenState extends State<PassScreen> {
   Widget build(BuildContext context) {
     if (!h.passOpen) {
       return SubScreen(
-        title: 'Lệnh Bài',
+        title: tr('Lệnh Bài'),
         child: Center(
           child: Panel(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Lệnh Bài mùa 1 mở từ $passOpenText.\n'
+              tr('Lệnh Bài mùa 1 mở từ {passOpenText}.\n'
               'Mỗi mùa 4 tuần, 30 bậc, lên bậc bằng điểm Năng động. '
-              'Bậc 30 nhánh Hào Kiệt có ngoại trang ${costumeById[passCostumeOf(1)]?.name ?? ''}.',
+              'Bậc 30 nhánh Hào Kiệt có ngoại trang {p0}.', {'passOpenText': passOpenText, 'p0': costumeById[passCostumeOf(1)]?.name ?? ''}),
               style: body,
               textAlign: TextAlign.center,
             ),
@@ -98,7 +99,7 @@ class _PassScreenState extends State<PassScreen> {
       );
     }
     return SubScreen(
-      title: 'Lệnh Bài',
+      title: tr('Lệnh Bài'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -115,8 +116,8 @@ class _PassScreenState extends State<PassScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 18),
-                        Expanded(child: _side('Miễn phí', cream)),
-                        Expanded(child: _side('Hào Kiệt', _paidColor)),
+                        Expanded(child: _side(tr('Miễn phí'), cream)),
+                        Expanded(child: _side(tr('Hào Kiệt'), _paidColor)),
                       ],
                     ),
                   ),
@@ -167,7 +168,7 @@ class _PassScreenState extends State<PassScreen> {
               children: [
                 Row(
                   children: [
-                    Text('Mùa ${h.passSeason}', style: titleStyle(17)),
+                    Text(tr('Mùa {passSeason}', {'passSeason': h.passSeason}), style: titleStyle(17)),
                     const SizedBox(width: 8),
                     Flexible(
                       child: GestureDetector(
@@ -179,14 +180,14 @@ class _PassScreenState extends State<PassScreen> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: goldLight),
                           ),
-                          child: Text('Nhiệm vụ tuần $done/${open.length}',
+                          child: Text(tr('Nhiệm vụ tuần {done}/{openLength}', {'done': done, 'openLength': open.length}),
                               style: bold.copyWith(fontSize: 11.5), maxLines: 1, overflow: TextOverflow.ellipsis),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Flexible(
-                      child: Text('Bậc $tier/$passTiers · còn ${passDaysLeft(day)} ngày',
+                      child: Text(tr('Bậc {tier}/{passTiers} · còn {p0} ngày', {'tier': tier, 'passTiers': passTiers, 'p0': passDaysLeft(day)}),
                           style: bold.copyWith(color: goldLight, fontSize: 13), overflow: TextOverflow.ellipsis),
                     ),
                   ],
@@ -196,9 +197,9 @@ class _PassScreenState extends State<PassScreen> {
                 const SizedBox(height: 2),
                 Text(
                   maxed
-                      ? 'Bậc tối đa! Mỗi $passExtraXp điểm thêm mở một Rương thêm (Tinh Thạch, Mảnh Hoàng Kim): $inTier/$passExtraXp.'
-                      : 'Điểm Năng động = kinh nghiệm Lệnh Bài: $inTier/$passTierXp đến bậc ${tier + 1}. '
-                          'Hết mùa, phần thưởng đã đạt mà chưa nhận sẽ tự gửi.',
+                      ? tr('Bậc tối đa! Mỗi {passExtraXp} điểm thêm mở một Rương thêm (Tinh Thạch, Mảnh Hoàng Kim): {inTier}/{passExtraXp}.', {'passExtraXp': passExtraXp, 'inTier': inTier})
+                      : tr('Điểm Năng động = kinh nghiệm Lệnh Bài: {inTier}/{passTierXp} đến bậc {p0}. '
+                          'Hết mùa, phần thưởng đã đạt mà chưa nhận sẽ tự gửi.', {'inTier': inTier, 'passTierXp': passTierXp, 'p0': tier + 1}),
                   style: small.copyWith(fontSize: 10.5),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -208,19 +209,19 @@ class _PassScreenState extends State<PassScreen> {
           ),
           const SizedBox(width: 8),
           LButton(
-            label: waiting > 0 ? 'Nhận tất cả ($waiting)' : 'Nhận tất cả',
+            label: waiting > 0 ? tr('Nhận tất cả ({waiting})', {'waiting': waiting}) : tr('Nhận tất cả'),
             small: true,
             enabled: waiting > 0,
             onTap: () => _got(h.passClaimAll(_rng)),
           ),
           const SizedBox(width: 6),
           if (h.passPaid)
-            LButton(label: 'Hào Kiệt ✓', small: true, color: const Color(0xFF8A6A1A), enabled: false, onTap: null)
+            LButton(label: tr('Hào Kiệt ✓'), small: true, color: const Color(0xFF8A6A1A), enabled: false, onTap: null)
           else
             ValueListenableBuilder<bool>(
               valueListenable: _iap.busy,
               builder: (_, busy, _) => LButton(
-                label: price == null ? 'Hào Kiệt: chưa mở bán' : 'Mở Hào Kiệt · $price',
+                label: price == null ? tr('Hào Kiệt: chưa mở bán') : tr('Mở Hào Kiệt · {price}', {'price': price}),
                 icon: Icons.workspace_premium,
                 small: true,
                 color: const Color(0xFF8A2A1A),
@@ -242,7 +243,7 @@ class _PassScreenState extends State<PassScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
         scrollable: true,
-        title: Text('Nhiệm vụ Lệnh Bài tuần này', style: titleStyle(18)),
+        title: Text(tr('Nhiệm vụ Lệnh Bài tuần này'), style: titleStyle(18)),
         // A fixed width: the dialog sizes to its content's intrinsic width,
         // which the progress bars cannot give.
         content: SizedBox(
@@ -251,17 +252,17 @@ class _PassScreenState extends State<PassScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Xong là cộng điểm Lệnh Bài ngay. Làm mới thứ Hai (còn ${huntDaysLeft(day)} ngày).',
+              Text(tr('Xong là cộng điểm Lệnh Bài ngay. Làm mới thứ Hai (còn {p0} ngày).', {'p0': huntDaysLeft(day)}),
                   style: small.copyWith(fontSize: 11.5)),
               const SizedBox(height: 6),
               for (final q in open) _questRow(q),
               if (open.length < passQuests.length)
-                Text('Nhiệm vụ Ma Vực, Hung Thú, Tâm Ma hiện khi mở được các chế độ đó.',
+                Text(tr('Nhiệm vụ Ma Vực, Hung Thú, Tâm Ma hiện khi mở được các chế độ đó.'),
                     style: small.copyWith(fontSize: 11, color: creamDim)),
             ],
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
     if (mounted) setState(() {});
@@ -278,7 +279,7 @@ class _PassScreenState extends State<PassScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(q.label,
+                child: Text(tr(q.label),
                     style: small.copyWith(fontSize: 12.5, color: done ? const Color(0xFF8CE07A) : cream)),
               ),
               Text(done ? '✓ +${q.xp}' : '$got/${q.target} · +${q.xp}',
@@ -298,16 +299,16 @@ class _PassScreenState extends State<PassScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Lệnh Bài Hào Kiệt · mùa ${h.passSeason}', style: titleStyle(18)),
+        title: Text(tr('Lệnh Bài Hào Kiệt · mùa {passSeason}', {'passSeason': h.passSeason}), style: titleStyle(18)),
         content: Text(
-          'Mở nhánh Hào Kiệt cho ${h.name} đến hết mùa (còn ${passDaysLeft(vnDayKey())} ngày). '
+          tr('Mở nhánh Hào Kiệt cho {hName} đến hết mùa (còn {p0} ngày). '
           'Bậc đã đạt nhận được ngay. Gồm Tinh Thạch, Mảnh Hoàng Kim, ngọc Thánh, Tinh Phách, '
-          'Tẩy Tủy Đan, và ở bậc 30: ngoại trang ${costume?.name ?? ''} cùng danh hiệu « $passPaidTitle ».',
+          'Tẩy Tủy Đan, và ở bậc 30: ngoại trang {p1} cùng danh hiệu « {passPaidTitle} ».', {'hName': h.name, 'p0': passDaysLeft(vnDayKey()), 'p1': costume?.name ?? '', 'passPaidTitle': passPaidTitle}),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Mua')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Mua'))),
         ],
       ),
     );
@@ -324,7 +325,7 @@ class _PassScreenState extends State<PassScreen> {
           SizedBox(
             height: 18,
             child: Center(
-              child: Text('Bậc $t',
+              child: Text(tr('Bậc {t}', {'t': t}),
                   style: bold.copyWith(fontSize: 12, color: reached ? goldLight : creamDim)),
             ),
           ),

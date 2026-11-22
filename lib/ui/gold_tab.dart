@@ -10,6 +10,7 @@ import '../core/items.dart';
 import '../services/analytics.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Thợ rèn tab: forge Hoàng Kim set pieces from Mảnh Hoàng Kim.
 class GoldTab extends StatefulWidget {
@@ -31,12 +32,12 @@ class _GoldTabState extends State<GoldTab> {
   void _forge(Slot s) {
     final it = h.forgeGold(_set, s, _rng);
     if (it == null) {
-      setState(() => _msg = h.bag.length >= bagSize ? 'Hành trang đã đầy.' : 'Không đủ Mảnh Hoàng Kim.');
+      setState(() => _msg = h.bag.length >= bagSize ? tr('Hành trang đã đầy.') : tr('Không đủ Mảnh Hoàng Kim.'));
       return;
     }
     Analytics.instance.log('gold_forge', {'set': _set.id, 'slot': s.index});
     SaveService.instance.save();
-    setState(() => _msg = 'Đã đúc ${it.name} (cấp ${it.level}), xem trong Hành trang.');
+    setState(() => _msg = tr('Đã đúc {itName} (cấp {level}), xem trong Hành trang.', {'itName': tr(it.name), 'level': it.level}));
     widget.onChanged();
   }
 
@@ -104,14 +105,14 @@ class _GoldTabState extends State<GoldTab> {
       children: [
         Row(
           children: [
-            chip(0, 'Đúc'),
-            chip(1, 'Khai Quang'),
-            chip(2, 'Hoàng Kim Các'),
+            chip(0, tr('Đúc')),
+            chip(1, tr('Khai Quang')),
+            chip(2, tr('Hoàng Kim Các')),
             const Spacer(),
             const MatIcon(Mat.shard, size: 20),
             const SizedBox(width: 3),
             Flexible(
-              child: Text('${h.goldShards} mảnh',
+              child: Text(tr('{goldShards} mảnh', {'goldShards': h.goldShards}),
                   style: bold.copyWith(color: _gold, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ],
@@ -147,16 +148,16 @@ class _GoldTabState extends State<GoldTab> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: lacquer,
-            content: Text('$label: +$n $unit cho đồ Hoàng Kim đang mặc, tốn $cost Mảnh Hoàng Kim?', style: body),
+            content: Text(tr('{label}: +{n} {unit} cho đồ Hoàng Kim đang mặc, tốn {cost} Mảnh Hoàng Kim?', {'label': label, 'n': n, 'unit': unit, 'cost': cost}), style: body),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đồng ý')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Đồng ý'))),
             ],
           ),
         );
         if (ok != true || !mounted) return;
         final (done, spent) = run(dry: false);
-        if (done > 0) _done('$label: +$done $unit, tốn $spent mảnh.');
+        if (done > 0) _done(tr('{label}: +{done} {unit}, tốn {spent} mảnh.', {'label': label, 'done': done, 'unit': unit, 'spent': spent}));
       },
     );
   }
@@ -168,8 +169,8 @@ class _GoldTabState extends State<GoldTab> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-            'Khai Quang: chỉ số gốc +4% đến +24% (cấp 1-5). '
-            'Tinh Luyện: chạm một dòng phụ để đưa lên mức tối đa ($goldPerfectCost mảnh).',
+            tr('Khai Quang: chỉ số gốc +4% đến +24% (cấp 1-5). '
+            'Tinh Luyện: chạm một dòng phụ để đưa lên mức tối đa ({goldPerfectCost} mảnh).', {'goldPerfectCost': goldPerfectCost}),
             style: small.copyWith(fontSize: 11)),
         const SizedBox(height: 4),
         if (worn.isNotEmpty)
@@ -177,15 +178,15 @@ class _GoldTabState extends State<GoldTab> {
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
-                Expanded(child: _allButton('Khai Quang tất cả', 'cấp Khai Quang', h.glowAll)),
+                Expanded(child: _allButton(tr('Khai Quang tất cả'), tr('cấp Khai Quang'), h.glowAll)),
                 const SizedBox(width: 6),
-                Expanded(child: _allButton('Tinh Luyện tất cả', 'dòng phụ', h.perfectAll)),
+                Expanded(child: _allButton(tr('Tinh Luyện tất cả'), tr('dòng phụ'), h.perfectAll)),
               ],
             ),
           ),
         Expanded(
           child: worn.isEmpty
-              ? Center(child: Text('Hãy mặc đồ Hoàng Kim để Khai Quang.', style: body))
+              ? Center(child: Text(tr('Hãy mặc đồ Hoàng Kim để Khai Quang.'), style: body))
               : ListView(children: [for (final it in worn) _glowRow(it)]),
         ),
         if (_msg != null) Text(_msg!, style: small.copyWith(color: cream), maxLines: 2),
@@ -206,17 +207,17 @@ class _GoldTabState extends State<GoldTab> {
           Row(
             children: [
               Expanded(
-                child: Text('${it.title} · Khai Quang ${it.glow}/$maxGlow',
+                child: Text('${tr(it.title)} · Khai Quang ${it.glow}/$maxGlow',
                     style: bold.copyWith(fontSize: 12.5, color: _gold), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               LButton(
-                label: maxed ? 'Tối đa' : 'Khai Quang · ${goldGlowCost[it.glow]}',
+                label: maxed ? tr('Tối đa') : 'Khai Quang · ${goldGlowCost[it.glow]}',
                 small: true,
                 color: const Color(0xFF8A6A1A),
                 enabled: block == null,
                 onTap: () {
                   if (h.glowUp(it)) {
-                    _done('${it.name} Khai Quang ${it.glow}: chỉ số gốc +${(glowPct(it.glow) * 100).round()}%.');
+                    _done(tr('{itName} Khai Quang {glow}: chỉ số gốc +{p0}%.', {'itName': tr(it.name), 'glow': it.glow, 'p0': (glowPct(it.glow) * 100).round()}));
                   }
                 },
               ),
@@ -241,9 +242,9 @@ class _GoldTabState extends State<GoldTab> {
           ? null
           : () {
               if (h.perfectLine(it, s)) {
-                _done('Tinh Luyện ${s.label}: ${s.format(best)}.');
+                _done(tr('Tinh Luyện {sLabel}: {p0}.', {'sLabel': tr(s.label), 'p0': s.format(best)}));
               } else {
-                setState(() => _msg = 'Cần $goldPerfectCost Mảnh Hoàng Kim.');
+                setState(() => _msg = tr('Cần {goldPerfectCost} Mảnh Hoàng Kim.', {'goldPerfectCost': goldPerfectCost}));
               }
             },
       child: Container(
@@ -254,7 +255,7 @@ class _GoldTabState extends State<GoldTab> {
           border: Border.all(color: full ? jade : _gold.withValues(alpha: 0.6)),
         ),
         child: Text(
-          full ? '${s.label} ${s.format(v)} ✓' : '${s.label} ${s.format(v)} → ${s.format(best)}',
+          full ? '${tr(s.label)} ${s.format(v)} ✓' : '${tr(s.label)} ${s.format(v)} → ${s.format(best)}',
           style: small.copyWith(fontSize: 11, color: full ? const Color(0xFF8CE07A) : cream),
         ),
       ),
@@ -266,7 +267,7 @@ class _GoldTabState extends State<GoldTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Đổi Mảnh Hoàng Kim, giới hạn mỗi tuần (làm mới thứ Hai).', style: small.copyWith(fontSize: 11)),
+        Text(tr('Đổi Mảnh Hoàng Kim, giới hạn mỗi tuần (làm mới thứ Hai).'), style: small.copyWith(fontSize: 11)),
         const SizedBox(height: 4),
         Expanded(
           child: ListView(
@@ -279,17 +280,17 @@ class _GoldTabState extends State<GoldTab> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text('${w.name} · còn ${h.hkLeft(w)}/${w.perWeek} tuần này',
+                        child: Text(tr('{wName} · còn {p0}/{perWeek} tuần này', {'wName': tr(w.name), 'p0': h.hkLeft(w), 'perWeek': w.perWeek}),
                             style: bold.copyWith(fontSize: 12.5)),
                       ),
                       LButton(
-                        label: '${w.price} mảnh',
+                        label: tr('{price} mảnh', {'price': w.price}),
                         small: true,
                         color: const Color(0xFF8A6A1A),
                         enabled: h.hkLeft(w) > 0 && h.goldShards >= w.price,
                         onTap: () {
                           final line = h.buyGoldWare(w, _rng);
-                          if (line != null) _done('Đã đổi: $line');
+                          if (line != null) _done(tr('Đã đổi: {line}', {'line': line}));
                         },
                       ),
                     ],
@@ -304,7 +305,7 @@ class _GoldTabState extends State<GoldTab> {
   }
 
   Widget _locked() => Center(
-        child: Text('Trang bị Hoàng Kim mở ở cấp $goldOpenLevel (hoặc sau khi chuyển sinh).',
+        child: Text(tr('Trang bị Hoàng Kim mở ở cấp {goldOpenLevel} (hoặc sau khi chuyển sinh).', {'goldOpenLevel': goldOpenLevel}),
             style: body, textAlign: TextAlign.center),
       );
 
@@ -333,7 +334,7 @@ class _GoldTabState extends State<GoldTab> {
               ),
               const SizedBox(width: 7),
               Expanded(
-                child: Text(s.name,
+                child: Text(tr(s.name),
                     style: bold.copyWith(fontSize: 13, color: on ? _gold : cream),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
@@ -351,17 +352,17 @@ class _GoldTabState extends State<GoldTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Bộ ${s.name}', style: titleStyle(16, color: _gold)),
+        Text(tr('Bộ {sName}', {'sName': tr(s.name)}), style: titleStyle(16, color: _gold)),
         const SizedBox(height: 4),
         for (final mark in goldSetMarks)
           Text(
-            '$mark món: ${bonusText(s.bonusAt(mark))}'
-            '${mark == 7 ? ' · đòn đánh thường có ${(goldBurstChance * 100).round()}% tung ${s.burst} '
-                '(${(goldBurstPower * 100).round()}% công lực, hành ${s.hanh.label})' : ''}',
+            tr('{mark} món: {p0}'
+            '{p1}', {'mark': mark, 'p0': bonusText(s.bonusAt(mark)), 'p1': mark == 7 ? tr(' · đòn đánh thường có {p0}% tung {burst} '
+                '({p1}% công lực, hành {hanhLabel})', {'p0': (goldBurstChance * 100).round(), 'burst': s.burst, 'p1': (goldBurstPower * 100).round(), 'hanhLabel': tr(s.hanh.label)}) : ''}),
             style: small.copyWith(fontSize: 11.5, color: worn >= mark ? _gold : creamDim),
           ),
         const SizedBox(height: 8),
-        Text('Đúc món mới ở cấp ${h.level} (Truyền thuyết, 3 lỗ khảm, chỉ số gốc cao hơn):',
+        Text(tr('Đúc món mới ở cấp {level} (Truyền thuyết, 3 lỗ khảm, chỉ số gốc cao hơn):', {'level': h.level}),
             style: small.copyWith(color: cream)),
         const SizedBox(height: 6),
         Expanded(
@@ -375,8 +376,8 @@ class _GoldTabState extends State<GoldTab> {
         ),
         Text(
           _msg ??
-              'Mảnh Hoàng Kim: mốc sát thương Boss Thế Giới, tháp tầng 40 trở lên, '
-                  'rương Năng động tuần, thưởng mùa Lôi đài, boss và tinh anh cấp $bossShardLevel+.',
+              tr('Mảnh Hoàng Kim: mốc sát thương Boss Thế Giới, tháp tầng 40 trở lên, '
+                  'rương Năng động tuần, thưởng mùa Lôi đài, boss và tinh anh cấp {bossShardLevel}+.', {'bossShardLevel': bossShardLevel}),
           style: small.copyWith(fontSize: 11, color: _msg == null ? creamDim : cream),
         ),
       ],
@@ -387,7 +388,7 @@ class _GoldTabState extends State<GoldTab> {
     final cost = goldPieceCost(slot);
     final worn = h.equip[slot]?.set == _set.id;
     return LButton(
-      label: '${slot.label}${worn ? ' ✓' : ''} · $cost',
+      label: '${tr(slot.label)}${worn ? ' ✓' : ''} · $cost',
       small: true,
       color: const Color(0xFF8A6A1A),
       enabled: h.goldShards >= cost,

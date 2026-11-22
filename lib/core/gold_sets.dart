@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'hanh.dart';
 import 'items.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Trang bị Hoàng Kim: five sets, one per phase, forged at the smithy from
 /// Mảnh Hoàng Kim. Worn pieces of one set add its bonuses at 2, 4 and 7
@@ -169,19 +170,19 @@ GoldSetDef? fullGoldSet(Map<String, int> pieces) {
 }
 
 String bonusLabel(Bonus b) => switch (b) {
-      Bonus.hpPct => 'Sinh lực',
-      Bonus.mpPct => 'Nội lực',
-      Bonus.atkPct => 'Công lực',
-      Bonus.defPct => 'Phòng thủ',
-      Bonus.crit => 'Chí mạng',
-      Bonus.critDmg => 'ST chí mạng',
-      Bonus.dodge => 'Né tránh',
-      Bonus.aspd => 'Tốc đánh',
-      Bonus.move => 'Tốc chạy',
-      Bonus.regen => 'Hồi sinh lực',
-      Bonus.skillDmg => 'Uy lực kỹ năng',
-      Bonus.cdr => 'Giảm hồi chiêu',
-      Bonus.dotPct => 'Uy lực độc/thiêu',
+      Bonus.hpPct => tr('Sinh lực'),
+      Bonus.mpPct => tr('Nội lực'),
+      Bonus.atkPct => tr('Công lực'),
+      Bonus.defPct => tr('Phòng thủ'),
+      Bonus.crit => tr('Chí mạng'),
+      Bonus.critDmg => tr('ST chí mạng'),
+      Bonus.dodge => tr('Né tránh'),
+      Bonus.aspd => tr('Tốc đánh'),
+      Bonus.move => tr('Tốc chạy'),
+      Bonus.regen => tr('Hồi sinh lực'),
+      Bonus.skillDmg => tr('Uy lực kỹ năng'),
+      Bonus.cdr => tr('Giảm hồi chiêu'),
+      Bonus.dotPct => tr('Uy lực độc/thiêu'),
     };
 
 /// "Phòng thủ +10%" lines for one bonus map.

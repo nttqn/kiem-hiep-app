@@ -14,6 +14,7 @@ import '../ui/theme.dart';
 import 'analytics.dart';
 import 'cloud.dart';
 import 'save.dart';
+import '../core/i18n.dart';
 
 /// Cập nhật trong game (Android): asks Google Play whether a newer build
 /// is out and offers it, downloading in the background. The oldest version
@@ -70,15 +71,15 @@ class UpdateService {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Có bản cập nhật mới', style: titleStyle(20)),
+        title: Text(tr('Có bản cập nhật mới'), style: titleStyle(20)),
         content: Text(
-          'Bản mới có thêm tính năng và sửa lỗi (bảng xếp hạng, lưu trữ đám mây). '
-          'Tải ngầm, vẫn chơi được trong lúc tải; xong sẽ khởi động lại game, nhân vật được giữ nguyên.',
+          tr('Bản mới có thêm tính năng và sửa lỗi (bảng xếp hạng, lưu trữ đám mây). '
+          'Tải ngầm, vẫn chơi được trong lúc tải; xong sẽ khởi động lại game, nhân vật được giữ nguyên.'),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để mai')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cập nhật')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Để mai'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Cập nhật'))),
         ],
       ),
     );
@@ -119,14 +120,14 @@ class UpdateService {
         canPop: false,
         child: AlertDialog(
           backgroundColor: lacquer,
-          title: Text('Cần cập nhật', style: titleStyle(20)),
+          title: Text(tr('Cần cập nhật'), style: titleStyle(20)),
           content: Text(
-            'Phiên bản $appVersion đã cũ. Hãy cập nhật bản mới trên Google Play để tiếp tục chơi. '
-            'Nhân vật và đồ đạc được giữ nguyên.',
+            tr('Phiên bản {appVersion} đã cũ. Hãy cập nhật bản mới trên Google Play để tiếp tục chơi. '
+            'Nhân vật và đồ đạc được giữ nguyên.', {'appVersion': appVersion}),
             style: body,
           ),
           actions: [
-            TextButton(onPressed: () => _updateNow(info), child: const Text('Cập nhật')),
+            TextButton(onPressed: () => _updateNow(info), child: Text(tr('Cập nhật'))),
           ],
         ),
       ),

@@ -4,6 +4,7 @@ import 'hero.dart';
 import 'items.dart';
 import 'weekly_hunt.dart' show huntWeekOf;
 import 'world_boss.dart' show vnDayKey;
+import 'i18n.dart';
 
 /// Tinh Hoa (1.18.0): monster gear past level 60 lost every use once a hero
 /// wore Hoàng Kim; players only sold it ("dở quá"). Now a Quý or better
@@ -38,7 +39,7 @@ bool canSalvage(Item it) => !it.locked && essenceOf(it) > 0;
 enum RefineAim { attack, defence }
 
 extension RefineAimInfo on RefineAim {
-  String get label => this == RefineAim.attack ? 'Công' : 'Thủ';
+  String get label => this == RefineAim.attack ? tr('Công') : tr('Thủ');
 
   Set<Stat> get stats => this == RefineAim.attack
       ? const {Stat.str, Stat.dex, Stat.ene, Stat.atk, Stat.crit, Stat.critDmg, Stat.aspd}

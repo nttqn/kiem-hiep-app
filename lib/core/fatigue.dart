@@ -1,3 +1,4 @@
+import 'i18n.dart';
 /// Mệt mỏi: past a few hours of fighting in one Vietnam day, monster EXP
 /// tapers off, so leaving auto-fight on all day does not race far ahead of
 /// players who play a normal session. Quest, dungeon and offline EXP are
@@ -15,5 +16,5 @@ double fatigueMul(double sec) => sec < fatigueStart ? 1 : (sec < fatigueHeavy ? 
 /// "3 giờ 05 phút".
 String fatigueLabel(double sec) {
   final m = sec ~/ 60;
-  return '${m ~/ 60} giờ ${(m % 60).toString().padLeft(2, '0')} phút';
+  return tr('{p0} giờ {p1} phút', {'p0': m ~/ 60, 'p1': (m % 60).toString().padLeft(2, '0')});
 }

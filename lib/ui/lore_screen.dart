@@ -6,6 +6,7 @@ import '../core/realm.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Giang Hồ Ký Sự: the nine chapters, their pages found so far, and what a
 /// whole chapter grants.
@@ -24,11 +25,11 @@ class _LoreScreenState extends State<LoreScreen> {
   Widget build(BuildContext context) {
     final total = loreChapters.fold<int>(0, (n, c) => n + h.lorePagesOf(c.realm));
     return SubScreen(
-      title: 'Giang Hồ Ký Sự',
+      title: tr('Giang Hồ Ký Sự'),
       actions: [
         Padding(
           padding: const EdgeInsets.only(left: 8),
-          child: Text('$total/$lorePageCount trang', style: bold.copyWith(color: goldLight)),
+          child: Text(tr('{total}/{lorePageCount} trang', {'total': total, 'lorePageCount': lorePageCount}), style: bold.copyWith(color: goldLight)),
         ),
       ],
       child: Row(
@@ -45,8 +46,8 @@ class _LoreScreenState extends State<LoreScreen> {
                   Padding(
                     padding: const EdgeInsets.all(6),
                     child: Text(
-                      'Trọn ${loreChapters.length} chương: danh hiệu « $loreTitle », '
-                      '${loreAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}',
+                      tr('Trọn {loreChaptersLength} chương: danh hiệu « {loreTitle} », '
+                      '{p0}', {'loreChaptersLength': loreChapters.length, 'loreTitle': loreTitle, 'p0': loreAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}),
                       style: small.copyWith(fontSize: 11, color: h.loreAllDone ? const Color(0xFF8CE07A) : creamDim),
                     ),
                   ),
@@ -84,8 +85,8 @@ class _LoreScreenState extends State<LoreScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(c.title, style: bold.copyWith(fontSize: 13), overflow: TextOverflow.ellipsis),
-                  Text(realmById[c.realm]!.name, style: small.copyWith(fontSize: 10.5), overflow: TextOverflow.ellipsis),
+                  Text(tr(c.title), style: bold.copyWith(fontSize: 13), overflow: TextOverflow.ellipsis),
+                  Text(tr(realmById[c.realm]!.name), style: small.copyWith(fontSize: 10.5), overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -103,9 +104,9 @@ class _LoreScreenState extends State<LoreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(c.title, style: titleStyle(22)),
+          Text(tr(c.title), style: titleStyle(22)),
           Text(
-            '${realmById[c.realm]!.name} · trọn chương: ${loreBonusLabel(c.bonus, c.value)}${done ? ' (đã nhận)' : ''}',
+            tr('{p0} · trọn chương: {p1}{p2}', {'p0': tr(realmById[c.realm]!.name), 'p1': loreBonusLabel(c.bonus, c.value), 'p2': done ? tr(' (đã nhận)') : ''}),
             style: small.copyWith(color: done ? const Color(0xFF8CE07A) : goldLight),
           ),
           const Divider(color: gold),
@@ -119,14 +120,14 @@ class _LoreScreenState extends State<LoreScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: h.lorePages.contains(loreKey(c.realm, i))
                           ? Text('${i + 1}. ${c.pages[i]}', style: body.copyWith(height: 1.4, fontStyle: FontStyle.italic))
-                          : Text('${i + 1}. Trang chưa tìm thấy.', style: body.copyWith(color: creamDim)),
+                          : Text(tr('{p0}. Trang chưa tìm thấy.', {'p0': i + 1}), style: body.copyWith(color: creamDim)),
                     ),
                 ],
               ),
             ),
           ),
           Text(
-            'Tìm trang ở Bí cảnh (đầu lĩnh, mật thất, bia cổ, người được cứu) và Tàng Bảo Đồ.',
+            tr('Tìm trang ở Bí cảnh (đầu lĩnh, mật thất, bia cổ, người được cứu) và Tàng Bảo Đồ.'),
             style: small.copyWith(fontSize: 11),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

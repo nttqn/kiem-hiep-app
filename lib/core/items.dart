@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'gems.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 enum Slot { weapon, hat, armor, belt, boots, amulet, ring }
 
@@ -122,10 +123,10 @@ class Item {
   double get baseMul =>
       (1 + 0.1 * plus) * (1 + starBasePct * star) * (1 + glowPct(glow)) * (1 + tienBasePct * tien);
   int get color => golden ? goldItemColor : rarity.color;
-  String get rarityLabel => golden ? 'Hoàng Kim' : rarity.label;
+  String get rarityLabel => golden ? tr('Hoàng Kim') : tr(rarity.label);
 
   String get title =>
-      '${plus > 0 ? '$name +$plus' : name}${star > 0 ? ' ${'★' * star}' : ''}${tien > 0 ? ' · Tiên $tien' : ''}';
+      '${plus > 0 ? '${tr(name)} +$plus' : tr(name)}${star > 0 ? ' ${'★' * star}' : ''}${tien > 0 ? tr(' · Tiên {tien}', {'tien': tien}) : ''}';
 
   /// Every stat this item gives right now, base scaled by enhancement and
   /// stars.

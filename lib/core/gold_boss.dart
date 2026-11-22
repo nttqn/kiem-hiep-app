@@ -7,6 +7,7 @@ import 'hero.dart';
 import 'ngo_dao.dart';
 import 'tam_ma.dart';
 import 'world_boss.dart';
+import 'i18n.dart';
 
 /// Boss Hoàng Kim (1.12.0): a great boss that comes down twice a day, at
 /// fixed hours, for everyone at once. Like Boss Thế Giới it cannot die and
@@ -101,7 +102,7 @@ DungeonDef goldBossDef([DateTime? now]) {
   final boss = goldBossOf(now);
   return DungeonDef(
     id: 'goldboss',
-    name: 'Boss Hoàng Kim · ${boss.name}',
+    name: tr('Boss Hoàng Kim · {bossName}', {'bossName': tr(boss.name)}),
     mapId: huyetHaiMap.id,
     level: 99,
     waves: const [],
@@ -185,12 +186,12 @@ extension GoldBoss on HeroData {
     gold += g;
     lastDungeonGold = g;
     lastDungeonExp = 0;
-    final lines = ['Sát thương: ${fmtThousands(damage)}', '+${fmtThousands(g)} lượng'];
+    final lines = [tr('Sát thương: {p0}', {'p0': fmtThousands(damage)}), tr('+{p0} lượng', {'p0': fmtThousands(g)})];
     final bit = 1 << gbSession.clamp(0, 1);
     if (damage > 0 && gbPaid & bit == 0) {
       gbPaid |= bit;
       goldShards += goldBossJoinShards;
-      lines.add('+$goldBossJoinShards Mảnh Hoàng Kim (tham gia)');
+      lines.add(tr('+{goldBossJoinShards} Mảnh Hoàng Kim (tham gia)', {'goldBossJoinShards': goldBossJoinShards}));
     }
     return lines;
   }
@@ -203,14 +204,14 @@ extension GoldBoss on HeroData {
     if (r == null) return const [];
     goldShards += r.shards;
     divineIron += r.iron;
-    final lines = ['Hạng $place Boss Hoàng Kim hôm qua:', '+${r.shards} Mảnh Hoàng Kim', '+${r.iron} Thần Thiết'];
+    final lines = [tr('Hạng {place} Boss Hoàng Kim hôm qua:', {'place': place}), tr('+{shards} Mảnh Hoàng Kim', {'shards': r.shards}), tr('+{iron} Thần Thiết', {'iron': r.iron})];
     // Tiên Ngọc (1.13.0) for the top ten, to those already in Ngộ Đạo.
     final jade = place == 1 ? 3 : place <= 3 ? 2 : place <= 10 ? 1 : 0;
     if (jade > 0 && daoOpen) {
       tienJade += jade;
-      lines.add('+$jade Tiên Ngọc');
+      lines.add(tr('+{jade} Tiên Ngọc', {'jade': jade}));
     }
-    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add(tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}));
     return lines;
   }
 }

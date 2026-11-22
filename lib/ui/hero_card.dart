@@ -20,6 +20,7 @@ import '../services/leaderboard.dart';
 import 'backdrop.dart' show FigurePreview;
 import 'play_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Rows reported this session, so the menu says so instead of asking again.
 final Set<String> _reported = {};
@@ -38,14 +39,14 @@ Future<void> showLbHeroMenu(BuildContext context, LbEntry e, {bool mine = false}
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('${sectOf(hn).name} · Cấp ${e.level}${e.rebirths > 0 ? ' · Chuyển sinh ${e.rebirths}' : ''}',
+          Text(tr('{p0} · Cấp {level}{p1}', {'p0': tr(sectOf(hn).name), 'level': e.level, 'p1': e.rebirths > 0 ? tr(' · Chuyển sinh {rebirths}', {'rebirths': e.rebirths}) : ''}),
               style: small.copyWith(color: hanhColor(hn))),
           const SizedBox(height: 12),
-          LButton(label: 'Xem thông tin', icon: Icons.person_search, onTap: () => Navigator.pop(ctx, 'view')),
+          LButton(label: tr('Xem thông tin'), icon: Icons.person_search, onTap: () => Navigator.pop(ctx, 'view')),
           if (!mine) ...[
             const SizedBox(height: 8),
             LButton(
-              label: _reported.contains(e.id) ? 'Đã báo cáo' : 'Báo cáo gian lận',
+              label: _reported.contains(e.id) ? tr('Đã báo cáo') : tr('Báo cáo gian lận'),
               icon: Icons.flag,
               color: seal,
               enabled: !_reported.contains(e.id),
@@ -54,7 +55,7 @@ Future<void> showLbHeroMenu(BuildContext context, LbEntry e, {bool mine = false}
           ],
         ],
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
     ),
   );
   if (!context.mounted) return;
@@ -73,13 +74,13 @@ Future<void> _report(BuildContext context, LbEntry e) async {
       backgroundColor: lacquer,
       title: Text(e.name, style: titleStyle(18, color: cream)),
       content: Text(
-        'Báo cáo nhân vật này gian lận (chỉ số vô lý, sửa dữ liệu…)? '
-        'Nhà phát triển sẽ xem xét và gỡ khỏi bảng nếu đúng.',
+        tr('Báo cáo nhân vật này gian lận (chỉ số vô lý, sửa dữ liệu…)? '
+        'Nhà phát triển sẽ xem xét và gỡ khỏi bảng nếu đúng.'),
         style: body,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Báo cáo gian lận')),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Báo cáo gian lận'))),
       ],
     ),
   );
@@ -88,7 +89,7 @@ Future<void> _report(BuildContext context, LbEntry e) async {
   if (sent) _reported.add(e.id);
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text(sent ? 'Đã gửi báo cáo, cảm ơn bạn.' : 'Không gửi được (có thể bạn đã báo cáo rồi).'),
+    content: Text(sent ? tr('Đã gửi báo cáo, cảm ơn bạn.') : tr('Không gửi được (có thể bạn đã báo cáo rồi).')),
     duration: const Duration(seconds: 2),
   ));
 }
@@ -181,7 +182,7 @@ class _HeroCardState extends State<_HeroCard> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(sectOf(hn).name, style: bold.copyWith(color: hanhColor(hn), fontSize: 13)),
+                    child: Text(tr(sectOf(hn).name), style: bold.copyWith(color: hanhColor(hn), fontSize: 13)),
                   ),
                 ],
               ),
@@ -218,22 +219,22 @@ class _HeroCardState extends State<_HeroCard> {
         Expanded(
           child: ListView(
             children: [
-              _stat('Lực chiến', fmt(e.power), big: true),
-              _stat('Cấp', '${e.level}'),
-              _stat('Chuyển sinh', '${e.rebirths}'),
-              if (e.dao > 0) _stat('Ngộ Đạo', daoName(e.dao)),
-              _stat('Tháp Thử Luyện', 'Tầng ${e.tower}'),
-              if (e.dhC > 0) _stat('Minh Chủ', '${e.dhC} lần'),
+              _stat(tr('Lực chiến'), fmt(e.power), big: true),
+              _stat(tr('Cấp'), '${e.level}'),
+              _stat(tr('Chuyển sinh'), '${e.rebirths}'),
+              if (e.dao > 0) _stat(tr('Ngộ Đạo'), daoName(e.dao)),
+              _stat(tr('Tháp Thử Luyện'), tr('Tầng {tower}', {'tower': e.tower})),
+              if (e.dhC > 0) _stat(tr('Minh Chủ'), tr('{dhC} lần', {'dhC': e.dhC})),
               if (st != null && st.length >= 8) ...[
                 const Divider(color: Colors.white24, height: 10),
-                _stat('Sinh lực', fmt(st[0])),
-                _stat('Nội lực', fmt(st[1])),
-                _stat('Công', fmt(st[2])),
-                _stat('Thủ', fmt(st[3])),
-                _stat('Bạo kích', pct(st[4])),
-                _stat('Sát thương bạo', pct(st[5])),
-                _stat('Né tránh', pct(st[6])),
-                _stat('Tốc đánh', (st[7] / 1000).toStringAsFixed(2)),
+                _stat(tr('Sinh lực'), fmt(st[0])),
+                _stat(tr('Nội lực'), fmt(st[1])),
+                _stat(tr('Công'), fmt(st[2])),
+                _stat(tr('Thủ'), fmt(st[3])),
+                _stat(tr('Bạo kích'), pct(st[4])),
+                _stat(tr('Sát thương bạo'), pct(st[5])),
+                _stat(tr('Né tránh'), pct(st[6])),
+                _stat(tr('Tốc đánh'), (st[7] / 1000).toStringAsFixed(2)),
               ],
               if (_loading)
                 const Padding(
@@ -246,7 +247,7 @@ class _HeroCardState extends State<_HeroCard> {
               else if (e.look == null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text('Người chơi này chưa cập nhật bản mới nên chưa có trang bị và chỉ số chi tiết.',
+                  child: Text(tr('Người chơi này chưa cập nhật bản mới nên chưa có trang bị và chỉ số chi tiết.'),
                       style: small.copyWith(fontSize: 11.5)),
                 ),
             ],
@@ -268,7 +269,7 @@ class _HeroCardState extends State<_HeroCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Trang bị', style: bold.copyWith(color: goldLight)),
+        Text(tr('Trang bị'), style: bold.copyWith(color: goldLight)),
         const SizedBox(height: 4),
         Wrap(
           spacing: 6,
@@ -287,12 +288,12 @@ class _HeroCardState extends State<_HeroCard> {
         Expanded(
           child: ListView(
             children: [
-              if (divine > 0) _line('Thần binh', '${divineStage(divine)} · cấp $divine'),
+              if (divine > 0) _line(tr('Thần binh'), tr('{p0} · cấp {divine}', {'p0': divineStage(divine), 'divine': divine})),
               for (final s in sets.entries)
-                if (goldSetById[s.key] != null) _line('Bộ Hoàng Kim', '${goldSetById[s.key]!.name} (${s.value})'),
-              if (mount != null) _line('Thú cưỡi', '${mount.name} · cấp ${_e.mountLv}'),
-              if (pet != null) _line('Linh thú', '${pet.name} · cấp $petLv'),
-              if (look != null && items.isEmpty) Text('Không mặc trang bị.', style: small),
+                if (goldSetById[s.key] != null) _line(tr('Bộ Hoàng Kim'), '${goldSetById[s.key]!.name} (${s.value})'),
+              if (mount != null) _line(tr('Thú cưỡi'), tr('{mountName} · cấp {mountLv}', {'mountName': tr(mount.name), 'mountLv': _e.mountLv})),
+              if (pet != null) _line(tr('Linh thú'), tr('{petName} · cấp {petLv}', {'petName': tr(pet.name), 'petLv': petLv})),
+              if (look != null && items.isEmpty) Text(tr('Không mặc trang bị.'), style: small),
             ],
           ),
         ),
@@ -313,7 +314,7 @@ class _HeroCardState extends State<_HeroCard> {
         children: [
           Expanded(
             child: LButton(
-              label: !me.sparOpen ? 'Tỉ thí: cấp $arenaOpenLevel' : 'Tỉ thí $left/$sparPerDay',
+              label: !me.sparOpen ? tr('Tỉ thí: cấp {arenaOpenLevel}', {'arenaOpenLevel': arenaOpenLevel}) : tr('Tỉ thí {left}/{sparPerDay}', {'left': left, 'sparPerDay': sparPerDay}),
               small: true,
               color: seal,
               enabled: me.sparOpen && left > 0 && !_loading,
@@ -324,7 +325,7 @@ class _HeroCardState extends State<_HeroCard> {
           // Hảo hữu (1.13.0).
           Expanded(
             child: LButton(
-              label: friend ? 'Bỏ bạn' : 'Kết bạn',
+              label: friend ? tr('Bỏ bạn') : tr('Kết bạn'),
               small: true,
               color: jade,
               enabled: friend || me.friends.length < maxFriends,
@@ -358,19 +359,19 @@ class _HeroCardState extends State<_HeroCard> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text(it.title, style: titleStyle(17, color: Color(it.color))),
+        title: Text(tr(it.title), style: titleStyle(17, color: Color(it.color))),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${it.slot.label} · ${it.rarityLabel} · cấp ${it.level}', style: body),
+            Text(tr('{slotLabel} · {rarityLabel} · cấp {level}', {'slotLabel': tr(it.slot.label), 'rarityLabel': it.rarityLabel, 'level': it.level}), style: body),
             if (it.golden && goldSetById[it.set] != null)
-              Text('Bộ ${goldSetById[it.set]!.name}${it.glow > 0 ? ' · Khai Quang ${it.glow}' : ''}',
+              Text(tr('Bộ {p0}{p1}', {'p0': tr(goldSetById[it.set]!.name), 'p1': it.glow > 0 ? ' · Khai Quang ${it.glow}' : ''}),
                   style: small.copyWith(color: const Color(goldItemColor))),
-            if (gems > 0) Text('Đã khảm $gems ngọc', style: small),
+            if (gems > 0) Text(tr('Đã khảm {gems} ngọc', {'gems': gems}), style: small),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
   }

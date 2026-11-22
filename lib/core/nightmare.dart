@@ -4,6 +4,7 @@ import 'activity.dart';
 import 'content.dart';
 import 'gems.dart' show maxRewardGemTier;
 import 'hero.dart' show mobHpAt;
+import 'i18n.dart';
 
 /// Ải Ác Mộng: the eighteen dungeons again for heroes past level 60, as a
 /// ladder from monster level 60 to 99 with tougher packs, a boss that calls
@@ -70,7 +71,7 @@ DungeonDef nightmareDef(int i, NmAffix affix) {
   final d = dungeons[i];
   return DungeonDef(
     id: 'nm${i + 1}',
-    name: '${d.name} · Ác Mộng',
+    name: tr('{dName} · Ác Mộng', {'dName': tr(d.name)}),
     mapId: d.mapId,
     level: nightmareLevel(i),
     waves: [for (final n in d.waves) n + 2],

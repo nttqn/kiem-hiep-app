@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'gems.dart' show maxRewardGemTier;
+import 'i18n.dart';
 
 /// Hòm thư: gifts the developer posts for every player in the Firebase
 /// console (`mail/{id}`), claimed once per hero.
@@ -46,22 +47,22 @@ class MailDef {
 
   /// What it gives, as short labels.
   List<String> get rewards => [
-        if (gold > 0) '${gold.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.')} lượng',
-        if (shards > 0) '$shards Mảnh Hoàng Kim',
-        if (iron > 0) '$iron Thần Thiết',
-        if (gems > 0) '$gems ngọc bậc $gemTier',
-        if (pages > 0) '$pages trang bí kíp',
-        if (hpPots > 0) '$hpPots bình máu',
-        if (mpPots > 0) '$mpPots bình nội lực',
-        if (jade > 0) '$jade Tiên Ngọc',
-        if (card > 0) '$card ngày Nguyệt thẻ',
+        if (gold > 0) tr('{p0} lượng', {'p0': gold.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.')}),
+        if (shards > 0) tr('{shards} Mảnh Hoàng Kim', {'shards': shards}),
+        if (iron > 0) tr('{iron} Thần Thiết', {'iron': iron}),
+        if (gems > 0) tr('{gems} ngọc bậc {gemTier}', {'gems': gems, 'gemTier': gemTier}),
+        if (pages > 0) tr('{pages} trang bí kíp', {'pages': pages}),
+        if (hpPots > 0) tr('{hpPots} bình máu', {'hpPots': hpPots}),
+        if (mpPots > 0) tr('{mpPots} bình nội lực', {'mpPots': mpPots}),
+        if (jade > 0) tr('{jade} Tiên Ngọc', {'jade': jade}),
+        if (card > 0) tr('{card} ngày Nguyệt thẻ', {'card': card}),
       ];
 
   /// Reads a console document; null when it is not a mail. Amounts are
   /// capped so a typo cannot hand out a fortune.
   static MailDef? fromMap(String id, Map<String, dynamic> m) {
     final t = m['title'];
-    final title = t is String && t.trim().isNotEmpty ? t : 'Thư từ nhà phát triển';
+    final title = t is String && t.trim().isNotEmpty ? t : tr('Thư từ nhà phát triển');
     int n(String k, int max) {
       final v = m[k];
       return v is num ? v.toInt().clamp(0, max) : 0;

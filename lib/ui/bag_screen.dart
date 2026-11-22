@@ -14,6 +14,7 @@ import 'character_screen.dart' show ItemDialog, TabChip;
 import 'gem_tab.dart' show GemIcon;
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Túi đồ (1.15.0): gear on one tab, everything else collected on the
 /// other, each with what it is for and where to get it. Opened from the
@@ -34,9 +35,9 @@ class _BagScreenState extends State<BagScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Túi đồ',
+      title: tr('Túi đồ'),
       actions: [
-        for (final (i, label) in [(0, 'Trang bị ${h.bag.length}/$bagSize'), (1, 'Vật phẩm')])
+        for (final (i, label) in [(0, tr('Trang bị {bagLength}/{bagSize}', {'bagLength': h.bag.length, 'bagSize': bagSize})), (1, tr('Vật phẩm'))])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: TabChip(label: label, on: _tab == i, onTap: () => setState(() => _tab = i)),
@@ -73,18 +74,18 @@ class _GearBagViewState extends State<GearBagView> {
   int get _sellUpTo => math.max(0, h.autoSellUpTo);
 
   static String _sellLabel(int r) => switch (r) {
-        0 => 'đồ Thường',
-        1 => 'đến Tinh xảo (xanh)',
-        _ => 'đến Quý (vàng)',
+        0 => tr('đồ Thường'),
+        1 => tr('đến Tinh xảo (xanh)'),
+        _ => tr('đến Quý (vàng)'),
       };
 
   bool _bulkSells(Item it) => it.rarity.index <= _sellUpTo && !it.golden && !it.locked;
 
   static String _salvageLabel(int r) => switch (r) {
-        < 0 => 'Không',
-        2 => 'Quý',
-        3 => 'đến Hiếm',
-        _ => 'đến Truyền thuyết',
+        < 0 => tr('Không'),
+        2 => tr('Quý'),
+        3 => tr('đến Hiếm'),
+        _ => tr('đến Truyền thuyết'),
       };
 
   /// Pieces the Phân giải button may take: never locked, Hoàng Kim or an
@@ -104,12 +105,12 @@ class _GearBagViewState extends State<GearBagView> {
           return AlertDialog(
             scrollable: true,
             backgroundColor: lacquer,
-            title: Text('Phân giải', style: titleStyle(20)),
+            title: Text(tr('Phân giải'), style: titleStyle(20)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Đồ từ cấp $essenceMinLevel, không tính đồ đã khóa, Hoàng Kim hay đồ tốt hơn món đang mặc.',
+                Text(tr('Đồ từ cấp {essenceMinLevel}, không tính đồ đã khóa, Hoàng Kim hay đồ tốt hơn món đang mặc.', {'essenceMinLevel': essenceMinLevel}),
                     style: small.copyWith(fontSize: 11.5)),
                 const SizedBox(height: 6),
                 Wrap(
@@ -117,7 +118,7 @@ class _GearBagViewState extends State<GearBagView> {
                   children: [
                     for (final r in [Rarity.rare, Rarity.epic, Rarity.legend])
                       TabChip(
-                        label: '${r.label} (${h.bag.where((it) => _bulkSalvages(it) && it.rarity == r).length})',
+                        label: '${tr(r.label)} (${h.bag.where((it) => _bulkSalvages(it) && it.rarity == r).length})',
                         on: pick.contains(r),
                         onTap: () => set(() {
                           if (!pick.remove(r)) pick.add(r);
@@ -126,12 +127,12 @@ class _GearBagViewState extends State<GearBagView> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('${list.length} món → +$total Tinh Hoa', style: bold.copyWith(color: const Color(0xFFB8F0FF))),
+                Text(tr('{listLength} món → +{total} Tinh Hoa', {'listLength': list.length, 'total': total}), style: bold.copyWith(color: const Color(0xFFB8F0FF))),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-              TextButton(onPressed: list.isEmpty ? null : () => Navigator.pop(ctx, true), child: const Text('Phân giải')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+              TextButton(onPressed: list.isEmpty ? null : () => Navigator.pop(ctx, true), child: Text(tr('Phân giải'))),
             ],
           );
         },
@@ -186,10 +187,10 @@ class _GearBagViewState extends State<GearBagView> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: lacquer,
-          content: Text('Bán ${list.length} món ${_sellLabel(_sellUpTo)}? Đồ Hoàng Kim được giữ lại.', style: body),
+          content: Text(tr('Bán {listLength} món {p0}? Đồ Hoàng Kim được giữ lại.', {'listLength': list.length, 'p0': _sellLabel(_sellUpTo)}), style: body),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Bán')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Bán'))),
           ],
         ),
       );
@@ -210,7 +211,7 @@ class _GearBagViewState extends State<GearBagView> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setMsg) => AlertDialog(
           backgroundColor: lacquer,
-          title: Text('Mua lại', style: titleStyle(20)),
+          title: Text(tr('Mua lại'), style: titleStyle(20)),
           content: SizedBox(
             width: 420,
             child: Column(
@@ -218,11 +219,11 @@ class _GearBagViewState extends State<GearBagView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                    'Đồ Quý trở lên vừa tự bán hoặc tự phân giải (tối đa $goneKeep món, '
-                    'mất khi tắt game). Chuộc lại đúng giá đã nhận.',
+                    tr('Đồ Quý trở lên vừa tự bán hoặc tự phân giải (tối đa {goneKeep} món, '
+                    'mất khi tắt game). Chuộc lại đúng giá đã nhận.', {'goneKeep': goneKeep}),
                     style: small),
                 const SizedBox(height: 6),
-                if (h.gone.isEmpty) Text('Không còn món nào.', style: body),
+                if (h.gone.isEmpty) Text(tr('Không còn món nào.'), style: body),
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
@@ -233,14 +234,14 @@ class _GearBagViewState extends State<GearBagView> {
                           child: Row(
                             children: [
                               Expanded(
-                                child: Text('${g.item.name} · cấp ${g.item.level} [${g.item.rarityLabel}]',
+                                child: Text(tr('{itemName} · cấp {level} [{rarityLabel}]', {'itemName': tr(g.item.name), 'level': g.item.level, 'rarityLabel': g.item.rarityLabel}),
                                     style: body.copyWith(color: rarityColor(g.item.rarity)),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis),
                               ),
                               const SizedBox(width: 6),
                               LButton(
-                                label: g.gold > 0 ? '${fmt(g.gold)} lượng' : '${g.essence} Tinh Hoa',
+                                label: g.gold > 0 ? tr('{p0} lượng', {'p0': fmt(g.gold)}) : tr('{essence} Tinh Hoa', {'essence': g.essence}),
                                 small: true,
                                 onTap: () {
                                   final err = h.buyBack(g);
@@ -261,7 +262,7 @@ class _GearBagViewState extends State<GearBagView> {
               ],
             ),
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Xong'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Xong')))],
         ),
       ),
     );
@@ -289,7 +290,7 @@ class _GearBagViewState extends State<GearBagView> {
             padding: const EdgeInsets.all(8),
             child: Column(
               children: [
-                Text(widget.forge ? 'Chọn món để cường hóa' : 'Đang trang bị', style: small),
+                Text(widget.forge ? tr('Chọn món để cường hóa') : tr('Đang trang bị'), style: small),
                 const SizedBox(height: 4),
                 Expanded(
                   child: Row(
@@ -320,13 +321,13 @@ class _GearBagViewState extends State<GearBagView> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Hành trang ${h.bag.length}/$bagSize${full ? ' · Đầy' : ''}',
+                      child: Text(tr('Hành trang {bagLength}/{bagSize}{p0}', {'bagLength': h.bag.length, 'bagSize': bagSize, 'p0': full ? tr(' · Đầy') : ''}),
                           style: bold.copyWith(color: full ? const Color(0xFFFF8A7A) : null),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
                     LButton(
-                      label: 'Mặc tốt nhất',
+                      label: tr('Mặc tốt nhất'),
                       small: true,
                       color: jade,
                       onTap: () {
@@ -336,7 +337,7 @@ class _GearBagViewState extends State<GearBagView> {
                     ),
                     const SizedBox(width: 6),
                     LButton(
-                      label: 'Bán ${_sellLabel(_sellUpTo)}',
+                      label: tr('Bán {p0}', {'p0': _sellLabel(_sellUpTo)}),
                       small: true,
                       enabled: h.bag.any(_bulkSells),
                       onTap: _bulkSell,
@@ -348,17 +349,17 @@ class _GearBagViewState extends State<GearBagView> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      Text('Tự bán: ', style: small),
+                      Text(tr('Tự bán: '), style: small),
                       _drop<int>(
                         h.autoSellUpTo,
-                        [for (var r = -1; r <= Rarity.rare.index; r++) (r, r < 0 ? 'Không' : _sellLabel(r))],
+                        [for (var r = -1; r <= Rarity.rare.index; r++) (r, r < 0 ? tr('Không') : _sellLabel(r))],
                         (v) {
                           h.autoSellUpTo = v;
                           _changed();
                         },
                       ),
                       const SizedBox(width: 12),
-                      Text('Tự phân giải: ', style: small),
+                      Text(tr('Tự phân giải: '), style: small),
                       _drop<int>(
                         h.autoSalvageUpTo,
                         [for (var r = -1; r <= Rarity.legend.index; r++) if (r < 0 || r >= Rarity.rare.index) (r, _salvageLabel(r))],
@@ -368,10 +369,10 @@ class _GearBagViewState extends State<GearBagView> {
                         },
                       ),
                       const SizedBox(width: 12),
-                      Text('Túi đầy: ', style: small),
+                      Text(tr('Túi đầy: '), style: small),
                       _drop<bool>(
                         h.fullBagSell,
-                        const [(false, 'Phân giải'), (true, 'Bán lấy vàng')],
+                        [(false, tr('Phân giải')), (true, tr('Bán lấy vàng'))],
                         (v) {
                           h.fullBagSell = v;
                           _changed();
@@ -379,7 +380,7 @@ class _GearBagViewState extends State<GearBagView> {
                       ),
                       const SizedBox(width: 8),
                       LButton(
-                        label: 'Mua lại${h.gone.isEmpty ? '' : ' (${h.gone.length})'}',
+                        label: tr('Mua lại{p0}', {'p0': h.gone.isEmpty ? '' : ' (${h.gone.length})'}),
                         small: true,
                         color: const Color(0xFF7A5A2A),
                         enabled: h.gone.isNotEmpty,
@@ -387,7 +388,7 @@ class _GearBagViewState extends State<GearBagView> {
                       ),
                       const SizedBox(width: 8),
                       LButton(
-                        label: 'Phân giải',
+                        label: tr('Phân giải'),
                         small: true,
                         color: const Color(0xFF3A6A8A),
                         enabled: h.bag.any(_bulkSalvages),
@@ -396,14 +397,14 @@ class _GearBagViewState extends State<GearBagView> {
                       const SizedBox(width: 12),
                       _drop<Slot?>(
                         _slot,
-                        [(null, 'Mọi vị trí'), for (final s in Slot.values) (s, s.label)],
+                        [(null, tr('Mọi vị trí')), for (final s in Slot.values) (s, s.label)],
                         (v) => setState(() => _slot = v),
                       ),
                       const SizedBox(width: 12),
-                      Text('Xếp: ', style: small),
+                      Text(tr('Xếp: '), style: small),
                       _drop<int>(
                         _sort,
-                        [for (var i = 0; i < _sorts.length; i++) (i, _sorts[i])],
+                        [for (var i = 0; i < _sorts.length; i++) (i, tr(_sorts[i]))],
                         (v) => setState(() => _sort = v),
                       ),
                     ],
@@ -414,8 +415,8 @@ class _GearBagViewState extends State<GearBagView> {
                       ? Center(
                           child: Text(
                               h.bag.isEmpty
-                                  ? 'Hành trang trống. Ra ngoài luyện công để nhặt đồ!'
-                                  : 'Không có món nào ở vị trí này.',
+                                  ? tr('Hành trang trống. Ra ngoài luyện công để nhặt đồ!')
+                                  : tr('Không có món nào ở vị trí này.'),
                               style: small))
                       : GridView.builder(
                           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -513,7 +514,7 @@ class _ItemsViewState extends State<ItemsView> {
                         Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: TabChip(
-                            label: k?.label ?? 'Tất cả',
+                            label: k?.label ?? tr('Tất cả'),
                             on: _kind == k,
                             onTap: () => setState(() {
                               _kind = k;
@@ -527,7 +528,7 @@ class _ItemsViewState extends State<ItemsView> {
                 const SizedBox(height: 6),
                 Expanded(
                   child: list.isEmpty
-                      ? Center(child: Text('Chưa có vật phẩm nào loại này.', style: small))
+                      ? Center(child: Text(tr('Chưa có vật phẩm nào loại này.'), style: small))
                       : GridView.builder(
                           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                             maxCrossAxisExtent: 64,
@@ -538,7 +539,7 @@ class _ItemsViewState extends State<ItemsView> {
                           itemBuilder: (_, i) => _tile(list[i], list[i].id == sel?.id),
                         ),
                 ),
-                Text('Vật phẩm không chiếm ô hành trang.', style: small.copyWith(fontSize: 11)),
+                Text(tr('Vật phẩm không chiếm ô hành trang.'), style: small.copyWith(fontSize: 11)),
               ],
             ),
           ),
@@ -584,7 +585,7 @@ class _ItemsViewState extends State<ItemsView> {
       n >= 1000000 ? '${(n / 1000000).toStringAsFixed(n >= 10000000 ? 0 : 1)}tr' : n >= 10000 ? '${n ~/ 1000}k' : '$n';
 
   Widget _detail(BagEntry? e) {
-    if (e == null) return Center(child: Text('Chọn một vật phẩm để xem.', style: small));
+    if (e == null) return Center(child: Text(tr('Chọn một vật phẩm để xem.'), style: small));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -596,8 +597,8 @@ class _ItemsViewState extends State<ItemsView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(e.name, style: bold.copyWith(color: Color(e.color), fontSize: 15)),
-                  Text('${e.kind.label} · Đang có: ${fmt(e.count)}', style: small),
+                  Text(tr(e.name), style: bold.copyWith(color: Color(e.color), fontSize: 15)),
+                  Text(tr('{kindLabel} · Đang có: {p0}', {'kindLabel': tr(e.kind.label), 'p0': fmt(e.count)}), style: small),
                 ],
               ),
             ),
@@ -609,10 +610,10 @@ class _ItemsViewState extends State<ItemsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Công dụng', style: bold.copyWith(color: goldLight, fontSize: 13)),
+                Text(tr('Công dụng'), style: bold.copyWith(color: goldLight, fontSize: 13)),
                 Text(e.use, style: body.copyWith(fontSize: 12.5)),
                 const SizedBox(height: 6),
-                Text('Cách kiếm', style: bold.copyWith(color: goldLight, fontSize: 13)),
+                Text(tr('Cách kiếm'), style: bold.copyWith(color: goldLight, fontSize: 13)),
                 Text(e.source, style: body.copyWith(fontSize: 12.5)),
                 if (e.note.isNotEmpty) ...[
                   const SizedBox(height: 6),
@@ -643,12 +644,12 @@ class _ItemsViewState extends State<ItemsView> {
             children: [
               Expanded(
                 child: LButton(
-                  label: 'Dùng 1',
+                  label: tr('Dùng 1'),
                   small: true,
                   color: jade,
                   enabled: h.canUsePill(p),
                   onTap: () {
-                    if (h.usePill(p)) _changed('Đã dùng ${p.name}.');
+                    if (h.usePill(p)) _changed(tr('Đã dùng {pName}.', {'pName': tr(p.name)}));
                   },
                 ),
               ),
@@ -656,12 +657,12 @@ class _ItemsViewState extends State<ItemsView> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: LButton(
-                    label: 'Dùng đến đầy',
+                    label: tr('Dùng đến đầy'),
                     small: true,
                     enabled: h.canUsePill(p),
                     onTap: () {
                       final n = h.fillPill(p);
-                      if (n > 0) _changed('Đã dùng $n viên ${p.name}.');
+                      if (n > 0) _changed(tr('Đã dùng {n} viên {pName}.', {'n': n, 'pName': tr(p.name)}));
                     },
                   ),
                 ),
@@ -670,7 +671,7 @@ class _ItemsViewState extends State<ItemsView> {
           ),
           if (!h.canUsePill(p))
             Text(
-              p.kind == PillKind.potential ? 'Đã dùng tối đa.' : 'Thời gian hiệu lực đã đầy.',
+              p.kind == PillKind.potential ? tr('Đã dùng tối đa.') : tr('Thời gian hiệu lực đã đầy.'),
               style: small.copyWith(fontSize: 11),
             ),
         ];
@@ -683,16 +684,16 @@ class _ItemsViewState extends State<ItemsView> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text('1 ${w.name}\ncòn ${h.essLeft(w)}/${w.perWeek} tuần này',
+                    child: Text(tr('1 {wName}\ncòn {p0}/{perWeek} tuần này', {'wName': tr(w.name), 'p0': h.essLeft(w), 'perWeek': w.perWeek}),
                         style: small.copyWith(fontSize: 11.5, color: cream), maxLines: 2),
                   ),
                   LButton(
-                    label: 'Đổi ${w.price}',
+                    label: tr('Đổi {price}', {'price': w.price}),
                     small: true,
                     color: const Color(0xFF3A6A8A),
                     enabled: h.essLeft(w) > 0 && h.essence >= w.price,
                     onTap: () {
-                      if (h.buyEssenceWare(w)) _changed('Đã đổi ${w.price} Tinh Hoa lấy 1 ${w.name}.');
+                      if (h.buyEssenceWare(w)) _changed(tr('Đã đổi {price} Tinh Hoa lấy 1 {wName}.', {'price': w.price, 'wName': tr(w.name)}));
                     },
                   ),
                 ],
@@ -703,7 +704,7 @@ class _ItemsViewState extends State<ItemsView> {
         return [
           const SizedBox(height: 6),
           LButton(
-            label: 'Đổi $soulPillsPerIron viên → 1 Thần Thiết',
+            label: tr('Đổi {soulPillsPerIron} viên → 1 Thần Thiết', {'soulPillsPerIron': soulPillsPerIron}),
             small: true,
             color: const Color(0xFF5A6A8A),
             enabled: h.soulPills >= soulPillsPerIron,
@@ -722,17 +723,17 @@ class _ItemsViewState extends State<ItemsView> {
         builder: (ctx) => AlertDialog(
           backgroundColor: lacquer,
           content: Text(
-              'Chuyển sinh ${h.rebirths + 1} cần ${h.nextRebirthPills} Linh Phách Đơn. Đổi ra Thần Thiết sẽ phải tích lại. Vẫn đổi?',
+              tr('Chuyển sinh {p0} cần {nextRebirthPills} Linh Phách Đơn. Đổi ra Thần Thiết sẽ phải tích lại. Vẫn đổi?', {'p0': h.rebirths + 1, 'nextRebirthPills': h.nextRebirthPills}),
               style: body),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đổi')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Đổi'))),
           ],
         ),
       );
       if (ok != true || !mounted) return;
     }
-    if (h.soulToIron()) _changed('Đã đổi $soulPillsPerIron Linh Phách Đơn lấy 1 Thần Thiết.');
+    if (h.soulToIron()) _changed(tr('Đã đổi {soulPillsPerIron} Linh Phách Đơn lấy 1 Thần Thiết.', {'soulPillsPerIron': soulPillsPerIron}));
   }
 }
 

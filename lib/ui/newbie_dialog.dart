@@ -9,6 +9,7 @@ import '../core/world_boss.dart';
 import '../services/analytics.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Tân thủ thất nhật: the seven gifts, today's to take.
 Future<void> showNewbieDialog(BuildContext context) {
@@ -42,14 +43,14 @@ class _NewbieDialogState extends State<_NewbieDialog> {
     return AlertDialog(
       backgroundColor: lacquer,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-      title: Text('Quà tân thủ 7 ngày', style: titleStyle(20)),
+      title: Text(tr('Quà tân thủ 7 ngày'), style: titleStyle(20)),
       content: SizedBox(
         width: 640,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Mỗi ngày vào game nhận một phần quà, không cần liên tục. Ngày 7: Thú cưỡi Bạch Mã!',
+            Text(tr('Mỗi ngày vào game nhận một phần quà, không cần liên tục. Ngày 7: Thú cưỡi Bạch Mã!'),
                 style: small.copyWith(fontSize: 11.5)),
             const SizedBox(height: 8),
             Row(
@@ -62,15 +63,15 @@ class _NewbieDialogState extends State<_NewbieDialog> {
             ),
             if (_got != null) ...[
               const SizedBox(height: 8),
-              Text('Đã nhận: ${_got!.join(', ')}', style: body.copyWith(fontSize: 12.5, color: const Color(0xFF8CE07A))),
+              Text(tr('Đã nhận: {p0}', {'p0': _got!.join(', ')}), style: body.copyWith(fontSize: 12.5, color: const Color(0xFF8CE07A))),
             ],
           ],
         ),
       ),
       actions: [
         if (ready)
-          LButton(label: 'Nhận quà ngày ${h.newbieClaimed + 1}', icon: Icons.redeem, small: true, color: jade, onTap: _claim),
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+          LButton(label: tr('Nhận quà ngày {p0}', {'p0': h.newbieClaimed + 1}), icon: Icons.redeem, small: true, color: jade, onTap: _claim),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng'))),
       ],
     );
   }
@@ -95,7 +96,7 @@ class _NewbieDialogState extends State<_NewbieDialog> {
       ),
       child: Column(
         children: [
-          Text('Ngày ${i + 1}', style: bold.copyWith(fontSize: 12, color: c)),
+          Text(tr('Ngày {p0}', {'p0': i + 1}), style: bold.copyWith(fontSize: 12, color: c)),
           const SizedBox(height: 3),
           Icon(
             done

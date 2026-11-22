@@ -5,6 +5,7 @@ library;
 import 'dart:convert';
 
 import '../core/hero.dart';
+import '../core/i18n.dart';
 
 /// The few facts about one copy of a slot that sync decisions need.
 class SlotInfo {
@@ -45,7 +46,7 @@ class SlotInfo {
   final List<String> oldNames;
 
   /// "Cấp 50", with the rebirth count when there is one.
-  String get levelText => rebirths > 0 ? 'Cấp $level · Chuyển sinh $rebirths' : 'Cấp $level';
+  String get levelText => rebirths > 0 ? tr('Cấp {level} · Chuyển sinh {rebirths}', {'level': level, 'rebirths': rebirths}) : tr('Cấp {level}', {'level': level});
 }
 
 /// How far a copy got: rebirths, then level, then play time (with half a

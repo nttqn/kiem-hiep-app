@@ -6,6 +6,7 @@ import 'hero.dart';
 import 'items.dart';
 import 'weekly_hunt.dart';
 import 'world_boss.dart' show vnDayKey;
+import 'i18n.dart';
 
 // 1.9.0: more to spend Mảnh Hoàng Kim on once a set is forged.
 // Khai Quang raises a piece's base stats, Tinh Luyện takes one of its extra
@@ -165,6 +166,6 @@ extension GoldExtras on HeroData {
       case GoldWareKind.pill:
         pills[w.pill] = (pills[w.pill] ?? 0) + w.count;
     }
-    return '+${w.name}';
+    return '+${tr(w.name)}';
   }
 }

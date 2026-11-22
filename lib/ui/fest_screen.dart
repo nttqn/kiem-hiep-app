@@ -11,6 +11,7 @@ import '../services/sound.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Lễ hội (1.11.0): the festival's land, today's tasks, the pack and the
 /// exchange shop.
@@ -66,13 +67,13 @@ class _FestScreenState extends State<FestScreen> {
     final f = festShopOn(day);
     if (f == null) {
       return SubScreen(
-        title: 'Lễ hội',
-        child: Center(child: Text('Hiện chưa có lễ hội nào. Hẹn gặp lại!', style: body)),
+        title: tr('Lễ hội'),
+        child: Center(child: Text(tr('Hiện chưa có lễ hội nào. Hẹn gặp lại!'), style: body)),
       );
     }
     final landOpen = festOn(day) != null;
     return SubScreen(
-      title: f.name,
+      title: tr(f.name),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -90,12 +91,12 @@ class _FestScreenState extends State<FestScreen> {
       padding: const EdgeInsets.all(10),
       child: ListView(
         children: [
-          Text(f.desc, style: small.copyWith(fontSize: 11)),
+          Text(tr(f.desc), style: small.copyWith(fontSize: 11)),
           const SizedBox(height: 4),
           Text(
             landOpen
-                ? '${dayLabel(f.from)} – ${dayLabel(f.until)} · đổi quà đến ${dayLabel(dayAfter(f.until, f.shopDays))}'
-                : 'Lễ hội đã kết thúc, còn đổi quà đến hết ${dayLabel(dayAfter(f.until, f.shopDays))}',
+                ? tr('{p0} – {p1} · đổi quà đến {p2}', {'p0': dayLabel(f.from), 'p1': dayLabel(f.until), 'p2': dayLabel(dayAfter(f.until, f.shopDays))})
+                : tr('Lễ hội đã kết thúc, còn đổi quà đến hết {p0}', {'p0': dayLabel(dayAfter(f.until, f.shopDays))}),
             style: bold.copyWith(fontSize: 11.5, color: goldLight),
           ),
           const SizedBox(height: 6),
@@ -109,10 +110,10 @@ class _FestScreenState extends State<FestScreen> {
               ),
             ],
           ),
-          Text('Hôm nay nhặt ${h.festEarned}/$festDayCap từ quái', style: small.copyWith(fontSize: 10.5, color: creamDim)),
+          Text(tr('Hôm nay nhặt {festEarned}/{festDayCap} từ quái', {'festEarned': h.festEarned, 'festDayCap': festDayCap}), style: small.copyWith(fontSize: 10.5, color: creamDim)),
           const SizedBox(height: 6),
           LButton(
-            label: !h.festOpenFor ? 'Mở ở cấp $festOpenLevel' : (landOpen ? 'Vào ${f.landName}' : 'Đã đóng cửa'),
+            label: !h.festOpenFor ? tr('Mở ở cấp {festOpenLevel}', {'festOpenLevel': festOpenLevel}) : (landOpen ? tr('Vào {landName}', {'landName': f.landName}) : tr('Đã đóng cửa')),
             icon: Icons.landscape,
             small: true,
             color: const Color(0xFF2A6A9A),
@@ -123,7 +124,7 @@ class _FestScreenState extends State<FestScreen> {
             },
           ),
           const SizedBox(height: 8),
-          Text('Nhiệm vụ hôm nay', style: titleStyle(16)),
+          Text(tr('Nhiệm vụ hôm nay'), style: titleStyle(16)),
           for (var i = 0; i < tasks.length; i++) _task(i, tasks[i], f, landOpen),
           const SizedBox(height: 8),
           _pack(f),
@@ -153,9 +154,9 @@ class _FestScreenState extends State<FestScreen> {
           SizedBox(
             width: 84,
             child: taken
-                ? Text('Đã nhận', style: small.copyWith(fontSize: 11, color: jade), textAlign: TextAlign.center)
+                ? Text(tr('Đã nhận'), style: small.copyWith(fontSize: 11, color: jade), textAlign: TextAlign.center)
                 : LButton(
-                    label: ready ? 'Nhận' : '${t.$2}/${t.$3}',
+                    label: ready ? tr('Nhận') : '${t.$2}/${t.$3}',
                     small: true,
                     color: jade,
                     enabled: ready,
@@ -183,14 +184,14 @@ class _FestScreenState extends State<FestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Gói lễ hội', style: titleStyle(15, color: goldLight)),
-          Text('Một lần mỗi lễ hội cho ${h.name}: $festPackCoins ${f.coin} + $festPackStones Tinh Thạch.',
+          Text(tr('Gói lễ hội'), style: titleStyle(15, color: goldLight)),
+          Text(tr('Một lần mỗi lễ hội cho {hName}: {festPackCoins} {coin} + {festPackStones} Tinh Thạch.', {'hName': h.name, 'festPackCoins': festPackCoins, 'coin': f.coin, 'festPackStones': festPackStones}),
               style: small.copyWith(fontSize: 11)),
           const SizedBox(height: 4),
           ValueListenableBuilder<bool>(
             valueListenable: _iap.busy,
             builder: (_, busy, _) => LButton(
-              label: h.festPack && h.festId == f.id ? 'Đã mua' : (price == null ? 'Chưa mở bán' : 'Mua $price'),
+              label: h.festPack && h.festId == f.id ? tr('Đã mua') : (price == null ? tr('Chưa mở bán') : tr('Mua {price}', {'price': price})),
               icon: Icons.shopping_bag,
               small: true,
               color: const Color(0xFF8A2A1A),
@@ -209,7 +210,7 @@ class _FestScreenState extends State<FestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Đổi quà', style: titleStyle(18)),
+          Text(tr('Đổi quà'), style: titleStyle(18)),
           const SizedBox(height: 4),
           Expanded(
             child: GridView.builder(
@@ -250,7 +251,7 @@ class _FestScreenState extends State<FestScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(owned ? 'Đã có' : 'Còn $left/${it.limit}',
+                child: Text(owned ? tr('Đã có') : tr('Còn {left}/{limit}', {'left': left, 'limit': it.limit}),
                     style: small.copyWith(fontSize: 10.5, color: creamDim)),
               ),
               LButton(
@@ -264,7 +265,7 @@ class _FestScreenState extends State<FestScreen> {
                   if (got != null) {
                     SoundService.instance.cue('loot');
                     SaveService.instance.save();
-                    _say('Đổi được: $got');
+                    _say(tr('Đổi được: {got}', {'got': got}));
                   }
                   setState(() {});
                 },

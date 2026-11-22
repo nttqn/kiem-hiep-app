@@ -6,6 +6,7 @@ import '../core/items.dart';
 import '../services/analytics.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 const _ess = Color(0xFFB8F0FF);
 const _line = Color(0xFF8AC8FF);
@@ -63,13 +64,13 @@ class _EngraveTabState extends State<EngraveTab> {
     if (r == null || d == null || s == null) return;
     final v = engraveValue(t, d, s);
     if (!h.engrave(t, r, d, s)) {
-      setState(() => _msg = h.essence < engraveCost ? 'Không đủ Tinh Hoa (cần $engraveCost).' : 'Không thể khắc dòng này.');
+      setState(() => _msg = h.essence < engraveCost ? tr('Không đủ Tinh Hoa (cần {engraveCost}).', {'engraveCost': engraveCost}) : tr('Không thể khắc dòng này.'));
       return;
     }
     Analytics.instance.log('engrave', {'stat': s.name, 'from': r.name, 'rarity': d.rarity.index});
     SaveService.instance.save();
     setState(() {
-      _msg = 'Đã khắc ${s.label} ${s.format(v)} lên ${t.name}.';
+      _msg = tr('Đã khắc {sLabel} {p0} lên {tName}.', {'sLabel': tr(s.label), 'p0': s.format(v), 'tName': tr(t.name)});
       _replace = null;
       _donor = null;
       _take = null;
@@ -90,7 +91,7 @@ class _EngraveTabState extends State<EngraveTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Đồ Hoàng Kim đang mặc', style: small),
+                Text(tr('Đồ Hoàng Kim đang mặc'), style: small),
                 const SizedBox(height: 4),
                 Expanded(
                   child: ListView(children: [for (final s in _slots) _row(s, h.equip[s]!, identical(h.equip[s], t))]),
@@ -99,7 +100,7 @@ class _EngraveTabState extends State<EngraveTab> {
                   children: [
                     const Icon(Icons.blur_on, color: _ess, size: 18),
                     const SizedBox(width: 4),
-                    Text('${h.essence} Tinh Hoa', style: bold.copyWith(color: _ess)),
+                    Text(tr('{essence} Tinh Hoa', {'essence': h.essence}), style: bold.copyWith(color: _ess)),
                   ],
                 ),
               ],
@@ -112,7 +113,7 @@ class _EngraveTabState extends State<EngraveTab> {
             padding: const EdgeInsets.all(10),
             child: t == null
                 ? Center(
-                    child: Text('Mặc đồ Hoàng Kim để khắc ấn.\nĐồ Hoàng Kim rèn ở thẻ Hoàng Kim từ cấp 60.',
+                    child: Text(tr('Mặc đồ Hoàng Kim để khắc ấn.\nĐồ Hoàng Kim rèn ở thẻ Hoàng Kim từ cấp 60.'),
                         style: body, textAlign: TextAlign.center))
                 : _detail(t),
           ),
@@ -136,7 +137,7 @@ class _EngraveTabState extends State<EngraveTab> {
               ItemTile(item: it, slot: s, size: 34),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(it.title,
+                child: Text(tr(it.title),
                     style: small.copyWith(fontSize: 12, color: Color(it.color)),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis),
@@ -171,17 +172,17 @@ class _EngraveTabState extends State<EngraveTab> {
         Expanded(
           child: ListView(
             children: [
-              Text('Khắc ấn', style: titleStyle(19)),
+              Text(tr('Khắc ấn'), style: titleStyle(19)),
               Text(
-                  'Lấy 1 dòng của đồ rơi (Quý trở lên, cấp từ ${t.level - engraveLevelGap}) khắc đè lên 1 dòng của '
-                  '${t.name}. Dòng giữ độ tốt như trên đồ rơi; món đồ rơi sẽ mất.',
+                  tr('Lấy 1 dòng của đồ rơi (Quý trở lên, cấp từ {p0}) khắc đè lên 1 dòng của '
+                  '{tName}. Dòng giữ độ tốt như trên đồ rơi; món đồ rơi sẽ mất.', {'p0': t.level - engraveLevelGap, 'tName': tr(t.name)}),
                   style: small.copyWith(fontSize: 11.5)),
               const SizedBox(height: 6),
-              Text('1. Dòng muốn thay', style: bold.copyWith(color: goldLight, fontSize: 13)),
+              Text(tr('1. Dòng muốn thay'), style: bold.copyWith(color: goldLight, fontSize: 13)),
               const SizedBox(height: 3),
               Wrap(children: [
                 for (final e in t.bonus.entries)
-                  _chip('${e.key.label} ${e.key.format(e.value)}',
+                  _chip('${tr(e.key.label)} ${e.key.format(e.value)}',
                       on: r == e.key,
                       onTap: () => setState(() {
                             _replace = e.key;
@@ -190,14 +191,14 @@ class _EngraveTabState extends State<EngraveTab> {
                           })),
               ]),
               const SizedBox(height: 6),
-              Text('2. Chọn dòng từ đồ rơi (${donors.length} món phù hợp)',
+              Text(tr('2. Chọn dòng từ đồ rơi ({donorsLength} món phù hợp)', {'donorsLength': donors.length}),
                   style: bold.copyWith(color: goldLight, fontSize: 13)),
               if (donors.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                      'Chưa có món nào. Giữ lại đồ Quý, Hiếm, Truyền thuyết từ cấp ${t.level - engraveLevelGap} '
-                      '(đừng để Tự phân giải ăn mất món có dòng đẹp).',
+                      tr('Chưa có món nào. Giữ lại đồ Quý, Hiếm, Truyền thuyết từ cấp {p0} '
+                      '(đừng để Tự phân giải ăn mất món có dòng đẹp).', {'p0': t.level - engraveLevelGap}),
                       style: small.copyWith(fontSize: 11.5)),
                 ),
               for (final it in donors)
@@ -218,14 +219,14 @@ class _EngraveTabState extends State<EngraveTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${it.name} · cấp ${it.level}',
+                            Text(tr('{itName} · cấp {level}', {'itName': tr(it.name), 'level': it.level}),
                                 style: small.copyWith(fontSize: 11.5, color: Color(it.color)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),
                             const SizedBox(height: 2),
                             Wrap(children: [
                               for (final k in it.bonus.keys)
-                                _chip('${k.label} ${k.format(engraveValue(t, it, k))}',
+                                _chip('${tr(k.label)} ${k.format(engraveValue(t, it, k))}',
                                     on: identical(it, d) && s == k,
                                     enabled: _takeable(t, k),
                                     onTap: () => setState(() {
@@ -250,8 +251,8 @@ class _EngraveTabState extends State<EngraveTab> {
             Expanded(
               child: Text(
                 r != null && s != null && d != null
-                    ? '${r.label} ${r.format(t.bonus[r]!)} → ${s.label} ${s.format(engraveValue(t, d, s))}'
-                    : 'Chọn dòng muốn thay và dòng từ đồ rơi.',
+                    ? '${tr(r.label)} ${r.format(t.bonus[r]!)} → ${tr(s.label)} ${s.format(engraveValue(t, d, s))}'
+                    : tr('Chọn dòng muốn thay và dòng từ đồ rơi.'),
                 style: bold.copyWith(fontSize: 12.5, color: ready ? goldLight : creamDim),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -259,7 +260,7 @@ class _EngraveTabState extends State<EngraveTab> {
             ),
             const SizedBox(width: 6),
             LButton(
-              label: 'Khắc · $engraveCost Tinh Hoa',
+              label: tr('Khắc · {engraveCost} Tinh Hoa', {'engraveCost': engraveCost}),
               icon: Icons.blur_on,
               small: true,
               enabled: ready,

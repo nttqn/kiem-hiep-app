@@ -9,6 +9,7 @@ import 'premium.dart';
 import 'tam_ma.dart' show fmtThousands;
 import 'weekly_hunt.dart';
 import 'world_boss.dart';
+import 'i18n.dart';
 
 /// Thượng Cổ Hung Thú (1.8.0): one great beast a week, in three
 /// difficulties. Unlike Boss Thế Giới it must be slain inside
@@ -69,7 +70,7 @@ DungeonDef beastDungeon(int difficulty, int week) {
   final b = beastOfWeek(week);
   return DungeonDef(
     id: 'hungthu',
-    name: '${b.name} · ${beastLevels[difficulty - 1]}',
+    name: '${tr(b.name)} · ${beastLevels[difficulty - 1]}',
     mapId: b.mapId,
     level: 99,
     waves: const [],
@@ -135,7 +136,7 @@ extension HungThu on HeroData {
       final g = beastGold[i] ~/ 10;
       gold += g;
       lastDungeonGold = g;
-      return ['Đã hạ ${beastLevels[i]} tuần này', '+${fmtThousands(g)} lượng'];
+      return [tr('Đã hạ {p0} tuần này', {'p0': beastLevels[i]}), tr('+{p0} lượng', {'p0': fmtThousands(g)})];
     }
     htKilled |= 1 << difficulty;
     passCheckQuests(vnDayKey());
@@ -144,9 +145,9 @@ extension HungThu on HeroData {
     gold += beastGold[i];
     lastDungeonGold = beastGold[i];
     final lines = [
-      '+${beastStones[i]} Tinh Thạch',
-      '+${beastSoulsFor(i)} Hung Thú Tinh Phách',
-      '+${fmtThousands(beastGold[i])} lượng',
+      tr('+{p0} Tinh Thạch', {'p0': beastStones[i]}),
+      tr('+{p0} Hung Thú Tinh Phách', {'p0': beastSoulsFor(i)}),
+      tr('+{p0} lượng', {'p0': fmtThousands(beastGold[i])}),
     ];
     for (var k = 0; k <= i; k++) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxRewardGemTier, beastGemTier[i]));

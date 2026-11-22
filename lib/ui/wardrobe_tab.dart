@@ -7,6 +7,7 @@ import '../services/analytics.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Ngoại trang tab: try any outfit on, wear the ones owned, buy the gold
 /// ones, and hide the hat.
@@ -29,19 +30,19 @@ class _WardrobeTabState extends State<WardrobeTab> {
     h.wearCostume(id);
     Analytics.instance.log('costume_wear', {'id': id.isEmpty ? 'none' : id});
     SaveService.instance.save();
-    setState(() => _msg = id.isEmpty ? 'Đã mặc theo trang bị.' : 'Đã mặc ${costumeById[id]!.name}.');
+    setState(() => _msg = id.isEmpty ? tr('Đã mặc theo trang bị.') : tr('Đã mặc {p0}.', {'p0': tr(costumeById[id]!.name)}));
     widget.onChanged();
   }
 
   void _buy(CostumeDef c) {
     if (!h.buyCostume(c.id)) {
-      setState(() => _msg = 'Không đủ lượng (cần ${fmt(c.need)}).');
+      setState(() => _msg = tr('Không đủ lượng (cần {p0}).', {'p0': fmt(c.need)}));
       return;
     }
     Analytics.instance.log('costume_buy', {'id': c.id});
     h.wearCostume(c.id);
     SaveService.instance.save();
-    setState(() => _msg = 'Đã mua và mặc ${c.name}!');
+    setState(() => _msg = tr('Đã mua và mặc {cName}!', {'cName': tr(c.name)}));
     widget.onChanged();
   }
 
@@ -58,8 +59,8 @@ class _WardrobeTabState extends State<WardrobeTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(c?.name ?? 'Theo trang bị', style: titleStyle(18), textAlign: TextAlign.center),
-                Text(c?.desc ?? 'Trang phục đổi theo nón, áo, đai, hài và vũ khí đang mặc.',
+                Text(tr(c?.name ?? 'Theo trang bị'), style: titleStyle(18), textAlign: TextAlign.center),
+                Text(c?.desc ?? tr('Trang phục đổi theo nón, áo, đai, hài và vũ khí đang mặc.'),
                     style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
                 Expanded(
                   child: FittedBox(
@@ -74,7 +75,7 @@ class _WardrobeTabState extends State<WardrobeTab> {
                 ),
                 Row(
                   children: [
-                    Expanded(child: Text('Ẩn mũ', style: small.copyWith(color: cream))),
+                    Expanded(child: Text(tr('Ẩn mũ'), style: small.copyWith(color: cream))),
                     Switch(
                       value: h.hideHat,
                       activeThumbColor: goldLight,
@@ -100,11 +101,11 @@ class _WardrobeTabState extends State<WardrobeTab> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Ngoại trang', style: titleStyle(18))),
-                    Text('Sưu tập ${h.ownedCostumes.length}/${costumes.length}', style: bold.copyWith(color: goldLight)),
+                    Expanded(child: Text(tr('Ngoại trang'), style: titleStyle(18))),
+                    Text(tr('Sưu tập {ownedCostumesLength}/{costumesLength}', {'ownedCostumesLength': h.ownedCostumes.length, 'costumesLength': costumes.length}), style: bold.copyWith(color: goldLight)),
                   ],
                 ),
-                Text('Chỉ đổi diện mạo, không đổi chỉ số. Chạm để mặc thử.', style: small.copyWith(fontSize: 11)),
+                Text(tr('Chỉ đổi diện mạo, không đổi chỉ số. Chạm để mặc thử.'), style: small.copyWith(fontSize: 11)),
                 if (_msg != null) Text(_msg!, style: small.copyWith(color: cream)),
                 const SizedBox(height: 6),
                 Expanded(
@@ -130,21 +131,21 @@ class _WardrobeTabState extends State<WardrobeTab> {
   Widget _action(CostumeDef? c) {
     final id = c?.id ?? '';
     if (h.costume == id) {
-      return Text('Đang mặc', style: bold.copyWith(color: goldLight), textAlign: TextAlign.center);
+      return Text(tr('Đang mặc'), style: bold.copyWith(color: goldLight), textAlign: TextAlign.center);
     }
     if (c == null || h.ownedCostumes.contains(id)) {
-      return LButton(label: 'Mặc', icon: Icons.checkroom, onTap: () => _wear(id));
+      return LButton(label: tr('Mặc'), icon: Icons.checkroom, onTap: () => _wear(id));
     }
     if (c.source == CostumeSource.gold) {
       return LButton(
-        label: 'Mua ${fmt(c.need)} lượng',
+        label: tr('Mua {p0} lượng', {'p0': fmt(c.need)}),
         icon: Icons.shopping_bag,
         color: jade,
         enabled: h.gold >= c.need,
         onTap: () => _buy(c),
       );
     }
-    return Text('Mở khóa: ${c.howTo}', style: small.copyWith(color: cream), textAlign: TextAlign.center);
+    return Text(tr('Mở khóa: {howTo}', {'howTo': c.howTo}), style: small.copyWith(color: cream), textAlign: TextAlign.center);
   }
 
   Widget _tile(CostumeDef? c) {
@@ -187,12 +188,12 @@ class _WardrobeTabState extends State<WardrobeTab> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(c?.name ?? 'Theo trang bị',
+                  Text(tr(c?.name ?? 'Theo trang bị'),
                       style: bold.copyWith(fontSize: 12.5, color: owned ? cream : creamDim),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                   Text(
-                    h.costume == id ? 'Đang mặc' : (owned ? 'Đã có' : c.howTo),
+                    h.costume == id ? tr('Đang mặc') : (owned ? tr('Đã có') : c.howTo),
                     style: small.copyWith(fontSize: 10, color: h.costume == id ? goldLight : creamDim),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

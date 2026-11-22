@@ -1,4 +1,5 @@
 import 'items.dart';
+import 'i18n.dart';
 
 /// Tân thủ thất nhật: seven gifts for a new hero, one for each Vietnam day
 /// they open the game (days need not be in a row), the last an outfit and
@@ -98,13 +99,13 @@ int newbieAggroFriends(int level, int rebirths) => rebirths > 0 ? 2 : (level < 6
 
 /// Short labels of [g], for the gift board.
 List<String> newbieLabels(NewbieGift g, {String Function(String id)? costumeName, String Function(String id)? mountName}) => [
-      if (g.gold > 0) '${_dots(g.gold)} lượng',
-      if (g.item != null) 'Trang bị ${g.item!.label}',
-      if (g.gems > 0) '${g.gems} ngọc bậc ${g.gemTier}',
-      if (g.hpPots > 0) '${g.hpPots} Kim Sang Dược',
-      if (g.mpPots > 0) '${g.mpPots} Ngưng Thần Đan',
-      if (g.costume.isNotEmpty) 'Ngoại trang ${costumeName?.call(g.costume) ?? g.costume}',
-      if (g.mount.isNotEmpty) 'Thú cưỡi ${mountName?.call(g.mount) ?? g.mount}',
+      if (g.gold > 0) tr('{p0} lượng', {'p0': _dots(g.gold)}),
+      if (g.item != null) tr('Trang bị {itemLabel}', {'itemLabel': tr(g.item!.label)}),
+      if (g.gems > 0) tr('{gems} ngọc bậc {gemTier}', {'gems': g.gems, 'gemTier': g.gemTier}),
+      if (g.hpPots > 0) tr('{hpPots} Kim Sang Dược', {'hpPots': g.hpPots}),
+      if (g.mpPots > 0) tr('{mpPots} Ngưng Thần Đan', {'mpPots': g.mpPots}),
+      if (g.costume.isNotEmpty) tr('Ngoại trang {p0}', {'p0': costumeName?.call(g.costume) ?? g.costume}),
+      if (g.mount.isNotEmpty) tr('Thú cưỡi {p0}', {'p0': mountName?.call(g.mount) ?? g.mount}),
     ];
 
 String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');

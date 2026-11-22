@@ -7,6 +7,7 @@ import '../core/tien_khi.dart';
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 const _jadeTint = Color(0xFF9FF0E0);
 
@@ -25,14 +26,14 @@ class _TienScreenState extends State<TienScreen> {
   void _forge(Item it) {
     if (!h.tienForge(it)) return;
     SaveService.instance.save();
-    setState(() => _msg = '${it.name} lên Tiên phẩm ${it.tien}: chỉ số gốc +${(tienBasePct * 100 * it.tien).round()}%.');
+    setState(() => _msg = tr('{itName} lên Tiên phẩm {tien}: chỉ số gốc +{p0}%.', {'itName': tr(it.name), 'tien': it.tien, 'p0': (tienBasePct * 100 * it.tien).round()}));
   }
 
   @override
   Widget build(BuildContext context) {
     final worn = [for (final s in Slot.values) ?h.equip[s]];
     return SubScreen(
-      title: 'Tiên khí',
+      title: tr('Tiên khí'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -46,7 +47,7 @@ class _TienScreenState extends State<TienScreen> {
                 children: [
                   Expanded(
                     child: worn.isEmpty
-                        ? Center(child: Text('Chưa mặc trang bị.', style: body))
+                        ? Center(child: Text(tr('Chưa mặc trang bị.'), style: body))
                         : ListView(children: [for (final it in worn) _row(it)]),
                   ),
                   if (_msg != null)
@@ -72,31 +73,31 @@ class _TienScreenState extends State<TienScreen> {
             children: [
               const MatIcon(Mat.jade, size: 26),
               const SizedBox(width: 6),
-              Expanded(child: Text('${h.tienJade} Tiên Ngọc', style: titleStyle(18, color: _jadeTint))),
+              Expanded(child: Text(tr('{tienJade} Tiên Ngọc', {'tienJade': h.tienJade}), style: titleStyle(18, color: _jadeTint))),
             ],
           ),
-          Text(h.daoLv > 0 ? daoName(h.daoLv) : 'Chưa nhập Ngộ Đạo',
+          Text(h.daoLv > 0 ? daoName(h.daoLv) : tr('Chưa nhập Ngộ Đạo'),
               style: small.copyWith(color: Color(daoColor(h.daoLv)))),
           const SizedBox(height: 6),
           Expanded(
             child: ListView(
               children: [
                 Text(
-                    'Mỗi Tiên phẩm: chỉ số gốc +${(tienBasePct * 100).round()}% (tối đa phẩm $maxTien, '
-                    '+${(tienBasePct * 100 * maxTien).round()}%). Món phải cường hóa +$maxPlus.',
+                    tr('Mỗi Tiên phẩm: chỉ số gốc +{p0}% (tối đa phẩm {maxTien}, '
+                    '+{p1}%). Món phải cường hóa +{maxPlus}.', {'p0': (tienBasePct * 100).round(), 'maxTien': maxTien, 'p1': (tienBasePct * 100 * maxTien).round(), 'maxPlus': maxPlus}),
                     style: body.copyWith(fontSize: 12.5)),
                 const SizedBox(height: 6),
-                Text('Phẩm n cần cảnh giới thứ n:', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+                Text(tr('Phẩm n cần cảnh giới thứ n:'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
                 for (var i = 0; i < maxTien; i++)
-                  Text('Phẩm ${i + 1}: ${daoStages[i].name} · ${tienJadeCost[i]} Tiên Ngọc · ${fmt(tienGoldCost(i + 1))} lượng',
+                  Text(tr('Phẩm {p0}: {p1} · {p2} Tiên Ngọc · {p3} lượng', {'p0': i + 1, 'p1': tr(daoStages[i].name), 'p2': tienJadeCost[i], 'p3': fmt(tienGoldCost(i + 1))}),
                       style: small.copyWith(fontSize: 11, color: i <= stage ? cream : creamDim)),
                 const SizedBox(height: 6),
-                Text('Nguồn Tiên Ngọc', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+                Text(tr('Nguồn Tiên Ngọc'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
                 Text(
-                    '• +$daoLayerJade mỗi tầng Ngộ Đạo mới\n'
+                    tr('• +{daoLayerJade} mỗi tầng Ngộ Đạo mới\n'
                     '• Độ kiếp thành công: +5 × cảnh giới\n'
                     '• Top 10 Boss Hoàng Kim mỗi ngày\n'
-                    '• Cửa hàng Bang hội',
+                    '• Cửa hàng Bang hội', {'daoLayerJade': daoLayerJade}),
                     style: small.copyWith(fontSize: 11.5)),
               ],
             ),
@@ -126,13 +127,13 @@ class _TienScreenState extends State<TienScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(it.title,
+                Text(tr(it.title),
                     style: bold.copyWith(fontSize: 13, color: Color(it.color)), maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text(
                   maxed
-                      ? 'Tiên phẩm $maxTien · chỉ số gốc +${(tienBasePct * 100 * it.tien).round()}%'
-                      : 'Phẩm ${it.tien} → $n: ${tienJadeCost[n - 1]} Tiên Ngọc, ${fmt(tienGoldCost(n))} lượng'
-                          '${block != null ? ' · $block' : ''}',
+                      ? tr('Tiên phẩm {maxTien} · chỉ số gốc +{p0}%', {'maxTien': maxTien, 'p0': (tienBasePct * 100 * it.tien).round()})
+                      : tr('Phẩm {tien} → {n}: {p0} Tiên Ngọc, {p1} lượng'
+                          '{p2}', {'tien': it.tien, 'n': n, 'p0': tienJadeCost[n - 1], 'p1': fmt(tienGoldCost(n)), 'p2': block != null ? ' · $block' : ''}),
                   style: small.copyWith(fontSize: 11, color: block == null || maxed ? cream : creamDim),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -142,7 +143,7 @@ class _TienScreenState extends State<TienScreen> {
           ),
           const SizedBox(width: 6),
           LButton(
-            label: maxed ? 'Tối đa' : 'Luyện',
+            label: maxed ? tr('Tối đa') : tr('Luyện'),
             small: true,
             color: const Color(0xFF2E8A7A),
             enabled: block == null,

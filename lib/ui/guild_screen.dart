@@ -21,6 +21,7 @@ import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import 'world_boss_screen.dart' show BossPreview;
+import '../core/i18n.dart';
 
 const _bangTint = Color(0xFF8CC8FF);
 
@@ -44,12 +45,12 @@ class _GuildScreenState extends State<GuildScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: const ['Bang hội', 'Hảo hữu', 'Sư đồ', 'Kết duyên'][_tab],
+      title: tr(const ['Bang hội', 'Hảo hữu', 'Sư đồ', 'Kết duyên'][_tab]),
       actions: [
-        tabChip('Bang hội', _tab == 0, () => setState(() => _tab = 0)),
-        tabChip('Hảo hữu', _tab == 1, () => setState(() => _tab = 1)),
-        tabChip(h.mentorBadge > 0 ? 'Sư đồ (${h.mentorBadge})' : 'Sư đồ', _tab == 2, () => setState(() => _tab = 2)),
-        tabChip(h.bondBadge(vnDayKey()) > 0 ? 'Kết duyên (1)' : 'Kết duyên', _tab == 3, () => setState(() => _tab = 3)),
+        tabChip(tr('Bang hội'), _tab == 0, () => setState(() => _tab = 0)),
+        tabChip(tr('Hảo hữu'), _tab == 1, () => setState(() => _tab = 1)),
+        tabChip(h.mentorBadge > 0 ? tr('Sư đồ ({mentorBadge})', {'mentorBadge': h.mentorBadge}) : tr('Sư đồ'), _tab == 2, () => setState(() => _tab = 2)),
+        tabChip(h.bondBadge(vnDayKey()) > 0 ? tr('Kết duyên (1)') : tr('Kết duyên'), _tab == 3, () => setState(() => _tab = 3)),
       ],
       child: !gs.available
           ? Panel(
@@ -57,12 +58,12 @@ class _GuildScreenState extends State<GuildScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Đăng nhập để vào bang và kết bạn', style: bold.copyWith(color: cream)),
+                    Text(tr('Đăng nhập để vào bang và kết bạn'), style: bold.copyWith(color: cream)),
                     const SizedBox(height: 6),
-                    Text('Bang hội và Hảo hữu dùng chung tài khoản với lưu trữ đám mây.', style: small),
+                    Text(tr('Bang hội và Hảo hữu dùng chung tài khoản với lưu trữ đám mây.'), style: small),
                     const SizedBox(height: 12),
                     LButton(
-                      label: 'Đăng nhập',
+                      label: tr('Đăng nhập'),
                       color: jade,
                       onTap: () async {
                         await showCloudPanel(context);
@@ -144,7 +145,7 @@ class _GuildTabState extends State<_GuildTab> {
             final g = await gs.guild(gid);
             if (g != null) {
               h.joinGuild(g.id, g.name, m.role, g.level);
-              _toast('Đã được nhận vào bang ${g.name}!');
+              _toast(tr('Đã được nhận vào bang {gName}!', {'gName': g.name}));
               break;
             }
           }
@@ -163,7 +164,7 @@ class _GuildTabState extends State<_GuildTab> {
         if (g == null || me == null) {
           final name = h.guildName;
           h.leaveGuild();
-          _toast(g == null ? 'Bang $name đã giải tán.' : 'Bạn không còn trong bang $name.');
+          _toast(g == null ? tr('Bang {name} đã giải tán.', {'name': name}) : tr('Bạn không còn trong bang {name}.', {'name': name}));
         } else {
           var members = await gs.members(g.id);
           h.guildRole = me.role;
@@ -193,7 +194,7 @@ class _GuildTabState extends State<_GuildTab> {
       }
       await SaveService.instance.save();
     } catch (e) {
-      _error = 'Không tải được, thử lại sau.';
+      _error = tr('Không tải được, thử lại sau.');
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -206,7 +207,7 @@ class _GuildTabState extends State<_GuildTab> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(_error!, style: body),
           const SizedBox(height: 8),
-          LButton(label: 'Thử lại', small: true, onTap: _sync),
+          LButton(label: tr('Thử lại'), small: true, onTap: _sync),
         ]),
       );
     }
@@ -225,11 +226,11 @@ class _GuildTabState extends State<_GuildTab> {
               children: [
                 Row(
                   children: [
-                    _chip(0, 'Tổng quan'),
-                    _chip(4, 'Bang chiến'),
-                    _chip(1, 'Thành viên${_apps.isNotEmpty ? ' (${_apps.length})' : ''}'),
-                    _chip(2, 'Cửa hàng'),
-                    _chip(3, 'Kênh Bang'),
+                    _chip(0, tr('Tổng quan')),
+                    _chip(4, tr('Bang chiến')),
+                    _chip(1, tr('Thành viên{p0}', {'p0': _apps.isNotEmpty ? ' (${_apps.length})' : ''})),
+                    _chip(2, tr('Cửa hàng')),
+                    _chip(3, tr('Kênh Bang')),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -292,29 +293,29 @@ class _GuildTabState extends State<_GuildTab> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(g.name, style: titleStyle(20, color: _bangTint), maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text('Cấp $lv · ${_members.length}/${guildMaxMembers(lv)} người', style: bold.copyWith(color: cream, fontSize: 13)),
+          Text(tr('Cấp {lv} · {_membersLength}/{p0} người', {'lv': lv, '_membersLength': _members.length, 'p0': guildMaxMembers(lv)}), style: bold.copyWith(color: cream, fontSize: 13)),
           const SizedBox(height: 4),
           Bar(
             value: next == null ? 1 : ((_total - prev) / (next - prev)).clamp(0.0, 1.0),
             color: _bangTint,
             height: 11,
-            label: next == null ? 'Cấp tối đa' : '${fmt(_total)} / ${fmt(next)}',
+            label: next == null ? tr('Cấp tối đa') : '${fmt(_total)} / ${fmt(next)}',
           ),
           const SizedBox(height: 4),
           Expanded(
             child: ListView(
               children: [
-                Text('Mỗi thành viên: +${(guildPerkPerLv * lv * 100).toStringAsFixed(1)}% EXP và lượng',
+                Text(tr('Mỗi thành viên: +{p0}% EXP và lượng', {'p0': (guildPerkPerLv * lv * 100).toStringAsFixed(1)}),
                     style: small.copyWith(fontSize: 11.5, color: goldLight)),
                 if (g.notice.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(g.notice, style: body.copyWith(fontSize: 12)),
                 ],
                 const SizedBox(height: 4),
-                _kv('Chức vụ', guildRoleName(h.guildRole)),
-                _kv('Cống hiến', fmt(h.guildContrib)),
-                _kv('Xu Bang', fmt(h.guildCoins)),
-                _kv('Nhận người', g.open ? 'Tự do' : 'Duyệt đơn'),
+                _kv(tr('Chức vụ'), guildRoleName(h.guildRole)),
+                _kv(tr('Cống hiến'), fmt(h.guildContrib)),
+                _kv(tr('Xu Bang'), fmt(h.guildCoins)),
+                _kv(tr('Nhận người'), g.open ? tr('Tự do') : tr('Duyệt đơn')),
               ],
             ),
           ),
@@ -322,10 +323,10 @@ class _GuildTabState extends State<_GuildTab> {
             children: [
               if (h.guildRole >= roleVice)
                 Expanded(
-                  child: LButton(label: 'Cài đặt', small: true, color: lacquerLight, onTap: () => _settings(g)),
+                  child: LButton(label: tr('Cài đặt'), small: true, color: lacquerLight, onTap: () => _settings(g)),
                 ),
               if (h.guildRole >= roleVice) const SizedBox(width: 6),
-              Expanded(child: LButton(label: 'Rời bang', small: true, color: lacquerLight, onTap: () => _leave(g))),
+              Expanded(child: LButton(label: tr('Rời bang'), small: true, color: lacquerLight, onTap: () => _leave(g))),
             ],
           ),
         ],
@@ -362,23 +363,23 @@ class _GuildTabState extends State<_GuildTab> {
           children: [
             Expanded(
               child: LButton(
-                label: h.gSigned ? 'Đã điểm danh' : 'Điểm danh +$guildSignContrib',
+                label: h.gSigned ? tr('Đã điểm danh') : tr('Điểm danh +{guildSignContrib}', {'guildSignContrib': guildSignContrib}),
                 icon: Icons.how_to_reg,
                 small: true,
                 color: jade,
                 enabled: !h.gSigned,
-                onTap: () => _did(h.guildSign(day), 'Điểm danh: +$guildSignContrib cống hiến, +$guildSignContrib xu Bang.'),
+                onTap: () => _did(h.guildSign(day), tr('Điểm danh: +{guildSignContrib} cống hiến, +{guildSignContrib} xu Bang.', {'guildSignContrib': guildSignContrib})),
               ),
             ),
             const SizedBox(width: 6),
             Expanded(
               child: LButton(
-                label: 'Quyên góp ${fmt(h.guildDonateCost)} (${guildDonatesPerDay - h.gDonated})',
+                label: tr('Quyên góp {p0} ({p1})', {'p0': fmt(h.guildDonateCost), 'p1': guildDonatesPerDay - h.gDonated}),
                 icon: Icons.savings,
                 small: true,
                 color: const Color(0xFF8A6A1A),
                 enabled: h.gDonated < guildDonatesPerDay && h.gold >= h.guildDonateCost,
-                onTap: () => _did(h.guildDonate(day), 'Quyên góp: +$guildContribPerDonate cống hiến.'),
+                onTap: () => _did(h.guildDonate(day), tr('Quyên góp: +{guildContribPerDonate} cống hiến.', {'guildContribPerDonate': guildContribPerDonate})),
               ),
             ),
           ],
@@ -395,15 +396,15 @@ class _GuildTabState extends State<_GuildTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Boss Bang · ${boss.name}', style: bold.copyWith(color: const Color(0xFFFF9A5A))),
-                    Text('Cả bang dồn sát thương trong tuần. Mỗi ngày $guildBossRuns lượt, ${guildBossTime.round()} giây.',
+                    Text(tr('Boss Bang · {p0}', {'p0': tr(boss.name)}), style: bold.copyWith(color: const Color(0xFFFF9A5A))),
+                    Text(tr('Cả bang dồn sát thương trong tuần. Mỗi ngày {guildBossRuns} lượt, {p0} giây.', {'guildBossRuns': guildBossRuns, 'p0': guildBossTime.round()}),
                         style: small.copyWith(fontSize: 11)),
-                    Text('Bang: ${fmt(total)} · Bạn: ${fmt(h.gBossDmg)}', style: bold.copyWith(fontSize: 12, color: cream)),
+                    Text(tr('Bang: {p0} · Bạn: {p1}', {'p0': fmt(total), 'p1': fmt(h.gBossDmg)}), style: bold.copyWith(fontSize: 12, color: cream)),
                   ],
                 ),
               ),
               LButton(
-                label: 'Đánh ($left)',
+                label: tr('Đánh ({left})', {'left': left}),
                 small: true,
                 enabled: left > 0,
                 onTap: () async {
@@ -418,7 +419,7 @@ class _GuildTabState extends State<_GuildTab> {
           ),
         ),
         const SizedBox(height: 6),
-        Text('Rương Boss Bang (cho ai đã đánh trong tuần)', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+        Text(tr('Rương Boss Bang (cho ai đã đánh trong tuần)'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
         for (var i = 0; i < guildBossTiers.length; i++) _chest(i, total),
       ],
     );
@@ -439,15 +440,15 @@ class _GuildTabState extends State<_GuildTab> {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              '${fmt(guildBossTiers[i])}: ${c.coins} xu Bang, ${c.iron} Thần Thiết'
-              '${c.pills > 0 ? ', ${c.pills} Linh Phách Đơn' : ''}${c.jade > 0 ? ', ${c.jade} Tiên Ngọc' : ''}',
+              tr('{p0}: {coins} xu Bang, {iron} Thần Thiết'
+              '{p1}{p2}', {'p0': fmt(guildBossTiers[i]), 'coins': c.coins, 'iron': c.iron, 'p1': c.pills > 0 ? tr(', {pills} Linh Phách Đơn', {'pills': c.pills}) : '', 'p2': c.jade > 0 ? tr(', {jade} Tiên Ngọc', {'jade': c.jade}) : ''}),
               style: small.copyWith(fontSize: 11),
               maxLines: 2,
             ),
           ),
           if (ready)
             LButton(
-              label: 'Nhận',
+              label: tr('Nhận'),
               small: true,
               color: jade,
               onTap: () {
@@ -466,15 +467,15 @@ class _GuildTabState extends State<_GuildTab> {
     return ListView(
       children: [
         if (_apps.isNotEmpty) ...[
-          Text('Đơn xin vào', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+          Text(tr('Đơn xin vào'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
           for (final a in _apps)
             _personRow(a, trailing: [
-              LButton(label: 'Nhận', small: true, color: jade, onTap: () => _accept(g, a)),
+              LButton(label: tr('Nhận'), small: true, color: jade, onTap: () => _accept(g, a)),
               const SizedBox(width: 4),
-              LButton(label: 'Từ chối', small: true, color: lacquerLight, onTap: () => _reject(g, a)),
+              LButton(label: tr('Từ chối'), small: true, color: lacquerLight, onTap: () => _reject(g, a)),
             ]),
           const SizedBox(height: 6),
-          Text('Thành viên', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+          Text(tr('Thành viên'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
         ],
         for (final m in _members) GestureDetector(onTap: () => _memberMenu(g, m), child: _personRow(m)),
       ],
@@ -504,7 +505,7 @@ class _GuildTabState extends State<_GuildTab> {
               children: [
                 Text(m.name, style: bold.copyWith(fontSize: 12.5, color: cream), overflow: TextOverflow.ellipsis),
                 Text(
-                  '${sectOf(Hanh.values[m.hanh]).name} · ${m.rebirths > 0 ? 'CS${m.rebirths} · ' : ''}Cấp ${m.level} · LC ${fmt(m.power)}',
+                  tr('{p0} · {p1}Cấp {level} · LC {p2}', {'p0': tr(sectOf(Hanh.values[m.hanh]).name), 'p1': m.rebirths > 0 ? tr('CS{rebirths} · ', {'rebirths': m.rebirths}) : '', 'level': m.level, 'p2': fmt(m.power)}),
                   style: small.copyWith(fontSize: 10.5),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -530,20 +531,20 @@ class _GuildTabState extends State<_GuildTab> {
       await f();
       _toast(done);
     } catch (_) {
-      _toast('Không thực hiện được, thử lại sau.');
+      _toast(tr('Không thực hiện được, thử lại sau.'));
     }
     await _sync();
   }
 
   Future<void> _accept(GuildInfo g, GuildMember a) async {
     if (_members.length >= guildMaxMembers(guildLevelOf(_total))) {
-      _toast('Bang đã đủ người.');
+      _toast(tr('Bang đã đủ người.'));
       return;
     }
-    await _run(() => gs.accept(g.id, a), 'Đã nhận ${a.name}.');
+    await _run(() => gs.accept(g.id, a), tr('Đã nhận {aName}.', {'aName': tr(a.name)}));
   }
 
-  Future<void> _reject(GuildInfo g, GuildMember a) => _run(() => gs.reject(g.id, a.row), 'Đã từ chối ${a.name}.');
+  Future<void> _reject(GuildInfo g, GuildMember a) => _run(() => gs.reject(g.id, a.row), tr('Đã từ chối {aName}.', {'aName': tr(a.name)}));
 
   Future<void> _memberMenu(GuildInfo g, GuildMember m) async {
     final mine = m.row == gs.myRow;
@@ -559,27 +560,27 @@ class _GuildTabState extends State<_GuildTab> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('${guildRoleName(m.role)} · cống hiến ${fmt(m.contrib)}', style: small),
+            Text(tr('{p0} · cống hiến {p1}', {'p0': guildRoleName(m.role), 'p1': fmt(m.contrib)}), style: small),
             const SizedBox(height: 10),
-            LButton(label: 'Xem thông tin', icon: Icons.person_search, onTap: () => Navigator.pop(ctx, 'view')),
+            LButton(label: tr('Xem thông tin'), icon: Icons.person_search, onTap: () => Navigator.pop(ctx, 'view')),
             if (leader && !mine) ...[
               const SizedBox(height: 6),
               LButton(
-                label: m.role == roleVice ? 'Hạ làm Thành viên' : 'Phong Phó bang',
+                label: m.role == roleVice ? tr('Hạ làm Thành viên') : tr('Phong Phó bang'),
                 small: true,
                 color: lacquerLight,
                 onTap: () => Navigator.pop(ctx, 'role'),
               ),
               const SizedBox(height: 6),
-              LButton(label: 'Nhường Bang chủ', small: true, color: lacquerLight, onTap: () => Navigator.pop(ctx, 'lead')),
+              LButton(label: tr('Nhường Bang chủ'), small: true, color: lacquerLight, onTap: () => Navigator.pop(ctx, 'lead')),
             ],
             if (canKick) ...[
               const SizedBox(height: 6),
-              LButton(label: 'Mời khỏi bang', small: true, color: seal, onTap: () => Navigator.pop(ctx, 'kick')),
+              LButton(label: tr('Mời khỏi bang'), small: true, color: seal, onTap: () => Navigator.pop(ctx, 'kick')),
             ],
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
     if (!mounted || pick == null) return;
@@ -587,13 +588,13 @@ class _GuildTabState extends State<_GuildTab> {
       case 'view':
         await showHeroCard(context, m.toEntry(), mine: mine);
       case 'role':
-        await _run(() => gs.setRole(g, m, m.role == roleVice ? roleMember : roleVice), 'Đã đổi chức vụ.');
+        await _run(() => gs.setRole(g, m, m.role == roleVice ? roleMember : roleVice), tr('Đã đổi chức vụ.'));
       case 'lead':
-        if (await _confirm('Nhường chức Bang chủ cho ${m.name}? Bạn sẽ thành Thành viên.')) {
-          await _run(() => gs.handOver(g, gs.myRow!, m), 'Đã nhường Bang chủ.');
+        if (await _confirm(tr('Nhường chức Bang chủ cho {mName}? Bạn sẽ thành Thành viên.', {'mName': m.name}))) {
+          await _run(() => gs.handOver(g, gs.myRow!, m), tr('Đã nhường Bang chủ.'));
         }
       case 'kick':
-        if (await _confirm('Mời ${m.name} khỏi bang?')) await _run(() => gs.remove(g.id, m.row), 'Đã mời ${m.name} khỏi bang.');
+        if (await _confirm(tr('Mời {mName} khỏi bang?', {'mName': m.name}))) await _run(() => gs.remove(g.id, m.row), tr('Đã mời {mName} khỏi bang.', {'mName': m.name}));
     }
   }
 
@@ -605,8 +606,8 @@ class _GuildTabState extends State<_GuildTab> {
         backgroundColor: lacquer,
         content: Text(text, style: body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đồng ý')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Đồng ý'))),
         ],
       ),
     );
@@ -616,12 +617,12 @@ class _GuildTabState extends State<_GuildTab> {
   Future<void> _leave(GuildInfo g) async {
     final alone = _members.length <= 1;
     if (h.guildRole == roleLeader && !alone) {
-      _toast('Bang chủ hãy nhường chức trước khi rời bang.');
+      _toast(tr('Bang chủ hãy nhường chức trước khi rời bang.'));
       return;
     }
     final text = h.guildRole == roleLeader
-        ? 'Bạn là người cuối cùng: rời đi sẽ giải tán bang ${g.name}. Xu Bang vẫn giữ lại.'
-        : 'Rời bang ${g.name}? Cống hiến với bang sẽ mất, xu Bang vẫn giữ lại.';
+        ? tr('Bạn là người cuối cùng: rời đi sẽ giải tán bang {gName}. Xu Bang vẫn giữ lại.', {'gName': g.name})
+        : tr('Rời bang {gName}? Cống hiến với bang sẽ mất, xu Bang vẫn giữ lại.', {'gName': g.name});
     if (!await _confirm(text)) return;
     try {
       if (h.guildRole == roleLeader) {
@@ -632,7 +633,7 @@ class _GuildTabState extends State<_GuildTab> {
       h.leaveGuild();
       await SaveService.instance.save();
     } catch (_) {
-      _toast('Không rời được bang, thử lại sau.');
+      _toast(tr('Không rời được bang, thử lại sau.'));
     }
     await _sync();
   }
@@ -646,7 +647,7 @@ class _GuildTabState extends State<_GuildTab> {
         builder: (ctx, set) => AlertDialog(
           scrollable: true,
           backgroundColor: lacquer,
-          title: Text('Cài đặt bang', style: titleStyle(18)),
+          title: Text(tr('Cài đặt bang'), style: titleStyle(18)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -655,24 +656,24 @@ class _GuildTabState extends State<_GuildTab> {
                 maxLength: guildNoticeMax,
                 maxLines: 2,
                 style: body,
-                decoration: const InputDecoration(labelText: 'Thông báo'),
+                decoration: InputDecoration(labelText: tr('Thông báo')),
               ),
               Row(
                 children: [
-                  Expanded(child: Text('Nhận người tự do (không cần duyệt)', style: body.copyWith(fontSize: 13))),
+                  Expanded(child: Text(tr('Nhận người tự do (không cần duyệt)'), style: body.copyWith(fontSize: 13))),
                   Switch(value: open, activeThumbColor: goldLight, onChanged: (v) => set(() => open = v)),
                 ],
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Lưu')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Lưu'))),
           ],
         ),
       ),
     );
-    if (ok == true) await _run(() => gs.setSettings(g, notice: notice.text.trim(), open: open), 'Đã lưu.');
+    if (ok == true) await _run(() => gs.setSettings(g, notice: notice.text.trim(), open: open), tr('Đã lưu.'));
   }
 
   // ------------------------------------------------------------ shop
@@ -681,7 +682,7 @@ class _GuildTabState extends State<_GuildTab> {
     final day = _day;
     return ListView(
       children: [
-        Text('Xu Bang: ${fmt(h.guildCoins)} · làm mới mỗi thứ Hai', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+        Text(tr('Xu Bang: {p0} · làm mới mỗi thứ Hai', {'p0': fmt(h.guildCoins)}), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
         for (final o in guildShop) _offer(o, day),
       ],
     );
@@ -699,18 +700,18 @@ class _GuildTabState extends State<_GuildTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${o.name} ×${o.n}', style: bold.copyWith(fontSize: 13, color: cream)),
-                Text('${o.price} xu · tuần ${h.guildBoughtOf(o)}/${o.limit}${o.minLv > 1 ? ' · bang cấp ${o.minLv}' : ''}',
+                Text(tr('{oName} ×{n}', {'oName': tr(o.name), 'n': o.n}), style: bold.copyWith(fontSize: 13, color: cream)),
+                Text(tr('{price} xu · tuần {p0}/{limit}{p1}', {'price': o.price, 'p0': h.guildBoughtOf(o), 'limit': o.limit, 'p1': o.minLv > 1 ? tr(' · bang cấp {minLv}', {'minLv': o.minLv}) : ''}),
                     style: small.copyWith(fontSize: 11)),
               ],
             ),
           ),
           LButton(
-            label: block ?? 'Đổi',
+            label: block ?? tr('Đổi'),
             small: true,
             color: jade,
             enabled: block == null,
-            onTap: () => _did(h.guildBuy(o, day), 'Đã đổi ${o.name} ×${o.n}.'),
+            onTap: () => _did(h.guildBuy(o, day), tr('Đã đổi {oName} ×{n}.', {'oName': tr(o.name), 'n': o.n})),
           ),
         ],
       ),
@@ -734,24 +735,24 @@ class _GuildTabState extends State<_GuildTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Chưa vào bang', style: titleStyle(18, color: _bangTint)),
+                Text(tr('Chưa vào bang'), style: titleStyle(18, color: _bangTint)),
                 const SizedBox(height: 4),
                 Expanded(
                   child: ListView(
                     children: [
                       Text(
-                          'Vào bang để nhận thêm EXP và lượng theo cấp bang, Điểm danh, Quyên góp, đánh Boss Bang '
-                          'cùng nhau và đổi đồ ở Cửa hàng Bang.',
+                          tr('Vào bang để nhận thêm EXP và lượng theo cấp bang, Điểm danh, Quyên góp, đánh Boss Bang '
+                          'cùng nhau và đổi đồ ở Cửa hàng Bang.'),
                           style: body.copyWith(fontSize: 12.5)),
                       const SizedBox(height: 6),
                       if (h.guildApplied.isNotEmpty)
-                        Text('Đang chờ duyệt ${h.guildApplied.length} đơn.', style: small.copyWith(color: goldLight)),
-                      if (!h.guildOpen) Text('Mở ở cấp $guildOpenLevel.', style: small.copyWith(color: goldLight)),
+                        Text(tr('Đang chờ duyệt {guildAppliedLength} đơn.', {'guildAppliedLength': h.guildApplied.length}), style: small.copyWith(color: goldLight)),
+                      if (!h.guildOpen) Text(tr('Mở ở cấp {guildOpenLevel}.', {'guildOpenLevel': guildOpenLevel}), style: small.copyWith(color: goldLight)),
                     ],
                   ),
                 ),
                 LButton(
-                  label: 'Lập bang · ${fmt(guildCreateGold)} lượng',
+                  label: tr('Lập bang · {p0} lượng', {'p0': fmt(guildCreateGold)}),
                   small: true,
                   color: jade,
                   enabled: h.guildOpen && h.gold >= guildCreateGold,
@@ -776,20 +777,20 @@ class _GuildTabState extends State<_GuildTab> {
                         child: TextField(
                           controller: _search,
                           style: body.copyWith(fontSize: 13),
-                          decoration: const InputDecoration(
-                              hintText: 'Tìm bang theo tên', isDense: true, contentPadding: EdgeInsets.all(8)),
+                          decoration: InputDecoration(
+                              hintText: tr('Tìm bang theo tên'), isDense: true, contentPadding: EdgeInsets.all(8)),
                           onSubmitted: (_) => _find(),
                         ),
                       ),
                     ),
                     const SizedBox(width: 6),
-                    LButton(label: 'Tìm', small: true, onTap: _find),
+                    LButton(label: tr('Tìm'), small: true, onTap: _find),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Expanded(
                   child: list.isEmpty
-                      ? Center(child: Text('Chưa có bang nào. Hãy lập bang đầu tiên!', style: body))
+                      ? Center(child: Text(tr('Chưa có bang nào. Hãy lập bang đầu tiên!'), style: body))
                       : ListView(children: [for (final g in list) _guildRow(g)]),
                 ),
               ],
@@ -809,9 +810,9 @@ class _GuildTabState extends State<_GuildTab> {
     try {
       final g = await gs.find(q);
       if (mounted) setState(() => _list = g == null ? const [] : [g]);
-      if (g == null) _toast('Không có bang "$q".');
+      if (g == null) _toast(tr('Không có bang "{q}".', {'q': q}));
     } catch (_) {
-      _toast('Không tìm được, thử lại sau.');
+      _toast(tr('Không tìm được, thử lại sau.'));
     }
   }
 
@@ -830,7 +831,7 @@ class _GuildTabState extends State<_GuildTab> {
               children: [
                 Text(g.name, style: bold.copyWith(fontSize: 14, color: cream), overflow: TextOverflow.ellipsis),
                 Text(
-                  'Cấp ${g.level} · ${g.n}/${guildMaxMembers(g.level)} · Bang chủ ${g.leaderName} · ${g.open ? 'tự do vào' : 'duyệt đơn'}',
+                  tr('Cấp {level} · {n}/{p0} · Bang chủ {leaderName} · {p1}', {'level': g.level, 'n': g.n, 'p0': guildMaxMembers(g.level), 'leaderName': g.leaderName, 'p1': g.open ? tr('tự do vào') : tr('duyệt đơn')}),
                   style: small.copyWith(fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -838,7 +839,7 @@ class _GuildTabState extends State<_GuildTab> {
             ),
           ),
           LButton(
-            label: applied ? 'Đã xin' : g.open ? 'Vào' : 'Xin vào',
+            label: applied ? tr('Đã xin') : g.open ? tr('Vào') : tr('Xin vào'),
             small: true,
             color: jade,
             enabled: h.guildOpen && !applied && !full && (g.open || h.guildApplied.length < guildMaxApplied),
@@ -854,14 +855,14 @@ class _GuildTabState extends State<_GuildTab> {
       final inNow = await gs.join(g, h);
       if (inNow) {
         h.joinGuild(g.id, g.name, roleMember, g.level);
-        _toast('Đã vào bang ${g.name}!');
+        _toast(tr('Đã vào bang {gName}!', {'gName': g.name}));
       } else {
         h.guildApplied.add(g.id);
-        _toast(g.open ? 'Chưa đủ cấp để vào thẳng, đã gửi đơn.' : 'Đã gửi đơn, chờ bang duyệt.');
+        _toast(g.open ? tr('Chưa đủ cấp để vào thẳng, đã gửi đơn.') : tr('Đã gửi đơn, chờ bang duyệt.'));
       }
       await SaveService.instance.save();
     } catch (_) {
-      _toast('Không gửi được, thử lại sau.');
+      _toast(tr('Không gửi được, thử lại sau.'));
     }
     await _sync();
   }
@@ -873,7 +874,7 @@ class _GuildTabState extends State<_GuildTab> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Lập bang', style: titleStyle(18)),
+        title: Text(tr('Lập bang'), style: titleStyle(18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -881,34 +882,34 @@ class _GuildTabState extends State<_GuildTab> {
               controller: name,
               maxLength: guildNameMax,
               style: body,
-              decoration: const InputDecoration(labelText: 'Tên bang'),
+              decoration: InputDecoration(labelText: tr('Tên bang')),
             ),
-            Text('Tốn ${fmt(guildCreateGold)} lượng. Tên phải từ $guildNameMin đến $guildNameMax ký tự và không trùng.',
+            Text(tr('Tốn {p0} lượng. Tên phải từ {guildNameMin} đến {guildNameMax} ký tự và không trùng.', {'p0': fmt(guildCreateGold), 'guildNameMin': guildNameMin, 'guildNameMax': guildNameMax}),
                 style: small),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Lập bang')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Lập bang'))),
         ],
       ),
     );
     final n = name.text.trim();
     if (ok != true) return;
     if (n.length < guildNameMin || n.length > guildNameMax) {
-      _toast('Tên bang từ $guildNameMin đến $guildNameMax ký tự.');
+      _toast(tr('Tên bang từ {guildNameMin} đến {guildNameMax} ký tự.', {'guildNameMin': guildNameMin, 'guildNameMax': guildNameMax}));
       return;
     }
     if (h.gold < guildCreateGold) return;
     final (id, err) = await gs.create(h, n);
     if (id == null) {
-      _toast(err ?? 'Không lập được bang.');
+      _toast(err ?? tr('Không lập được bang.'));
       return;
     }
     h.gold -= guildCreateGold;
     h.joinGuild(id, n, roleLeader, 1);
     await SaveService.instance.save();
-    _toast('Đã lập bang $n!');
+    _toast(tr('Đã lập bang {n}!', {'n': n}));
     await _sync();
   }
 }
@@ -936,7 +937,7 @@ class _ChatViewState extends State<_ChatView> {
     if (ok) {
       _text.clear();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không gửi được, thử lại sau.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Không gửi được, thử lại sau.'))));
     }
   }
 
@@ -953,10 +954,10 @@ class _ChatViewState extends State<_ChatView> {
               final msgs = snap.data;
               if (msgs == null) {
                 return snap.hasError
-                    ? Center(child: Text('Không tải được kênh bang.', style: small))
+                    ? Center(child: Text(tr('Không tải được kênh bang.'), style: small))
                     : const Center(child: CircularProgressIndicator(color: goldLight));
               }
-              if (msgs.isEmpty) return Center(child: Text('Chưa có tin nào. Chào cả bang đi!', style: small));
+              if (msgs.isEmpty) return Center(child: Text(tr('Chưa có tin nào. Chào cả bang đi!'), style: small));
               return ListView(
                 reverse: true,
                 children: [
@@ -984,14 +985,14 @@ class _ChatViewState extends State<_ChatView> {
                   controller: _text,
                   maxLength: 120,
                   style: body.copyWith(fontSize: 13),
-                  decoration: const InputDecoration(
-                      hintText: 'Nhắn cả bang…', counterText: '', isDense: true, contentPadding: EdgeInsets.all(8)),
+                  decoration: InputDecoration(
+                      hintText: tr('Nhắn cả bang…'), counterText: '', isDense: true, contentPadding: EdgeInsets.all(8)),
                   onSubmitted: (_) => _send(),
                 ),
               ),
             ),
             const SizedBox(width: 6),
-            LButton(label: 'Gửi', small: true, enabled: !_sending, onTap: _send),
+            LButton(label: tr('Gửi'), small: true, enabled: !_sending, onTap: _send),
           ],
         ),
       ],
@@ -1048,7 +1049,7 @@ class _FriendsTabState extends State<_FriendsTab> {
       _rows = {for (final e in rows) e.id: e};
       _inbox = inbox;
     } catch (_) {
-      _toast('Không tải được, thử lại sau.');
+      _toast(tr('Không tải được, thử lại sau.'));
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -1057,7 +1058,7 @@ class _FriendsTabState extends State<_FriendsTab> {
     if (!h.canGift(f.row, _day)) return;
     final ok = await gs.sendGift(h, f.row, _day);
     if (!ok) {
-      _toast('Không gửi được, thử lại sau.');
+      _toast(tr('Không gửi được, thử lại sau.'));
       return;
     }
     h.markGifted(f.row, _day);
@@ -1074,7 +1075,7 @@ class _FriendsTabState extends State<_FriendsTab> {
       n++;
     }
     await SaveService.instance.save();
-    _toast(n > 0 ? 'Đã tặng quà cho $n bạn.' : 'Không gửi được, thử lại sau.');
+    _toast(n > 0 ? tr('Đã tặng quà cho {n} bạn.', {'n': n}) : tr('Không gửi được, thử lại sau.'));
     if (mounted) setState(() {});
   }
 
@@ -1092,7 +1093,7 @@ class _FriendsTabState extends State<_FriendsTab> {
       _inbox = [..._inbox]..remove(g);
     }
     await SaveService.instance.save();
-    _toast(n > 0 ? 'Nhận $n quà: +${fmt(gold)} lượng.' : 'Hôm nay đã nhận đủ quà.');
+    _toast(n > 0 ? tr('Nhận {n} quà: +{p0} lượng.', {'n': n, 'p0': fmt(gold)}) : tr('Hôm nay đã nhận đủ quà.'));
     if (mounted) setState(() {});
   }
 
@@ -1113,16 +1114,16 @@ class _FriendsTabState extends State<_FriendsTab> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Bạn bè ${h.friends.length}/$maxFriends', style: titleStyle(17)),
+                      child: Text(tr('Bạn bè {friendsLength}/{maxFriends}', {'friendsLength': h.friends.length, 'maxFriends': maxFriends}), style: titleStyle(17)),
                     ),
-                    LButton(label: 'Tặng tất cả', small: true, color: jade, enabled: canGiftAny, onTap: _giftAll),
+                    LButton(label: tr('Tặng tất cả'), small: true, color: jade, enabled: canGiftAny, onTap: _giftAll),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Expanded(
                   child: h.friends.isEmpty
                       ? Center(
-                          child: Text('Chưa có bạn. Chạm vào người chơi trên Bảng xếp hạng → Xem thông tin → Kết bạn.',
+                          child: Text(tr('Chưa có bạn. Chạm vào người chơi trên Bảng xếp hạng → Xem thông tin → Kết bạn.'),
                               style: body, textAlign: TextAlign.center),
                         )
                       : ListView(children: [for (final f in h.friends) _friendRow(f, day)]),
@@ -1140,8 +1141,8 @@ class _FriendsTabState extends State<_FriendsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Quà nhận được', style: titleStyle(17, color: _bangTint)),
-                Text('${_inbox.length} quà chờ · hôm nay còn nhận ${h.giftsLeft(day)}/$friendGiftsPerDay',
+                Text(tr('Quà nhận được'), style: titleStyle(17, color: _bangTint)),
+                Text(tr('{_inboxLength} quà chờ · hôm nay còn nhận {p0}/{friendGiftsPerDay}', {'_inboxLength': _inbox.length, 'p0': h.giftsLeft(day), 'friendGiftsPerDay': friendGiftsPerDay}),
                     style: small.copyWith(fontSize: 11.5)),
                 const SizedBox(height: 4),
                 Expanded(
@@ -1151,14 +1152,14 @@ class _FriendsTabState extends State<_FriendsTab> {
                         Text('• ${g.name}', style: body.copyWith(fontSize: 12), overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 6),
                       Text(
-                          'Mỗi ngày tặng mỗi bạn một quà. Mỗi quà nhận được: +${fmt(friendGiftGold(h.level, h.rebirths))} lượng '
-                          '(tối đa $friendGiftsPerDay quà một ngày).',
+                          tr('Mỗi ngày tặng mỗi bạn một quà. Mỗi quà nhận được: +{p0} lượng '
+                          '(tối đa {friendGiftsPerDay} quà một ngày).', {'p0': fmt(friendGiftGold(h.level, h.rebirths)), 'friendGiftsPerDay': friendGiftsPerDay}),
                           style: small.copyWith(fontSize: 11)),
                     ],
                   ),
                 ),
                 LButton(
-                  label: 'Nhận quà',
+                  label: tr('Nhận quà'),
                   small: true,
                   color: jade,
                   enabled: _inbox.isNotEmpty && h.giftsLeft(day) > 0,
@@ -1197,8 +1198,8 @@ class _FriendsTabState extends State<_FriendsTab> {
                   Text(f.name, style: bold.copyWith(fontSize: 12.5, color: cream), overflow: TextOverflow.ellipsis),
                   Text(
                     e == null
-                        ? '${sectOf(hn).name} · chưa có trên bảng'
-                        : '${sectOf(hn).name} · ${e.rebirths > 0 ? 'CS${e.rebirths} · ' : ''}Cấp ${e.level} · LC ${fmt(e.power)}',
+                        ? tr('{p0} · chưa có trên bảng', {'p0': tr(sectOf(hn).name)})
+                        : tr('{p0} · {p1}Cấp {level} · LC {p2}', {'p0': tr(sectOf(hn).name), 'p1': e.rebirths > 0 ? tr('CS{rebirths} · ', {'rebirths': e.rebirths}) : '', 'level': e.level, 'p2': fmt(e.power)}),
                     style: small.copyWith(fontSize: 10.5),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1206,7 +1207,7 @@ class _FriendsTabState extends State<_FriendsTab> {
               ),
             ),
             LButton(
-              label: sent ? 'Đã tặng' : 'Tặng quà',
+              label: sent ? tr('Đã tặng') : tr('Tặng quà'),
               small: true,
               color: jade,
               enabled: !sent,
@@ -1229,19 +1230,19 @@ class _FriendsTabState extends State<_FriendsTab> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            LButton(label: 'Xem thông tin', icon: Icons.person_search, onTap: () => Navigator.pop(ctx, 'view')),
+            LButton(label: tr('Xem thông tin'), icon: Icons.person_search, onTap: () => Navigator.pop(ctx, 'view')),
             const SizedBox(height: 6),
-            LButton(label: 'Xóa bạn', small: true, color: seal, onTap: () => Navigator.pop(ctx, 'drop')),
+            LButton(label: tr('Xóa bạn'), small: true, color: seal, onTap: () => Navigator.pop(ctx, 'drop')),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng')))],
       ),
     );
     if (!mounted) return;
     if (pick == 'view') {
       final e = _rows[f.row];
       if (e == null) {
-        _toast('${f.name} chưa có trên bảng xếp hạng.');
+        _toast(tr('{fName} chưa có trên bảng xếp hạng.', {'fName': f.name}));
       } else {
         await showHeroCard(context, e);
       }

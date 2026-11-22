@@ -1,4 +1,5 @@
 import 'content.dart';
+import 'i18n.dart';
 
 /// Tinh anh: a named, much tougher take on an ordinary monster that appears
 /// on [map] only while a quest or bounty wants it.
@@ -261,4 +262,4 @@ class WantedElite {
 const _roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
 /// "Luân Hồi II" for chapter index 1.
-String chapterLabel(int i) => 'Luân Hồi ${_roman[i.clamp(0, _roman.length - 1)]}';
+String chapterLabel(int i) => tr('Luân Hồi {p0}', {'p0': _roman[i.clamp(0, _roman.length - 1)]});

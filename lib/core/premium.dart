@@ -11,6 +11,7 @@ import 'mount_skins.dart';
 import 'newbie.dart';
 import 'weekly_hunt.dart';
 import 'world_boss.dart' show vnDayKey;
+import 'i18n.dart';
 
 /// Ưu đãi (1.7.0): what a purchase or a chosen rewarded ad gives a hero.
 /// Pure rules; the store and the ads live in services/.
@@ -153,18 +154,18 @@ extension Premium on HeroData {
       case skuMonthCard:
         if (g.until.isEmpty || g.until.compareTo(cardUntil) <= 0) return null;
         cardUntil = g.until;
-        return 'Khôi phục Nguyệt thẻ đến ${g.until.substring(6, 8)}/${g.until.substring(4, 6)}';
+        return tr('Khôi phục Nguyệt thẻ đến {p0}/{p1}', {'p0': g.until.substring(6, 8), 'p1': g.until.substring(4, 6)});
       case skuPass:
         final s = int.tryParse(g.until) ?? 0;
         if (s <= 0 || s <= passPaidSeason) return null;
         passPaidSeason = s;
-        return 'Khôi phục Lệnh Bài Hào Kiệt mùa $s';
+        return tr('Khôi phục Lệnh Bài Hào Kiệt mùa {s}', {'s': s});
       case skuFest:
         if (festPack) return null;
-        return 'Khôi phục Gói lễ hội: ${grantFestPack().join(', ')}';
+        return tr('Khôi phục Gói lễ hội: {p0}', {'p0': grantFestPack().join(', ')});
       case skuStarter:
         if (starterBought) return null;
-        return 'Khôi phục Gói tân thủ: ${grantStarter().join(', ')}';
+        return tr('Khôi phục Gói tân thủ: {p0}', {'p0': grantStarter().join(', ')});
     }
     return null;
   }
@@ -183,22 +184,22 @@ extension Premium on HeroData {
     if (!firstPayReady(adFree)) return const [];
     firstPayTaken = true;
     final lines = <String>[];
-    if (ownedCostumes.add(firstPayCostume)) lines.add('Ngoại trang ${costumeById[firstPayCostume]!.name}');
-    if (seasonTitles.add(firstPayTitle)) lines.add('Danh hiệu « $firstPayTitle »');
+    if (ownedCostumes.add(firstPayCostume)) lines.add(tr('Ngoại trang {p0}', {'p0': tr(costumeById[firstPayCostume]!.name)}));
+    if (seasonTitles.add(firstPayTitle)) lines.add(tr('Danh hiệu « {firstPayTitle} »', {'firstPayTitle': firstPayTitle}));
     final g = firstPayGold(level, rebirths);
     gold += g;
-    lines.add('+$g lượng');
+    lines.add(tr('+{g} lượng', {'g': g}));
     divineIron += firstPayIron;
     soulPills += firstPayPills;
     goldShards += firstPayShards;
     hpPots += firstPayHpPots;
-    lines.addAll(['+$firstPayIron Thần Thiết', '+$firstPayPills Linh Phách Đơn', '+$firstPayShards mảnh Hoàng Kim', '+$firstPayHpPots Kim Sang Dược']);
+    lines.addAll([tr('+{firstPayIron} Thần Thiết', {'firstPayIron': firstPayIron}), tr('+{firstPayPills} Linh Phách Đơn', {'firstPayPills': firstPayPills}), tr('+{firstPayShards} mảnh Hoàng Kim', {'firstPayShards': firstPayShards}), tr('+{firstPayHpPots} Kim Sang Dược', {'firstPayHpPots': firstPayHpPots})]);
     final rng = math.Random();
     final tier = firstPayGemTier(level);
     for (var i = 0; i < firstPayGems; i++) {
       addGem(Gem(Hanh.values[rng.nextInt(5)], tier));
     }
-    lines.add('$firstPayGems ngọc bậc $tier');
+    lines.add(tr('{firstPayGems} ngọc bậc {tier}', {'firstPayGems': firstPayGems, 'tier': tier}));
     return lines;
   }
 
@@ -213,14 +214,14 @@ extension Premium on HeroData {
     starStones += starPackStones;
     beastSouls += starPackSouls;
     stPackWeek = huntWeekOf(vnDayKey());
-    return ['+$starPackStones Tinh Thạch', '+$starPackSouls Hung Thú Tinh Phách'];
+    return [tr('+{starPackStones} Tinh Thạch', {'starPackStones': starPackStones}), tr('+{starPackSouls} Hung Thú Tinh Phách', {'starPackSouls': starPackSouls})];
   }
 
   /// Hòm Ngân Lượng bought.
   List<String> grantGoldPack() {
     final g = goldPackFor(level, rebirths);
     gold += g;
-    return ['+$g lượng'];
+    return [tr('+{g} lượng', {'g': g})];
   }
 
   bool canClaimCard(String today) => cardActive(today) && cardClaimDay != today;
@@ -231,7 +232,7 @@ extension Premium on HeroData {
     final r = cardDailyFor(level, rebirths);
     gold += r.gold;
     final rng = math.Random(today.hashCode ^ name.hashCode);
-    final lines = ['+${r.gold} lượng'];
+    final lines = [tr('+{gold} lượng', {'gold': r.gold})];
     for (var i = 0; i < r.gems; i++) {
       final g = Gem(Hanh.values[rng.nextInt(5)], r.gemTier);
       addGem(g);
@@ -239,7 +240,7 @@ extension Premium on HeroData {
     }
     if (r.iron > 0) {
       divineIron += r.iron;
-      lines.add('+${r.iron} Thần Thiết');
+      lines.add(tr('+{iron} Thần Thiết', {'iron': r.iron}));
     }
     return lines;
   }
@@ -271,7 +272,7 @@ extension Premium on HeroData {
     final c = adChestFor(adChestN, level, rebirths);
     adChestN++;
     gold += c.gold;
-    final lines = ['+${c.gold} lượng'];
+    final lines = [tr('+{gold} lượng', {'gold': c.gold})];
     final rng = math.Random();
     for (var i = 0; i < c.gems; i++) {
       final g = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, 1 + level ~/ 20));
@@ -280,11 +281,11 @@ extension Premium on HeroData {
     }
     if (c.iron > 0) {
       divineIron += c.iron;
-      lines.add('+${c.iron} Thần Thiết');
+      lines.add(tr('+{iron} Thần Thiết', {'iron': c.iron}));
     }
     if (c.shards > 0) {
       goldShards += c.shards;
-      lines.add('+${c.shards} mảnh Hoàng Kim');
+      lines.add(tr('+{shards} mảnh Hoàng Kim', {'shards': c.shards}));
     }
     return lines;
   }

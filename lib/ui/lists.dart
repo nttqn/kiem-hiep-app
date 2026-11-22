@@ -15,6 +15,7 @@ import 'play_screen.dart';
 import 'realm_view.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 class MapListScreen extends StatelessWidget {
   const MapListScreen({super.key});
@@ -27,11 +28,11 @@ class MapListScreen extends StatelessWidget {
     bool isOpen(MapDef m) => h.level >= m.entryLv && h.rebirths >= m.rebirths;
     final last = all.lastIndexWhere(isOpen);
     return SubScreen(
-      title: 'Luyện công',
+      title: tr('Luyện công'),
       actions: [
         if (h.fishOpen)
           LButton(
-            label: 'Ngư phổ',
+            label: tr('Ngư phổ'),
             icon: Icons.phishing,
             small: true,
             color: const Color(0xFF2E6A8A),
@@ -63,17 +64,17 @@ class MapListScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Text(m.name, style: titleStyle(18, color: cream)),
+                              Text(tr(m.name), style: titleStyle(18, color: cream)),
                               const SizedBox(width: 10),
-                              Text(m.rebirths > 0 ? '${m.rebirths == 6 ? 'Lục' : 'Ngũ'} chuyển · Thần Thiết' : 'Cấp ${m.minLv}–${m.maxLv}',
+                              Text(m.rebirths > 0 ? tr('{p0} chuyển · Thần Thiết', {'p0': m.rebirths == 6 ? tr('Lục') : tr('Ngũ')}) : tr('Cấp {minLv}–{maxLv}', {'minLv': m.minLv, 'maxLv': m.maxLv}),
                                   style: bold.copyWith(color: goldLight)),
                               if (fit) ...[
                                 const SizedBox(width: 8),
-                                Text('Phù hợp', style: small.copyWith(color: const Color(0xFF8CE07A))),
+                                Text(tr('Phù hợp'), style: small.copyWith(color: const Color(0xFF8CE07A))),
                               ],
                             ],
                           ),
-                          Text(m.desc, style: small),
+                          Text(tr(m.desc), style: small),
                           const SizedBox(height: 2),
                           Wrap(
                             spacing: 10,
@@ -87,13 +88,13 @@ class MapListScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     open
                         ? LButton(
-                            label: 'Vào',
+                            label: tr('Vào'),
                             small: true,
                             color: fit ? jade : seal,
                             onTap: () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.field(m))),
                           )
                         : Text(
-                            m.rebirths > 0 ? 'Cần Chuyển sinh ${m.rebirths}\ncấp ${m.entryLv}' : 'Cần cấp ${m.entryLv}',
+                            m.rebirths > 0 ? tr('Cần Chuyển sinh {rebirths}\ncấp {entryLv}', {'rebirths': m.rebirths, 'entryLv': m.entryLv}) : tr('Cần cấp {entryLv}', {'entryLv': m.entryLv}),
                             style: small,
                             textAlign: TextAlign.center),
                   ],
@@ -127,11 +128,11 @@ class TowerCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Tháp Thử Luyện', style: titleStyle(19, color: cream)),
+                Text(tr('Tháp Thử Luyện'), style: titleStyle(19, color: cream)),
                 Text(
                   open
-                      ? 'Tầng cao nhất: ${h.towerBest} · Mỗi 5 tầng có đầu lĩnh và ngọc, từ tầng 60 rơi ngọc Tiên, 72 ngọc Thánh.'
-                      : 'Mở ở cấp $towerOpenLevel. Tháp vô tận, càng lên cao quái càng mạnh.',
+                      ? tr('Tầng cao nhất: {towerBest} · Mỗi 5 tầng có đầu lĩnh và ngọc, từ tầng 60 rơi ngọc Tiên, 72 ngọc Thánh.', {'towerBest': h.towerBest})
+                      : tr('Mở ở cấp {towerOpenLevel}. Tháp vô tận, càng lên cao quái càng mạnh.', {'towerOpenLevel': towerOpenLevel}),
                   style: small.copyWith(fontSize: 11.5),
                   maxLines: 2,
                 ),
@@ -141,12 +142,12 @@ class TowerCard extends StatelessWidget {
           const SizedBox(width: 8),
           open
               ? LButton(
-                  label: 'Leo tầng $next',
+                  label: tr('Leo tầng {next}', {'next': next}),
                   small: true,
                   color: jade,
                   onTap: () => Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(towerFloor(next)))),
                 )
-              : Text('Cấp $towerOpenLevel', style: small),
+              : Text(tr('Cấp {towerOpenLevel}', {'towerOpenLevel': towerOpenLevel}), style: small),
         ],
       ),
     );
@@ -202,7 +203,7 @@ class _MobTag extends StatelessWidget {
         ),
         const SizedBox(width: 3),
         Text(
-          def.boss ? '${def.name} (đầu lĩnh)' : def.name,
+          def.boss ? tr('{defName} (đầu lĩnh)', {'defName': tr(def.name)}) : def.name,
           style: small.copyWith(color: def.boss ? const Color(0xFFFFB08A) : cream, fontSize: 11.5),
         ),
       ],
@@ -251,10 +252,10 @@ class _ThemeSwatch extends StatelessWidget {
 
 /// A side land's short name, for its dungeons in the list.
 String landShort(String mapId) => switch (mapId) {
-      'mieucuong' => 'Miêu Cương',
-      'tayvuc' => 'Tây Vực',
-      'donghai' => 'Đông Hải',
-      'conlon' => 'Côn Lôn',
+      'mieucuong' => tr('Miêu Cương'),
+      'tayvuc' => tr('Tây Vực'),
+      'donghai' => tr('Đông Hải'),
+      'conlon' => tr('Côn Lôn'),
       _ => mapById[mapId]?.name ?? '',
     };
 
@@ -292,7 +293,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                 Text(label, style: bold.copyWith(fontSize: 13)),
                 if (fresh) ...[
                   const SizedBox(width: 4),
-                  Text('MỚI', style: bold.copyWith(fontSize: 9.5, color: const Color(0xFFFFD34A))),
+                  Text(tr('MỚI'), style: bold.copyWith(fontSize: 9.5, color: const Color(0xFFFFD34A))),
                 ],
               ],
             ),
@@ -305,7 +306,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
     final h = SaveService.instance.hero;
     final realmOpen = h.realmOpen(0);
     return SubScreen(
-      title: const ['Vượt ải', 'Bí cảnh', 'Ải Ác Mộng'][_mode],
+      title: tr(const ['Vượt ải', 'Bí cảnh', 'Ải Ác Mộng'][_mode]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -313,9 +314,9 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(children: [
-                _chip('Thường', 0),
-                if (realmOpen) _chip('Bí cảnh', 1, fresh: h.realmStars.isEmpty),
-                if (h.nightmareOpen) _chip('Ác Mộng', 2),
+                _chip(tr('Thường'), 0),
+                if (realmOpen) _chip(tr('Bí cảnh'), 1, fresh: h.realmStars.isEmpty),
+                if (h.nightmareOpen) _chip(tr('Ác Mộng'), 2),
               ]),
             ),
           Expanded(
@@ -372,7 +373,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    n >= 0 ? 'Ải ${n + 1}: ${d.name}' : '${landShort(d.mapId)}: ${d.name}',
+                                    n >= 0 ? tr('Ải {p0}: {dName}', {'p0': n + 1, 'dName': tr(d.name)}) : '${landShort(d.mapId)}: ${tr(d.name)}',
                                     style: bold.copyWith(color: goldLight),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -380,9 +381,9 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                                 if (quest) const Icon(Icons.auto_stories, size: 16, color: goldLight),
                               ],
                             ),
-                            Text('Cấp ${d.level} · ${d.map.name}', style: small),
+                            Text(tr('Cấp {level} · {mapName}', {'level': d.level, 'mapName': tr(d.map.name)}), style: small),
                             Text(
-                              '${d.waves.length} đợt quái + ${mobById[d.map.boss]!.name}',
+                              tr('{wavesLength} đợt quái + {p0}', {'wavesLength': d.waves.length, 'p0': tr(mobById[d.map.boss]!.name)}),
                               style: small.copyWith(color: cream),
                             ),
                             const Spacer(),
@@ -391,7 +392,7 @@ class _DungeonListScreenState extends State<DungeonListScreen> {
                                 for (var s = 0; s < 3; s++)
                                   Icon(s < stars ? Icons.star : Icons.star_border, color: goldLight, size: 20),
                                 const Spacer(),
-                                Text(open ? '${d.timeLimit.round()} giây' : 'Cần cấp ${d.level - 2}', style: small),
+                                Text(open ? tr('{p0} giây', {'p0': d.timeLimit.round()}) : tr('Cần cấp {p0}', {'p0': d.level - 2}), style: small),
                               ],
                             ),
                           ],
@@ -424,12 +425,12 @@ class _QuestScreenState extends State<QuestScreen> {
   /// What the story panel says once there is no quest under way.
   Widget _storyDone(HeroData h) {
     final (head, line) = h.rebirths == 0
-        ? ('Đã hoàn thành toàn bộ chính tuyến!', 'Đạt cấp 99 đầy kinh nghiệm rồi chuyển sinh để mở Luân Hồi.')
+        ? (tr('Đã hoàn thành toàn bộ chính tuyến!'), tr('Đạt cấp 99 đầy kinh nghiệm rồi chuyển sinh để mở Luân Hồi.'))
         : h.rbDone >= luanHoi.length
-            ? ('Đã hoàn thành toàn bộ Luân Hồi!', 'Danh xưng Võ Lâm Chí Tôn đã thuộc về bạn.')
+            ? (tr('Đã hoàn thành toàn bộ Luân Hồi!'), tr('Danh xưng Võ Lâm Chí Tôn đã thuộc về bạn.'))
             : (
-                'Hoàn thành ${chapterLabel(h.chapter)}: ${luanHoi[h.chapter].title}',
-                'Chuyển sinh lần nữa để mở ${chapterLabel(h.chapter + 1)}. Trong lúc chờ, hãy nhận lệnh ở Bảng Truy Nã.'
+                tr('Hoàn thành {p0}: {p1}', {'p0': chapterLabel(h.chapter), 'p1': tr(luanHoi[h.chapter].title)}),
+                tr('Chuyển sinh lần nữa để mở {p0}. Trong lúc chờ, hãy nhận lệnh ở Bảng Truy Nã.', {'p0': chapterLabel(h.chapter + 1)})
               );
     return Center(
       child: Column(
@@ -465,10 +466,10 @@ class _QuestScreenState extends State<QuestScreen> {
     final q = h.currentMain;
     final ready = h.bounties.where((b) => b.done).length;
     return SubScreen(
-      title: 'Nhiệm vụ',
+      title: tr('Nhiệm vụ'),
       actions: [
-        _chip('Cốt truyện', 0),
-        _chip(ready > 0 ? 'Truy nã ($ready)' : 'Truy nã', 1),
+        _chip(tr('Cốt truyện'), 0),
+        _chip(ready > 0 ? tr('Truy nã ({ready})', {'ready': ready}) : tr('Truy nã'), 1),
       ],
       child: _tab == 1 ? const BountyView() : Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -481,22 +482,22 @@ class _QuestScreenState extends State<QuestScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(h.inLuanHoi ? '${h.questLabel} · ${luanHoi[h.chapter].title}' : h.questLabel,
+                        Text(h.inLuanHoi ? '${tr(h.questLabel)} · ${tr(luanHoi[h.chapter].title)}' : h.questLabel,
                             style: small.copyWith(color: h.inLuanHoi ? goldLight : creamDim)),
-                        Text(q.title, style: titleStyle(22)),
+                        Text(tr(q.title), style: titleStyle(22)),
                         const SizedBox(height: 6),
                         Expanded(
                           child: SingleChildScrollView(
                             child: Text(
                                 h.inLuanHoi && h.rbQuest == 0
-                                    ? '${luanHoi[h.chapter].intro}\n\n${q.story}'
+                                    ? '${tr(luanHoi[h.chapter].intro)}\n\n${tr(q.story)}'
                                     : q.story,
                                 style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
                           ),
                         ),
                         const Divider(color: gold),
                         Text(
-                          h.mainLocked ? 'Cần đạt cấp ${q.minLv}' : 'Mục tiêu: ${q.goal}',
+                          h.mainLocked ? tr('Cần đạt cấp {minLv}', {'minLv': q.minLv}) : tr('Mục tiêu: {goal}', {'goal': tr(q.goal)}),
                           style: bold.copyWith(color: h.mainLocked ? const Color(0xFFFF8A7A) : cream),
                         ),
                         if (q.type == QuestType.kill && !h.mainLocked)
@@ -511,8 +512,8 @@ class _QuestScreenState extends State<QuestScreen> {
                           ),
                         const SizedBox(height: 4),
                         Text(
-                          'Thưởng: ${fmt(expToNext(q.minLv) * q.expFactor)} kinh nghiệm · '
-                          '${fmt(q.gold)} lượng${q.item ? ' · trang bị Quý' : ''}',
+                          tr('Thưởng: {p0} kinh nghiệm · '
+                          '{p1} lượng{p2}', {'p0': fmt(expToNext(q.minLv) * q.expFactor), 'p1': fmt(q.gold), 'p2': q.item ? tr(' · trang bị Quý') : ''}),
                           style: small.copyWith(color: goldLight),
                         ),
                       ],
@@ -526,8 +527,8 @@ class _QuestScreenState extends State<QuestScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Hằng ngày', style: titleStyle(20)),
-                  Text('Làm mới mỗi ngày · thưởng theo cấp', style: small),
+                  Text(tr('Hằng ngày'), style: titleStyle(20)),
+                  Text(tr('Làm mới mỗi ngày · thưởng theo cấp'), style: small),
                   const SizedBox(height: 6),
                   for (final d in h.daily)
                     Padding(
@@ -544,7 +545,7 @@ class _QuestScreenState extends State<QuestScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(d.goal, style: body.copyWith(fontSize: 13)),
+                                Text(tr(d.goal), style: body.copyWith(fontSize: 13)),
                                 if (!d.done)
                                   Bar(
                                     value: d.progress / d.count,
@@ -553,7 +554,7 @@ class _QuestScreenState extends State<QuestScreen> {
                                     label: '${d.progress}/${d.count}',
                                   ),
                                 Text(
-                                  '+${fmt(d.exp)} kinh nghiệm · +${fmt(d.gold)} lượng',
+                                  tr('+{p0} kinh nghiệm · +{p1} lượng', {'p0': fmt(d.exp), 'p1': fmt(d.gold)}),
                                   style: small.copyWith(fontSize: 11),
                                 ),
                               ],
@@ -563,8 +564,8 @@ class _QuestScreenState extends State<QuestScreen> {
                       ),
                     ),
                   const Spacer(),
-                  Text('Ngũ hành: Kim → Mộc → Thổ → Thủy → Hỏa → Kim', style: small),
-                  Text('Phái của bạn: ${h.sect.name} (${h.hanh.label})', style: small),
+                  Text(tr('Ngũ hành: Kim → Mộc → Thổ → Thủy → Hỏa → Kim'), style: small),
+                  Text(tr('Phái của bạn: {sectName} ({hanhLabel})', {'sectName': tr(h.sect.name), 'hanhLabel': tr(h.hanh.label)}), style: small),
                 ],
               ),
             ),

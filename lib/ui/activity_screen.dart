@@ -12,6 +12,7 @@ import '../services/sound.dart';
 import 'pass_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Chests a hero can open right now, for the town badge.
 int activityClaimable(HeroData h) {
@@ -48,7 +49,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Năng động',
+      title: tr('Năng động'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -75,8 +76,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Hôm nay', style: titleStyle(18)),
-          Text('Mỗi hoạt động có điểm tối đa trong ngày.', style: small.copyWith(fontSize: 11)),
+          Text(tr('Hôm nay'), style: titleStyle(18)),
+          Text(tr('Mỗi hoạt động có điểm tối đa trong ngày.'), style: small.copyWith(fontSize: 11)),
           const SizedBox(height: 6),
           Expanded(
             child: ListView(
@@ -89,8 +90,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
           const SizedBox(height: 4),
           LButton(
             label: !h.passOpen
-                ? 'Lệnh Bài (mở $passOpenText)'
-                : (h.passWaiting > 0 ? 'Lệnh Bài · nhận ${h.passWaiting}' : 'Lệnh Bài · bậc ${h.passTier}/$passTiers'),
+                ? tr('Lệnh Bài (mở {passOpenText})', {'passOpenText': passOpenText})
+                : (h.passWaiting > 0 ? tr('Lệnh Bài · nhận {passWaiting}', {'passWaiting': h.passWaiting}) : tr('Lệnh Bài · bậc {passTier}/{passTiers}', {'passTier': h.passTier, 'passTiers': passTiers})),
             icon: Icons.workspace_premium,
             small: true,
             color: const Color(0xFF8A6A1A),
@@ -116,7 +117,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('${d.label} (+${d.points})',
+                child: Text('${tr(d.label)} (+${d.points})',
                     style: small.copyWith(fontSize: 12, color: full ? const Color(0xFF8CE07A) : cream)),
               ),
               Text('$got/${d.cap}', style: bold.copyWith(fontSize: 12, color: full ? const Color(0xFF8CE07A) : goldLight)),
@@ -140,10 +141,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
         children: [
           Row(
             children: [
-              Text(weekly ? 'Quà tuần' : 'Quà ngày', style: titleStyle(18)),
+              Text(weekly ? tr('Quà tuần') : tr('Quà ngày'), style: titleStyle(18)),
               const SizedBox(width: 10),
               Flexible(
-                child: Text(weekly ? 'Điểm tuần: $pts (làm mới thứ Hai)' : 'Điểm năng động: $pts',
+                child: Text(weekly ? tr('Điểm tuần: {pts} (làm mới thứ Hai)', {'pts': pts}) : tr('Điểm năng động: {pts}', {'pts': pts}),
                     style: bold.copyWith(color: goldLight), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
@@ -169,15 +170,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final can = h.actCanClaim(i, weekly: weekly);
     final c = actChest(i, h.level, weekly: weekly);
     final what = [
-      '${fmt(c.gold)} lượng',
-      if (c.potions > 0) '${c.potions} thuốc',
-      if (c.herbs > 0) '${c.herbs} dược liệu',
-      if (c.gemTier > 0) 'ngọc cấp ${c.gemTier}',
-      if (c.coins > 0) '${c.coins} Uy danh',
-      if (c.shards > 0) '${c.shards} mảnh Hoàng Kim',
-      if (c.pill == 'songboi') 'Song Bội Đan',
-      if (c.pill == 'cuongluc') 'Cuồng Lực Đan',
-      if (c.pill == 'taytuy') 'Tẩy Tủy Đan',
+      tr('{p0} lượng', {'p0': fmt(c.gold)}),
+      if (c.potions > 0) tr('{potions} thuốc', {'potions': c.potions}),
+      if (c.herbs > 0) tr('{herbs} dược liệu', {'herbs': c.herbs}),
+      if (c.gemTier > 0) tr('ngọc cấp {gemTier}', {'gemTier': c.gemTier}),
+      if (c.coins > 0) tr('{coins} Uy danh', {'coins': c.coins}),
+      if (c.shards > 0) tr('{shards} mảnh Hoàng Kim', {'shards': c.shards}),
+      if (c.pill == 'songboi') tr('Song Bội Đan'),
+      if (c.pill == 'cuongluc') tr('Cuồng Lực Đan'),
+      if (c.pill == 'taytuy') tr('Tẩy Tủy Đan'),
     ].join(' · ');
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -190,7 +191,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 SaveService.instance.save();
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text('Mở rương: ${lines.join(', ')}')));
+                  ..showSnackBar(SnackBar(content: Text(tr('Mở rương: {p0}', {'p0': lines.join(', ')}))));
                 setState(() {});
               }
             : null,
@@ -203,7 +204,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ),
           child: Column(
             children: [
-              Text('$mark điểm', style: bold.copyWith(fontSize: 12, color: goldLight)),
+              Text(tr('{mark} điểm', {'mark': mark}), style: bold.copyWith(fontSize: 12, color: goldLight)),
               // Shrinks rather than covering the text on short screens.
               Expanded(
                 child: FittedBox(
@@ -218,7 +219,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               // by a few pixels with three lines).
               Flexible(
                 flex: 2,
-                child: Text(claimed ? 'Đã nhận' : (can ? 'Chạm để mở!' : what),
+                child: Text(claimed ? tr('Đã nhận') : (can ? tr('Chạm để mở!') : what),
                     style: small.copyWith(fontSize: 9.5, color: can ? cream : creamDim),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/painting.dart';
 
+import '../core/i18n.dart';
 import '../core/alchemy.dart';
 import '../core/content.dart';
 import '../core/fishing.dart';
@@ -631,7 +632,7 @@ class WorldRenderer {
     c.drawRect(Rect.fromLTWH(r.left, r.top, r.width * (m.hp / m.maxHp).clamp(0, 1), r.height),
         Paint()..color = m.big ? const Color(0xFFE8503A) : const Color(0xFFD8403A));
     if (targeted || m.big) {
-      final tp = _label(m.elite ? '★ ${m.eliteName} · ${m.level}' : '${d.name} · ${m.level}',
+      final tp = _label(m.elite ? '★ ${tr(m.eliteName)} · ${m.level}' : '${tr(d.name)} · ${m.level}',
           m.elite ? 0xFFFFD34A : (d.boss ? 0xFFFFB08A : 0xFFFFF3C4), m.big ? 13 : 11);
       tp.paint(c, Offset(m.x - tp.width / 2, y - tp.height - 1));
       // Hanh pip.

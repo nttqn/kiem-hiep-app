@@ -12,6 +12,7 @@ import '../services/leaderboard.dart';
 import '../services/save.dart';
 import 'play_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 const _warTint = Color(0xFFFF8A5A);
 
@@ -101,7 +102,7 @@ class _GuildWarViewState extends State<GuildWarView> {
       _foes = [for (final e in foes.entries) (e.key, e.value)];
       await SaveService.instance.save();
     } catch (e) {
-      _error = 'Không tải được Bang chiến, thử lại sau.';
+      _error = tr('Không tải được Bang chiến, thử lại sau.');
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -120,13 +121,13 @@ class _GuildWarViewState extends State<GuildWarView> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Thưởng Bang chiến', style: titleStyle(20, color: _warTint)),
+        title: Text(tr('Thưởng Bang chiến'), style: titleStyle(20, color: _warTint)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [for (final l in lines) Text('• $l', style: body)],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
   }
@@ -152,7 +153,7 @@ class _GuildWarViewState extends State<GuildWarView> {
     } catch (_) {
       if (mounted && _foeId == id) {
         setState(() => _targets = const []);
-        _toast('Không tải được thành viên bang $name.');
+        _toast(tr('Không tải được thành viên bang {name}.', {'name': name}));
       }
     }
   }
@@ -171,13 +172,13 @@ class _GuildWarViewState extends State<GuildWarView> {
       try {
         _members = await gs.members(g.id);
       } catch (_) {}
-      if (!await gs.pushWar(g, h, _members)) _toast('Chưa ghi được Chiến công lên máy chủ, sẽ thử lại.');
+      if (!await gs.pushWar(g, h, _members)) _toast(tr('Chưa ghi được Chiến công lên máy chủ, sẽ thử lại.'));
       try {
         _board = await gs.warBoard(_week);
       } catch (_) {}
       widget.onChanged();
     } catch (_) {
-      _toast('Mạng yếu, thử lại sau.');
+      _toast(tr('Mạng yếu, thử lại sau.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -191,7 +192,7 @@ class _GuildWarViewState extends State<GuildWarView> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(_error!, style: body),
           const SizedBox(height: 8),
-          LButton(label: 'Thử lại', small: true, onTap: _load),
+          LButton(label: tr('Thử lại'), small: true, onTap: _load),
         ]),
       );
     }
@@ -202,22 +203,22 @@ class _GuildWarViewState extends State<GuildWarView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Tuần $_week · còn ${huntDaysLeft(day)} ngày · Chiến lệnh $left/$warPerDay',
+          tr('Tuần {_week} · còn {p0} ngày · Chiến lệnh {left}/{warPerDay}', {'_week': _week, 'p0': huntDaysLeft(day), 'left': left, 'warPerDay': warPerDay}),
           style: bold.copyWith(color: _warTint, fontSize: 12.5),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         Text(
-          'Chiến công: bạn ${h.warPtsFor(g.id)} · bang ${fmt(_mySum)}${place >= 0 ? ' (hạng ${place + 1})' : ''}',
+          tr('Chiến công: bạn {p0} · bang {p1}{p2}', {'p0': h.warPtsFor(g.id), 'p1': fmt(_mySum), 'p2': place >= 0 ? tr(' (hạng {p0})', {'p0': place + 1}) : ''}),
           style: small.copyWith(fontSize: 11.5, color: cream),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
         Row(children: [
-          _chip(0, 'Khiêu chiến'),
-          _chip(1, 'Xếp hạng'),
-          _chip(2, 'Phần thưởng'),
+          _chip(0, tr('Khiêu chiến')),
+          _chip(1, tr('Xếp hạng')),
+          _chip(2, tr('Phần thưởng')),
         ]),
         const SizedBox(height: 4),
         Expanded(
@@ -251,7 +252,7 @@ class _GuildWarViewState extends State<GuildWarView> {
 
   Widget _challengeView(String day) {
     if (_foes.isEmpty) {
-      return Center(child: Text('Chưa có bang nào khác để khiêu chiến.', style: small));
+      return Center(child: Text(tr('Chưa có bang nào khác để khiêu chiến.'), style: small));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -292,9 +293,9 @@ class _GuildWarViewState extends State<GuildWarView> {
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            'Chọn một bang ở trên để xem cao thủ của họ.\n'
-            'Mỗi ngày $warPerDay Chiến lệnh, mỗi người một lần. Thắng người mạnh hơn được nhiều Chiến công hơn '
-            '($warWinMin–$warWinMax), thua vẫn được $warLossPts.',
+            tr('Chọn một bang ở trên để xem cao thủ của họ.\n'
+            'Mỗi ngày {warPerDay} Chiến lệnh, mỗi người một lần. Thắng người mạnh hơn được nhiều Chiến công hơn '
+            '({warWinMin}–{warWinMax}), thua vẫn được {warLossPts}.', {'warPerDay': warPerDay, 'warWinMin': warWinMin, 'warWinMax': warWinMax, 'warLossPts': warLossPts}),
             style: small.copyWith(fontSize: 11.5),
             textAlign: TextAlign.center,
           ),
@@ -303,7 +304,7 @@ class _GuildWarViewState extends State<GuildWarView> {
     }
     final t = _targets;
     if (t == null) return const Center(child: CircularProgressIndicator(color: goldLight));
-    if (t.isEmpty) return Center(child: Text('Bang này chưa có ai để khiêu chiến.', style: small));
+    if (t.isEmpty) return Center(child: Text(tr('Bang này chưa có ai để khiêu chiến.'), style: small));
     return ListView(
       children: [for (final m in t) _targetRow(m, day)],
     );
@@ -331,7 +332,7 @@ class _GuildWarViewState extends State<GuildWarView> {
               children: [
                 Text(m.name, style: bold.copyWith(fontSize: 12.5, color: cream), overflow: TextOverflow.ellipsis),
                 Text(
-                  '${sectOf(Hanh.values[m.hanh]).name} · ${m.rebirths > 0 ? 'CS${m.rebirths} · ' : ''}Cấp ${m.level} · LC ${fmt(m.power)}',
+                  tr('{p0} · {p1}Cấp {level} · LC {p2}', {'p0': tr(sectOf(Hanh.values[m.hanh]).name), 'p1': m.rebirths > 0 ? tr('CS{rebirths} · ', {'rebirths': m.rebirths}) : '', 'level': m.level, 'p2': fmt(m.power)}),
                   style: small.copyWith(fontSize: 10.5),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -343,7 +344,7 @@ class _GuildWarViewState extends State<GuildWarView> {
             child: Text('+$pts', style: bold.copyWith(fontSize: 12, color: goldLight)),
           ),
           LButton(
-            label: fought ? 'Đã đánh' : 'Đánh',
+            label: fought ? tr('Đã đánh') : tr('Đánh'),
             small: true,
             color: const Color(0xFF8A2A1A),
             enabled: can && !_busy,
@@ -358,7 +359,7 @@ class _GuildWarViewState extends State<GuildWarView> {
 
   Widget _boardView() {
     if (_board.isEmpty) {
-      return Center(child: Text('Tuần này chưa bang nào có Chiến công.', style: small));
+      return Center(child: Text(tr('Tuần này chưa bang nào có Chiến công.'), style: small));
     }
     return ListView(
       children: [
@@ -380,7 +381,7 @@ class _GuildWarViewState extends State<GuildWarView> {
                   child: Text(_board[i].name,
                       style: bold.copyWith(fontSize: 12.5, color: cream), overflow: TextOverflow.ellipsis),
                 ),
-                Text('${_board[i].n} người · ', style: small.copyWith(fontSize: 11)),
+                Text(tr('{p0} người · ', {'p0': _board[i].n}), style: small.copyWith(fontSize: 11)),
                 Text(fmt(_board[i].pts), style: bold.copyWith(fontSize: 12.5, color: _warTint)),
               ],
             ),
@@ -394,17 +395,17 @@ class _GuildWarViewState extends State<GuildWarView> {
   Widget _rewardsView() {
     return ListView(
       children: [
-        Text('Hết tuần (Chủ nhật), ai có Chiến công đều nhận thưởng theo hạng của bang:',
+        Text(tr('Hết tuần (Chủ nhật), ai có Chiến công đều nhận thưởng theo hạng của bang:'),
             style: small.copyWith(fontSize: 11.5, color: cream)),
         const SizedBox(height: 4),
         for (final (label, place) in warRankBrackets) _rewardRow(label, warRankReward(place)),
         const SizedBox(height: 6),
         Text(
-          'Mỗi trận: thắng +$warWinCoins xu Bang, +$warWinContrib cống hiến; thua +$warLossCoins xu Bang. '
-          'Chuyển bang giữa tuần thì Chiến công tính lại từ đầu cho bang mới.',
+          tr('Mỗi trận: thắng +{warWinCoins} xu Bang, +{warWinContrib} cống hiến; thua +{warLossCoins} xu Bang. '
+          'Chuyển bang giữa tuần thì Chiến công tính lại từ đầu cho bang mới.', {'warWinCoins': warWinCoins, 'warWinContrib': warWinContrib, 'warLossCoins': warLossCoins}),
           style: small.copyWith(fontSize: 11),
         ),
-        if (h.gwWins > 0) Text('Đã thắng ${h.gwWins} trận Bang chiến', style: bold.copyWith(fontSize: 11.5, color: goldLight)),
+        if (h.gwWins > 0) Text(tr('Đã thắng {gwWins} trận Bang chiến', {'gwWins': h.gwWins}), style: bold.copyWith(fontSize: 11.5, color: goldLight)),
       ],
     );
   }
@@ -418,8 +419,8 @@ class _GuildWarViewState extends State<GuildWarView> {
             SizedBox(width: 92, child: Text(label, style: bold.copyWith(fontSize: 12, color: cream))),
             Expanded(
               child: Text(
-                '${r.coins} xu Bang, ${r.iron} Thần Thiết'
-                '${r.jade > 0 ? ', ${r.jade} Tiên Ngọc' : ''}${r.title.isNotEmpty ? ', danh hiệu « ${r.title} »' : ''}',
+                tr('{coins} xu Bang, {iron} Thần Thiết'
+                '{p0}{p1}', {'coins': r.coins, 'iron': r.iron, 'p0': r.jade > 0 ? tr(', {jade} Tiên Ngọc', {'jade': r.jade}) : '', 'p1': r.title.isNotEmpty ? tr(', danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}) : ''}),
                 style: small.copyWith(fontSize: 11),
               ),
             ),

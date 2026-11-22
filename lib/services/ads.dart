@@ -7,6 +7,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analytics.dart';
+import '../core/i18n.dart';
 
 /// AdMob: rewarded ads the player chooses to watch (revive, double a
 /// dungeon reward, free potions) and a rare interstitial when walking back
@@ -31,13 +32,13 @@ class AdsService with WidgetsBindingObserver {
     final overlay = navigatorKey.currentState?.overlay;
     if (overlay == null) return;
     final entry = OverlayEntry(
-      builder: (_) => const Positioned.fill(
+      builder: (_) => Positioned.fill(
         child: AbsorbPointer(
           child: ColoredBox(
             color: Color(0xCC000000),
             child: Center(
               child: Text(
-                'Quảng cáo sắp bắt đầu…',
+                tr('Quảng cáo sắp bắt đầu…'),
                 textDirection: TextDirection.ltr,
                 style: TextStyle(color: Color(0xFFF3E6C8), fontSize: 16, decoration: TextDecoration.none),
               ),

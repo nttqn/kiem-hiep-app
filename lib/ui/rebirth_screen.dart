@@ -9,6 +9,7 @@ import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import 'tien_screen.dart';
+import '../core/i18n.dart';
 
 /// Chuyển sinh: requirements, what is kept and reset, and the bonus ladder.
 class RebirthScreen extends StatefulWidget {
@@ -28,18 +29,18 @@ class _RebirthScreenState extends State<RebirthScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Chuyển sinh lần ${h.rebirths + 1}?', style: titleStyle(20)),
+        title: Text(tr('Chuyển sinh lần {p0}?', {'p0': h.rebirths + 1}), style: titleStyle(20)),
         content: Text(
-          'Nhân vật sẽ trở về cấp $rebirthLevel. Điểm tiềm năng được trả lại để cộng lại '
-          '(thêm $rebirthPoints điểm).${h.nextRebirthPills > 0 ? ' Tiêu hao ${h.nextRebirthPills} Linh Phách Đơn.' : ''} Trang bị, kỹ năng, ngọc, linh thú, lượng và nhiệm vụ '
-          'được giữ nguyên.',
+          tr('Nhân vật sẽ trở về cấp {rebirthLevel}. Điểm tiềm năng được trả lại để cộng lại '
+          '(thêm {rebirthPoints} điểm).{p0} Trang bị, kỹ năng, ngọc, linh thú, lượng và nhiệm vụ '
+          'được giữ nguyên.', {'rebirthLevel': rebirthLevel, 'rebirthPoints': rebirthPoints, 'p0': h.nextRebirthPills > 0 ? tr(' Tiêu hao {nextRebirthPills} Linh Phách Đơn.', {'nextRebirthPills': h.nextRebirthPills}) : ''}),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để sau')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Để sau'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Chuyển sinh', style: TextStyle(color: goldLight, fontWeight: FontWeight.w800)),
+            child: Text(tr('Chuyển sinh'), style: TextStyle(color: goldLight, fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -53,13 +54,13 @@ class _RebirthScreenState extends State<RebirthScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Chuyển sinh lần ${h.rebirths}!', style: titleStyle(22)),
+        title: Text(tr('Chuyển sinh lần {rebirths}!', {'rebirths': h.rebirths}), style: titleStyle(22)),
         content: Text(
-          'Đại hiệp đã thoát thai hoán cốt, trở về cấp $rebirthLevel với '
-          '${h.freePoints} điểm tiềm năng. Hãy vào Nhân vật để cộng điểm.',
+          tr('Đại hiệp đã thoát thai hoán cốt, trở về cấp {rebirthLevel} với '
+          '{freePoints} điểm tiềm năng. Hãy vào Nhân vật để cộng điểm.', {'rebirthLevel': rebirthLevel, 'freePoints': h.freePoints}),
           style: body,
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tuyệt'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Tuyệt')))],
       ),
     );
   }
@@ -70,7 +71,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
     final atMax = h.level >= maxLevel;
     final done = h.rebirths >= maxRebirths;
     return SubScreen(
-      title: done ? 'Chuyển sinh · Ngộ Đạo' : 'Chuyển sinh',
+      title: done ? tr('Chuyển sinh · Ngộ Đạo') : tr('Chuyển sinh'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -86,50 +87,50 @@ class _RebirthScreenState extends State<RebirthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Đã chuyển sinh ${h.rebirths}/$maxRebirths lần', style: titleStyle(18, color: cream)),
+                          Text(tr('Đã chuyển sinh {rebirths}/{maxRebirths} lần', {'rebirths': h.rebirths, 'maxRebirths': maxRebirths}), style: titleStyle(18, color: cream)),
                           const SizedBox(height: 8),
-                          Text('Điều kiện', style: bold.copyWith(color: goldLight)),
-                          _check('Đạt cấp $maxLevel (hiện tại cấp ${h.level})', atMax),
-                          _check('Kinh nghiệm cấp $maxLevel đầy', h.expFull),
+                          Text(tr('Điều kiện'), style: bold.copyWith(color: goldLight)),
+                          _check(tr('Đạt cấp {maxLevel} (hiện tại cấp {level})', {'maxLevel': maxLevel, 'level': h.level}), atMax),
+                          _check(tr('Kinh nghiệm cấp {maxLevel} đầy', {'maxLevel': maxLevel}), h.expFull),
                           if (h.nextRebirthPills > 0)
-                            _check('Linh Phách Đơn: ${h.soulPills}/${h.nextRebirthPills} viên (trừ khi chuyển sinh)',
+                            _check(tr('Linh Phách Đơn: {soulPills}/{nextRebirthPills} viên (trừ khi chuyển sinh)', {'soulPills': h.soulPills, 'nextRebirthPills': h.nextRebirthPills}),
                                 h.soulPills >= h.nextRebirthPills),
                           const SizedBox(height: 4),
                           Bar(
                             value: atMax ? (h.exp / cap).clamp(0.0, 1.0) : 0,
                             color: expGold,
                             height: 13,
-                            label: atMax ? '${fmt(h.exp)} / ${fmt(cap)}' : 'Cần cấp $maxLevel',
+                            label: atMax ? '${fmt(h.exp)} / ${fmt(cap)}' : tr('Cần cấp {maxLevel}', {'maxLevel': maxLevel}),
                           ),
                           const SizedBox(height: 10),
                           if (done || h.nextRebirthPills > 0) ...[
                             // Past the last rebirth, EXP goes into Linh Phách Đơn.
-                            MatCount(Mat.soulPill, 'Linh Phách Đơn: ${h.soulPills} viên', style: bold.copyWith(color: const Color(0xFF9FE8FF)), size: 22),
+                            MatCount(Mat.soulPill, tr('Linh Phách Đơn: {soulPills} viên', {'soulPills': h.soulPills}), style: bold.copyWith(color: const Color(0xFF9FE8FF)), size: 22),
                             const SizedBox(height: 4),
                             Bar(
                               value: h.expFull ? (h.soulExp / h.soulPillExp).clamp(0.0, 1.0) : 0,
                               color: const Color(0xFF6FC8E8),
                               height: 13,
-                              label: h.expFull ? '${fmt(h.soulExp)} / ${fmt(h.soulPillExp)}' : 'Cần đầy kinh nghiệm cấp $maxLevel',
+                              label: h.expFull ? '${fmt(h.soulExp)} / ${fmt(h.soulPillExp)}' : tr('Cần đầy kinh nghiệm cấp {maxLevel}', {'maxLevel': maxLevel}),
                             ),
                             _line(done
-                                ? 'Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn.'
-                                : 'Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn. Cần ${h.nextRebirthPills} viên để chuyển sinh lần ${h.rebirths + 1}.'),
+                                ? tr('Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn.')
+                                : tr('Kinh nghiệm dư ngưng tụ thành Linh Phách Đơn. Cần {nextRebirthPills} viên để chuyển sinh lần {p0}.', {'nextRebirthPills': h.nextRebirthPills, 'p0': h.rebirths + 1})),
                             if (done && kiepPillsAhead(h.daoLv) > 0)
-                              _line('Để dành cho Độ kiếp: còn cần ${fmt(kiepPillsAhead(h.daoLv))} viên để tới ${daoStages.last.name}.'),
-                            _line('Đổi $soulPillsPerIron viên lấy 1 Thần Thiết ở Kỳ Trân Các.'),
+                              _line(tr('Để dành cho Độ kiếp: còn cần {p0} viên để tới {lastName}.', {'p0': fmt(kiepPillsAhead(h.daoLv)), 'lastName': tr(daoStages.last.name)})),
+                            _line(tr('Đổi {soulPillsPerIron} viên lấy 1 Thần Thiết ở Kỳ Trân Các.', {'soulPillsPerIron': soulPillsPerIron})),
                           ],
                           if (!done) ...[
                             const SizedBox(height: 6),
-                            Text('Khi chuyển sinh', style: bold.copyWith(color: goldLight)),
-                            _line('Trở về cấp $rebirthLevel, trả lại điểm tiềm năng và tặng thêm $rebirthPoints điểm.'),
-                            _line('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.'),
-                            _line('Mỗi lần: Sinh lực ${_pct(rebirthHpAtk)}, Công lực ${_pct(rebirthHpAtk)}, '
-                                'Phòng thủ ${_pct(rebirthDef)}, Kinh nghiệm nhận ${_pct(rebirthExp)}, vĩnh viễn.'),
+                            Text(tr('Khi chuyển sinh'), style: bold.copyWith(color: goldLight)),
+                            _line(tr('Trở về cấp {rebirthLevel}, trả lại điểm tiềm năng và tặng thêm {rebirthPoints} điểm.', {'rebirthLevel': rebirthLevel, 'rebirthPoints': rebirthPoints})),
+                            _line(tr('Giữ nguyên trang bị, kỹ năng, ngọc, linh thú, lượng, nhiệm vụ và thành tựu.')),
+                            _line(tr('Mỗi lần: Sinh lực {p0}, Công lực {p0}, '
+                                'Phòng thủ {p1}, Kinh nghiệm nhận {p2}, vĩnh viễn.', {'p0': _pct(rebirthHpAtk), 'p1': _pct(rebirthDef), 'p2': _pct(rebirthExp)})),
                             if (h.rebirths + 1 >= lucChuyen)
-                              _line('Lục chuyển: mỗi cấp cần gấp ${lucChuyenExpNeed.round()} lần kinh nghiệm, '
-                                  'nhưng được ${pointsPerLevel + lucChuyenPoints} điểm tiềm năng (thay vì $pointsPerLevel). '
-                                  'Mở U Minh Huyết Hải.'),
+                              _line(tr('Lục chuyển: mỗi cấp cần gấp {p0} lần kinh nghiệm, '
+                                  'nhưng được {p1} điểm tiềm năng (thay vì {pointsPerLevel}). '
+                                  'Mở U Minh Huyết Hải.', {'p0': lucChuyenExpNeed.round(), 'p1': pointsPerLevel + lucChuyenPoints, 'pointsPerLevel': pointsPerLevel})),
                           ],
                         ],
                       ),
@@ -138,7 +139,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                   const SizedBox(height: 6),
                   Center(
                     child: LButton(
-                      label: done ? 'Đã đạt tối đa' : 'Chuyển sinh lần ${h.rebirths + 1}',
+                      label: done ? tr('Đã đạt tối đa') : tr('Chuyển sinh lần {p0}', {'p0': h.rebirths + 1}),
                       icon: Icons.autorenew,
                       width: 260,
                       enabled: h.canRebirth,
@@ -160,9 +161,9 @@ class _RebirthScreenState extends State<RebirthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Thưởng cộng dồn', style: titleStyle(18)),
+                  Text(tr('Thưởng cộng dồn'), style: titleStyle(18)),
                   const SizedBox(height: 6),
-                  _row(['Lần', 'Sinh lực', 'Công lực', 'Phòng thủ', 'Kinh nghiệm'], header: true),
+                  _row([tr('Lần'), tr('Sinh lực'), tr('Công lực'), tr('Phòng thủ'), tr('Kinh nghiệm')], header: true),
                   // Scrolls on a short phone.
                   Expanded(
                     child: ListView(
@@ -177,7 +178,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                           ], done: n <= h.rebirths, next: n == h.rebirths + 1),
                         const SizedBox(height: 6),
                         Text(
-                          'Trang bị đang mặc vẫn dùng được sau khi chuyển sinh, nên lần sau lên cấp nhanh hơn nhiều.',
+                          tr('Trang bị đang mặc vẫn dùng được sau khi chuyển sinh, nên lần sau lên cấp nhanh hơn nhiều.'),
                           style: small.copyWith(fontSize: 11.5),
                         ),
                       ],
@@ -225,10 +226,10 @@ class _RebirthScreenState extends State<RebirthScreen> {
             color: c,
             height: 13,
             label: !open
-                ? 'Cần đầy kinh nghiệm cấp $maxLevel'
+                ? tr('Cần đầy kinh nghiệm cấp {maxLevel}', {'maxLevel': maxLevel})
                 : h.daoWaiting
-                    ? 'Viên mãn · chờ Độ kiếp'
-                    : 'Đạo hạnh ${fmt(h.daoExp)} / ${fmt(daoCost(lv))}',
+                    ? tr('Viên mãn · chờ Độ kiếp')
+                    : tr('Đạo hạnh {p0} / {p1}', {'p0': fmt(h.daoExp), 'p1': fmt(daoCost(lv))}),
           ),
           const SizedBox(height: 6),
           Expanded(
@@ -237,18 +238,18 @@ class _RebirthScreenState extends State<RebirthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (lv > 0)
-                    Text('Đang có: Sinh lực ${pct(Bonus.hpPct)}, Công lực ${pct(Bonus.atkPct)}, Phòng thủ ${pct(Bonus.defPct)}',
+                    Text(tr('Đang có: Sinh lực {p0}, Công lực {p1}, Phòng thủ {p2}', {'p0': pct(Bonus.hpPct), 'p1': pct(Bonus.atkPct), 'p2': pct(Bonus.defPct)}),
                         style: bold.copyWith(fontSize: 13, color: cream)),
                   if (gate) ...[
-                    _line('Độ kiếp vào ${daoStages[h.kiepStage].name}: thắng Tâm Ma Kiếp trong ${kiepTime.round()} giây, '
-                        'tốn ${kiepPills(lv)} Linh Phách Đơn (có ${h.soulPills}). Thua không mất gì, đánh lại được.'),
-                    _line('Tâm ma biến: ${[for (final a in kiepAffixes(h.kiepStage)) tmAffixes[TmAffix.values[a]]!.name].join(', ')}.'),
+                    _line(tr('Độ kiếp vào {p0}: thắng Tâm Ma Kiếp trong {p1} giây, '
+                        'tốn {p2} Linh Phách Đơn (có {soulPills}). Thua không mất gì, đánh lại được.', {'p0': tr(daoStages[h.kiepStage].name), 'p1': kiepTime.round(), 'p2': kiepPills(lv), 'soulPills': h.soulPills})),
+                    _line(tr('Tâm ma biến: {p0}.', {'p0': [for (final a in kiepAffixes(h.kiepStage)) tmAffixes[TmAffix.values[a]]!.name].join(', ')})),
                   ],
-                  _line('Đã đầy cấp $maxLevel, kinh nghiệm vừa ngưng tụ Linh Phách Đơn vừa tăng Đạo hạnh.'),
-                  _line('Mỗi tầng: Sinh lực, Công lực +${(daoHpAtk * 100).toStringAsFixed(1).replaceAll('.', ',')}%, '
-                      'Phòng thủ +${(daoDef * 100).toStringAsFixed(1).replaceAll('.', ',')}%. Mỗi cảnh giới mới thêm '
-                      '+${(daoStageHpAtk * 100).round()}% Sinh lực, Công lực.'),
-                  _line('Chín tầng một cảnh giới; Chân Tiên không có giới hạn. Cảnh giới hiện trên Bảng xếp hạng.'),
+                  _line(tr('Đã đầy cấp {maxLevel}, kinh nghiệm vừa ngưng tụ Linh Phách Đơn vừa tăng Đạo hạnh.', {'maxLevel': maxLevel})),
+                  _line(tr('Mỗi tầng: Sinh lực, Công lực +{p0}%, '
+                      'Phòng thủ +{p1}%. Mỗi cảnh giới mới thêm '
+                      '+{p2}% Sinh lực, Công lực.', {'p0': (daoHpAtk * 100).toStringAsFixed(1).replaceAll('.', ','), 'p1': (daoDef * 100).toStringAsFixed(1).replaceAll('.', ','), 'p2': (daoStageHpAtk * 100).round()})),
+                  _line(tr('Chín tầng một cảnh giới; Chân Tiên không có giới hạn. Cảnh giới hiện trên Bảng xếp hạng.')),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 4,
@@ -263,7 +264,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                             border: Border.all(
                                 color: i == daoStageOf(lv) ? Color(daoStages[i].color) : gold.withValues(alpha: 0.3)),
                           ),
-                          child: Text(daoStages[i].name,
+                          child: Text(tr(daoStages[i].name),
                               style: small.copyWith(
                                   fontSize: 11, color: i <= daoStageOf(lv) ? Color(daoStages[i].color) : creamDim)),
                         ),
@@ -280,7 +281,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                 if (gate) ...[
                   Expanded(
                     child: LButton(
-                      label: h.daoWaiting ? 'Độ kiếp' : 'Độ kiếp (chưa đủ)',
+                      label: h.daoWaiting ? tr('Độ kiếp') : tr('Độ kiếp (chưa đủ)'),
                       icon: Icons.bolt,
                       small: true,
                       enabled: h.canKiep,
@@ -292,7 +293,7 @@ class _RebirthScreenState extends State<RebirthScreen> {
                 // Tiên khí (1.13.0): where Tiên Ngọc from the climb goes.
                 Expanded(
                   child: LButton(
-                    label: 'Tiên khí · ${h.tienJade}',
+                    label: tr('Tiên khí · {tienJade}', {'tienJade': h.tienJade}),
                     icon: Icons.diamond,
                     small: true,
                     color: const Color(0xFF2E8A7A),

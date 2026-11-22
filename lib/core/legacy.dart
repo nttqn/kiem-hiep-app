@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Truyền thừa (1.14.0): a stronger hero on the same account (another save
 /// slot) speeds up the others. Players who had maxed one hero rarely made a
@@ -68,5 +69,5 @@ List<String> takeLegacyGift(HeroData h, HeroData src) {
   h.gold += g.gold;
   h.hpPots += g.pots;
   h.mpPots += g.pots;
-  return ['+${g.gold} lượng', '+${g.pots} bình máu, +${g.pots} bình nội lực'];
+  return [tr('+{gold} lượng', {'gold': g.gold}), tr('+{pots} bình máu, +{pots} bình nội lực', {'pots': g.pots})];
 }

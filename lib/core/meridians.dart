@@ -1,3 +1,4 @@
+import 'i18n.dart';
 import 'hanh.dart';
 import 'sects.dart';
 
@@ -17,7 +18,7 @@ class MeridianDef {
   /// Bonus after [n] points: per·n / (1 + n/[meridianSoftCap]).
   double valueAt(int n) => n <= 0 ? 0 : per * n / (1 + n / meridianSoftCap);
 
-  String text(int n) => '$label +${(valueAt(n) * 100).toStringAsFixed(1)}%';
+  String text(int n) => '${tr(label)} +${(valueAt(n) * 100).toStringAsFixed(1)}%';
 }
 
 /// Points where a channel gives half of its straight-line value.

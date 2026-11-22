@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/codex.dart';
 import '../core/hero.dart';
+import '../core/items.dart' show RarityInfo;
 import '../core/monthly.dart';
 import '../core/rewards.dart';
 import '../core/world_boss.dart' show vnNow;
@@ -12,11 +13,12 @@ import '../services/save.dart';
 import 'codex_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 String _away(Duration d) {
   final h = d.inHours, m = d.inMinutes % 60;
-  if (h == 0) return '$m phút';
-  return m == 0 ? '$h giờ' : '$h giờ $m phút';
+  if (h == 0) return tr('{m} phút', {'m': m});
+  return m == 0 ? tr('{h} giờ', {'h': h}) : tr('{h} giờ {m} phút', {'h': h, 'm': m});
 }
 
 /// "Bế quan tu luyện": what the hero gained while the game was closed.
@@ -40,7 +42,7 @@ Future<void> showOfflineDialog(BuildContext context, HeroData h, OfflineReward r
           children: [
             const Icon(Icons.self_improvement, color: goldLight),
             const SizedBox(width: 8),
-            Text('Bế quan tu luyện', style: titleStyle(22)),
+            Text(tr('Bế quan tu luyện'), style: titleStyle(22)),
           ],
         ),
         content: SizedBox(
@@ -50,16 +52,16 @@ Future<void> showOfflineDialog(BuildContext context, HeroData h, OfflineReward r
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Trong ${_away(r.away)} vắng mặt, ${h.name} đã bế quan luyện công'
-                '${r.away >= offlineCap ? ' (tối đa ${offlineCap.inHours} giờ)' : ''}.',
+                tr('Trong {p0} vắng mặt, {hName} đã bế quan luyện công'
+                '{p1}.', {'p0': _away(r.away), 'hName': h.name, 'p1': r.away >= offlineCap ? tr(' (tối đa {inHours} giờ)', {'inHours': offlineCap.inHours}) : ''}),
                 style: body,
               ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _gain(Icons.auto_awesome, '+${fmt(r.exp * (doubled ? 2 : 1))}', 'kinh nghiệm'),
-                  _gain(Icons.monetization_on, '+${fmt(r.gold * (doubled ? 2 : 1))}', 'lượng'),
+                  _gain(Icons.auto_awesome, '+${fmt(r.exp * (doubled ? 2 : 1))}', tr('kinh nghiệm')),
+                  _gain(Icons.monetization_on, '+${fmt(r.gold * (doubled ? 2 : 1))}', tr('lượng')),
                 ],
               ),
             ],
@@ -80,7 +82,7 @@ Future<void> showOfflineDialog(BuildContext context, HeroData h, OfflineReward r
                         if (ctx.mounted) Navigator.pop(ctx);
                       },
                 icon: const Icon(Icons.ondemand_video, size: 18),
-                label: Text(ready ? 'Xem quảng cáo: nhận x2' : 'Quảng cáo đang tải…'),
+                label: Text(ready ? tr('Xem quảng cáo: nhận x2') : tr('Quảng cáo đang tải…')),
               ),
             ),
           TextButton(
@@ -88,7 +90,7 @@ Future<void> showOfflineDialog(BuildContext context, HeroData h, OfflineReward r
               pay(1);
               Navigator.pop(ctx);
             },
-            child: const Text('Nhận'),
+            child: Text(tr('Nhận')),
           ),
         ],
       ),
@@ -120,15 +122,15 @@ Future<void> showLoginGiftDialog(BuildContext context, HeroData h) async {
           backgroundColor: lacquer,
           // The monthly track makes it taller than a landscape phone.
           scrollable: true,
-          title: Text('Quà đăng nhập', style: titleStyle(22)),
+          title: Text(tr('Quà đăng nhập'), style: titleStyle(22)),
           content: SizedBox(
             width: 600,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                    'Mỗi ngày mở game nhận một món. Ngày 7 tặng trang bị Hiếm, rồi vòng lại từ đầu. '
-                    'Số ngày nhận trong tháng còn mở thêm quà điểm danh.',
+                    tr('Mỗi ngày mở game nhận một món. Ngày 7 tặng trang bị Hiếm, rồi vòng lại từ đầu. '
+                    'Số ngày nhận trong tháng còn mở thêm quà điểm danh.'),
                     style: small),
                 const SizedBox(height: 10),
                 Row(
@@ -148,7 +150,7 @@ Future<void> showLoginGiftDialog(BuildContext context, HeroData h) async {
                 _MonthlyTrack(days: h.monthDaysOn(today), level: h.level),
                 if (got != null) ...[
                   const SizedBox(height: 10),
-                  Text('Đã nhận: $got', style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
+                  Text(tr('Đã nhận: {got}', {'got': got}), style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
                 ],
               ],
             ),
@@ -156,7 +158,7 @@ Future<void> showLoginGiftDialog(BuildContext context, HeroData h) async {
           actions: [
             if (due)
               LButton(
-                label: 'Nhận quà ngày ${todayIdx + 1}',
+                label: tr('Nhận quà ngày {p0}', {'p0': todayIdx + 1}),
                 small: true,
                 color: jade,
                 onTap: () {
@@ -166,7 +168,7 @@ Future<void> showLoginGiftDialog(BuildContext context, HeroData h) async {
                 },
               )
             else
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đóng'))),
           ],
         );
       },
@@ -207,7 +209,7 @@ class _GiftTile extends StatelessWidget {
         opacity: taken && !today ? 0.45 : 1,
         child: Column(
           children: [
-            Text('Ngày $day', style: small.copyWith(fontSize: 11, color: cream)),
+            Text(tr('Ngày {day}', {'day': day}), style: small.copyWith(fontSize: 11, color: cream)),
             const SizedBox(height: 4),
             Stack(
               alignment: Alignment.center,
@@ -222,7 +224,7 @@ class _GiftTile extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              gift.amount > 0 ? fmt(gift.amount) : gift.label.replaceFirst('Trang bị ', ''),
+              gift.amount > 0 ? fmt(gift.amount) : tr(gift.rarity?.label ?? gift.label),
               style: bold.copyWith(fontSize: 11),
               textAlign: TextAlign.center,
             ),
@@ -245,7 +247,7 @@ class _MonthlyTrack extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Điểm danh tháng $month: $days ngày', style: bold.copyWith(color: goldLight)),
+        Text(tr('Điểm danh tháng {month}: {days} ngày', {'month': month, 'days': days}), style: bold.copyWith(color: goldLight)),
         const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,7 +270,7 @@ class _MonthlyTrack extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('${m.days} ngày', style: bold.copyWith(fontSize: 12, color: cream)),
+                          Text(tr('{days} ngày', {'days': m.days}), style: bold.copyWith(fontSize: 12, color: cream)),
                           if (days >= m.days) ...[
                             const SizedBox(width: 3),
                             const Icon(Icons.check_circle, color: Color(0xFF8CE07A), size: 14),
@@ -280,7 +282,7 @@ class _MonthlyTrack extends StatelessWidget {
                           l,
                           style: small.copyWith(
                             fontSize: 10,
-                            color: m.item != null && l.startsWith('Trang bị') ? rarityColor(m.item!) : null,
+                            color: m.item != null && l == monthlyItemLabel(m.item!) ? rarityColor(m.item!) : null,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
@@ -314,7 +316,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     int rank(AchDef a) => h.achClaimed.contains(a.id) ? 2 : (a.reached(h) ? 0 : 1);
     final list = List<AchDef>.of(achievements)..sort((a, b) => rank(a).compareTo(rank(b)));
     return SubScreen(
-      title: 'Thành tựu',
+      title: tr('Thành tựu'),
       actions: [
         // Đồ giám Truyền thuyết (1.19.0) lives here, its pages to take on the badge.
         Padding(
@@ -324,7 +326,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             label: Text('${h.codexReady}'),
             backgroundColor: seal,
             child: LButton(
-              label: 'Đồ giám',
+              label: tr('Đồ giám'),
               icon: Icons.menu_book,
               small: true,
               color: const Color(0xFF8A4A1A),
@@ -337,14 +339,14 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         ),
         Text('$done/${achievements.length}', style: bold.copyWith(color: goldLight)),
         const SizedBox(width: 12),
-        Text('Danh hiệu: ', style: small),
+        Text(tr('Danh hiệu: '), style: small),
         DropdownButton<String>(
           value: h.title,
           dropdownColor: lacquer,
           underline: const SizedBox.shrink(),
           style: bold.copyWith(color: goldLight),
           items: [
-            const DropdownMenuItem(value: '', child: Text('(không)')),
+            DropdownMenuItem(value: '', child: Text(tr('(không)'))),
             // A set: two achievements share « Võ Lâm Chí Tôn ».
             for (final t in {
               for (final a in achievements)
@@ -390,10 +392,10 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(a.name, style: bold.copyWith(color: goldLight, fontSize: 13.5)),
-                Text(a.desc, style: small.copyWith(fontSize: 11.5, color: cream),
+                Text(tr(a.name), style: bold.copyWith(color: goldLight, fontSize: 13.5)),
+                Text(tr(a.desc), style: small.copyWith(fontSize: 11.5, color: cream),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('Danh hiệu: ${a.title}',
+                Text(tr('Danh hiệu: {aTitle}', {'aTitle': tr(a.title)}),
                     style: small.copyWith(fontSize: 11, color: goldLight, fontStyle: FontStyle.italic),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 3),

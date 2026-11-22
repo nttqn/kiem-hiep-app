@@ -8,13 +8,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/chat.dart';
 import '../core/hero.dart';
 import 'cloud.dart';
+import '../core/i18n.dart';
 
 /// Kênh Thế Giới over Firebase Realtime Database (billed by download, not
 /// per message read, so a hundred lines per open stays cheap):
 ///
-/// * `chat/msgs/{pushId}`: the messages; the newest [chatShown] are shown.
-/// * `chat/last/{uid}`: when that player last sent; the rules refuse a new
-///   message within [chatCooldown] of it, by server time.
+/// * `chat/msgs/{pushId}`: the Vietnamese channel's messages, and
+///   `chat/rooms/{lang}/{pushId}` every other language's ([chatMsgsPath]);
+///   the newest [chatShown] are shown. Players see the channel of the
+///   language they play in.
+/// * `chat/last/{uid}`: when that player last sent, in any channel; the
+///   rules refuse a new message within [chatCooldown] of it, by server time.
 /// * `chat/bans/{uid}`: set by hand in the Firebase console to mute someone.
 /// * `chat/reports/{msgId}/{uid}`: reports, read in the console.
 ///
@@ -49,6 +53,9 @@ class ChatService extends ChangeNotifier {
   List<ChatMsg>? debugMessages;
 
   final List<StreamSubscription<DatabaseEvent>> _subs = [];
+
+  /// The channel being shown and written to, fixed when the screen opens.
+  String _path = chatMsgsPath(Lang.vi);
   int _opens = 0;
 
   CloudSave get _cloud => CloudSave.instance;
@@ -105,6 +112,7 @@ class ChatService extends ChangeNotifier {
       return;
     }
     if (!_cloud.available) return;
+    _path = chatMsgsPath(currentLang);
     error = null;
     loading = true;
     messages.clear();
@@ -112,7 +120,7 @@ class ChatService extends ChangeNotifier {
     try {
       final db = _db;
       db.goOnline();
-      final q = db.ref('chat/msgs').limitToLast(chatShown);
+      final q = db.ref(_path).limitToLast(chatShown);
       _subs.add(q.onChildAdded.listen((e) {
         final m = ChatMsg.fromMap(e.snapshot.key ?? '', e.snapshot.value);
         if (m == null) return;
@@ -146,7 +154,7 @@ class ChatService extends ChangeNotifier {
     debugPrint('chat failed: $e');
     if (_opens == 0) return;
     loading = false;
-    error = 'Không tải được kênh chat, thử lại sau.';
+    error = tr('Không tải được kênh chat, thử lại sau.');
     notifyListeners();
   }
 
@@ -181,12 +189,12 @@ class ChatService extends ChangeNotifier {
   /// Sends [raw] as [h]; null when sent, else why not.
   Future<String?> send(HeroData h, String raw) async {
     final text = chatClean(raw);
-    if (text.isEmpty) return 'Chưa nhập gì';
-    if (banned) return 'Bạn đã bị cấm chat';
+    if (text.isEmpty) return tr('Chưa nhập gì');
+    if (banned) return tr('Bạn đã bị cấm chat');
     final w = wait;
-    if (w > Duration.zero) return 'Gửi lại sau ${chatWaitLabel(w)}';
+    if (w > Duration.zero) return tr('Gửi lại sau {p0}', {'p0': chatWaitLabel(w)});
     final uid = myUid;
-    if (uid == null) return 'Đăng nhập để chat';
+    if (uid == null) return tr('Đăng nhập để chat');
     final name = chatCensor(h.name.length > 24 ? h.name.substring(0, 24) : h.name);
     if (debugMessages != null) {
       messages.add(ChatMsg(
@@ -204,12 +212,12 @@ class ChatService extends ChangeNotifier {
       return null;
     }
     final db = _db;
-    final key = db.ref('chat/msgs').push().key!;
+    final key = db.ref(_path).push().key!;
     try {
       // One write, so the rules see the message and the new send time
       // together.
       await db.ref().update({
-        'chat/msgs/$key': {
+        '$_path/$key': {
           'uid': uid,
           'name': name,
           'hanh': h.hanh.index,
@@ -225,14 +233,14 @@ class ChatService extends ChangeNotifier {
       unawaited(_sweep());
       return null;
     } on TimeoutException {
-      return 'Mạng chậm, thử lại sau';
+      return tr('Mạng chậm, thử lại sau');
     } catch (e) {
       debugPrint('chat send failed: $e');
       // Refused: muted, or the cooldown by server time.
       await _readMine();
-      if (banned) return 'Bạn đã bị cấm chat';
-      if (wait > Duration.zero) return 'Gửi lại sau ${chatWaitLabel(wait)}';
-      return 'Không gửi được, thử lại sau';
+      if (banned) return tr('Bạn đã bị cấm chat');
+      if (wait > Duration.zero) return tr('Gửi lại sau {p0}', {'p0': chatWaitLabel(wait)});
+      return tr('Không gửi được, thử lại sau');
     }
   }
 
@@ -241,7 +249,7 @@ class ChatService extends ChangeNotifier {
   Future<void> _sweep() async {
     try {
       final old = await _db
-          .ref('chat/msgs')
+          .ref(_path)
           .orderByChild('at')
           .endAt(now - chatKeep.inMilliseconds)
           .limitToFirst(5)

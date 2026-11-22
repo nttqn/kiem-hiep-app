@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'core/i18n.dart';
 import 'core/ky_ngo.dart';
+import 'services/language.dart';
 import 'core/activity.dart';
 import 'core/ngo_dao.dart';
 import 'core/gold_boss.dart';
@@ -216,6 +218,13 @@ Future<void> main() async {
   final sect = int.tryParse(q['sect'] ?? '') ?? 0;
   final level = int.tryParse(q['level'] ?? '') ?? 1;
   final female = q['female'] == '1';
+  // lang=zh_Hant|vi: that language, else the browser's as on a phone.
+  final lang = Lang.byCode(q['lang']);
+  if (lang != null) {
+    await LanguageService.instance.set(lang);
+  } else {
+    await LanguageService.instance.load();
+  }
   await SaveService.instance.load();
   SoundService.instance.init();
   var map = maps.first;

@@ -1,6 +1,7 @@
 import 'hero.dart';
 import 'items.dart';
 import 'ngo_dao.dart';
+import 'i18n.dart';
 
 /// Tiên khí (1.13.0): where Đạo hạnh goes besides the tầng bonuses. A worn
 /// +[maxPlus] piece is forged phẩm by phẩm with Tiên Ngọc and gold, each
@@ -16,13 +17,13 @@ int tienGoldCost(int n) => 2000000 * n;
 
 /// Why [it] can't go on to its next phẩm for [h], or null when it can.
 String? tienBlock(HeroData h, Item it) {
-  if (!h.daoOpen || h.daoLv <= 0) return 'Cần nhập Ngộ Đạo';
-  if (it.tien >= maxTien) return 'Đã đạt Tiên phẩm tối đa';
-  if (it.plus < maxPlus) return 'Cần cường hóa +$maxPlus';
+  if (!h.daoOpen || h.daoLv <= 0) return tr('Cần nhập Ngộ Đạo');
+  if (it.tien >= maxTien) return tr('Đã đạt Tiên phẩm tối đa');
+  if (it.plus < maxPlus) return tr('Cần cường hóa +{maxPlus}', {'maxPlus': maxPlus});
   final n = it.tien + 1;
-  if (daoStageOf(h.daoLv) < n - 1) return 'Cần cảnh giới ${daoStages[n - 1].name}';
-  if (h.tienJade < tienJadeCost[n - 1]) return 'Thiếu Tiên Ngọc';
-  if (h.gold < tienGoldCost(n)) return 'Thiếu ngân lượng';
+  if (daoStageOf(h.daoLv) < n - 1) return tr('Cần cảnh giới {p0}', {'p0': tr(daoStages[n - 1].name)});
+  if (h.tienJade < tienJadeCost[n - 1]) return tr('Thiếu Tiên Ngọc');
+  if (h.gold < tienGoldCost(n)) return tr('Thiếu ngân lượng');
   return null;
 }
 
@@ -60,7 +61,7 @@ extension TienKhi on HeroData {
     final owed = daoJadeTotal(daoLv) - had;
     if (owed <= 0) return 0;
     tienJade += owed;
-    notices.add(Notice('Bù $owed Tiên Ngọc cho các tầng Ngộ Đạo đã đạt trước bản Tiên khí', color: 0xFF8CE0C8, big: true));
+    notices.add(Notice(tr('Bù {owed} Tiên Ngọc cho các tầng Ngộ Đạo đã đạt trước bản Tiên khí', {'owed': owed}), color: 0xFF8CE0C8, big: true));
     return owed;
   }
 

@@ -10,6 +10,7 @@ import 'sub_screen.dart';
 import 'treasure_view.dart';
 import 'offers_view.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key, this.tab = 0});
@@ -52,12 +53,12 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget _freePots() {
     final wait = _lastFree == null ? Duration.zero : _freeGap - DateTime.now().difference(_lastFree!);
     if (wait > Duration.zero) {
-      return Text('Thuốc miễn phí: quay lại sau ${wait.inMinutes + 1} phút', style: small);
+      return Text(tr('Thuốc miễn phí: quay lại sau {p0} phút', {'p0': wait.inMinutes + 1}), style: small);
     }
     return ValueListenableBuilder<bool>(
       valueListenable: AdsService.instance.rewardedReady,
       builder: (_, ready, _) => LButton(
-        label: ready ? 'Xem quảng cáo: +5 mỗi loại thuốc' : 'Quảng cáo đang tải…',
+        label: ready ? tr('Xem quảng cáo: +5 mỗi loại thuốc') : tr('Quảng cáo đang tải…'),
         icon: Icons.ondemand_video,
         small: true,
         color: const Color(0xFF8A5A10),
@@ -92,7 +93,7 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Cửa hàng',
+      title: tr('Cửa hàng'),
       actions: [
         for (final (i, name) in const [(0, 'Tạp hóa'), (1, 'Kỳ Trân Các'), (2, 'Ưu đãi')])
           Padding(
@@ -106,7 +107,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: _tab == i ? goldLight : gold.withValues(alpha: 0.5)),
                 ),
-                child: Text(name, style: bold.copyWith(fontSize: 13)),
+                child: Text(tr(name), style: bold.copyWith(fontSize: 13)),
               ),
             ),
           ),
@@ -130,17 +131,17 @@ class _ShopScreenState extends State<ShopScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Dược phẩm', style: titleStyle(20)),
-                  Text('Hồi ${(potionHeal * 100).round()}% · giá theo cấp: ${fmt(price)} lượng/bình',
+                  Text(tr('Dược phẩm'), style: titleStyle(20)),
+                  Text(tr('Hồi {p0}% · giá theo cấp: {p1} lượng/bình', {'p0': (potionHeal * 100).round(), 'p1': fmt(price)}),
                       style: small),
                   const SizedBox(height: 10),
-                  _potRow('Kim Sang Dược', 'Hồi sinh lực', const Color(0xFFE84B4A), h.hpPots, true),
+                  _potRow(tr('Kim Sang Dược'), tr('Hồi sinh lực'), const Color(0xFFE84B4A), h.hpPots, true),
                   const SizedBox(height: 10),
-                  _potRow('Ngưng Thần Đan', 'Hồi nội lực', const Color(0xFF4A7AE8), h.mpPots, false),
+                  _potRow(tr('Ngưng Thần Đan'), tr('Hồi nội lực'), const Color(0xFF4A7AE8), h.mpPots, false),
                   const SizedBox(height: 12),
                   _freePots(),
                   const Spacer(),
-                  Text('Mẹo: bật Tự động trong trận, nhân vật sẽ tự uống thuốc khi máu dưới 42%.',
+                  Text(tr('Mẹo: bật Tự động trong trận, nhân vật sẽ tự uống thuốc khi máu dưới 42%.'),
                       style: small),
                 ],
               ),
@@ -152,8 +153,8 @@ class _ShopScreenState extends State<ShopScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Trang bị (cấp ${_stock.first.level})', style: titleStyle(20)),
-                  Text('Hàng đổi khi bạn lên mỗi 5 cấp. Đồ tốt hơn rơi từ quái và đầu lĩnh.', style: small),
+                  Text(tr('Trang bị (cấp {level})', {'level': _stock.first.level}), style: titleStyle(20)),
+                  Text(tr('Hàng đổi khi bạn lên mỗi 5 cấp. Đồ tốt hơn rơi từ quái và đầu lĩnh.'), style: small),
                   const SizedBox(height: 8),
                   Expanded(
                     child: GridView.builder(
@@ -185,7 +186,7 @@ class _ShopScreenState extends State<ShopScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(name, style: bold),
-              Text('$what · có $have', style: small),
+              Text(tr('{what} · có {have}', {'what': what, 'have': have}), style: small),
             ],
           ),
         ),
@@ -211,15 +212,15 @@ class _ShopScreenState extends State<ShopScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(it.name,
+                Text(tr(it.name),
                     style: bold.copyWith(fontSize: 12.5, color: rarityColor(it.rarity)),
                     overflow: TextOverflow.ellipsis),
                 Text(
-                  it.base.entries.map((e) => '${e.key.label} ${e.key.format(e.value)}').join(' · '),
+                  it.base.entries.map((e) => '${tr(e.key.label)} ${e.key.format(e.value)}').join(' · '),
                   style: small.copyWith(fontSize: 10.5),
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (better) Text('Tốt hơn đồ đang mặc', style: small.copyWith(fontSize: 10.5, color: const Color(0xFF8CE07A))),
+                if (better) Text(tr('Tốt hơn đồ đang mặc'), style: small.copyWith(fontSize: 10.5, color: const Color(0xFF8CE07A))),
               ],
             ),
           ),
@@ -234,7 +235,7 @@ class _ShopScreenState extends State<ShopScreen> {
               SaveService.instance.save();
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Đã mua ${it.name}. Vào Hành trang để trang bị.')),
+                SnackBar(content: Text(tr('Đã mua {itName}. Vào Hành trang để trang bị.', {'itName': tr(it.name)}))),
               );
             },
           ),

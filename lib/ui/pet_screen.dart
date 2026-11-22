@@ -13,6 +13,7 @@ import 'companion_view.dart';
 import 'mount_view.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Spirit beasts: buy, tame (boss drops), level up and send one out.
 class PetScreen extends StatefulWidget {
@@ -38,9 +39,9 @@ class _PetScreenState extends State<PetScreen> {
   Widget build(BuildContext context) {
     const tabs = [(2, 'Hiệp khách'), (0, 'Linh thú'), (1, 'Thú cưỡi')];
     return SubScreen(
-      title: tabs.firstWhere((t) => t.$1 == _tab).$2,
+      title: tr(tabs.firstWhere((t) => t.$1 == _tab).$2),
       actions: [
-        for (final (i, name) in tabs) tabChip(name, _tab == i, () => setState(() => _tab = i)),
+        for (final (i, name) in tabs) tabChip(tr(name), _tab == i, () => setState(() => _tab = i)),
       ],
       child: switch (_tab) {
         1 => const MountView(),
@@ -86,7 +87,7 @@ class _PetScreenState extends State<PetScreen> {
                   decoration: BoxDecoration(color: hanhColor(p.hanh), shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 5),
-                Expanded(child: Text(p.name, style: titleStyle(p.name.length > 12 ? 13.5 : 16, color: owned ? goldLight : creamDim), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                Expanded(child: Text(tr(p.name), style: titleStyle(p.name.length > 12 ? 13.5 : 16, color: owned ? goldLight : creamDim), maxLines: 1, overflow: TextOverflow.ellipsis)),
               ],
             ),
             Expanded(
@@ -104,16 +105,16 @@ class _PetScreenState extends State<PetScreen> {
                 ),
               ),
             ),
-            Text(p.desc, style: small.copyWith(fontSize: 10.5), maxLines: 3),
+            Text(tr(p.desc), style: small.copyWith(fontSize: 10.5), maxLines: 3),
             const SizedBox(height: 4),
-            Text(owned ? 'Cấp $lv/$maxPetLevel · ${p.bonusText(lv)}' : p.bonusText(1),
+            Text(owned ? tr('Cấp {lv}/{maxPetLevel} · {p0}', {'lv': lv, 'maxPetLevel': maxPetLevel, 'p0': p.bonusText(lv)}) : p.bonusText(1),
                 style: bold.copyWith(fontSize: 12, color: cream)),
-            Text('Chưởng ${p.hanh.label}: ${(petPower(lv) * 100).round()}% công lực',
+            Text(tr('Chưởng {hanhLabel}: {p0}% công lực', {'hanhLabel': tr(p.hanh.label), 'p0': (petPower(lv) * 100).round()}),
                 style: small.copyWith(fontSize: 10.5)),
             const SizedBox(height: 6),
             if (owned) ...[
               LButton(
-                label: out ? 'Đang theo' : 'Xuất chiến',
+                label: out ? tr('Đang theo') : tr('Xuất chiến'),
                 small: true,
                 color: out ? jade : seal,
                 onTap: () {
@@ -123,7 +124,7 @@ class _PetScreenState extends State<PetScreen> {
               ),
               const SizedBox(height: 4),
               LButton(
-                label: lv >= maxPetLevel ? 'Tối đa' : 'Nâng ${fmt(petLevelCost(lv))}',
+                label: lv >= maxPetLevel ? tr('Tối đa') : tr('Nâng {p0}', {'p0': fmt(petLevelCost(lv))}),
                 small: true,
                 color: const Color(0xFF7A5A1A),
                 enabled: lv < maxPetLevel && h.gold >= petLevelCost(lv),
@@ -133,7 +134,7 @@ class _PetScreenState extends State<PetScreen> {
               ),
             ] else if (p.price > 0)
               LButton(
-                label: 'Mua ${fmt(p.price)}',
+                label: tr('Mua {p0}', {'p0': fmt(p.price)}),
                 small: true,
                 color: jade,
                 enabled: h.gold >= p.price,
@@ -143,7 +144,7 @@ class _PetScreenState extends State<PetScreen> {
               )
             else
               Text(
-                '${petSource(p)}\nĐã hạ ${kills.clamp(0, petPity)}/$petPity (chắc chắn rơi ở lần thứ $petPity)',
+                tr('{p0}\nĐã hạ {p1}/{petPity} (chắc chắn rơi ở lần thứ {petPity})', {'p0': petSource(p), 'p1': kills.clamp(0, petPity), 'petPity': petPity}),
                 style: small.copyWith(fontSize: 10.5, color: creamDim),
                 textAlign: TextAlign.center,
               ),

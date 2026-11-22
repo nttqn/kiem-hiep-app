@@ -9,6 +9,7 @@ import '../services/analytics.dart';
 import '../services/purchase.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Cửa hàng tab "Ưu đãi" (1.7.0): Nguyệt thẻ, Gói tân thủ, Gói bỏ quảng
 /// cáo and the daily Rương quảng cáo.
@@ -64,7 +65,7 @@ class _OffersViewState extends State<OffersView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [for (final l in lines) Text('• $l', style: body)],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
     setState(() {});
@@ -118,7 +119,7 @@ class _OffersViewState extends State<OffersView> {
     return ValueListenableBuilder<bool>(
       valueListenable: _iap.busy,
       builder: (_, busy, _) => LButton(
-        label: done ?? (price == null ? 'Chưa mở bán' : 'Mua $price'),
+        label: done ?? (price == null ? tr('Chưa mở bán') : tr('Mua {price}', {'price': price})),
         icon: done == null ? Icons.shopping_bag : Icons.check,
         small: true,
         color: const Color(0xFF8A2A1A),
@@ -133,35 +134,35 @@ class _OffersViewState extends State<OffersView> {
     final r = cardDailyFor(h.level, h.rebirths);
     final active = h.cardActive(today);
     return _box(
-      title: 'Nguyệt thẻ',
+      title: tr('Nguyệt thẻ'),
       color: goldLight,
       icon: Icons.calendar_month,
       children: [
-        Text('$monthCardDays ngày cho ${h.name}. Mỗi ngày nhận:', style: small.copyWith(fontSize: 11.5)),
+        Text(tr('{monthCardDays} ngày cho {hName}. Mỗi ngày nhận:', {'monthCardDays': monthCardDays, 'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
         const SizedBox(height: 4),
-        _line('${fmt(r.gold)} lượng'),
-        _line('${r.gems} ngọc bậc ${r.gemTier}'),
-        if (r.iron > 0) _line('${r.iron} Thần Thiết'),
-        _line('+$monthCardExtraRuns lượt Bí cảnh, +$monthCardExtraRuns lượt Boss Thế Giới'),
+        _line(tr('{p0} lượng', {'p0': fmt(r.gold)})),
+        _line(tr('{gems} ngọc bậc {gemTier}', {'gems': r.gems, 'gemTier': r.gemTier})),
+        if (r.iron > 0) _line(tr('{iron} Thần Thiết', {'iron': r.iron})),
+        _line(tr('+{monthCardExtraRuns} lượt Bí cảnh, +{monthCardExtraRuns} lượt Boss Thế Giới', {'monthCardExtraRuns': monthCardExtraRuns})),
         const Spacer(),
         if (active)
-          Text('Còn ${h.cardDaysLeft(today)} ngày', style: bold.copyWith(color: jade), textAlign: TextAlign.center),
+          Text(tr('Còn {p0} ngày', {'p0': h.cardDaysLeft(today)}), style: bold.copyWith(color: jade), textAlign: TextAlign.center),
         if (active) ...[
           const SizedBox(height: 4),
           LButton(
-            label: h.canClaimCard(today) ? 'Nhận quà hôm nay' : 'Đã nhận hôm nay',
+            label: h.canClaimCard(today) ? tr('Nhận quà hôm nay') : tr('Đã nhận hôm nay'),
             small: true,
             color: jade,
             enabled: h.canClaimCard(today),
             onTap: () {
               Analytics.instance.log('card_claim');
-              _say('Nguyệt thẻ', h.claimCard(today));
+              _say(tr('Nguyệt thẻ'), h.claimCard(today));
             },
           ),
           const SizedBox(height: 4),
         ],
         _buy(skuMonthCard),
-        if (active) Text('Mua thêm để gia hạn $monthCardDays ngày.', style: small.copyWith(fontSize: 10), textAlign: TextAlign.center),
+        if (active) Text(tr('Mua thêm để gia hạn {monthCardDays} ngày.', {'monthCardDays': monthCardDays}), style: small.copyWith(fontSize: 10), textAlign: TextAlign.center),
       ],
     );
   }
@@ -172,7 +173,7 @@ class _OffersViewState extends State<OffersView> {
     final ready = h.firstPayReady(adFree);
     final costume = costumeById[firstPayCostume]!;
     return _box(
-      title: 'Quà nạp đầu',
+      title: tr('Quà nạp đầu'),
       color: const Color(0xFFFFB04A),
       icon: Icons.redeem,
       children: [
@@ -181,27 +182,27 @@ class _OffersViewState extends State<OffersView> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              Text('Mua bất kỳ gói nào cho ${h.name}, nhận thêm:', style: small.copyWith(fontSize: 11.5)),
+              Text(tr('Mua bất kỳ gói nào cho {hName}, nhận thêm:', {'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
               const SizedBox(height: 4),
-              _line('Ngoại trang ${costume.name}'),
-              _line('Danh hiệu « $firstPayTitle »'),
-              _line('${fmt(firstPayGold(h.level, h.rebirths))} lượng'),
-              _line('$firstPayIron Thần Thiết, $firstPayPills Linh Phách Đơn'),
-              _line('$firstPayShards mảnh Hoàng Kim, $firstPayGems ngọc bậc ${firstPayGemTier(h.level)}'),
-              _line('$firstPayHpPots Kim Sang Dược'),
+              _line(tr('Ngoại trang {costumeName}', {'costumeName': tr(costume.name)})),
+              _line(tr('Danh hiệu « {firstPayTitle} »', {'firstPayTitle': firstPayTitle})),
+              _line(tr('{p0} lượng', {'p0': fmt(firstPayGold(h.level, h.rebirths))})),
+              _line(tr('{firstPayIron} Thần Thiết, {firstPayPills} Linh Phách Đơn', {'firstPayIron': firstPayIron, 'firstPayPills': firstPayPills})),
+              _line(tr('{firstPayShards} mảnh Hoàng Kim, {firstPayGems} ngọc bậc {p0}', {'firstPayShards': firstPayShards, 'firstPayGems': firstPayGems, 'p0': firstPayGemTier(h.level)})),
+              _line(tr('{firstPayHpPots} Kim Sang Dược', {'firstPayHpPots': firstPayHpPots})),
             ],
           ),
         ),
         const SizedBox(height: 4),
         LButton(
-          label: h.firstPayTaken ? 'Đã nhận' : ready ? 'Nhận quà' : 'Chưa mua gói nào',
+          label: h.firstPayTaken ? tr('Đã nhận') : ready ? tr('Nhận quà') : tr('Chưa mua gói nào'),
           icon: h.firstPayTaken ? Icons.check : Icons.redeem,
           small: true,
           color: jade,
           enabled: ready,
           onTap: () {
             Analytics.instance.log('first_pay_claim');
-            _say('Quà nạp đầu', h.takeFirstPay(adFree));
+            _say(tr('Quà nạp đầu'), h.takeFirstPay(adFree));
           },
         ),
       ],
@@ -209,33 +210,33 @@ class _OffersViewState extends State<OffersView> {
   }
 
   Widget _starter() => _box(
-        title: 'Gói tân thủ',
+        title: tr('Gói tân thủ'),
         color: const Color(0xFF8CE07A),
         icon: Icons.card_giftcard,
         children: [
-          Text('Một lần cho mỗi nhân vật:', style: small.copyWith(fontSize: 11.5)),
+          Text(tr('Một lần cho mỗi nhân vật:'), style: small.copyWith(fontSize: 11.5)),
           const SizedBox(height: 4),
-          _line('Thú cưỡi Bạch Mã'),
-          _line('1 trang bị Sử thi theo cấp'),
-          _line('${fmt(starterGift.gold)} lượng'),
-          _line('${starterGift.hpPots} Kim Sang Dược, ${starterGift.mpPots} Ngưng Thần Đan'),
-          _line('${starterGift.gems} ngọc bậc ${starterGift.gemTier}'),
+          _line(tr('Thú cưỡi Bạch Mã')),
+          _line(tr('1 trang bị Sử thi theo cấp')),
+          _line(tr('{p0} lượng', {'p0': fmt(starterGift.gold)})),
+          _line(tr('{hpPots} Kim Sang Dược, {mpPots} Ngưng Thần Đan', {'hpPots': starterGift.hpPots, 'mpPots': starterGift.mpPots})),
+          _line(tr('{gems} ngọc bậc {gemTier}', {'gems': starterGift.gems, 'gemTier': starterGift.gemTier})),
           const Spacer(),
-          _buy(skuStarter, done: h.starterBought ? 'Đã mua' : null),
+          _buy(skuStarter, done: h.starterBought ? tr('Đã mua') : null),
         ],
       );
 
   /// Hòm Ngân Lượng (1.11.1): gold for this hero, as often as wanted.
   Widget _goldPack() => _box(
-        title: 'Hòm Ngân Lượng',
+        title: tr('Hòm Ngân Lượng'),
         color: const Color(0xFFFFC34A),
         icon: Icons.savings,
         children: [
-          Text('Nhận ngay cho ${h.name}:', style: small.copyWith(fontSize: 11.5)),
+          Text(tr('Nhận ngay cho {hName}:', {'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
           const SizedBox(height: 4),
-          _line('${fmt(goldPackFor(h.level, h.rebirths))} lượng'),
-          _line('Tăng theo cấp và số lần chuyển sinh'),
-          _line('Mua bao nhiêu lần cũng được'),
+          _line(tr('{p0} lượng', {'p0': fmt(goldPackFor(h.level, h.rebirths))})),
+          _line(tr('Tăng theo cấp và số lần chuyển sinh')),
+          _line(tr('Mua bao nhiêu lần cũng được')),
           const Spacer(),
           _buy(skuGoldPack),
         ],
@@ -243,42 +244,42 @@ class _OffersViewState extends State<OffersView> {
 
   /// Gói Thăng Tinh (1.9.0): once a week a hero.
   Widget _starPack() => _box(
-        title: 'Gói Thăng Tinh',
+        title: tr('Gói Thăng Tinh'),
         color: const Color(0xFFFFD34A),
         icon: Icons.auto_awesome,
         children: [
-          Text('Mỗi tuần một lần cho ${h.name}:', style: small.copyWith(fontSize: 11.5)),
+          Text(tr('Mỗi tuần một lần cho {hName}:', {'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
           const SizedBox(height: 4),
-          _line('$starPackStones Tinh Thạch'),
-          _line('$starPackSouls Hung Thú Tinh Phách'),
-          _line('Đủ nâng một món từ ★0 lên ★3, hoặc góp sao 4–5'),
+          _line(tr('{starPackStones} Tinh Thạch', {'starPackStones': starPackStones})),
+          _line(tr('{starPackSouls} Hung Thú Tinh Phách', {'starPackSouls': starPackSouls})),
+          _line(tr('Đủ nâng một món từ ★0 lên ★3, hoặc góp sao 4–5')),
           Wrap(spacing: 8, children: [
             MatCount(Mat.stone, fmt(h.starStones), style: small.copyWith(fontSize: 11, color: cream), size: 16),
             MatCount(Mat.soul, '${h.beastSouls}', style: small.copyWith(fontSize: 11, color: cream), size: 16),
           ]),
           const Spacer(),
-          _buy(skuStarPack, done: h.starPackThisWeek ? 'Đã mua tuần này' : null),
+          _buy(skuStarPack, done: h.starPackThisWeek ? tr('Đã mua tuần này') : null),
         ],
       );
 
   Widget _noAds() {
     final owned = AdsService.instance.adFree.value;
     return _box(
-      title: 'Bỏ quảng cáo',
+      title: tr('Bỏ quảng cáo'),
       color: const Color(0xFF9FD8FF),
       icon: Icons.block,
       children: [
-        Text('Cho cả tài khoản cửa hàng, mọi nhân vật:', style: small.copyWith(fontSize: 11.5)),
+        Text(tr('Cho cả tài khoản cửa hàng, mọi nhân vật:'), style: small.copyWith(fontSize: 11.5)),
         const SizedBox(height: 4),
-        _line('Không còn quảng cáo khi về thành hay mở lại game'),
-        _line('Mọi phần thưởng "xem quảng cáo" nhận ngay, không phải xem'),
-        _line('Mua một lần, cài lại vẫn giữ'),
+        _line(tr('Không còn quảng cáo khi về thành hay mở lại game')),
+        _line(tr('Mọi phần thưởng "xem quảng cáo" nhận ngay, không phải xem')),
+        _line(tr('Mua một lần, cài lại vẫn giữ')),
         const Spacer(),
-        _buy(skuNoAds, done: owned ? 'Đã sở hữu' : null),
+        _buy(skuNoAds, done: owned ? tr('Đã sở hữu') : null),
         const SizedBox(height: 4),
         TextButton(
           onPressed: _iap.available ? _iap.restore : null,
-          child: Text('Khôi phục giao dịch', style: small.copyWith(fontSize: 11, color: creamDim)),
+          child: Text(tr('Khôi phục giao dịch'), style: small.copyWith(fontSize: 11, color: creamDim)),
         ),
       ],
     );
@@ -290,11 +291,11 @@ class _OffersViewState extends State<OffersView> {
     final n = adChestMax - left;
     final next = left > 0 ? adChestFor(n, h.level, h.rebirths) : null;
     return _box(
-      title: 'Rương quảng cáo',
+      title: tr('Rương quảng cáo'),
       color: const Color(0xFFE8A84A),
       icon: Icons.inventory_2,
       children: [
-        Text('$adChestMax rương mỗi ngày, rương sau quý hơn rương trước.', style: small.copyWith(fontSize: 11.5)),
+        Text(tr('{adChestMax} rương mỗi ngày, rương sau quý hơn rương trước.', {'adChestMax': adChestMax}), style: small.copyWith(fontSize: 11.5)),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -309,18 +310,18 @@ class _OffersViewState extends State<OffersView> {
         ),
         const SizedBox(height: 8),
         if (next != null) ...[
-          Text('Rương ${n + 1}:', style: bold.copyWith(fontSize: 12)),
-          _line('${fmt(next.gold)} lượng'),
-          if (next.gems > 0) _line('${next.gems} ngọc'),
-          if (next.iron > 0) _line('${next.iron} Thần Thiết'),
-          if (next.shards > 0) _line('${next.shards} mảnh Hoàng Kim'),
+          Text(tr('Rương {p0}:', {'p0': n + 1}), style: bold.copyWith(fontSize: 12)),
+          _line(tr('{p0} lượng', {'p0': fmt(next.gold)})),
+          if (next.gems > 0) _line(tr('{gems} ngọc', {'gems': next.gems})),
+          if (next.iron > 0) _line(tr('{iron} Thần Thiết', {'iron': next.iron})),
+          if (next.shards > 0) _line(tr('{shards} mảnh Hoàng Kim', {'shards': next.shards})),
         ] else
-          Text('Đã mở hết hôm nay. Mai quay lại nhé!', style: small, textAlign: TextAlign.center),
+          Text(tr('Đã mở hết hôm nay. Mai quay lại nhé!'), style: small, textAlign: TextAlign.center),
         const Spacer(),
         ValueListenableBuilder<bool>(
           valueListenable: AdsService.instance.rewardedReady,
           builder: (_, ready, _) => LButton(
-            label: left <= 0 ? 'Hết lượt' : (ready ? 'Xem quảng cáo, mở rương' : 'Quảng cáo đang tải…'),
+            label: left <= 0 ? tr('Hết lượt') : (ready ? tr('Xem quảng cáo, mở rương') : tr('Quảng cáo đang tải…')),
             icon: Icons.ondemand_video,
             small: true,
             color: const Color(0xFF8A5A10),
@@ -328,7 +329,7 @@ class _OffersViewState extends State<OffersView> {
             onTap: () async {
               if (!await AdsService.instance.showRewarded() || !mounted) return;
               Analytics.instance.log('ad_chest', {'n': n + 1});
-              _say('Rương quảng cáo ${n + 1}', h.openAdChest(vnDayKey()));
+              _say(tr('Rương quảng cáo {p0}', {'p0': n + 1}), h.openAdChest(vnDayKey()));
             },
           ),
         ),

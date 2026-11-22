@@ -11,6 +11,7 @@ import '../services/ads.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Nhân vật tab: Luyện thể, five body parts trained with Thần Thiết.
 class BodyTab extends StatefulWidget {
@@ -34,8 +35,8 @@ class _BodyTabState extends State<BodyTab> {
     final now = bodyRealmOf(h.bodyTotal);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(now != realm
-          ? 'Đột phá cảnh giới ${now!.name}! Lực chiến +${fmt(h.power - before)}'
-          : '${bodyParts[i].name} tầng ${h.bodyLv[i]}. Lực chiến +${fmt(h.power - before)}'),
+          ? tr('Đột phá cảnh giới {nowName}! Lực chiến +{p0}', {'nowName': tr(now!.name), 'p0': fmt(h.power - before)})
+          : tr('{p0} tầng {p1}. Lực chiến +{p2}', {'p0': tr(bodyParts[i].name), 'p1': h.bodyLv[i], 'p2': fmt(h.power - before)})),
       duration: const Duration(seconds: 2),
     ));
     setState(() {});
@@ -65,18 +66,18 @@ class _BodyTabState extends State<BodyTab> {
             child: Column(
               children: [
                 Expanded(child: FittedBox(child: FigurePreview.of(h, scale: 2))),
-                Text(realm?.name ?? 'Phàm thể', style: titleStyle(18, color: c)),
-                Text('Tổng tầng: $total/${bodyMax * bodyParts.length}', style: small),
+                Text(realm?.name ?? tr('Phàm thể'), style: titleStyle(18, color: c)),
+                Text(tr('Tổng tầng: {total}/{p0}', {'total': total, 'p0': bodyMax * bodyParts.length}), style: small),
                 if (next != null)
-                  Text('${next.name} ở $total/${next.at}: ${_bonusText(next.bonus)}',
+                  Text(tr('{nextName} ở {total}/{at}: {p0}', {'nextName': tr(next.name), 'total': total, 'at': next.at, 'p0': _bonusText(next.bonus)}),
                       style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
                 const SizedBox(height: 4),
                 Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 10,
                   children: [
-                    MatCount(Mat.iron, '${h.divineIron} Thần Thiết', style: bold.copyWith(fontSize: 12, color: const Color(0xFF9FD8FF))),
-                    MatCount(Mat.soulPill, '${h.soulPills} Linh Phách Đơn', style: bold.copyWith(fontSize: 12, color: const Color(0xFFC8B8FF))),
+                    MatCount(Mat.iron, tr('{divineIron} Thần Thiết', {'divineIron': h.divineIron}), style: bold.copyWith(fontSize: 12, color: const Color(0xFF9FD8FF))),
+                    MatCount(Mat.soulPill, tr('{soulPills} Linh Phách Đơn', {'soulPills': h.soulPills}), style: bold.copyWith(fontSize: 12, color: const Color(0xFFC8B8FF))),
                   ],
                 ),
               ],
@@ -90,10 +91,10 @@ class _BodyTabState extends State<BodyTab> {
             padding: const EdgeInsets.all(10),
             child: h.bodyOpen
                 ? ListView(children: [
-                    Text('Luyện thể', style: titleStyle(18, color: goldLight)),
+                    Text(tr('Luyện thể'), style: titleStyle(18, color: goldLight)),
                     Text(
-                      'Tôi luyện thân thể bằng Thần Thiết và lượng. Tầng 11 cần Chuyển sinh ${bodyTiers[0].$2} '
-                      'và ${bodyTiers[0].$3} Linh Phách Đơn, tầng 21 cần Chuyển sinh ${bodyTiers[1].$2} và ${bodyTiers[1].$3} viên.',
+                      tr('Tôi luyện thân thể bằng Thần Thiết và lượng. Tầng 11 cần Chuyển sinh {p0} '
+                      'và {p1} Linh Phách Đơn, tầng 21 cần Chuyển sinh {p2} và {p3} viên.', {'p0': bodyTiers[0].$2, 'p1': bodyTiers[0].$3, 'p2': bodyTiers[1].$2, 'p3': bodyTiers[1].$3}),
                       style: small.copyWith(fontSize: 11),
                     ),
                     const SizedBox(height: 6),
@@ -102,8 +103,8 @@ class _BodyTabState extends State<BodyTab> {
                   ])
                 : Center(
                     child: Text(
-                      'Luyện thể mở ở Chuyển sinh $bodyOpenRebirths.\n'
-                      'Năm phần thân thể: Bì, Nhục, Cân, Cốt, Tủy, mỗi phần $bodyMax tầng.',
+                      tr('Luyện thể mở ở Chuyển sinh {bodyOpenRebirths}.\n'
+                      'Năm phần thân thể: Bì, Nhục, Cân, Cốt, Tủy, mỗi phần {bodyMax} tầng.', {'bodyOpenRebirths': bodyOpenRebirths, 'bodyMax': bodyMax}),
                       style: body,
                       textAlign: TextAlign.center,
                     ),
@@ -118,7 +119,7 @@ class _BodyTabState extends State<BodyTab> {
     if (h.bodyBoost) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 6),
-        child: Text('Ưu đãi đang chờ: lần luyện kế tiếp miễn lượng, nửa Thần Thiết.',
+        child: Text(tr('Ưu đãi đang chờ: lần luyện kế tiếp miễn lượng, nửa Thần Thiết.'),
             style: bold.copyWith(fontSize: 12, color: jade)),
       );
     }
@@ -130,7 +131,7 @@ class _BodyTabState extends State<BodyTab> {
         child: ValueListenableBuilder<bool>(
           valueListenable: AdsService.instance.rewardedReady,
           builder: (_, ready, _) => LButton(
-            label: 'Xem quảng cáo: lần luyện tới miễn lượng, nửa Thần Thiết',
+            label: tr('Xem quảng cáo: lần luyện tới miễn lượng, nửa Thần Thiết'),
             icon: Icons.ondemand_video,
             small: true,
             color: const Color(0xFF8A5A10),
@@ -157,9 +158,9 @@ class _BodyTabState extends State<BodyTab> {
     final block = h.bodyBlock(i);
     final pills = bodyPillCost(lv);
     final cost = switch (block) {
-      BodyBlock.maxed => 'Đã viên mãn',
-      BodyBlock.rebirth => 'Cần Chuyển sinh ${bodyRebirthsFor(lv)}',
-      _ => '${h.bodyCost(i).$1} Thần Thiết · ${fmt(h.bodyCost(i).$2)} lượng${pills > 0 ? ' · $pills Linh Phách Đơn' : ''}',
+      BodyBlock.maxed => tr('Đã viên mãn'),
+      BodyBlock.rebirth => tr('Cần Chuyển sinh {p0}', {'p0': bodyRebirthsFor(lv)}),
+      _ => tr('{p0} Thần Thiết · {p1} lượng{p2}', {'p0': h.bodyCost(i).$1, 'p1': fmt(h.bodyCost(i).$2), 'p2': pills > 0 ? tr(' · {pills} Linh Phách Đơn', {'pills': pills}) : ''}),
     };
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
@@ -175,8 +176,8 @@ class _BodyTabState extends State<BodyTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${p.name} · tầng $lv/$bodyMax', style: bold.copyWith(fontSize: 13, color: goldLight)),
-                Text('${p.label} +${(p.valueAt(lv) * 100).toStringAsFixed(1)}%  (mỗi tầng +${(p.per * 100).toStringAsFixed(1)}%)',
+                Text(tr('{pName} · tầng {lv}/{bodyMax}', {'pName': tr(p.name), 'lv': lv, 'bodyMax': bodyMax}), style: bold.copyWith(fontSize: 13, color: goldLight)),
+                Text(tr('{pLabel} +{p0}%  (mỗi tầng +{p1}%)', {'pLabel': tr(p.label), 'p0': (p.valueAt(lv) * 100).toStringAsFixed(1), 'p1': (p.per * 100).toStringAsFixed(1)}),
                     style: small.copyWith(fontSize: 11, color: cream)),
                 Text(cost,
                     style: small.copyWith(
@@ -189,7 +190,7 @@ class _BodyTabState extends State<BodyTab> {
           ),
           if (block != BodyBlock.maxed)
             LButton(
-              label: pills > 0 ? 'Đột phá' : 'Luyện',
+              label: pills > 0 ? tr('Đột phá') : tr('Luyện'),
               small: true,
               color: pills > 0 ? const Color(0xFF5A3A8A) : seal,
               enabled: block == null,

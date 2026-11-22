@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'i18n.dart';
 
 /// Tàng Bảo Đồ: treasure maps dropped by field monsters. Reading one marks a
 /// spot on the field map the hero is on; digging there turns up a chest, or
@@ -48,8 +49,8 @@ class TbdSpot {
 /// A compass word for the direction from (fx, fy) to (tx, ty); y grows south.
 String compassWord(double fx, double fy, double tx, double ty) {
   final dx = tx - fx, dy = ty - fy;
-  final ns = dy < -0.4 * dx.abs() ? 'bắc' : (dy > 0.4 * dx.abs() ? 'nam' : '');
-  final ew = dx > 0.4 * dy.abs() ? 'đông' : (dx < -0.4 * dy.abs() ? 'tây' : '');
+  final ns = dy < -0.4 * dx.abs() ? tr('bắc') : (dy > 0.4 * dx.abs() ? 'nam' : '');
+  final ew = dx > 0.4 * dy.abs() ? tr('đông') : (dx < -0.4 * dy.abs() ? tr('tây') : '');
   if (ns.isNotEmpty && ew.isNotEmpty) return '$ew $ns';
   return ns.isNotEmpty ? ns : ew;
 }

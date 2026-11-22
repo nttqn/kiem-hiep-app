@@ -21,6 +21,7 @@ import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import 'world_boss_screen.dart' show BossPreview;
+import '../core/i18n.dart';
 
 // The 1.8.0 endgame: Tâm Ma Ảo Cảnh, Ma Vực and Thượng Cổ Hung Thú, each
 // with its own board.
@@ -35,8 +36,8 @@ int endgameBoardMine(LbBoard b, HeroData h) => switch (b) {
 
 /// A board row's value as shown.
 String endgameBoardLabel(LbBoard b, LbEntry e) => switch (b) {
-      LbBoard.tamMa => 'Tầng ${e.tm}',
-      LbBoard.maVuc => 'Tầng ${e.mv % 1000}',
+      LbBoard.tamMa => tr('Tầng {tm}', {'tm': e.tm}),
+      LbBoard.maVuc => tr('Tầng {p0}', {'p0': e.mv % 1000}),
       LbBoard.beast => beastScoreLabel(e.ht),
       _ => '',
     };
@@ -97,17 +98,17 @@ class _EndgameBoardState extends State<EndgameBoard> {
       body = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Đăng nhập để lên bảng xếp hạng', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+          Text(tr('Đăng nhập để lên bảng xếp hạng'), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          LButton(label: 'Đăng nhập', small: true, color: jade, onTap: () => showCloudPanel(context)),
+          LButton(label: tr('Đăng nhập'), small: true, color: jade, onTap: () => showCloudPanel(context)),
         ],
       );
     } else if (_failed) {
-      body = Center(child: Text('Không tải được, thử lại sau.', style: small));
+      body = Center(child: Text(tr('Không tải được, thử lại sau.'), style: small));
     } else if (_rows == null) {
       body = const Center(child: CircularProgressIndicator(color: goldLight));
     } else if (_rows!.isEmpty) {
-      body = Center(child: Text('Chưa có ai. Hãy là người đầu tiên!', style: small, textAlign: TextAlign.center));
+      body = Center(child: Text(tr('Chưa có ai. Hãy là người đầu tiên!'), style: small, textAlign: TextAlign.center));
     } else {
       body = ListView.builder(
         itemCount: _rows!.length,
@@ -149,8 +150,8 @@ class _EndgameBoardState extends State<EndgameBoard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.title, style: titleStyle(18)),
-          if (_place != null) Text('Hạng của bạn: #$_place', style: bold.copyWith(color: goldLight)),
+          Text(tr(widget.title), style: titleStyle(18)),
+          if (_place != null) Text(tr('Hạng của bạn: #{_place}', {'_place': _place}), style: bold.copyWith(color: goldLight)),
           const SizedBox(height: 4),
           Expanded(child: body),
         ],
@@ -167,7 +168,7 @@ Widget _line(String s, {Color color = cream, double size = 13}) => Padding(
 Widget _adTry({required bool can, required VoidCallback onEarned}) => ValueListenableBuilder<bool>(
       valueListenable: AdsService.instance.rewardedReady,
       builder: (_, ready, _) => LButton(
-        label: 'Xem quảng cáo: +1 lượt',
+        label: tr('Xem quảng cáo: +1 lượt'),
         icon: Icons.ondemand_video,
         small: true,
         color: const Color(0xFF8A5A10),
@@ -205,7 +206,7 @@ class _TamMaScreenState extends State<TamMaScreen> {
     final shadow = tamMaPower(next);
     final left = h.tmTriesLeft;
     return SubScreen(
-      title: 'Tâm Ma Ảo Cảnh',
+      title: tr('Tâm Ma Ảo Cảnh'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -216,7 +217,7 @@ class _TamMaScreenState extends State<TamMaScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Tầng $next', style: titleStyle(24), textAlign: TextAlign.center),
+                  Text(tr('Tầng {next}', {'next': next}), style: titleStyle(24), textAlign: TextAlign.center),
                   Expanded(
                     child: Center(
                       child: ColorFiltered(
@@ -230,12 +231,12 @@ class _TamMaScreenState extends State<TamMaScreen> {
                       ),
                     ),
                   ),
-                  Text('Lực chiến Tâm Ma: ${fmt(shadow)}', style: bold.copyWith(color: const Color(0xFFC88CFF)),
+                  Text(tr('Lực chiến Tâm Ma: {p0}', {'p0': fmt(shadow)}), style: bold.copyWith(color: const Color(0xFFC88CFF)),
                       textAlign: TextAlign.center),
-                  Text('Của bạn: ${fmt(h.power)}', style: small, textAlign: TextAlign.center),
+                  Text(tr('Của bạn: {p0}', {'p0': fmt(h.power)}), style: small, textAlign: TextAlign.center),
                   const SizedBox(height: 6),
                   LButton(
-                    label: left > 0 ? 'Khiêu chiến · $left lượt' : 'Hết lượt hôm nay',
+                    label: left > 0 ? tr('Khiêu chiến · {left} lượt', {'left': left}) : tr('Hết lượt hôm nay'),
                     icon: Icons.whatshot,
                     enabled: left > 0,
                     onTap: _fight,
@@ -261,30 +262,30 @@ class _TamMaScreenState extends State<TamMaScreen> {
               padding: const EdgeInsets.all(12),
               child: ListView(
                 children: [
-                  Text('Đối mặt chính mình', style: titleStyle(20)),
-                  _line('Tâm Ma là bóng tối của bạn: cùng môn phái, chiêu thức, thú cưỡi. Mỗi tầng nó mạnh thêm 5%, '
-                      'nên chỉ trang bị tốt hơn mới đưa bạn lên cao hơn.'),
-                  _line('Thua mất 1 lượt trong ngày ($tamMaFreeTries lượt, Nguyệt thẻ +1). Thắng thì lên tầng tiếp, không mất lượt. '
-                      'Chỉ được dùng $arenaPotions bình máu mỗi trận.'),
+                  Text(tr('Đối mặt chính mình'), style: titleStyle(20)),
+                  _line(tr('Tâm Ma là bóng tối của bạn: cùng môn phái, chiêu thức, thú cưỡi. Mỗi tầng nó mạnh thêm 5%, '
+                      'nên chỉ trang bị tốt hơn mới đưa bạn lên cao hơn.')),
+                  _line(tr('Thua mất 1 lượt trong ngày ({tamMaFreeTries} lượt, Nguyệt thẻ +1). Thắng thì lên tầng tiếp, không mất lượt. '
+                      'Chỉ được dùng {arenaPotions} bình máu mỗi trận.', {'tamMaFreeTries': tamMaFreeTries, 'arenaPotions': arenaPotions})),
                   const SizedBox(height: 6),
-                  Text('Tâm ma tầng $next', style: bold.copyWith(color: goldLight)),
-                  if (tamMaAffixes(next).isEmpty) _line('Không có', color: creamDim),
+                  Text(tr('Tâm ma tầng {next}', {'next': next}), style: bold.copyWith(color: goldLight)),
+                  if (tamMaAffixes(next).isEmpty) _line(tr('Không có'), color: creamDim),
                   for (final a in tamMaAffixes(next))
-                    _line('${tmAffixes[a]!.name}: ${tmAffixes[a]!.desc}', color: const Color(0xFFFF9A7A)),
+                    _line('${tr(tmAffixes[a]!.name)}: ${tr(tmAffixes[a]!.desc)}', color: const Color(0xFFFF9A7A)),
                   const SizedBox(height: 6),
-                  Text('Thưởng lần đầu vượt tầng', style: bold.copyWith(color: goldLight)),
-                  _line('${tamMaStones(next)} Tinh Thạch, ${fmt(tamMaGold(next))} lượng'),
-                  _line('Mỗi 5 tầng: thêm ngọc bậc ${tamMaGemTier(next)}. Mỗi 10 tầng: 1 Hung Thú Tinh Phách.'),
-                  _line('Tinh Thạch dùng để Thăng Tinh trang bị +10 (Thợ rèn).', color: creamDim),
+                  Text(tr('Thưởng lần đầu vượt tầng'), style: bold.copyWith(color: goldLight)),
+                  _line(tr('{p0} Tinh Thạch, {p1} lượng', {'p0': tamMaStones(next), 'p1': fmt(tamMaGold(next))})),
+                  _line(tr('Mỗi 5 tầng: thêm ngọc bậc {p0}. Mỗi 10 tầng: 1 Hung Thú Tinh Phách.', {'p0': tamMaGemTier(next)})),
+                  _line(tr('Tinh Thạch dùng để Thăng Tinh trang bị +10 (Thợ rèn).'), color: creamDim),
                   const SizedBox(height: 6),
-                  Text('Tầng cao nhất: ${h.tmBest}', style: bold.copyWith(color: cream)),
-                  MatCount(Mat.stone, 'Tinh Thạch đang có: ${fmt(h.starStones)}', style: bold.copyWith(color: cream), size: 20),
+                  Text(tr('Tầng cao nhất: {tmBest}', {'tmBest': h.tmBest}), style: bold.copyWith(color: cream)),
+                  MatCount(Mat.stone, tr('Tinh Thạch đang có: {p0}', {'p0': fmt(h.starStones)}), style: bold.copyWith(color: cream), size: 20),
                 ],
               ),
             ),
           ),
           const SizedBox(width: 10),
-          const SizedBox(width: 260, child: EndgameBoard(board: LbBoard.tamMa, title: 'Xếp hạng Tâm Ma')),
+          SizedBox(width: 260, child: EndgameBoard(board: LbBoard.tamMa, title: tr('Xếp hạng Tâm Ma'))),
         ],
       ),
     );
@@ -322,13 +323,13 @@ class _MaVucScreenState extends State<MaVucScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Quét nhanh Ma Vực', style: titleStyle(20)),
+        title: Text(tr('Quét nhanh Ma Vực'), style: titleStyle(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [for (final l in lines) Text('• $l', style: body)],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nhận'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Nhận')))],
       ),
     );
   }
@@ -341,7 +342,7 @@ class _MaVucScreenState extends State<MaVucScreen> {
     final all = maVucWeekAffixes(week);
     final now = maVucAffixesAt(next, week);
     return SubScreen(
-      title: 'Ma Vực',
+      title: tr('Ma Vực'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -352,7 +353,7 @@ class _MaVucScreenState extends State<MaVucScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Tầng $next', style: titleStyle(24), textAlign: TextAlign.center),
+                  Text(tr('Tầng {next}', {'next': next}), style: titleStyle(24), textAlign: TextAlign.center),
                   Expanded(
                     child: Center(
                       child: FittedBox(
@@ -360,13 +361,13 @@ class _MaVucScreenState extends State<MaVucScreen> {
                       ),
                     ),
                   ),
-                  Text('Tuần này đã lên: tầng ${h.mvBest}', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
-                  Text('Làm mới sau ${huntDaysLeftShown()} ngày', style: small, textAlign: TextAlign.center),
+                  Text(tr('Tuần này đã lên: tầng {mvBest}', {'mvBest': h.mvBest}), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+                  Text(tr('Làm mới sau {p0} ngày', {'p0': huntDaysLeftShown()}), style: small, textAlign: TextAlign.center),
                   const SizedBox(height: 6),
                   // Quét nhanh (1.8.1): up to 70% of last week's best at once.
                   if (h.maVucSweepTo > 0) ...[
                     LButton(
-                      label: 'Quét nhanh tới tầng ${h.maVucSweepTo}',
+                      label: tr('Quét nhanh tới tầng {maVucSweepTo}', {'maVucSweepTo': h.maVucSweepTo}),
                       icon: Icons.fast_forward,
                       small: true,
                       color: const Color(0xFF6A3A9A),
@@ -374,7 +375,7 @@ class _MaVucScreenState extends State<MaVucScreen> {
                     ),
                     const SizedBox(height: 6),
                   ],
-                  LButton(label: 'Vào tầng $next', icon: Icons.whatshot, onTap: _go),
+                  LButton(label: tr('Vào tầng {next}', {'next': next}), icon: Icons.whatshot, onTap: _go),
                 ],
               ),
             ),
@@ -385,26 +386,26 @@ class _MaVucScreenState extends State<MaVucScreen> {
               padding: const EdgeInsets.all(12),
               child: ListView(
                 children: [
-                  Text('Leo tầng mỗi tuần', style: titleStyle(20)),
-                  _line('Mỗi thứ Hai Ma Vực mở lại từ tầng 1. Tầng nào lên lần đầu trong tuần đều có thưởng, '
-                      'nên tuần nào cũng đáng leo lại. Mỗi 5 tầng có đầu lĩnh.'),
-                  _line('Quái mạnh thêm 6% mỗi tầng. Không mang hiệp khách.'),
+                  Text(tr('Leo tầng mỗi tuần'), style: titleStyle(20)),
+                  _line(tr('Mỗi thứ Hai Ma Vực mở lại từ tầng 1. Tầng nào lên lần đầu trong tuần đều có thưởng, '
+                      'nên tuần nào cũng đáng leo lại. Mỗi 5 tầng có đầu lĩnh.')),
+                  _line(tr('Quái mạnh thêm 6% mỗi tầng. Không mang hiệp khách.')),
                   const SizedBox(height: 6),
-                  Text('Ma khí tuần này', style: bold.copyWith(color: goldLight)),
+                  Text(tr('Ma khí tuần này'), style: bold.copyWith(color: goldLight)),
                   for (var i = 0; i < all.length; i++)
-                    _line('${const ['Từ tầng 1', 'Từ tầng 10', 'Từ tầng 20'][i]} · ${nmAffixes[all[i]]!.name}: ${nmAffixes[all[i]]!.desc}',
+                    _line('${tr(const ['Từ tầng 1', 'Từ tầng 10', 'Từ tầng 20'][i])} · ${tr(nmAffixes[all[i]]!.name)}: ${tr(nmAffixes[all[i]]!.desc)}',
                         color: now.contains(all[i]) ? const Color(0xFFFF9A7A) : creamDim),
                   const SizedBox(height: 6),
-                  Text('Thưởng tầng $next', style: bold.copyWith(color: goldLight)),
-                  _line('${maVucStones(next)} Tinh Thạch, ${fmt(maVucGold(next))} lượng'
-                      '${next % 5 == 0 ? ', ngọc bậc ${maVucGemTier(next)}, ${maVucIron(next)} Thần Thiết' : ''}'),
-                  _line('Tinh Thạch dùng để Thăng Tinh trang bị +10 (Thợ rèn).', color: creamDim),
+                  Text(tr('Thưởng tầng {next}', {'next': next}), style: bold.copyWith(color: goldLight)),
+                  _line(tr('{p0} Tinh Thạch, {p1} lượng'
+                      '{p2}', {'p0': maVucStones(next), 'p1': fmt(maVucGold(next)), 'p2': next % 5 == 0 ? tr(', ngọc bậc {p0}, {p1} Thần Thiết', {'p0': maVucGemTier(next), 'p1': maVucIron(next)}) : ''})),
+                  _line(tr('Tinh Thạch dùng để Thăng Tinh trang bị +10 (Thợ rèn).'), color: creamDim),
                 ],
               ),
             ),
           ),
           const SizedBox(width: 10),
-          const SizedBox(width: 260, child: EndgameBoard(board: LbBoard.maVuc, title: 'Xếp hạng tuần')),
+          SizedBox(width: 260, child: EndgameBoard(board: LbBoard.maVuc, title: tr('Xếp hạng tuần'))),
         ],
       ),
     );
@@ -446,7 +447,7 @@ class _BeastScreenState extends State<BeastScreen> {
     final left = h.htTriesLeft;
     final i = _diff - 1;
     return SubScreen(
-      title: 'Thượng Cổ Hung Thú',
+      title: tr('Thượng Cổ Hung Thú'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -457,8 +458,8 @@ class _BeastScreenState extends State<BeastScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(b.name, style: titleStyle(24, color: hanhColor(base.hanh)), textAlign: TextAlign.center),
-                  Text('Hệ ${base.hanh.label}', style: small, textAlign: TextAlign.center),
+                  Text(tr(b.name), style: titleStyle(24, color: hanhColor(base.hanh)), textAlign: TextAlign.center),
+                  Text(tr('Hệ {hanhLabel}', {'hanhLabel': tr(base.hanh.label)}), style: small, textAlign: TextAlign.center),
                   Expanded(child: Center(child: BossPreview(def: base, size: 160))),
                   Row(
                     children: [
@@ -490,7 +491,7 @@ class _BeastScreenState extends State<BeastScreen> {
                   ),
                   const SizedBox(height: 6),
                   LButton(
-                    label: left > 0 ? 'Khiêu chiến · $left lượt' : 'Hết lượt hôm nay',
+                    label: left > 0 ? tr('Khiêu chiến · {left} lượt', {'left': left}) : tr('Hết lượt hôm nay'),
                     icon: Icons.whatshot,
                     enabled: left > 0,
                     onTap: _fight,
@@ -505,27 +506,27 @@ class _BeastScreenState extends State<BeastScreen> {
               padding: const EdgeInsets.all(12),
               child: ListView(
                 children: [
-                  Text(b.desc, style: titleStyle(17)),
-                  _line('Hung thú tuần này, đổi mỗi thứ Hai. Phải hạ trong ${beastTime.round()} giây. '
-                      'Né vùng đỏ trước khi nó giáng xuống! Ở 60% và 30% máu nó gọi đồng bọn; dưới 30% nó cuồng nộ.'),
-                  _line('$beastFreeTries lượt mỗi ngày (Nguyệt thẻ +1), dùng chung cho cả ba độ khó.'),
+                  Text(tr(b.desc), style: titleStyle(17)),
+                  _line(tr('Hung thú tuần này, đổi mỗi thứ Hai. Phải hạ trong {p0} giây. '
+                      'Né vùng đỏ trước khi nó giáng xuống! Ở 60% và 30% máu nó gọi đồng bọn; dưới 30% nó cuồng nộ.', {'p0': beastTime.round()})),
+                  _line(tr('{beastFreeTries} lượt mỗi ngày (Nguyệt thẻ +1), dùng chung cho cả ba độ khó.', {'beastFreeTries': beastFreeTries})),
                   const SizedBox(height: 6),
-                  Text('${beastLevels[i]} · nên có lực chiến ${fmt(beastPowers[i])}', style: bold.copyWith(color: goldLight)),
-                  _line(h.htSlain(_diff) ? 'Đã hạ tuần này: lần sau chỉ thưởng ${fmt(beastGold[i] ~/ 10)} lượng.'
-                      : 'Lần đầu hạ trong tuần: ${beastStones[i]} Tinh Thạch, ${beastSoulsFor(i)} Hung Thú Tinh Phách, '
-                          '${fmt(beastGold[i])} lượng, ${i + 1} ngọc bậc ${beastGemTier[i]}.',
+                  Text(tr('{p0} · nên có lực chiến {p1}', {'p0': beastLevels[i], 'p1': fmt(beastPowers[i])}), style: bold.copyWith(color: goldLight)),
+                  _line(h.htSlain(_diff) ? tr('Đã hạ tuần này: lần sau chỉ thưởng {p0} lượng.', {'p0': fmt(beastGold[i] ~/ 10)})
+                      : tr('Lần đầu hạ trong tuần: {p0} Tinh Thạch, {p1} Hung Thú Tinh Phách, '
+                          '{p2} lượng, {p3} ngọc bậc {p4}.', {'p0': beastStones[i], 'p1': beastSoulsFor(i), 'p2': fmt(beastGold[i]), 'p3': i + 1, 'p4': beastGemTier[i]}),
                       color: h.htSlain(_diff) ? creamDim : cream),
-                  _line('Bảng xếp hạng tính độ khó cao nhất đã hạ, rồi thời gian nhanh nhất.', color: creamDim),
+                  _line(tr('Bảng xếp hạng tính độ khó cao nhất đã hạ, rồi thời gian nhanh nhất.'), color: creamDim),
                   const SizedBox(height: 6),
-                  Text('Thành tích tuần: ${h.htScore > 0 ? beastScoreLabel(h.htScore) : 'chưa có'}',
+                  Text(tr('Thành tích tuần: {p0}', {'p0': h.htScore > 0 ? beastScoreLabel(h.htScore) : tr('chưa có')}),
                       style: bold.copyWith(color: cream)),
-                  MatCount(Mat.soul, 'Tinh Phách đang có: ${h.beastSouls}', style: bold.copyWith(color: cream), size: 20),
+                  MatCount(Mat.soul, tr('Tinh Phách đang có: {beastSouls}', {'beastSouls': h.beastSouls}), style: bold.copyWith(color: cream), size: 20),
                 ],
               ),
             ),
           ),
           const SizedBox(width: 10),
-          const SizedBox(width: 260, child: EndgameBoard(board: LbBoard.beast, title: 'Xếp hạng tuần')),
+          SizedBox(width: 260, child: EndgameBoard(board: LbBoard.beast, title: tr('Xếp hạng tuần'))),
         ],
       ),
     );

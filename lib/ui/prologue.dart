@@ -5,6 +5,7 @@ import '../core/hero.dart';
 import '../render/art_figures.dart';
 import 'backdrop.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Lời mở đầu for a new hero: three short pages (the land, the sect
 /// master's first charge, how to fight) and a button straight into that
@@ -35,22 +36,22 @@ class _PrologueState extends State<_Prologue> {
 
   List<(String, String, Widget?)> get _pages => [
         (
-          'Lạc An, năm loạn thế',
-          'Huyết Ma Giáo trỗi dậy, sơn tặc và yêu thú tràn khắp ngoại thành. Dân lành khốn khổ, '
-              'võ lâm chia rẽ. Giang hồ đang cần một người dám đứng ra.',
+          tr('Lạc An, năm loạn thế'),
+          tr('Huyết Ma Giáo trỗi dậy, sơn tặc và yêu thú tràn khắp ngoại thành. Dân lành khốn khổ, '
+              'võ lâm chia rẽ. Giang hồ đang cần một người dám đứng ra.'),
           null,
         ),
         (
-          'Chưởng môn ${h.sect.name}',
-          '"Đồ nhi, ngươi đã học xong căn bản của bổn môn. Ngoài thành sói hoang đang hại dân làng. '
-              'Xuống núi diệt trừ chúng, đó là bài khảo nghiệm đầu tiên của ngươi."',
+          tr('Chưởng môn {sectName}', {'sectName': tr(h.sect.name)}),
+          tr('"Đồ nhi, ngươi đã học xong căn bản của bổn môn. Ngoài thành sói hoang đang hại dân làng. '
+              'Xuống núi diệt trừ chúng, đó là bài khảo nghiệm đầu tiên của ngươi."'),
           FigurePreview(hanh: h.hanh, female: h.female, scale: 1.3, gear: const HeroGear(weapon: 4, hat: 4, armor: 4, belt: 4, boots: 4, cape: true), costume: costumeById['chuongmon']),
         ),
         (
-          'Bí quyết hành tẩu',
-          '• Kéo cần điều khiển bên trái để đi, chạm nút tia chớp để đánh, chạm các vòng tròn để ra chiêu.\n'
+          tr('Bí quyết hành tẩu'),
+          tr('• Kéo cần điều khiển bên trái để đi, chạm nút tia chớp để đánh, chạm các vòng tròn để ra chiêu.\n'
               '• Bật TỰ ĐỘNG: nhân vật tự đánh, tự uống thuốc, tự cộng điểm và tự mặc đồ tốt hơn.\n'
-              '• Về thành: nhận quà mỗi ngày, Mục tiêu 7 ngày và nhiệm vụ chính tuyến để lên cấp nhanh.',
+              '• Về thành: nhận quà mỗi ngày, Mục tiêu 7 ngày và nhiệm vụ chính tuyến để lên cấp nhanh.'),
           FigurePreview.of(h, scale: 1.3),
         ),
       ];
@@ -101,11 +102,11 @@ class _PrologueState extends State<_Prologue> {
                               if (!last)
                                 TextButton(
                                   onPressed: () => Navigator.of(context).pop(false),
-                                  child: const Text('Bỏ qua'),
+                                  child: Text(tr('Bỏ qua')),
                                 ),
                               const SizedBox(width: 6),
                               LButton(
-                                label: last ? 'Lên đường' : 'Tiếp',
+                                label: last ? tr('Lên đường') : tr('Tiếp'),
                                 icon: last ? Icons.directions_run : Icons.arrow_forward,
                                 color: jade,
                                 small: true,

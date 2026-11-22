@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'gems.dart';
 import 'hero.dart';
 import 'realm.dart' show realmChestGold;
+import 'i18n.dart';
 
 /// Kỳ ngộ (1.20.0): now and then a field kill turns up a chance meeting:
 /// an ẩn sĩ passing on some công lực, an old chest under a tree, herbs by a
@@ -119,7 +120,7 @@ extension KyNgoHero on HeroData {
   /// Titles for the totals reached; the lines to show.
   List<String> kyTitles() => [
         for (final e in kyTotalTitles.entries)
-          if (kyTotal >= e.key && seasonTitles.add(e.value)) 'Danh hiệu « ${e.value} »',
+          if (kyTotal >= e.key && seasonTitles.add(e.value)) tr('Danh hiệu « {eValue} »', {'eValue': e.value}),
       ];
 
   /// Pays a meeting that needs no fight; the lines to show (the world adds
@@ -133,21 +134,21 @@ extension KyNgoHero on HeroData {
       case KyNgo.ruongCo:
         final g = kyChestGold(level, rebirths, goldMul);
         gold += g;
-        return ['+$g lượng'];
+        return [tr('+{g} lượng', {'g': g})];
       case KyNgo.linhDuoc:
         addHerb(herbTier, kyHerbs);
         hpPots += kyPots;
         mpPots += kyPots ~/ 2;
-        return ['+$kyHerbs linh thảo, +$kyPots bình máu, +${kyPots ~/ 2} bình nội lực'];
+        return [tr('+{kyHerbs} linh thảo, +{kyPots} bình máu, +{p0} bình nội lực', {'kyHerbs': kyHerbs, 'kyPots': kyPots, 'p0': kyPots ~/ 2})];
       case KyNgo.tienChi:
         kyBless = kyBlessSec;
-        return ['+${(kyBlessBonus * 100).round()}% EXP và lượng trong ${kyBlessSec ~/ 60} phút luyện công'];
+        return [tr('+{p0}% EXP và lượng trong {p1} phút luyện công', {'p0': (kyBlessBonus * 100).round(), 'p1': kyBlessSec ~/ 60})];
       case KyNgo.biKip:
         return [gainManualPage(rng)];
       case KyNgo.thienThach:
         if (rebirths > 0) {
           divineIron += kyStarIron;
-          return ['+$kyStarIron Thần Thiết'];
+          return [tr('+{kyStarIron} Thần Thiết', {'kyStarIron': kyStarIron})];
         }
         final g = Gem(hanh, math.min(maxDropTier, dropTier(level, boss: true) + 1));
         addGem(g, kyStarGems);
@@ -169,7 +170,7 @@ extension KyNgoHero on HeroData {
   void tickKyBless(double dt) {
     if (kyBless <= 0) return;
     kyBless = math.max(0, kyBless - dt);
-    if (kyBless == 0) notices.add(Notice('Tiên nhân chỉ lộ đã hết', color: 0xFFB8A890));
+    if (kyBless == 0) notices.add(Notice(tr('Tiên nhân chỉ lộ đã hết'), color: 0xFFB8A890));
   }
 
   double get kyBlessMul => kyBless > 0 ? 1 + kyBlessBonus : 1.0;
@@ -188,8 +189,8 @@ extension KyNgoHero on HeroData {
     final gem = Gem(hanh, kyPageGemTier);
     addGem(gem, kyPageGems);
     essence += kyPageEssence;
-    final lines = ['Kỳ ngộ phổ · ${k.label}', '+$g lượng', '+$kyPageGems ${gem.name}', '+$kyPageEssence Tinh Hoa'];
-    if (kyClaimed.length >= KyNgo.values.length && seasonTitles.add(kyAllTitle)) lines.add('Danh hiệu « $kyAllTitle »');
+    final lines = [tr('Kỳ ngộ phổ · {kLabel}', {'kLabel': tr(k.label)}), tr('+{g} lượng', {'g': g}), '+$kyPageGems ${tr(gem.name)}', tr('+{kyPageEssence} Tinh Hoa', {'kyPageEssence': kyPageEssence})];
+    if (kyClaimed.length >= KyNgo.values.length && seasonTitles.add(kyAllTitle)) lines.add(tr('Danh hiệu « {kyAllTitle} »', {'kyAllTitle': kyAllTitle}));
     return lines;
   }
 

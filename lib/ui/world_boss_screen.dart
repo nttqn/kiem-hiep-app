@@ -28,6 +28,7 @@ import 'hero_card.dart';
 import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Thử thách: the endless tower, the daily world boss and the Lôi đài.
 class ChallengeScreen extends StatefulWidget {
@@ -67,98 +68,98 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     final cards = <Widget>[
       // 1.12.0: twice a day, at fixed hours.
       _card(
-        title: 'Boss Hoàng Kim',
+        title: tr('Boss Hoàng Kim'),
         icon: Icons.workspace_premium,
         lines: [
-          'Hôm nay: ${gb.name}',
+          tr('Hôm nay: {gbName}', {'gbName': tr(gb.name)}),
           gbSession >= 0
-              ? 'Đang xuất hiện! Lượt còn: ${h.gbRunsLeft}'
-              : 'Xuất hiện ${[for (var i = 0; i < goldBossSessions.length; i++) goldBossSessionLabel(i)].join(' và ')}',
+              ? tr('Đang xuất hiện! Lượt còn: {gbRunsLeft}', {'gbRunsLeft': h.gbRunsLeft})
+              : tr('Xuất hiện {p0}', {'p0': [for (var i = 0; i < goldBossSessions.length; i++) goldBossSessionLabel(i)].join(tr(' và '))}),
         ],
         art: BossPreview(def: gb, size: 150),
-        button: h.goldBossOpen ? 'Vào Boss Hoàng Kim' : 'Mở ở cấp $goldBossOpenLevel',
+        button: h.goldBossOpen ? tr('Vào Boss Hoàng Kim') : tr('Mở ở cấp {goldBossOpenLevel}', {'goldBossOpenLevel': goldBossOpenLevel}),
         enabled: h.goldBossOpen,
         isNew: true,
         onTap: () => _go(const GoldBossScreen()),
       ),
       _card(
-        title: 'Tháp Thử Luyện',
+        title: tr('Tháp Thử Luyện'),
         icon: Icons.temple_buddhist,
         lines: [
-          'Tầng cao nhất: ${h.towerBest}',
-          'Tháp vô tận, càng lên cao quái càng mạnh.',
-          'Mỗi 5 tầng có đầu lĩnh và ngọc; tầng 60 rơi ngọc Tiên, 72 ngọc Thánh.',
+          tr('Tầng cao nhất: {towerBest}', {'towerBest': h.towerBest}),
+          tr('Tháp vô tận, càng lên cao quái càng mạnh.'),
+          tr('Mỗi 5 tầng có đầu lĩnh và ngọc; tầng 60 rơi ngọc Tiên, 72 ngọc Thánh.'),
         ],
         art: Text('${h.towerBest + 1}', style: titleStyle(84, color: goldLight.withValues(alpha: 0.85))),
-        button: towerOpen ? 'Leo tầng ${h.towerBest + 1}' : 'Mở ở cấp $towerOpenLevel',
+        button: towerOpen ? tr('Leo tầng {p0}', {'p0': h.towerBest + 1}) : tr('Mở ở cấp {towerOpenLevel}', {'towerOpenLevel': towerOpenLevel}),
         enabled: towerOpen,
         onTap: () => _go(PlayScreen.dungeon(towerFloor(h.towerBest + 1))),
       ),
       _card(
-        title: 'Boss Thế Giới',
+        title: tr('Boss Thế Giới'),
         icon: Icons.whatshot,
         lines: [
-          'Hôm nay: ${boss.name}',
-          'Lượt còn: ${h.wbRunsLeft} · Tổng sát thương: ${fmt(h.wbTotal)}',
-          'Đánh 60 giây, so tổng sát thương trong ngày với cả server. Đổi boss lúc 0 giờ.',
+          tr('Hôm nay: {bossName}', {'bossName': tr(boss.name)}),
+          tr('Lượt còn: {wbRunsLeft} · Tổng sát thương: {p0}', {'wbRunsLeft': h.wbRunsLeft, 'p0': fmt(h.wbTotal)}),
+          tr('Đánh 60 giây, so tổng sát thương trong ngày với cả server. Đổi boss lúc 0 giờ.'),
         ],
         art: BossPreview(def: boss, size: 150),
-        button: bossOpen ? 'Vào Boss Thế Giới' : 'Mở ở cấp $worldBossOpenLevel',
+        button: bossOpen ? tr('Vào Boss Thế Giới') : tr('Mở ở cấp {worldBossOpenLevel}', {'worldBossOpenLevel': worldBossOpenLevel}),
         enabled: bossOpen,
         onTap: () => _go(const WorldBossScreen()),
       ),
       _card(
-        title: 'Lôi đài',
+        title: tr('Lôi đài'),
         icon: Icons.sports_kabaddi,
         lines: [
-          'Hạng: ${arenaTiers[h.arenaTier].name} · ${h.arenaPoints} điểm',
-          'Lượt còn: ${arenaOpen ? h.arenaFightsLeft : 0} · Uy danh: ${fmt(h.arenaCoins)}',
-          'Tỷ thí với bản sao cao thủ khác, đổi Uy danh lấy thú cưỡi, ngọc, đan dược.',
+          tr('Hạng: {p0} · {arenaPoints} điểm', {'p0': tr(arenaTiers[h.arenaTier].name), 'arenaPoints': h.arenaPoints}),
+          tr('Lượt còn: {p0} · Uy danh: {p1}', {'p0': arenaOpen ? h.arenaFightsLeft : 0, 'p1': fmt(h.arenaCoins)}),
+          tr('Tỷ thí với bản sao cao thủ khác, đổi Uy danh lấy thú cưỡi, ngọc, đan dược.'),
         ],
         art: Icon(Icons.sports_kabaddi, size: 110, color: Color(arenaTiers[h.arenaTier].color).withValues(alpha: 0.85)),
-        button: arenaOpen ? 'Lên lôi đài' : 'Mở ở cấp $arenaOpenLevel',
+        button: arenaOpen ? tr('Lên lôi đài') : tr('Mở ở cấp {arenaOpenLevel}', {'arenaOpenLevel': arenaOpenLevel}),
         enabled: arenaOpen,
         onTap: () => _go(const ArenaScreen()),
       ),
       // 1.8.0: the endgame.
       _card(
-        title: 'Tâm Ma',
+        title: tr('Tâm Ma'),
         icon: Icons.person_off,
         lines: [
-          'Tầng cao nhất: ${h.tmBest} · Lượt còn: ${h.tmTriesLeft}',
-          'Đấu với bóng tối của chính mình, mỗi tầng mạnh hơn 5%.',
-          'Thưởng Tinh Thạch để Thăng Tinh trang bị.',
+          tr('Tầng cao nhất: {tmBest} · Lượt còn: {tmTriesLeft}', {'tmBest': h.tmBest, 'tmTriesLeft': h.tmTriesLeft}),
+          tr('Đấu với bóng tối của chính mình, mỗi tầng mạnh hơn 5%.'),
+          tr('Thưởng Tinh Thạch để Thăng Tinh trang bị.'),
         ],
         art: Text('${h.tmBest + 1}', style: titleStyle(84, color: const Color(0xFFC88CFF).withValues(alpha: 0.85))),
-        button: h.tamMaOpen ? 'Vào Tâm Ma' : 'Mở khi lực chiến ${fmt(tamMaOpenPower)}',
+        button: h.tamMaOpen ? tr('Vào Tâm Ma') : tr('Mở khi lực chiến {p0}', {'p0': fmt(tamMaOpenPower)}),
         enabled: h.tamMaOpen,
         isNew: true,
         onTap: () => _go(const TamMaScreen()),
       ),
       _card(
-        title: 'Hung Thú',
+        title: tr('Hung Thú'),
         icon: Icons.pest_control,
         lines: [
-          'Tuần này: ${beast.name} · Lượt còn: ${h.htTriesLeft}',
-          'Boss tuần 3 độ khó, phải né vùng đỏ và hạ trong 3 phút.',
-          'Thưởng Hung Thú Tinh Phách để Thăng Tinh trang bị lên 4★ và 5★.',
+          tr('Tuần này: {beastName} · Lượt còn: {htTriesLeft}', {'beastName': tr(beast.name), 'htTriesLeft': h.htTriesLeft}),
+          tr('Boss tuần 3 độ khó, phải né vùng đỏ và hạ trong 3 phút.'),
+          tr('Thưởng Hung Thú Tinh Phách để Thăng Tinh trang bị lên 4★ và 5★.'),
         ],
         art: BossPreview(def: mobById[beast.base]!, size: 150),
-        button: h.beastOpen ? 'Săn Hung Thú' : 'Mở ở chuyển sinh $beastOpenRebirths',
+        button: h.beastOpen ? tr('Săn Hung Thú') : tr('Mở ở chuyển sinh {beastOpenRebirths}', {'beastOpenRebirths': beastOpenRebirths}),
         enabled: h.beastOpen,
         isNew: true,
         onTap: () => _go(const BeastScreen()),
       ),
       _card(
-        title: 'Ma Vực',
+        title: tr('Ma Vực'),
         icon: Icons.blur_circular,
         lines: [
-          'Tuần này: tầng ${h.mvBest}',
-          'Leo vô tận, mở lại mỗi thứ Hai, ma khí đổi theo tuần.',
-          'Mỗi tầng mới trong tuần đều có Tinh Thạch.',
+          tr('Tuần này: tầng {mvBest}', {'mvBest': h.mvBest}),
+          tr('Leo vô tận, mở lại mỗi thứ Hai, ma khí đổi theo tuần.'),
+          tr('Mỗi tầng mới trong tuần đều có Tinh Thạch.'),
         ],
         art: Text('${h.mvBest + 1}', style: titleStyle(84, color: const Color(0xFFB04AFF).withValues(alpha: 0.85))),
-        button: h.maVucOpen ? 'Vào Ma Vực' : 'Mở khi qua tháp tầng $maVucOpenTower',
+        button: h.maVucOpen ? tr('Vào Ma Vực') : tr('Mở khi qua tháp tầng {maVucOpenTower}', {'maVucOpenTower': maVucOpenTower}),
         enabled: h.maVucOpen,
         isNew: true,
         onTap: () => _go(const MaVucScreen()),
@@ -186,7 +187,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(color: const Color(0xFFE0402A), borderRadius: BorderRadius.circular(5)),
-                      child: Text('MỚI', style: bold.copyWith(fontSize: 10, color: Colors.white)),
+                      child: Text(tr('MỚI'), style: bold.copyWith(fontSize: 10, color: Colors.white)),
                     ),
                   ],
                 ],
@@ -195,8 +196,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           ),
         );
     return SubScreen(
-      title: 'Thử thách',
-      actions: [chip(0, 'Thường ngày'), chip(1, 'Cao thủ')],
+      title: tr('Thử thách'),
+      actions: [chip(0, tr('Thường ngày')), chip(1, tr('Cao thủ'))],
       child: LayoutBuilder(
         builder: (_, box) {
           final w = (box.maxWidth - 20) / 3;
@@ -244,7 +245,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(color: seal, borderRadius: BorderRadius.circular(6)),
-              child: Text('MỚI', style: bold.copyWith(fontSize: 11, color: Colors.white)),
+              child: Text(tr('MỚI'), style: bold.copyWith(fontSize: 11, color: Colors.white)),
             ),
           ],
         ],
@@ -360,7 +361,7 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
   Widget build(BuildContext context) {
     final boss = worldBossOf();
     return SubScreen(
-      title: 'Boss Thế Giới',
+      title: tr('Boss Thế Giới'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -381,19 +382,19 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(boss.name, style: titleStyle(20, color: hanhColor(boss.hanh)), textAlign: TextAlign.center),
+          Text(tr(boss.name), style: titleStyle(20, color: hanhColor(boss.hanh)), textAlign: TextAlign.center),
           Expanded(child: Center(child: BossPreview(def: boss, size: 150))),
-          Text('Lượt còn: $left (${h.wbFreeRuns + h.wbAdRuns} hôm nay)',
+          Text(tr('Lượt còn: {left} ({p0} hôm nay)', {'left': left, 'p0': h.wbFreeRuns + h.wbAdRuns}),
               style: bold.copyWith(color: cream), textAlign: TextAlign.center),
-          Text('Cao nhất: ${fmt(h.wbBest)}', style: small, textAlign: TextAlign.center),
+          Text(tr('Cao nhất: {p0}', {'p0': fmt(h.wbBest)}), style: small, textAlign: TextAlign.center),
           const SizedBox(height: 6),
-          LButton(label: 'Khiêu chiến', icon: Icons.whatshot, enabled: left > 0, onTap: _fight),
+          LButton(label: tr('Khiêu chiến'), icon: Icons.whatshot, enabled: left > 0, onTap: _fight),
           if (h.wbAdRuns < worldBossAdTries) ...[
             const SizedBox(height: 6),
             ValueListenableBuilder<bool>(
               valueListenable: AdsService.instance.rewardedReady,
               builder: (_, ready, _) => LButton(
-                label: 'Xem quảng cáo: +1 lượt',
+                label: tr('Xem quảng cáo: +1 lượt'),
                 icon: Icons.ondemand_video,
                 small: true,
                 color: const Color(0xFF8A5A10),
@@ -419,8 +420,8 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Mốc sát thương hôm nay', style: titleStyle(18)),
-          Text('Tổng: ${fmt(h.wbTotal)}', style: bold.copyWith(color: const Color(0xFFFF9A5A))),
+          Text(tr('Mốc sát thương hôm nay'), style: titleStyle(18)),
+          Text(tr('Tổng: {p0}', {'p0': fmt(h.wbTotal)}), style: bold.copyWith(color: const Color(0xFFFF9A5A))),
           const SizedBox(height: 6),
           Expanded(
             child: ListView(
@@ -453,9 +454,9 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
               children: [
                 Text(fmt(goal), style: bold.copyWith(color: cream)),
                 Text(
-                    '${fmt(worldBossMilestoneGold(i))} lượng · 1 ngọc $gemName ngẫu nhiên'
-                    '${worldBossGoldShards[i] > 0 ? ' · ${worldBossGoldShards[i]} mảnh Hoàng Kim' : ''}'
-                    '${worldBossIron[i] > 0 ? ' · ${worldBossIron[i]} Thần Thiết' : ''}',
+                    tr('{p0} lượng · 1 ngọc {gemName} ngẫu nhiên'
+                    '{p1}'
+                    '{p2}', {'p0': fmt(worldBossMilestoneGold(i)), 'gemName': gemName, 'p1': worldBossGoldShards[i] > 0 ? tr(' · {p0} mảnh Hoàng Kim', {'p0': worldBossGoldShards[i]}) : '', 'p2': worldBossIron[i] > 0 ? tr(' · {p0} Thần Thiết', {'p0': worldBossIron[i]}) : ''}),
                     style: small.copyWith(fontSize: 11)),
                 const SizedBox(height: 3),
                 Bar(value: (h.wbTotal / goal).clamp(0.0, 1.0), color: const Color(0xFFFF9A5A), height: 6),
@@ -466,7 +467,7 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
           done
               ? const Icon(Icons.check_circle, color: Color(0xFF8CE07A))
               : LButton(
-                  label: 'Nhận',
+                  label: tr('Nhận'),
                   small: true,
                   color: jade,
                   enabled: can,
@@ -476,9 +477,9 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
                     SaveService.instance.save();
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(
-                            content: Text('Nhận ${fmt(worldBossMilestoneGold(i))} lượng và ${g.name}'
-                                '${worldBossGoldShards[i] > 0 ? ', ${worldBossGoldShards[i]} mảnh Hoàng Kim' : ''}'
-                                '${worldBossIron[i] > 0 ? ', ${worldBossIron[i]} Thần Thiết' : ''}')));
+                            content: Text(tr('Nhận {p0} lượng và {gName}'
+                                '{p1}'
+                                '{p2}', {'p0': fmt(worldBossMilestoneGold(i)), 'gName': tr(g.name), 'p1': worldBossGoldShards[i] > 0 ? tr(', {p0} mảnh Hoàng Kim', {'p0': worldBossGoldShards[i]}) : '', 'p2': worldBossIron[i] > 0 ? tr(', {p0} Thần Thiết', {'p0': worldBossIron[i]}) : ''}))));
                     setState(() {});
                   },
                 ),
@@ -494,17 +495,17 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
       body = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Đăng nhập để lên bảng xếp hạng', style: bold.copyWith(color: cream), textAlign: TextAlign.center),
+          Text(tr('Đăng nhập để lên bảng xếp hạng'), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          LButton(label: 'Đăng nhập', small: true, color: jade, onTap: () => showCloudPanel(context)),
+          LButton(label: tr('Đăng nhập'), small: true, color: jade, onTap: () => showCloudPanel(context)),
         ],
       );
     } else if (_loadFailed) {
-      body = Center(child: Text('Không tải được, thử lại sau.', style: small));
+      body = Center(child: Text(tr('Không tải được, thử lại sau.'), style: small));
     } else if (_rows == null) {
       body = const Center(child: CircularProgressIndicator(color: goldLight));
     } else if (_rows!.isEmpty) {
-      body = Center(child: Text('Chưa ai khiêu chiến hôm nay.', style: small, textAlign: TextAlign.center));
+      body = Center(child: Text(tr('Chưa ai khiêu chiến hôm nay.'), style: small, textAlign: TextAlign.center));
     } else {
       body = ListView.builder(
         itemCount: _rows!.length,
@@ -545,8 +546,8 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Xếp hạng hôm nay', style: titleStyle(18)),
-          if (_place != null) Text('Hạng của bạn: #$_place', style: bold.copyWith(color: goldLight)),
+          Text(tr('Xếp hạng hôm nay'), style: titleStyle(18)),
+          if (_place != null) Text(tr('Hạng của bạn: #{_place}', {'_place': _place}), style: bold.copyWith(color: goldLight)),
           const SizedBox(height: 4),
           Expanded(child: body),
         ],

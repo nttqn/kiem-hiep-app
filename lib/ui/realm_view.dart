@@ -10,6 +10,7 @@ import '../services/save.dart';
 import 'lore_screen.dart';
 import 'play_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Bí cảnh: one wide land per field map, explored a few times a day.
 class RealmView extends StatefulWidget {
@@ -38,7 +39,7 @@ class _RealmViewState extends State<RealmView> {
   void _enter(int i) {
     if (!h.realmStartRun(vnDayKey())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hết lượt thám hiểm hôm nay, mai quay lại nhé.')),
+        SnackBar(content: Text(tr('Hết lượt thám hiểm hôm nay, mai quay lại nhé.'))),
       );
       return;
     }
@@ -63,14 +64,14 @@ class _RealmViewState extends State<RealmView> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Vùng đất rộng phủ sương, mỗi lần vào một khác. Thắp 3 trận nhãn (hạ Hộ Trận Sứ canh giữ) để phá phong ấn, '
-                  'hạ đầu lĩnh. Trên đường có rương báu, bia cổ ban phúc và người gặp nạn cần cứu. 10 phút mỗi lượt.',
+                  tr('Vùng đất rộng phủ sương, mỗi lần vào một khác. Thắp 3 trận nhãn (hạ Hộ Trận Sứ canh giữ) để phá phong ấn, '
+                  'hạ đầu lĩnh. Trên đường có rương báu, bia cổ ban phúc và người gặp nạn cần cứu. 10 phút mỗi lượt.'),
                   style: small.copyWith(fontSize: 11.5, color: cream),
                 ),
               ),
               const SizedBox(width: 10),
               LButton(
-                label: 'Ký sự ${h.lorePages.length}/$lorePageCount',
+                label: tr('Ký sự {lorePagesLength}/{lorePageCount}', {'lorePagesLength': h.lorePages.length, 'lorePageCount': lorePageCount}),
                 icon: Icons.menu_book,
                 small: true,
                 color: const Color(0xFF2E6A5A),
@@ -83,7 +84,7 @@ class _RealmViewState extends State<RealmView> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Lượt hôm nay', style: small.copyWith(fontSize: 11)),
+                  Text(tr('Lượt hôm nay'), style: small.copyWith(fontSize: 11)),
                   Text('$left', style: titleStyle(20)),
                   if (h.realmAds < realmAdRuns)
                     ValueListenableBuilder<bool>(
@@ -131,15 +132,15 @@ class _RealmViewState extends State<RealmView> {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(r.name,
+                              child: Text(tr(r.name),
                                   style: bold.copyWith(color: const Color(0xFFB8F0E0)), overflow: TextOverflow.ellipsis),
                             ),
                             if (best) const Icon(Icons.recommend, size: 16, color: Color(0xFF8CE0C8)),
                           ],
                         ),
-                        Text('Quái cấp ${realmLevel(r, h.level)} · ${r.map.name}',
+                        Text(tr('Quái cấp {p0} · {mapName}', {'p0': realmLevel(r, h.level), 'mapName': tr(r.map.name)}),
                             style: small, overflow: TextOverflow.ellipsis),
-                        Text(r.desc,
+                        Text(tr(r.desc),
                             style: small.copyWith(color: cream, fontSize: 11),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis),
@@ -151,9 +152,9 @@ class _RealmViewState extends State<RealmView> {
                             const Spacer(),
                             Text(
                               !open
-                                  ? 'Cần cấp ${r.openLv}'
+                                  ? tr('Cần cấp {openLv}', {'openLv': r.openLv})
                                   : stars == 0
-                                      ? 'Lần đầu: đồ Hiếm'
+                                      ? tr('Lần đầu: đồ Hiếm')
                                       : mobById[r.map.boss]!.name,
                               style: small.copyWith(fontSize: 11),
                               overflow: TextOverflow.ellipsis,

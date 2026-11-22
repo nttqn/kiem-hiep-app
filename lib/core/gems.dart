@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'hanh.dart';
 import 'items.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Ngũ hành gems: socketed into gear, one stat each. Monsters drop tiers up
 /// to [maxDropTier]; Tiên and Thánh come only from fusing and the tower.
@@ -28,7 +29,7 @@ class Gem {
   final int tier;
 
   String get key => '${hanh.index}:$tier';
-  String get name => '${hanh.label} Ngọc ${gemTierNames[tier - 1]}';
+  String get name => tr('{hanhLabel} Ngọc {p0}', {'hanhLabel': tr(hanh.label), 'p0': tr(gemTierNames[tier - 1])});
 
   static Gem? parse(Object? key) {
     if (key is! String) return null;
@@ -67,11 +68,11 @@ String gemEffectText(Gem g, {bool banMenh = false}) {
   String pct(double v) => '+${(v * m * 100).toStringAsFixed(v * m * 100 < 10 ? 1 : 0)}%';
   final e = gemEffect(g);
   return switch (g.hanh) {
-    Hanh.kim => 'Công lực ${pct(e[Bonus.atkPct]!)}',
-    Hanh.moc => 'Chí mạng ${pct(e[Bonus.crit]!)}',
-    Hanh.thuy => 'Nội lực ${pct(e[Bonus.mpPct]!)}, uy lực kỹ năng ${pct(e[Bonus.skillDmg]!)}',
-    Hanh.hoa => 'ST chí mạng ${pct(e[Bonus.critDmg]!)}',
-    Hanh.tho => 'Sinh lực ${pct(e[Bonus.hpPct]!)}',
+    Hanh.kim => tr('Công lực {p0}', {'p0': pct(e[Bonus.atkPct]!)}),
+    Hanh.moc => tr('Chí mạng {p0}', {'p0': pct(e[Bonus.crit]!)}),
+    Hanh.thuy => tr('Nội lực {p0}, uy lực kỹ năng {p1}', {'p0': pct(e[Bonus.mpPct]!), 'p1': pct(e[Bonus.skillDmg]!)}),
+    Hanh.hoa => tr('ST chí mạng {p0}', {'p0': pct(e[Bonus.critDmg]!)}),
+    Hanh.tho => tr('Sinh lực {p0}', {'p0': pct(e[Bonus.hpPct]!)}),
   };
 }
 
@@ -86,9 +87,9 @@ Map<Bonus, double> setBonus(int distinct) {
 }
 
 String setBonusText(int distinct) {
-  if (distinct >= 5) return 'Ngũ Hành Viên Mãn: công lực +8%, sinh lực +8%';
-  if (distinct >= 3) return 'Tam Hành Hội Tụ: công lực +3%, sinh lực +3%';
-  return 'Khảm đủ 3 hệ khác nhau để kích hoạt Tam Hành Hội Tụ';
+  if (distinct >= 5) return tr('Ngũ Hành Viên Mãn: công lực +8%, sinh lực +8%');
+  if (distinct >= 3) return tr('Tam Hành Hội Tụ: công lực +3%, sinh lực +3%');
+  return tr('Khảm đủ 3 hệ khác nhau để kích hoạt Tam Hành Hội Tụ');
 }
 
 /// Gold to fuse three tier-[tier] gems into one of the next tier.

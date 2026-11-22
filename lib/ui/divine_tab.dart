@@ -8,6 +8,7 @@ import '../services/analytics.dart';
 import '../services/save.dart';
 import 'backdrop.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Thợ rèn tab: awaken the weapon (Thần binh) with Thần Thiết and gold.
 class DivineTab extends StatefulWidget {
@@ -28,7 +29,7 @@ class _DivineTabState extends State<DivineTab> {
     Analytics.instance.log('divine_up', {'lv': h.divine});
     SaveService.instance.save();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('${divineStage(h.divine)} tầng ${h.divine}! Lực chiến +${fmt(h.power - before)}'),
+      content: Text(tr('{p0} tầng {divine}! Lực chiến +{p1}', {'p0': divineStage(h.divine), 'divine': h.divine, 'p1': fmt(h.power - before)})),
       duration: const Duration(seconds: 2),
     ));
     setState(() {});
@@ -52,10 +53,10 @@ class _DivineTabState extends State<DivineTab> {
                 Expanded(child: FittedBox(child: FigurePreview.of(h, scale: 2))),
                 Text(
                     lv <= 0
-                        ? 'Chưa thức tỉnh'
+                        ? tr('Chưa thức tỉnh')
                         : lv < divineMax
-                            ? '${divineStage(lv)} · tầng $lv/$divineMax'
-                            : '${divineStage(lv)} · tầng $lv',
+                            ? tr('{p0} · tầng {lv}/{divineMax}', {'p0': divineStage(lv), 'lv': lv, 'divineMax': divineMax})
+                            : tr('{p0} · tầng {lv}', {'p0': divineStage(lv), 'lv': lv}),
                     style: titleStyle(17, color: c)),
                 const SizedBox(height: 4),
                 Row(
@@ -63,7 +64,7 @@ class _DivineTabState extends State<DivineTab> {
                   children: [
                     const MatIcon(Mat.iron, size: 22),
                     const SizedBox(width: 4),
-                    Text('${h.divineIron} Thần Thiết', style: bold.copyWith(color: const Color(0xFF9FD8FF))),
+                    Text(tr('{divineIron} Thần Thiết', {'divineIron': h.divineIron}), style: bold.copyWith(color: const Color(0xFF9FD8FF))),
                   ],
                 ),
               ],
@@ -84,8 +85,8 @@ class _DivineTabState extends State<DivineTab> {
 
   Widget _locked() => Center(
         child: Text(
-          'Thần binh mở sau lần chuyển sinh đầu tiên.\n'
-          'Thần Thiết vẫn được cất giữ từ bây giờ: hiện có ${h.divineIron}.',
+          tr('Thần binh mở sau lần chuyển sinh đầu tiên.\n'
+          'Thần Thiết vẫn được cất giữ từ bây giờ: hiện có {divineIron}.', {'divineIron': h.divineIron}),
           style: body,
           textAlign: TextAlign.center,
         ),
@@ -99,9 +100,9 @@ class _DivineTabState extends State<DivineTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Thức tỉnh vũ khí', style: titleStyle(18, color: goldLight)),
+        Text(tr('Thức tỉnh vũ khí'), style: titleStyle(18, color: goldLight)),
         Text(
-          'Thần binh gắn với nhân vật, đổi vũ khí vẫn giữ nguyên. Mỗi tầng chắc chắn thành công.',
+          tr('Thần binh gắn với nhân vật, đổi vũ khí vẫn giữ nguyên. Mỗi tầng chắc chắn thành công.'),
           style: small.copyWith(fontSize: 11.5),
         ),
         const SizedBox(height: 6),
@@ -112,14 +113,14 @@ class _DivineTabState extends State<DivineTab> {
                 if (i == divineTier2From + 1)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
-                    child: Text('Bậc hai · mở ở Chuyển sinh $divineTier2Rebirths',
+                    child: Text(tr('Bậc hai · mở ở Chuyển sinh {divineTier2Rebirths}', {'divineTier2Rebirths': divineTier2Rebirths}),
                         style: bold.copyWith(fontSize: 12, color: goldLight)),
                   ),
                 _levelRow(i, lv),
               ],
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
-                child: Text('Tiên binh · không giới hạn, mở ở Chuyển sinh $divineTienRebirths',
+                child: Text(tr('Tiên binh · không giới hạn, mở ở Chuyển sinh {divineTienRebirths}', {'divineTienRebirths': divineTienRebirths}),
                     style: bold.copyWith(fontSize: 12, color: goldLight)),
               ),
               for (var i = divineMax + 1; i <= last; i++) _levelRow(i, lv),
@@ -132,18 +133,18 @@ class _DivineTabState extends State<DivineTab> {
             Expanded(
               child: Text(
                 maxed
-                    ? 'Đã đạt Tiên binh, tầng cao nhất.'
+                    ? tr('Đã đạt Tiên binh, tầng cao nhất.')
                     : h.divineTier2Locked
-                        ? 'Tầng ${lv + 1} trở lên mở ở Chuyển sinh $divineTier2Rebirths.'
+                        ? tr('Tầng {p0} trở lên mở ở Chuyển sinh {divineTier2Rebirths}.', {'p0': lv + 1, 'divineTier2Rebirths': divineTier2Rebirths})
                         : h.divineTienLocked
-                            ? 'Tiên binh mở ở Chuyển sinh $divineTienRebirths.'
-                            : 'Tầng ${lv + 1}: ${divineIronAt(lv)} Thần Thiết · ${fmt(divineGoldCost(lv))} lượng',
+                            ? tr('Tiên binh mở ở Chuyển sinh {divineTienRebirths}.', {'divineTienRebirths': divineTienRebirths})
+                            : tr('Tầng {p0}: {p1} Thần Thiết · {p2} lượng', {'p0': lv + 1, 'p1': divineIronAt(lv), 'p2': fmt(divineGoldCost(lv))}),
                 style: bold.copyWith(fontSize: 13, color: maxed ? goldLight : cream),
               ),
             ),
             if (!maxed)
               LButton(
-                label: 'Thức tỉnh',
+                label: tr('Thức tỉnh'),
                 icon: Icons.auto_awesome,
                 small: true,
                 color: const Color(0xFF5A3A8A),
@@ -154,8 +155,8 @@ class _DivineTabState extends State<DivineTab> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Thần Thiết: Ải Ác Mộng 7 trở lên (vượt lần đầu được nhiều), mốc sát thương cao của Boss Thế Giới, '
-          'vượt tháp tầng 100 trở lên, top Săn quái tuần, và quà Hòm thư.',
+          tr('Thần Thiết: Ải Ác Mộng 7 trở lên (vượt lần đầu được nhiều), mốc sát thương cao của Boss Thế Giới, '
+          'vượt tháp tầng 100 trở lên, top Săn quái tuần, và quà Hòm thư.'),
           style: small.copyWith(fontSize: 10.5),
         ),
       ],

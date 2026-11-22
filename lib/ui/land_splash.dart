@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/content.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Hints shown while a land is entered.
 const landTips = [
@@ -112,7 +113,7 @@ class _LandSplashState extends State<LandSplash> {
                         const Icon(Icons.lightbulb_outline, color: goldLight, size: 16),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: Text('Mẹo: $_tip',
+                          child: Text(tr('Mẹo: {tip}', {'tip': tr(_tip)}),
                               style: small.copyWith(color: cream, fontSize: 12.5, shadows: shadow), maxLines: 2),
                         ),
                       ],

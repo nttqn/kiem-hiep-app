@@ -6,6 +6,7 @@ import 'guild.dart';
 import 'hero.dart';
 import 'ngo_dao.dart';
 import 'weekly_hunt.dart';
+import 'i18n.dart';
 
 /// Bang chiến (1.16.0): bangs fight bangs over a week. With a few Chiến
 /// lệnh a day a member challenges the heroes of another bang (their copies,
@@ -40,7 +41,7 @@ bool warPlausible(int pts, int members) => pts >= 0 && members >= 1 && members <
 
 DungeonDef warDef(ArenaRival r, String guildName) => DungeonDef(
       id: 'guildwar',
-      name: 'Bang chiến · ${r.name}${guildName.isEmpty ? '' : ' ($guildName)'}',
+      name: tr('Bang chiến · {rName}{p0}', {'rName': tr(r.name), 'p0': guildName.isEmpty ? '' : ' ($guildName)'}),
       mapId: 'hoason',
       level: r.level,
       waves: const [],
@@ -141,9 +142,9 @@ extension GuildWar on HeroData {
       gwWins++;
     }
     return [
-      won ? 'Thắng trận Bang chiến!' : 'Thua trận, Chiến công an ủi.',
-      '+$pts Chiến công (tuần này: $gwPts)',
-      '+$coins xu Bang${won ? ', +$warWinContrib cống hiến' : ''}',
+      won ? tr('Thắng trận Bang chiến!') : tr('Thua trận, Chiến công an ủi.'),
+      tr('+{pts} Chiến công (tuần này: {gwPts})', {'pts': pts, 'gwPts': gwPts}),
+      tr('+{coins} xu Bang{p0}', {'coins': coins, 'p0': won ? tr(', +{warWinContrib} cống hiến', {'warWinContrib': warWinContrib}) : ''}),
     ];
   }
 
@@ -156,15 +157,15 @@ extension GuildWar on HeroData {
     guildCoins += r.coins;
     divineIron += r.iron;
     final lines = [
-      place > 0 ? 'Bang chiến tuần $gwLastWeek: bang hạng $place' : 'Bang chiến tuần $gwLastWeek: cảm ơn đã tham chiến',
-      '+${r.coins} xu Bang',
-      '+${r.iron} Thần Thiết',
+      place > 0 ? tr('Bang chiến tuần {gwLastWeek}: bang hạng {place}', {'gwLastWeek': gwLastWeek, 'place': place}) : tr('Bang chiến tuần {gwLastWeek}: cảm ơn đã tham chiến', {'gwLastWeek': gwLastWeek}),
+      tr('+{coins} xu Bang', {'coins': r.coins}),
+      tr('+{iron} Thần Thiết', {'iron': r.iron}),
     ];
     if (r.jade > 0 && daoOpen) {
       tienJade += r.jade;
-      lines.add('+${r.jade} Tiên Ngọc');
+      lines.add(tr('+{jade} Tiên Ngọc', {'jade': r.jade}));
     }
-    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add(tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}));
     return lines;
   }
 

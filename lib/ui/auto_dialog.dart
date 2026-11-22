@@ -4,6 +4,7 @@ import '../core/auto_config.dart';
 import '../core/hero.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Cài đặt tự đánh, from the pause menu or the town's settings.
 Future<void> showAutoSettings(BuildContext context, HeroData h) async {
@@ -40,7 +41,7 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
       final sk = h.sect.skills;
       return AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Cài đặt tự đánh', style: titleStyle(20)),
+        title: Text(tr('Cài đặt tự đánh'), style: titleStyle(20)),
         content: SizedBox(
           width: 460,
           child: SingleChildScrollView(
@@ -48,12 +49,12 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                head('Ưu tiên mục tiêu'),
+                head(tr('Ưu tiên mục tiêu')),
                 Wrap(children: [
                   for (final t in AutoTarget.values)
                     chip(autoTargetNames[t]!, c.target == t, () => set(() => c.target = t)),
                 ]),
-                head('Chiêu được dùng khi tự đánh (chạm để bật/tắt)'),
+                head(tr('Chiêu được dùng khi tự đánh (chạm để bật/tắt)')),
                 Wrap(children: [
                   for (var i = 0; i < sk.length; i++)
                     if (!sk[i].isPassive)
@@ -61,22 +62,22 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
                         set(() => c.skillsOff.contains(i) ? c.skillsOff.remove(i) : c.skillsOff.add(i));
                       }),
                 ]),
-                head('Uống thuốc Sinh lực khi dưới'),
+                head(tr('Uống thuốc Sinh lực khi dưới')),
                 Wrap(children: [
                   for (final v in autoHpSteps) chip(pct(v), c.hpPot == v, () => set(() => c.hpPot = v)),
                 ]),
-                head('Uống thuốc Nội lực khi dưới'),
+                head(tr('Uống thuốc Nội lực khi dưới')),
                 Wrap(children: [
                   for (final v in autoMpSteps) chip(pct(v), c.mpPot == v, () => set(() => c.mpPot = v)),
                 ]),
-                head('Khác'),
+                head(tr('Khác')),
                 Wrap(children: [
-                  chip('Đi nhặt đồ rơi, linh thảo', c.loot, () => set(() => c.loot = !c.loot)),
-                  chip('Để dành tuyệt kỹ cho đông quái, boss', c.saveUltimate,
+                  chip(tr('Đi nhặt đồ rơi, linh thảo'), c.loot, () => set(() => c.loot = !c.loot)),
+                  chip(tr('Để dành tuyệt kỹ cho đông quái, boss'), c.saveUltimate,
                       () => set(() => c.saveUltimate = !c.saveUltimate)),
-                  chip('Tự cộng điểm, học chiêu khi lên cấp', c.points, () => set(() => c.points = !c.points)),
-                  chip('Tự mặc đồ tốt hơn khi nhặt', c.gear, () => set(() => c.gear = !c.gear)),
-                  chip('Tự đi nhiệm vụ (vào ải, đổi bản đồ)', c.questGo, () => set(() => c.questGo = !c.questGo)),
+                  chip(tr('Tự cộng điểm, học chiêu khi lên cấp'), c.points, () => set(() => c.points = !c.points)),
+                  chip(tr('Tự mặc đồ tốt hơn khi nhặt'), c.gear, () => set(() => c.gear = !c.gear)),
+                  chip(tr('Tự đi nhiệm vụ (vào ải, đổi bản đồ)'), c.questGo, () => set(() => c.questGo = !c.questGo)),
                 ]),
               ],
             ),
@@ -89,9 +90,9 @@ Future<void> showAutoSettings(BuildContext context, HeroData h) async {
                 : () => set(() => h.autoCfg = AutoConfig()
                   ..points = c.points
                   ..gear = c.gear),
-            child: const Text('Mặc định'),
+            child: Text(tr('Mặc định')),
           ),
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Xong')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Xong'))),
         ],
       );
     }),

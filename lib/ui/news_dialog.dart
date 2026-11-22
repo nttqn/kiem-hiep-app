@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/news.dart';
 import '../services/news.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Bảng tin (1.16.3): the notices from `news`, newest and pinned first;
 /// tapping one opens it with its picture and button. [first] opens straight
@@ -60,13 +61,13 @@ class _NewsDialogState extends State<_NewsDialog> {
         children: [
           if (n != null)
             IconButton(
-              tooltip: 'Quay lại',
+              tooltip: tr('Quay lại'),
               visualDensity: VisualDensity.compact,
               onPressed: () => setState(() => _open = null),
               icon: const Icon(Icons.arrow_back, color: goldLight),
             ),
           Expanded(
-            child: Text(n?.title ?? 'Bảng tin',
+            child: Text(n?.title ?? tr('Bảng tin'),
                 style: titleStyle(20), maxLines: 2, overflow: TextOverflow.ellipsis),
           ),
         ],
@@ -83,11 +84,11 @@ class _NewsDialogState extends State<_NewsDialog> {
               final ok = await ns.open(n);
               if (!ok && context.mounted) {
                 ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('Không mở được liên kết.')));
+                    .showSnackBar(SnackBar(content: Text(tr('Không mở được liên kết.'))));
               }
             },
           ),
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng'))),
       ],
     );
   }
@@ -99,7 +100,7 @@ class _NewsDialogState extends State<_NewsDialog> {
     if (list.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Text('Chưa có thông báo nào.', style: body, textAlign: TextAlign.center),
+        child: Text(tr('Chưa có thông báo nào.'), style: body, textAlign: TextAlign.center),
       );
     }
     return ListView(
@@ -147,7 +148,7 @@ class _NewsDialogState extends State<_NewsDialog> {
                     Row(children: [
                       if (n.tag.isNotEmpty) _tag(n.tag),
                       Expanded(
-                        child: Text(n.title,
+                        child: Text(tr(n.title),
                             style: bold.copyWith(color: read ? cream : goldLight),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
@@ -184,8 +185,8 @@ class _NewsDialogState extends State<_NewsDialog> {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(children: [
                 if (n.tag.isNotEmpty) _tag(n.tag),
-                if (n.from.isNotEmpty) Text('Ngày ${_day(n.from)}', style: small.copyWith(fontSize: 11)),
-                if (n.until.isNotEmpty) Text(' · đến hết ${_day(n.until)}', style: small.copyWith(fontSize: 11)),
+                if (n.from.isNotEmpty) Text(tr('Ngày {p0}', {'p0': _day(n.from)}), style: small.copyWith(fontSize: 11)),
+                if (n.until.isNotEmpty) Text(tr(' · đến hết {p0}', {'p0': _day(n.until)}), style: small.copyWith(fontSize: 11)),
               ]),
             ),
           if (n.image.isNotEmpty)

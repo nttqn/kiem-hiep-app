@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'i18n.dart';
 
 /// Bí cảnh: a wide hidden land behind each field map, explored one run at a
 /// time. The map starts under fog; somewhere in it are three trận nhãn
@@ -308,9 +309,9 @@ class MerchantOffer {
 
 /// The thương nhân's three offers at [level]; [gemTier] is the gem sold.
 List<MerchantOffer> merchantOffers(int level, int gemTier, int potionPrice) => [
-      MerchantOffer(MerchantWare.epicItem, 'Trang bị Hiếm cấp $level', realmChestGold(level) * 12),
-      MerchantOffer(MerchantWare.gem, 'Ngọc ngũ hành bậc $gemTier', realmChestGold(level) * 5),
-      MerchantOffer(MerchantWare.potions, '20 Kim Sang Dược (giảm nửa giá)', potionPrice * 10),
+      MerchantOffer(MerchantWare.epicItem, tr('Trang bị Hiếm cấp {level}', {'level': level}), realmChestGold(level) * 12),
+      MerchantOffer(MerchantWare.gem, tr('Ngọc ngũ hành bậc {gemTier}', {'gemTier': gemTier}), realmChestGold(level) * 5),
+      MerchantOffer(MerchantWare.potions, tr('20 Kim Sang Dược (giảm nửa giá)'), potionPrice * 10),
     ];
 
 /// Gold in a chest at [level]: about a dungeon's repeat clear.

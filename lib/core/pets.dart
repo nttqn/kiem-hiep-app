@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'content.dart';
 import 'hanh.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Companion spirit beasts (linh thú): one follows the hero at a time,
 /// spits a bolt of its phase at nearby monsters and raises one stat.
@@ -37,12 +38,12 @@ class PetDef {
   double bonusAt(int lv) => base + perLv * (lv - 1);
 
   String get bonusName => switch (bonus) {
-        Bonus.move => 'Tốc chạy',
-        Bonus.crit => 'Chí mạng',
-        Bonus.defPct => 'Phòng thủ',
-        Bonus.skillDmg => 'Uy lực kỹ năng',
-        Bonus.atkPct => 'Công lực',
-        Bonus.aspd => 'Tốc đánh',
+        Bonus.move => tr('Tốc chạy'),
+        Bonus.crit => tr('Chí mạng'),
+        Bonus.defPct => tr('Phòng thủ'),
+        Bonus.skillDmg => tr('Uy lực kỹ năng'),
+        Bonus.atkPct => tr('Công lực'),
+        Bonus.aspd => tr('Tốc đánh'),
         _ => bonus.name,
       };
 
@@ -101,4 +102,4 @@ const double petDropChance = 0.2;
 const int petPity = 5;
 
 String petSource(PetDef p) =>
-    p.price > 0 ? 'Mua tại tiệm: ${p.price} lượng' : 'Rơi từ ${mobById[p.boss]!.name}';
+    p.price > 0 ? tr('Mua tại tiệm: {price} lượng', {'price': p.price}) : tr('Rơi từ {p0}', {'p0': tr(mobById[p.boss]!.name)});

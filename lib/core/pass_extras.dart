@@ -11,20 +11,21 @@ import 'weekly_hunt.dart';
 import 'hanh.dart';
 import 'hero.dart';
 import 'world_boss.dart' show vnDayKey, worldBossOpenLevel;
+import 'i18n.dart';
 
 /// Short labels of [r] for a hero of [level] and [rebirths], in [season].
 List<String> passLabels(PassReward r, int level, int rebirths, int season) => [
-      if (r.costume) 'Ngoại trang ${costumeById[passCostumeOf(season)]?.name ?? ''}',
-      if (r.title.isNotEmpty) 'Danh hiệu « ${r.title} »',
-      if (r.goldK > 0) '${_dots(r.gold(level, rebirths))} lượng',
-      if (r.gems > 0) '${r.gems} Ngọc ${gemTierNames[r.tierFor(level) - 1]}',
-      if (r.stones > 0) '${r.stones} Tinh Thạch',
-      if (r.shards > 0) '${r.shards} Mảnh Hoàng Kim',
-      if (r.souls > 0) '${r.souls} Hung Thú Tinh Phách',
-      if (r.iron > 0) '${r.iron} Thần Thiết',
-      if (r.soulPills > 0) '${r.soulPills} Linh Phách Đơn',
+      if (r.costume) tr('Ngoại trang {p0}', {'p0': costumeById[passCostumeOf(season)]?.name ?? ''}),
+      if (r.title.isNotEmpty) tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}),
+      if (r.goldK > 0) tr('{p0} lượng', {'p0': _dots(r.gold(level, rebirths))}),
+      if (r.gems > 0) tr('{gems} Ngọc {p0}', {'gems': r.gems, 'p0': tr(gemTierNames[r.tierFor(level) - 1])}),
+      if (r.stones > 0) tr('{stones} Tinh Thạch', {'stones': r.stones}),
+      if (r.shards > 0) tr('{shards} Mảnh Hoàng Kim', {'shards': r.shards}),
+      if (r.souls > 0) tr('{souls} Hung Thú Tinh Phách', {'souls': r.souls}),
+      if (r.iron > 0) tr('{iron} Thần Thiết', {'iron': r.iron}),
+      if (r.soulPills > 0) tr('{soulPills} Linh Phách Đơn', {'soulPills': r.soulPills}),
       if (r.pill.isNotEmpty) pillById[r.pill]?.name ?? r.pill,
-      if (r.pots > 0) '${r.pots} bình máu + nội lực',
+      if (r.pots > 0) tr('{pots} bình máu + nội lực', {'pots': r.pots}),
     ];
 
 String _dots(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+$)'), (_) => '.');
@@ -39,7 +40,7 @@ extension PassExtras on HeroData {
     if (passSeason > 0) {
       final lines = _passTakeAll(math.Random());
       if (lines.isNotEmpty) {
-        notices.add(Notice('Lệnh Bài mùa $passSeason (chưa nhận): ${lines.join(', ')}', color: 0xFFFFD34A, big: true));
+        notices.add(Notice(tr('Lệnh Bài mùa {passSeason} (chưa nhận): {p0}', {'passSeason': passSeason, 'p0': lines.join(', ')}), color: 0xFFFFD34A, big: true));
       }
     }
     passSeason = s;
@@ -101,7 +102,7 @@ extension PassExtras on HeroData {
       if (passQuestDone(q, day) || passQuestProgress(q, day) < q.target) continue;
       passQDone |= 1 << q.kind.index;
       passXp += q.xp;
-      notices.add(Notice('Nhiệm vụ Lệnh Bài: ${q.label} (+${q.xp} điểm)', color: 0xFFFFD34A));
+      notices.add(Notice(tr('Nhiệm vụ Lệnh Bài: {qLabel} (+{xp} điểm)', {'qLabel': tr(q.label), 'xp': q.xp}), color: 0xFFFFD34A));
     }
   }
 
@@ -203,16 +204,16 @@ extension PassExtras on HeroData {
     if (r.costume) {
       final c = costumeById[passCostumeOf(passSeason)];
       if (c != null && ownedCostumes.add(c.id)) {
-        lines.add('Ngoại trang ${c.name}');
+        lines.add(tr('Ngoại trang {cName}', {'cName': tr(c.name)}));
       } else {
         shards += passOwnedShards;
       }
     }
-    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add('Danh hiệu « ${r.title} »');
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add(tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}));
     final g = r.gold(level, rebirths);
     if (g > 0) {
       gold += g;
-      lines.add('+${_dots(g)} lượng');
+      lines.add(tr('+{p0} lượng', {'p0': _dots(g)}));
     }
     for (var i = 0; i < r.gems; i++) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], r.tierFor(level));
@@ -221,23 +222,23 @@ extension PassExtras on HeroData {
     }
     if (r.stones > 0) {
       starStones += r.stones;
-      lines.add('+${r.stones} Tinh Thạch');
+      lines.add(tr('+{stones} Tinh Thạch', {'stones': r.stones}));
     }
     if (shards > 0) {
       goldShards += shards;
-      lines.add('+$shards Mảnh Hoàng Kim');
+      lines.add(tr('+{shards} Mảnh Hoàng Kim', {'shards': shards}));
     }
     if (r.souls > 0) {
       beastSouls += r.souls;
-      lines.add('+${r.souls} Hung Thú Tinh Phách');
+      lines.add(tr('+{souls} Hung Thú Tinh Phách', {'souls': r.souls}));
     }
     if (r.iron > 0) {
       divineIron += r.iron;
-      lines.add('+${r.iron} Thần Thiết');
+      lines.add(tr('+{iron} Thần Thiết', {'iron': r.iron}));
     }
     if (r.soulPills > 0) {
       soulPills += r.soulPills;
-      lines.add('+${r.soulPills} Linh Phách Đơn');
+      lines.add(tr('+{soulPills} Linh Phách Đơn', {'soulPills': r.soulPills}));
     }
     if (r.pill.isNotEmpty) {
       this.pills[r.pill] = (this.pills[r.pill] ?? 0) + 1;
@@ -246,7 +247,7 @@ extension PassExtras on HeroData {
     if (r.pots > 0) {
       hpPots += r.pots;
       mpPots += r.pots;
-      lines.add('+${r.pots} Kim Sang Dược, +${r.pots} Ngưng Thần Đan');
+      lines.add(tr('+{pots} Kim Sang Dược, +{pots} Ngưng Thần Đan', {'pots': r.pots}));
     }
     recompute();
     return lines;

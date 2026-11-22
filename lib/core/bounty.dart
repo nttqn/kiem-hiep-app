@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'i18n.dart';
 
 /// Bảng Truy Nã: repeatable bounties posted in town, rolled for the hero's
 /// level. Progress counts on its own; finished ones are handed in for the
@@ -49,7 +50,7 @@ class Bounty {
   /// Key the world tags this bounty's elite with.
   String get eliteKey => 'b:$map:$target:$epithet';
 
-  String get eliteName => '${mobById[target]!.name} ${bountyEpithets[epithet % bountyEpithets.length]}';
+  String get eliteName => '${tr(mobById[target]!.name)} ${bountyEpithets[epithet % bountyEpithets.length]}';
 
   double get eliteHp => stars >= 5 ? 9 : 5;
   double get eliteAtk => stars >= 5 ? 1.3 : 1.15;
@@ -57,9 +58,9 @@ class Bounty {
   String get mapName => mapById[map]?.name ?? '';
 
   String get goal => switch (kind) {
-        BountyKind.kill => 'Hạ $count ${mobById[target]!.name}',
-        BountyKind.boss => 'Đánh bại ${mobById[target]!.name}',
-        BountyKind.elite => 'Truy diệt $eliteName',
+        BountyKind.kill => tr('Hạ {count} {p0}', {'count': count, 'p0': tr(mobById[target]!.name)}),
+        BountyKind.boss => tr('Đánh bại {p0}', {'p0': tr(mobById[target]!.name)}),
+        BountyKind.elite => tr('Truy diệt {eliteName}', {'eliteName': eliteName}),
       };
 
   Map<String, dynamic> toJson() => {

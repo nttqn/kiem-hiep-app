@@ -13,6 +13,7 @@ import '../core/sects.dart';
 import '../core/weather.dart';
 import '../core/world.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 class HeroFrame extends StatelessWidget {
   const HeroFrame({super.key, required this.world});
@@ -43,7 +44,7 @@ class HeroFrame extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(h.hanh.label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white70, height: 1)),
+                Text(tr(h.hanh.label), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white70, height: 1)),
                 Text('${h.level}', style: titleStyle(20, color: Colors.white)),
               ],
             ),
@@ -52,7 +53,7 @@ class HeroFrame extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(h.title.isEmpty ? h.name : '${h.name} · ${h.title}',
+              Text(tr(h.title).isEmpty ? h.name : '${h.name} · ${tr(h.title)}',
                   style: bold.copyWith(fontSize: 13, shadows: const [Shadow(color: Colors.black, blurRadius: 3)])),
               const SizedBox(height: 2),
               Bar(
@@ -86,7 +87,7 @@ class HeroFrame extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: Color(pill.color).withValues(alpha: 0.8)),
                           ),
-                          child: Text('${pill.name.replaceAll(' Đan', '')} ${(e.value / 60).ceil()}p',
+                          child: Text(tr('{pill} {min}p', {'pill': tr(pill.name).replaceAll(' Đan', ''), 'min': (e.value / 60).ceil()}),
                               style: bold.copyWith(fontSize: 10, color: Color(pill.color))),
                         ),
                   ],
@@ -110,9 +111,9 @@ class QuestTracker extends StatelessWidget {
     if (q == null) return const SizedBox.shrink();
     final locked = hero.mainLocked;
     final text = locked
-        ? 'Cấp ${q.minLv} mở: ${q.title}'
+        ? tr('Cấp {minLv} mở: {qTitle}', {'minLv': q.minLv, 'qTitle': tr(q.title)})
         : (q.type == QuestType.kill
-            ? '${q.goal} ${hero.mainProgress}/${q.count}'
+            ? '${tr(q.goal)} ${hero.mainProgress}/${q.count}'
             : q.goal);
     return IgnorePointer(
       child: Container(
@@ -126,7 +127,7 @@ class QuestTracker extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nhiệm vụ · ${q.title}', style: bold.copyWith(fontSize: 11.5, color: goldLight)),
+            Text(tr('Nhiệm vụ · {qTitle}', {'qTitle': tr(q.title)}), style: bold.copyWith(fontSize: 11.5, color: goldLight)),
             Text(text, style: body.copyWith(fontSize: 11.5)),
           ],
         ),
@@ -144,8 +145,8 @@ class RealmTracker extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = world;
     final step = w.lairOpen
-        ? 'Phong ấn đã phá: hạ ${mobById[w.map.boss]!.name} ở phía đông'
-        : 'Hạ Hộ Trận Sứ rồi chạm trận nhãn (${w.pillarsLit}/$realmPillars) để phá phong ấn';
+        ? tr('Phong ấn đã phá: hạ {p0} ở phía đông', {'p0': tr(mobById[w.map.boss]!.name)})
+        : tr('Hạ Hộ Trận Sứ rồi chạm trận nhãn ({pillarsLit}/{realmPillars}) để phá phong ấn', {'pillarsLit': w.pillarsLit, 'realmPillars': realmPillars});
     final buffs = w.realmBuffs.map((b) => b.label.split(':').first).join(', ');
     return IgnorePointer(
       child: Container(
@@ -159,14 +160,14 @@ class RealmTracker extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Thám hiểm', style: bold.copyWith(fontSize: 11.5, color: const Color(0xFF8CE0C8))),
+            Text(tr('Thám hiểm'), style: bold.copyWith(fontSize: 11.5, color: const Color(0xFF8CE0C8))),
             Text(step, style: body.copyWith(fontSize: 11.5)),
-            Text('Cứu người ${w.captivesFreed}/$realmCaptives${buffs.isEmpty ? '' : ' · Phúc: $buffs'}',
+            Text(tr('Cứu người {captivesFreed}/{realmCaptives}{p0}', {'captivesFreed': w.captivesFreed, 'realmCaptives': realmCaptives, 'p0': buffs.isEmpty ? '' : tr(' · Phúc: {buffs}', {'buffs': buffs})}),
                 style: body.copyWith(fontSize: 11, color: creamDim)),
             if (w.realm!.events.isNotEmpty)
               Text(
-                  'Biến cố: ${w.realm!.events.map((e) => e.label).join(', ')}'
-                  '${w.vaultHintKnown && w.vaultStep < 3 ? ' · Cơ quan: ${w.vaultHint}' : ''}',
+                  tr('Biến cố: {p0}'
+                  '{p1}', {'p0': w.realm!.events.map((e) => tr(e.label)).join(', '), 'p1': w.vaultHintKnown && w.vaultStep < 3 ? tr(' · Cơ quan: {vaultHint}', {'vaultHint': w.vaultHint}) : ''}),
                   style: body.copyWith(fontSize: 11, color: const Color(0xFFB8F0E0))),
           ],
         ),
@@ -203,34 +204,34 @@ class TopInfo extends StatelessWidget {
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(world.map.name, style: bold.copyWith(fontSize: 13, color: goldLight)),
+                      Text(tr(world.map.name), style: bold.copyWith(fontSize: 13, color: goldLight)),
                       if (world.night) ...[
                         const SizedBox(width: 8),
                         const Icon(Icons.nightlight_round, size: 14, color: Color(0xFFB8C8F0)),
-                        Text(' Đêm', style: body.copyWith(fontSize: 12, color: const Color(0xFFB8C8F0))),
+                        Text(tr(' Đêm'), style: body.copyWith(fontSize: 12, color: const Color(0xFFB8C8F0))),
                       ],
                       if (world.weather != Weather.clear) ...[
                         const SizedBox(width: 8),
-                        Text(world.weather.label, style: body.copyWith(fontSize: 12)),
+                        Text(tr(world.weather.label), style: body.copyWith(fontSize: 12)),
                       ],
                     ],
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(d.name, style: bold.copyWith(fontSize: 13, color: goldLight)),
+                      Text(tr(d.name), style: bold.copyWith(fontSize: 13, color: goldLight)),
                       const SizedBox(width: 10),
                       Text(
                         d.isWorldBoss
-                            ? 'Sát thương ${fmt(world.bossDamage.round())}'
+                            ? tr('Sát thương {p0}', {'p0': fmt(world.bossDamage.round())})
                             : d.isRealm
-                            ? '${world.lairOpen ? 'Đầu lĩnh' : 'Trận nhãn ${world.pillarsLit}/$realmPillars'}'
-                                ' · Rương ${world.chestsOpened}/$realmChests · ${(world.explored * 100).floor()}%'
+                            ? tr('{p0}'
+                                ' · Rương {chestsOpened}/{realmChests} · {p1}%', {'p0': world.lairOpen ? tr('Đầu lĩnh') : tr('Trận nhãn {pillarsLit}/{realmPillars}', {'pillarsLit': world.pillarsLit, 'realmPillars': realmPillars}), 'chestsOpened': world.chestsOpened, 'realmChests': realmChests, 'p1': (world.explored * 100).floor()})
                             : d.isArena
-                                ? 'Bình máu ${arenaPotions - world.arenaPotsUsed}/$arenaPotions'
+                                ? tr('Bình máu {p0}/{arenaPotions}', {'p0': arenaPotions - world.arenaPotsUsed, 'arenaPotions': arenaPotions})
                                 : world.bossWave
-                                ? 'Đầu lĩnh'
-                                : 'Đợt ${math.max(1, world.wave + 1)}/${d.waves.length} · còn ${world.aliveMobs}',
+                                ? tr('Đầu lĩnh')
+                                : tr('Đợt {p0}/{wavesLength} · còn {aliveMobs}', {'p0': math.max(1, world.wave + 1), 'wavesLength': d.waves.length, 'aliveMobs': world.aliveMobs}),
                         style: d.isWorldBoss
                             ? bold.copyWith(fontSize: 13, color: const Color(0xFFFF9A5A))
                             : body.copyWith(fontSize: 12),
@@ -265,7 +266,7 @@ class TopInfo extends StatelessWidget {
                   decoration: BoxDecoration(color: Color(boss.def.hanh.color), shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 4),
-                Text('${boss.def.name} · Cấp ${boss.level}',
+                Text(tr('{defName} · Cấp {level}', {'defName': tr(boss.def.name), 'level': boss.level}),
                     style: bold.copyWith(fontSize: 12, color: const Color(0xFFFFB08A))),
               ],
             ),
@@ -326,7 +327,7 @@ class AutoToggle extends StatelessWidget {
           border: Border.all(color: on ? goldLight : gold.withValues(alpha: 0.6), width: 1.5),
           boxShadow: on ? const [BoxShadow(color: Color(0x888CE07A), blurRadius: 8)] : null,
         ),
-        child: Text('TỰ\nĐỘNG',
+        child: Text(tr('TỰ\nĐỘNG'),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 8.5, height: 1.05, fontWeight: FontWeight.w800, color: on ? Colors.white : creamDim)),
       ),
@@ -483,8 +484,8 @@ class ExpStrip extends StatelessWidget {
           color: Color(daoColor(hero.daoLv)),
           height: 9,
           label: hero.daoWaiting
-              ? '${daoName(hero.daoLv)} · viên mãn, chờ Độ kiếp · Linh Phách Đơn ${hero.soulPills}'
-              : '${daoName(hero.daoLv)} · ${(d * 100).toStringAsFixed(1)}% · Linh Phách Đơn ${hero.soulPills}',
+              ? tr('{p0} · viên mãn, chờ Độ kiếp · Linh Phách Đơn {soulPills}', {'p0': daoName(hero.daoLv), 'soulPills': hero.soulPills})
+              : tr('{p0} · {p1}% · Linh Phách Đơn {soulPills}', {'p0': daoName(hero.daoLv), 'p1': (d * 100).toStringAsFixed(1), 'soulPills': hero.soulPills}),
         ),
       );
     }
@@ -497,10 +498,10 @@ class ExpStrip extends StatelessWidget {
         color: soul ? const Color(0xFF6FC8E8) : expGold,
         height: 9,
         label: soul
-            ? 'Linh Phách Đơn ${hero.soulPills} · ${(v * 100).toStringAsFixed(1)}%'
+            ? tr('Linh Phách Đơn {soulPills} · {p0}%', {'soulPills': hero.soulPills, 'p0': (v * 100).toStringAsFixed(1)})
             : hero.expFull
-                ? 'Kinh nghiệm đầy · có thể chuyển sinh'
-                : 'Cấp ${hero.level} · ${(v * 100).toStringAsFixed(1)}%',
+                ? tr('Kinh nghiệm đầy · có thể chuyển sinh')
+                : tr('Cấp {level} · {p0}%', {'level': hero.level, 'p0': (v * 100).toStringAsFixed(1)}),
       ),
     );
   }
@@ -663,7 +664,7 @@ class SkillButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.lock, size: 16, color: Colors.white70),
-                  Text('Cấp $unlockLevel', style: const TextStyle(fontSize: 9, color: Colors.white70, fontWeight: FontWeight.w700)),
+                  Text(tr('Cấp {unlockLevel}', {'unlockLevel': unlockLevel}), style: const TextStyle(fontSize: 9, color: Colors.white70, fontWeight: FontWeight.w700)),
                 ],
               ),
             if (cdText != null)
@@ -677,7 +678,7 @@ class SkillButton extends StatelessWidget {
             if (noMp && cdText == null)
               Positioned(
                 bottom: 2,
-                child: Text('Nội lực', style: TextStyle(fontSize: 9, color: Colors.lightBlue.shade100, fontWeight: FontWeight.w800)),
+                child: Text(tr('Nội lực'), style: TextStyle(fontSize: 9, color: Colors.lightBlue.shade100, fontWeight: FontWeight.w800)),
               ),
           ],
         ),

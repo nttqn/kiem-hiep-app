@@ -4,6 +4,7 @@ import 'hero.dart';
 import 'rewards.dart' show offlineCap;
 import 'week_goals.dart' show weekGoalDay;
 import 'world_boss.dart' show vnNow, vnDayKey;
+import 'i18n.dart';
 
 /// One reminder to set on the phone when the game is left.
 class Reminder {
@@ -39,18 +40,18 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
   final full = now.toUtc().add(offlineCap);
   final fullHour = vnNow(full).hour;
   if (!h.canRebirth && fullHour >= 8 && fullHour < 22 && full.difference(tomorrow).inMinutes.abs() > 180) {
-    out.add(Reminder(1, full, 'Bế quan đã đầy',
-        '${h.name} đã bế quan đủ ${offlineCap.inHours} giờ. Về nhận kinh nghiệm và lượng nào!'));
+    out.add(Reminder(1, full, tr('Bế quan đã đầy'),
+        tr('{hName} đã bế quan đủ {inHours} giờ. Về nhận kinh nghiệm và lượng nào!', {'hName': h.name, 'inHours': offlineCap.inHours})));
   }
   out.add(Reminder(
     2,
     tomorrow,
-    newbieWaiting ? 'Quà tân thủ đang chờ' : 'Quà mới đã sẵn sàng',
+    newbieWaiting ? tr('Quà tân thủ đang chờ') : tr('Quà mới đã sẵn sàng'),
     newbieWaiting
-        ? 'Quà tân thủ ngày ${h.newbieClaimed + 1} của ${h.name} đang chờ. Đủ 7 ngày nhận Bạch Mã!'
+        ? tr('Quà tân thủ ngày {p0} của {hName} đang chờ. Đủ 7 ngày nhận Bạch Mã!', {'p0': h.newbieClaimed + 1, 'hName': h.name})
         : weekDayTomorrow > 1 && weekDayTomorrow <= 7
-            ? 'Mục tiêu 7 ngày: ngày $weekDayTomorrow đã mở 3 mục tiêu mới cho ${h.name}.'
-            : 'Quà đăng nhập, nhiệm vụ ngày và lượt Boss Thế Giới đã làm mới.',
+            ? tr('Mục tiêu 7 ngày: ngày {weekDayTomorrow} đã mở 3 mục tiêu mới cho {hName}.', {'weekDayTomorrow': weekDayTomorrow, 'hName': h.name})
+            : tr('Quà đăng nhập, nhiệm vụ ngày và lượt Boss Thế Giới đã làm mới.'),
   ));
   // Trang viên: the first field to ripen, in daytime and not near tomorrow's.
   final ripe = h.manorOpen ? h.manor.nextReady(now.millisecondsSinceEpoch) : null;
@@ -58,7 +59,7 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
     final at = DateTime.fromMillisecondsSinceEpoch(ripe, isUtc: true);
     final hour = vnNow(at).hour;
     if (hour >= 8 && hour < 22 && at.difference(tomorrow).inMinutes.abs() > 120) {
-      out.add(Reminder(5, at, 'Ruộng linh thảo đã chín', 'Trang viên của ${h.name} có ruộng chín rồi, về thu hoạch nhé!'));
+      out.add(Reminder(5, at, tr('Ruộng linh thảo đã chín'), tr('Trang viên của {hName} có ruộng chín rồi, về thu hoạch nhé!', {'hName': h.name})));
     }
   }
   // A festival opening in the next month, for heroes who may join it.
@@ -66,10 +67,10 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
       ? festivals.where((f) => f.from.compareTo(today) > 0 && daysBetween(today, f.from) <= 30).firstOrNull
       : null;
   final festIn = fest == null ? 0 : daysBetween(today, fest.from);
-  String festText() => '${fest!.landName} mở từ hôm nay đến ${dayLabel(fest.until)}. '
-      '${h.name} về hạ quái nhặt ${fest.coin} đổi ngoại trang, thú cưỡi nhé!';
+  String festText() => tr('{landName} mở từ hôm nay đến {p0}. '
+      '{hName} về hạ quái nhặt {coin} đổi ngoại trang, thú cưỡi nhé!', {'landName': fest!.landName, 'p0': dayLabel(fest.until), 'hName': h.name, 'coin': fest.coin});
   if (festIn == 1) {
-    out[out.indexWhere((r) => r.id == 2)] = Reminder(2, tomorrow, '${fest!.name} đã mở!', festText());
+    out[out.indexWhere((r) => r.id == 2)] = Reminder(2, tomorrow, tr('{festName} đã mở!', {'festName': tr(fest!.name)}), festText());
   }
   // Would Quà hồi quy be waiting [days] days from now?
   bool giftBy(int days) {
@@ -79,21 +80,21 @@ List<Reminder> reminderPlan(HeroData h, DateTime now, {bool newbieWaiting = fals
   for (final (id, days) in [(3, 3), (4, 7), (6, 14), (7, 30)]) {
     final at = vnAt(now, days, reminderHour, reminderMinute);
     if (festIn == days) {
-      out.add(Reminder(id, at, '${fest!.name} đã mở!', festText()));
+      out.add(Reminder(id, at, tr('{festName} đã mở!', {'festName': tr(fest!.name)}), festText()));
     } else if (days == 3) {
-      out.add(Reminder(id, at, 'Giang hồ dậy sóng', '${h.name} ơi, quái vật lại kéo đến. Mau trở lại hành hiệp!'));
+      out.add(Reminder(id, at, tr('Giang hồ dậy sóng'), tr('{hName} ơi, quái vật lại kéo đến. Mau trở lại hành hiệp!', {'hName': h.name})));
     } else if (giftBy(days)) {
       final tier = comebackTier(days);
-      out.add(Reminder(id, at, 'Quà hồi quy đang chờ',
-          '${h.name} vắng mặt $days ngày rồi. Về nhận Quà hồi quy và ${comebackBoostDays(tier)} ngày '
-              '+${(comebackExp * 100).round()}% EXP để bắt kịp giang hồ!'));
+      out.add(Reminder(id, at, tr('Quà hồi quy đang chờ'),
+          tr('{hName} vắng mặt {days} ngày rồi. Về nhận Quà hồi quy và {p0} ngày '
+              '+{p1}% EXP để bắt kịp giang hồ!', {'hName': h.name, 'days': days, 'p0': comebackBoostDays(tier), 'p1': (comebackExp * 100).round()})));
     } else {
-      out.add(Reminder(id, at, 'Giang hồ vẫn chờ',
-          'Đã $days ngày rồi, giang hồ vẫn chờ ${h.name}. Về nhận quà và xem thử thách mới nhé!'));
+      out.add(Reminder(id, at, tr('Giang hồ vẫn chờ'),
+          tr('Đã {days} ngày rồi, giang hồ vẫn chờ {hName}. Về nhận quà và xem thử thách mới nhé!', {'days': days, 'hName': h.name})));
     }
   }
   if (festIn > 1 && ![3, 7, 14, 30].contains(festIn)) {
-    out.add(Reminder(8, vnAt(now, festIn, reminderHour, reminderMinute), '${fest!.name} đã mở!', festText()));
+    out.add(Reminder(8, vnAt(now, festIn, reminderHour, reminderMinute), tr('{festName} đã mở!', {'festName': tr(fest!.name)}), festText()));
   }
   return out;
 }

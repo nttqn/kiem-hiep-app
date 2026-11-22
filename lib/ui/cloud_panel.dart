@@ -6,6 +6,7 @@ import '../services/save.dart';
 import '../services/sync_plan.dart';
 import 'theme.dart';
 import 'title_screen.dart';
+import '../core/i18n.dart';
 
 /// Cloud icon showing sync state; opens the cloud panel. Hidden when the
 /// build has no Firebase config (web, or before setup).
@@ -21,7 +22,7 @@ class CloudButton extends StatelessWidget {
         if (!cloud.available) return const SizedBox.shrink();
         final on = cloud.user != null;
         return IconButton(
-          tooltip: 'Lưu trữ đám mây',
+          tooltip: tr('Lưu trữ đám mây'),
           onPressed: () => showCloudPanel(context),
           icon: Stack(
             clipBehavior: Clip.none,
@@ -72,13 +73,13 @@ Future<void> askAccountSwitch(BuildContext context) async {
   String? pick;
   try {
     final save = SaveService.instance;
-    final other = save.ownerWho.isEmpty ? 'tài khoản trước' : save.ownerWho;
+    final other = save.ownerWho.isEmpty ? tr('tài khoản trước') : save.ownerWho;
     pick = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Đổi tài khoản', style: titleStyle(20)),
+        title: Text(tr('Đổi tài khoản'), style: titleStyle(20)),
         content: SizedBox(
           width: 500,
           child: SingleChildScrollView(
@@ -86,25 +87,25 @@ Future<void> askAccountSwitch(BuildContext context) async {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Bạn vừa đăng nhập ${cloud.who}, nhưng nhân vật trên máy này thuộc $other.', style: body),
+                Text(tr('Bạn vừa đăng nhập {who}, nhưng nhân vật trên máy này thuộc {other}.', {'who': cloud.who, 'other': other}), style: body),
                 const SizedBox(height: 10),
                 Text(
-                    '• Chơi tài khoản này: nhân vật của $other được cất riêng trên máy (và vẫn còn trên mây '
-                    'của tài khoản đó), đăng nhập lại là có. Máy tải nhân vật của ${cloud.who} về.',
+                    tr('• Chơi tài khoản này: nhân vật của {other} được cất riêng trên máy (và vẫn còn trên mây '
+                    'của tài khoản đó), đăng nhập lại là có. Máy tải nhân vật của {who} về.', {'other': other, 'who': cloud.who}),
                     style: small.copyWith(color: cream)),
                 const SizedBox(height: 6),
-                Text('• Chuyển sang tài khoản này: các nhân vật trên máy được lưu vào ${cloud.who}.',
+                Text(tr('• Chuyển sang tài khoản này: các nhân vật trên máy được lưu vào {who}.', {'who': cloud.who}),
                     style: small.copyWith(color: cream)),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, 'out'), child: const Text('Đăng xuất')),
-          TextButton(onPressed: () => Navigator.pop(ctx, 'move'), child: const Text('Chuyển sang tài khoản này')),
+          TextButton(onPressed: () => Navigator.pop(ctx, 'out'), child: Text(tr('Đăng xuất'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, 'move'), child: Text(tr('Chuyển sang tài khoản này'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, 'use'),
-            child: const Text('Chơi tài khoản này', style: TextStyle(color: goldLight, fontWeight: FontWeight.w800)),
+            child: Text(tr('Chơi tài khoản này'), style: TextStyle(color: goldLight, fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -120,11 +121,11 @@ Future<void> askAccountSwitch(BuildContext context) async {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: lacquer,
-            title: Text('Chuyển nhân vật?', style: titleStyle(20)),
-            content: Text('Mọi nhân vật trên máy sẽ được lưu vào ${cloud.who}.', style: body),
+            title: Text(tr('Chuyển nhân vật?'), style: titleStyle(20)),
+            content: Text(tr('Mọi nhân vật trên máy sẽ được lưu vào {who}.', {'who': cloud.who}), style: body),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Chuyển')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Hủy'))),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Chuyển'))),
             ],
           ),
         );
@@ -159,7 +160,7 @@ class _CloudPanel extends StatelessWidget {
             children: [
               const Icon(Icons.cloud, color: goldLight),
               const SizedBox(width: 8),
-              Text('Lưu trữ đám mây', style: titleStyle(20)),
+              Text(tr('Lưu trữ đám mây'), style: titleStyle(20)),
             ],
           ),
           content: SizedBox(
@@ -171,13 +172,13 @@ class _CloudPanel extends StatelessWidget {
                 if (!signedIn) ...[
                   Text(
                     // No other platform named: App Store 2.3.10 (1.16.2).
-                    'Đăng nhập để cất nhân vật lên mây. Cài lại game hay đổi điện thoại '
-                    'vẫn giữ nguyên tiến độ.',
+                    tr('Đăng nhập để cất nhân vật lên mây. Cài lại game hay đổi điện thoại '
+                    'vẫn giữ nguyên tiến độ.'),
                     style: body.copyWith(height: 1.4),
                   ),
                   const SizedBox(height: 14),
                   LButton(
-                    label: 'Đăng nhập Google',
+                    label: tr('Đăng nhập Google'),
                     icon: Icons.login,
                     color: const Color(0xFF3A6AD8),
                     width: 260,
@@ -187,7 +188,7 @@ class _CloudPanel extends StatelessWidget {
                   if (cloud.isApplePlatform) ...[
                     const SizedBox(height: 8),
                     LButton(
-                      label: 'Đăng nhập Apple',
+                      label: tr('Đăng nhập Apple'),
                       icon: Icons.apple,
                       color: const Color(0xFF222222),
                       width: 260,
@@ -196,18 +197,18 @@ class _CloudPanel extends StatelessWidget {
                     ),
                   ],
                 ] else ...[
-                  Text('Tài khoản: ${cloud.who}', style: bold),
+                  Text(tr('Tài khoản: {who}', {'who': cloud.who}), style: bold),
                   if (cloud.switchPending) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Máy này đang giữ nhân vật của tài khoản khác'
-                      '${SaveService.instance.ownerWho.isEmpty ? '' : ' (${SaveService.instance.ownerWho})'}. '
-                      'Chưa đồng bộ gì cho tới khi bạn chọn.',
+                      tr('Máy này đang giữ nhân vật của tài khoản khác'
+                      '{p0}. '
+                      'Chưa đồng bộ gì cho tới khi bạn chọn.', {'p0': SaveService.instance.ownerWho.isEmpty ? '' : ' (${SaveService.instance.ownerWho})'}),
                       style: body.copyWith(color: const Color(0xFFFFD34A)),
                     ),
                     const SizedBox(height: 6),
                     LButton(
-                      label: 'Chọn cách xử lý',
+                      label: tr('Chọn cách xử lý'),
                       small: true,
                       color: jade,
                       onTap: () => Navigator.pop(context),
@@ -216,16 +217,16 @@ class _CloudPanel extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     cloud.lastSync == null
-                        ? 'Chưa đồng bộ'
-                        : 'Đồng bộ lần cuối: ${_clock(cloud.lastSync!)}',
+                        ? tr('Chưa đồng bộ')
+                        : tr('Đồng bộ lần cuối: {p0}', {'p0': _clock(cloud.lastSync!)}),
                     style: small,
                   ),
-                  Text('Tự động lưu lên mây sau mỗi trận và khi thoát game.', style: small),
+                  Text(tr('Tự động lưu lên mây sau mỗi trận và khi thoát game.'), style: small),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       LButton(
-                        label: 'Đồng bộ ngay',
+                        label: tr('Đồng bộ ngay'),
                         small: true,
                         color: jade,
                         enabled: !cloud.busy && !cloud.switchPending,
@@ -236,7 +237,7 @@ class _CloudPanel extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       LButton(
-                        label: 'Đăng xuất',
+                        label: tr('Đăng xuất'),
                         small: true,
                         color: const Color(0xFF5A4A3A),
                         enabled: !cloud.busy,
@@ -248,13 +249,13 @@ class _CloudPanel extends StatelessWidget {
                   TextButton.icon(
                     onPressed: cloud.busy ? null : () => _confirmWipe(context),
                     icon: const Icon(Icons.cloud_off, color: Color(0xFFF0C060), size: 18),
-                    label: const Text('Xóa bản lưu trên mây (giữ tài khoản)',
+                    label: Text(tr('Xóa bản lưu trên mây (giữ tài khoản)'),
                         style: TextStyle(color: Color(0xFFF0C060), fontSize: 13)),
                   ),
                   TextButton.icon(
                     onPressed: cloud.busy ? null : () => _confirmDelete(context),
                     icon: const Icon(Icons.delete_forever, color: Color(0xFFFF7A6A), size: 18),
-                    label: const Text('Xóa tài khoản và dữ liệu trên mây',
+                    label: Text(tr('Xóa tài khoản và dữ liệu trên mây'),
                         style: TextStyle(color: Color(0xFFFF7A6A), fontSize: 13)),
                   ),
                 ],
@@ -270,7 +271,7 @@ class _CloudPanel extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng'))),
           ],
         );
       },
@@ -282,18 +283,18 @@ class _CloudPanel extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Xóa bản lưu trên mây?', style: titleStyle(20)),
+        title: Text(tr('Xóa bản lưu trên mây?'), style: titleStyle(20)),
         content: Text(
-          'Mọi nhân vật và bản dự phòng trên mây của ${CloudSave.instance.who}, cùng các dòng trên bảng xếp hạng, '
+          tr('Mọi nhân vật và bản dự phòng trên mây của {who}, cùng các dòng trên bảng xếp hạng, '
           'sẽ bị xóa; tài khoản vẫn còn và bạn được đăng xuất. Nhân vật đang có trong máy này vẫn còn. '
-          'Nhân vật chỉ có trên mây (không có trong máy này) sẽ mất hẳn.',
+          'Nhân vật chỉ có trên mây (không có trong máy này) sẽ mất hẳn.', {'who': CloudSave.instance.who}),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Hủy'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xóa bản lưu', style: TextStyle(color: Color(0xFFFF7A6A))),
+            child: Text(tr('Xóa bản lưu'), style: TextStyle(color: Color(0xFFFF7A6A))),
           ),
         ],
       ),
@@ -314,17 +315,17 @@ Future<void> confirmDeleteAccount(BuildContext context) async {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Xóa tài khoản?', style: titleStyle(20)),
+        title: Text(tr('Xóa tài khoản?'), style: titleStyle(20)),
         content: Text(
-          'Mọi bản lưu trên mây và tài khoản đăng nhập của game sẽ bị xóa vĩnh viễn. '
-          'Nhân vật đang có trong máy này vẫn còn, nhưng nếu gỡ game sẽ mất hẳn.',
+          tr('Mọi bản lưu trên mây và tài khoản đăng nhập của game sẽ bị xóa vĩnh viễn. '
+          'Nhân vật đang có trong máy này vẫn còn, nhưng nếu gỡ game sẽ mất hẳn.'),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Hủy'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xóa vĩnh viễn', style: TextStyle(color: Color(0xFFFF7A6A))),
+            child: Text(tr('Xóa vĩnh viễn'), style: TextStyle(color: Color(0xFFFF7A6A))),
           ),
         ],
       ),
@@ -333,7 +334,7 @@ Future<void> confirmDeleteAccount(BuildContext context) async {
     final done = await CloudSave.instance.deleteAccount();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(done ? 'Đã xóa tài khoản và mọi dữ liệu trên mây.' : 'Chưa xóa được tài khoản, thử lại sau.'),
+      content: Text(done ? tr('Đã xóa tài khoản và mọi dữ liệu trên mây.') : tr('Chưa xóa được tài khoản, thử lại sau.')),
     ));
 }
 
@@ -369,7 +370,7 @@ Future<void> resolveConflicts(BuildContext context) async {
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             backgroundColor: lacquer,
-            title: Text('Ô ${slot + 1}: chọn bản lưu', style: titleStyle(20)),
+            title: Text(tr('Ô {p0}: chọn bản lưu', {'p0': slot + 1}), style: titleStyle(20)),
             content: SizedBox(
               width: 500,
               child: SingleChildScrollView(
@@ -379,21 +380,21 @@ Future<void> resolveConflicts(BuildContext context) async {
                   children: [
                     Text(
                       other
-                          ? 'Ô này trên mây là một nhân vật khác với nhân vật trong máy.'
+                          ? tr('Ô này trên mây là một nhân vật khác với nhân vật trong máy.')
                           : cloudNewer
-                              ? 'Trên mây có bản mới hơn bản trong máy này (có thể bạn đã chơi trên máy khác).'
-                              : 'Bản trong máy này đang kém hơn bản trên mây (có thể máy vừa khôi phục một bản sao lưu cũ).',
+                              ? tr('Trên mây có bản mới hơn bản trong máy này (có thể bạn đã chơi trên máy khác).')
+                              : tr('Bản trong máy này đang kém hơn bản trên mây (có thể máy vừa khôi phục một bản sao lưu cũ).'),
                       style: body,
                     ),
                     const SizedBox(height: 10),
-                    _copy('Trên mây', remote, best: compareProgress(remote, here) > 0),
+                    _copy(tr('Trên mây'), remote, best: compareProgress(remote, here) > 0),
                     const SizedBox(height: 6),
-                    _copy('Trong máy', here, best: compareProgress(here, remote) > 0),
+                    _copy(tr('Trong máy'), here, best: compareProgress(here, remote) > 0),
                     const SizedBox(height: 8),
                     Text(
                       other && empty >= 0
-                          ? 'Có thể giữ cả hai: nhân vật trên mây sẽ được đưa vào ô trống ${empty + 1}.'
-                          : 'Bản không chọn được cất vào bản dự phòng, khôi phục được ở màn chọn nhân vật.',
+                          ? tr('Có thể giữ cả hai: nhân vật trên mây sẽ được đưa vào ô trống {p0}.', {'p0': empty + 1})
+                          : tr('Bản không chọn được cất vào bản dự phòng, khôi phục được ở màn chọn nhân vật.'),
                       style: small.copyWith(color: goldLight),
                     ),
                   ],
@@ -401,12 +402,12 @@ Future<void> resolveConflicts(BuildContext context) async {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, 'local'), child: const Text('Giữ bản trong máy')),
-              TextButton(onPressed: () => Navigator.pop(ctx, 'cloud'), child: const Text('Dùng bản trên mây')),
+              TextButton(onPressed: () => Navigator.pop(ctx, 'local'), child: Text(tr('Giữ bản trong máy'))),
+              TextButton(onPressed: () => Navigator.pop(ctx, 'cloud'), child: Text(tr('Dùng bản trên mây'))),
               if (other && empty >= 0)
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, 'both'),
-                  child: const Text('Giữ cả hai', style: TextStyle(color: Color(0xFF8CE07A), fontWeight: FontWeight.w800)),
+                  child: Text(tr('Giữ cả hai'), style: TextStyle(color: Color(0xFF8CE07A), fontWeight: FontWeight.w800)),
                 ),
             ],
           ),
@@ -420,17 +421,17 @@ Future<void> resolveConflicts(BuildContext context) async {
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: lacquer,
-              title: Text('Chọn bản kém hơn?', style: titleStyle(20, color: const Color(0xFFFF8A7A))),
+              title: Text(tr('Chọn bản kém hơn?'), style: titleStyle(20, color: const Color(0xFFFF8A7A))),
               content: Text(
-                'Bản bạn chọn (${kept.levelText}) kém hơn bản kia (${dropped.levelText}). '
-                'Bản ${dropped.levelText} sẽ được cất vào bản dự phòng của ô ${slot + 1}.',
+                tr('Bản bạn chọn ({levelText}) kém hơn bản kia ({levelText2}). '
+                'Bản {levelText2} sẽ được cất vào bản dự phòng của ô {p0}.', {'levelText': kept.levelText, 'levelText2': dropped.levelText, 'p0': slot + 1}),
                 style: body,
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Chọn lại')),
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Chọn lại'))),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Vẫn chọn', style: TextStyle(color: Color(0xFFFF8A7A))),
+                  child: Text(tr('Vẫn chọn'), style: TextStyle(color: Color(0xFFFF8A7A))),
                 ),
               ],
             ),
@@ -468,13 +469,13 @@ Widget _copy(String title, SlotInfo s, {bool best = false}) {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(best ? '$title · tiến độ cao hơn' : title,
+        Text(best ? tr('{title} · tiến độ cao hơn', {'title': title}) : title,
             style: small.copyWith(color: best ? const Color(0xFF8CE07A) : goldLight)),
-        Text('${s.name} · ${s.sect} · ${s.levelText}', style: bold),
+        Text('${s.name} · ${tr(s.sect)} · ${s.levelText}', style: bold),
         Text(
-          'Đã chơi ${hours.toStringAsFixed(1)} giờ · lưu lúc '
-          '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')} '
-          '${when.day}/${when.month}',
+          tr('Đã chơi {p0} giờ · lưu lúc '
+          '{p1}:{p2} '
+          '{day}/{month}', {'p0': hours.toStringAsFixed(1), 'p1': when.hour.toString().padLeft(2, '0'), 'p2': when.minute.toString().padLeft(2, '0'), 'day': when.day, 'month': when.month}),
           style: small,
         ),
       ],

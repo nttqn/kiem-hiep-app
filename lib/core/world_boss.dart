@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'clock.dart';
 import 'content.dart';
+import 'i18n.dart';
 
 /// Boss Thế Giới: one huge boss a day for everyone. A run lasts
 /// [worldBossTime] seconds; the boss cannot die, the score is the damage
@@ -48,7 +49,7 @@ DungeonDef worldBossDef([DateTime? now]) {
   final boss = worldBossOf(now);
   return DungeonDef(
     id: 'worldboss',
-    name: 'Boss Thế Giới · ${boss.name}',
+    name: tr('Boss Thế Giới · {bossName}', {'bossName': tr(boss.name)}),
     mapId: mapOfMob(boss.id)!.id,
     level: 99,
     waves: const [],

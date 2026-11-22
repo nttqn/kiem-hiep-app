@@ -28,6 +28,7 @@ import 'rename_dialog.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import 'wardrobe_tab.dart';
+import '../core/i18n.dart';
 
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({super.key, this.tab = 0, this.forge = false});
@@ -51,13 +52,13 @@ class _CharacterScreenState extends State<CharacterScreen> {
   Widget build(BuildContext context) {
     const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh', 'Luyện thể', 'Khắc ấn'];
     return SubScreen(
-      title: widget.forge && _tab >= 2 ? 'Thợ rèn' : 'Nhân vật',
+      title: widget.forge && _tab >= 2 ? tr('Thợ rèn') : tr('Nhân vật'),
       actions: [
         for (final i in widget.forge ? [2, 3, 4, if (h.goldOpen) 9, 6, 7] : [0, 1, 3, 5, if (h.rebirths > 0) 8])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: TabChip(
-              label: names[i],
+              label: tr(names[i]),
               on: _tab == i,
               badge: switch (i) {
                 0 => h.freePoints,
@@ -105,11 +106,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
               children: [
                 Row(
                   children: [
-                    Text('Tiềm năng còn: ', style: body),
+                    Text(tr('Tiềm năng còn: '), style: body),
                     Text('${h.freePoints}', style: titleStyle(20)),
                     const Spacer(),
                     LButton(
-                      label: 'Tự cộng',
+                      label: tr('Tự cộng'),
                       small: true,
                       color: jade,
                       enabled: h.freePoints > 0,
@@ -134,8 +135,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${names[i]}  ${st.attrs[i]}', style: bold),
-                              Text(hints[i], style: small.copyWith(fontSize: 11)),
+                              Text('${tr(names[i])}  ${st.attrs[i]}', style: bold),
+                              Text(tr(hints[i]), style: small.copyWith(fontSize: 11)),
                             ],
                           ),
                         ),
@@ -151,12 +152,12 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Gợi ý phái: ${_buildHint()}',
+                      child: Text(tr('Gợi ý phái: {p0}', {'p0': _buildHint()}),
                           style: small, maxLines: 2, overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(width: 6),
                     LButton(
-                      label: 'Tẩy điểm (${fmt(h.resetCost)})',
+                      label: tr('Tẩy điểm ({p0})', {'p0': fmt(h.resetCost)}),
                       small: true,
                       color: const Color(0xFF5A4A3A),
                       enabled: h.gold >= h.resetCost && h.spent.any((v) => v > 0),
@@ -181,7 +182,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 Row(
                   children: [
                     Flexible(
-                      child: Text('${h.name} · ${h.sect.name}',
+                      child: Text('${h.name} · ${tr(h.sect.name)}',
                           style: titleStyle(18), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
                     InkWell(
@@ -195,31 +196,31 @@ class _CharacterScreenState extends State<CharacterScreen> {
                     ),
                   ],
                 ),
-                Text('Cấp ${h.level} · Lực chiến ${fmt(h.power)}', style: small.copyWith(color: goldLight)),
+                Text(tr('Cấp {level} · Lực chiến {p0}', {'level': h.level, 'p0': fmt(h.power)}), style: small.copyWith(color: goldLight)),
                 const SizedBox(height: 6),
                 Expanded(
                   child: ListView(
                     children: [
-                      _stat('Sinh lực', fmt(st.maxHp)),
-                      _stat('Nội lực', fmt(st.maxMp)),
-                      _stat('Công lực', fmt(st.atk)),
-                      _stat('Phòng thủ', fmt(st.def)),
-                      _stat('Chí mạng', '${(st.crit * 100).toStringAsFixed(1)}%'),
-                      _stat('ST chí mạng', '${(st.critDmg * 100).round()}%'),
-                      _stat('Né tránh', '${(st.dodge * 100).toStringAsFixed(1)}%'),
-                      _stat('Tốc đánh', '${(st.aspd * 100).round()}%'),
+                      _stat(tr('Sinh lực'), fmt(st.maxHp)),
+                      _stat(tr('Nội lực'), fmt(st.maxMp)),
+                      _stat(tr('Công lực'), fmt(st.atk)),
+                      _stat(tr('Phòng thủ'), fmt(st.def)),
+                      _stat(tr('Chí mạng'), '${(st.crit * 100).toStringAsFixed(1)}%'),
+                      _stat(tr('ST chí mạng'), '${(st.critDmg * 100).round()}%'),
+                      _stat(tr('Né tránh'), '${(st.dodge * 100).toStringAsFixed(1)}%'),
+                      _stat(tr('Tốc đánh'), '${(st.aspd * 100).round()}%'),
                       // 1.13.4: what is past a cap is turned, not lost.
                       if (st.overCrit > 0)
-                        _stat('Chí mạng dư → ST chí mạng', '+${(st.overCrit * overCritToCritDmg * 100).round()}%'),
+                        _stat(tr('Chí mạng dư → ST chí mạng'), '+${(st.overCrit * overCritToCritDmg * 100).round()}%'),
                       if (st.overDodge > 0)
-                        _stat('Né tránh dư → Sinh lực', '+${(overDodgeHp(st.overDodge) * 100).round()}%'),
+                        _stat(tr('Né tránh dư → Sinh lực'), '+${(overDodgeHp(st.overDodge) * 100).round()}%'),
                       if (st.overAspd > 0)
-                        _stat('Tốc đánh dư → Công lực', '+${(st.overAspd * overAspdToAtk * 100).round()}%'),
-                      _stat('Tốc chạy', fmt(st.move)),
-                      _stat('Hồi sinh lực', '${st.hpRegen.toStringAsFixed(1)}/giây'),
-                      if (st.skillDmg > 0) _stat('Uy lực kỹ năng', '+${(st.skillDmg * 100).round()}%'),
-                      if (st.cdr > 0) _stat('Giảm hồi chiêu', '${(st.cdr * 100).round()}%'),
-                      if (st.dotPct > 0) _stat('Uy lực độc/thiêu', '+${(st.dotPct * 100).round()}%'),
+                        _stat(tr('Tốc đánh dư → Công lực'), '+${(st.overAspd * overAspdToAtk * 100).round()}%'),
+                      _stat(tr('Tốc chạy'), fmt(st.move)),
+                      _stat(tr('Hồi sinh lực'), tr('{p0}/giây', {'p0': st.hpRegen.toStringAsFixed(1)})),
+                      if (st.skillDmg > 0) _stat(tr('Uy lực kỹ năng'), '+${(st.skillDmg * 100).round()}%'),
+                      if (st.cdr > 0) _stat(tr('Giảm hồi chiêu'), '${(st.cdr * 100).round()}%'),
+                      if (st.dotPct > 0) _stat(tr('Uy lực độc/thiêu'), '+${(st.dotPct * 100).round()}%'),
                     ],
                   ),
                 ),
@@ -235,7 +236,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
     const names = ['Sức mạnh', 'Thân pháp', 'Sinh khí', 'Nội công'];
     final w = h.sect.autoBuild;
     final order = [0, 1, 2, 3]..sort((a, b) => w[b].compareTo(w[a]));
-    return order.where((i) => w[i] > 0).map((i) => names[i]).join(' > ');
+    return order.where((i) => w[i] > 0).map((i) => tr(names[i])).join(' > ');
   }
 
   Widget _plus(String label, int attr, int n) => LButton(
@@ -282,9 +283,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Kinh mạch', style: titleStyle(18))),
+              Expanded(child: Text(tr('Kinh mạch'), style: titleStyle(18))),
               LButton(
-                label: 'Tẩy (${fmt(h.meridianResetCost)})',
+                label: tr('Tẩy ({p0})', {'p0': fmt(h.meridianResetCost)}),
                 small: true,
                 color: const Color(0xFF5A4A3A),
                 enabled: h.gold >= h.meridianResetCost && h.meridianPts.any((v) => v > 0),
@@ -294,10 +295,10 @@ class _CharacterScreenState extends State<CharacterScreen> {
           ),
           Text(
             open
-                ? 'Dồn điểm kỹ năng dư vào kinh mạch. Càng nhiều điểm, mỗi điểm càng ít tác dụng. '
-                    'Trần: Chí mạng ${(critCap * 100).round()}%, Tốc đánh ${(aspdCap * 100).round()}%; '
-                    'phần dư đổi thành ST chí mạng và công lực.'
-                : 'Mở ở cấp $meridianLevel. Dùng điểm kỹ năng dư sau khi đã nâng đủ kỹ năng.',
+                ? tr('Dồn điểm kỹ năng dư vào kinh mạch. Càng nhiều điểm, mỗi điểm càng ít tác dụng. '
+                    'Trần: Chí mạng {p0}%, Tốc đánh {p1}%; '
+                    'phần dư đổi thành ST chí mạng và công lực.', {'p0': (critCap * 100).round(), 'p1': (aspdCap * 100).round()})
+                : tr('Mở ở cấp {meridianLevel}. Dùng điểm kỹ năng dư sau khi đã nâng đủ kỹ năng.', {'meridianLevel': meridianLevel}),
             style: small.copyWith(fontSize: 11),
           ),
           const SizedBox(height: 4),
@@ -327,11 +328,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         backgroundColor: lacquer,
-        title: Text('Tẩy kinh mạch?', style: titleStyle(18)),
-        content: Text('Trả lại $n điểm kỹ năng từ kinh mạch để dồn lại, tốn ${fmt(h.meridianResetCost)} lượng.', style: body),
+        title: Text(tr('Tẩy kinh mạch?'), style: titleStyle(18)),
+        content: Text(tr('Trả lại {n} điểm kỹ năng từ kinh mạch để dồn lại, tốn {p0} lượng.', {'n': n, 'p0': fmt(h.meridianResetCost)}), style: body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tẩy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Tẩy'))),
         ],
       ),
     );
@@ -362,10 +363,10 @@ class _CharacterScreenState extends State<CharacterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${m.name} · $n điểm', style: bold.copyWith(fontSize: 12.5, color: open ? cream : creamDim)),
+                Text(tr('{mName} · {n} điểm', {'mName': tr(m.name), 'n': n}), style: bold.copyWith(fontSize: 12.5, color: open ? cream : creamDim)),
                 Text(m.text(n), style: small.copyWith(fontSize: 11, color: hanhColor(m.hanh))),
                 if (_capped(m.bonus))
-                  Text('Đã chạm trần, phần dư đổi sang chỉ số khác (ít hơn)',
+                  Text(tr('Đã chạm trần, phần dư đổi sang chỉ số khác (ít hơn)'),
                       style: small.copyWith(fontSize: 10.5, color: goldLight)),
               ],
             ),
@@ -404,12 +405,12 @@ class _CharacterScreenState extends State<CharacterScreen> {
       children: [
         Row(
           children: [
-            Text('Điểm kỹ năng: ', style: body),
+            Text(tr('Điểm kỹ năng: '), style: body),
             Text('${h.skillPoints}', style: titleStyle(20)),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
-                h.breakthrough ? 'Đã đột phá: kỹ năng tới cấp $maxBreakLevel' : 'Cấp $breakthroughLevel: đột phá tới cấp $maxBreakLevel',
+                h.breakthrough ? tr('Đã đột phá: kỹ năng tới cấp {maxBreakLevel}', {'maxBreakLevel': maxBreakLevel}) : tr('Cấp {breakthroughLevel}: đột phá tới cấp {maxBreakLevel}', {'breakthroughLevel': breakthroughLevel, 'maxBreakLevel': maxBreakLevel}),
                 style: small.copyWith(fontSize: 11, color: h.breakthrough ? const Color(0xFF8CE07A) : creamDim),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -417,7 +418,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             const Spacer(),
             if (h.branchOpen) ...[
               LButton(
-                label: h.branchDef?.name ?? 'Lưu phái •',
+                label: h.branchDef?.name ?? tr('Lưu phái •'),
                 small: true,
                 color: branchWaiting(h) ? seal : const Color(0xFF8A6A1A),
                 onTap: () async {
@@ -428,7 +429,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
               const SizedBox(width: 6),
             ],
             LButton(
-              label: 'Tự học',
+              label: tr('Tự học'),
               small: true,
               color: jade,
               enabled: h.skillPoints > 0,
@@ -479,20 +480,20 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(sk.name, style: bold.copyWith(color: goldLight), overflow: TextOverflow.ellipsis),
+                      child: Text(tr(sk.name), style: bold.copyWith(color: goldLight), overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(width: 6),
-                    Text(locked ? 'Cấp ${sk.unlock} mở' : '$lv/${h.skillCap(i)}',
+                    Text(locked ? tr('Cấp {unlock} mở', {'unlock': sk.unlock}) : '$lv/${h.skillCap(i)}',
                         style: small.copyWith(color: locked ? const Color(0xFFFF8A7A) : cream)),
                   ],
                 ),
                 if (h.manualOf(sk.id) case final k?)
-                  Text('Bí kíp ${manualKinds[k]!.name} · tầng ${h.manualLevel(manualKey(sk.id, k))}',
+                  Text(tr('Bí kíp {p0} · tầng {p1}', {'p0': tr(manualKinds[k]!.name), 'p1': h.manualLevel(manualKey(sk.id, k))}),
                       style: small.copyWith(fontSize: 11, color: const Color(0xFFE0C8FF)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis)
                 else
-                  Text(sk.desc, style: small.copyWith(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(tr(sk.desc), style: small.copyWith(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text(_skillNumbers(h.castSkill(i), math.max(1, lv)), style: small.copyWith(fontSize: 11, color: cream),
                     maxLines: 2, overflow: TextOverflow.ellipsis),
               ],
@@ -547,32 +548,32 @@ class _CharacterScreenState extends State<CharacterScreen> {
     if (s.isPassive) {
       return s.passive.entries.map((e) => '${_bonusName(e.key)} +${_pct(e.value * lv)}').join(' · ');
     }
-    final cost = 'Nội lực ${h.skillMp(s, lv).round()} · Hồi ${s.cooldown.toStringAsFixed(1)}s';
+    final cost = tr('Nội lực {p0} · Hồi {p1}s', {'p0': h.skillMp(s, lv).round(), 'p1': s.cooldown.toStringAsFixed(1)});
     return switch (s.kind) {
-      SkillKind.guard => 'Giảm ${_pct(math.min(0.7, p))} sát thương ${s.duration.round()}s · $cost',
-      SkillKind.heal => 'Hồi ${_pct(p * 2)} sinh lực · $cost',
-      SkillKind.shield => 'Khiên ${_pct(p)} sinh lực ${s.duration.round()}s · $cost',
-      _ => '${(p * 100).round()}% công lực${s.ticks > 1 ? ' ×${s.ticks}' : ''}'
-          '${s.count > 1 && s.kind != SkillKind.line ? ' ×${s.count}' : ''} · $cost',
+      SkillKind.guard => tr('Giảm {p0} sát thương {p1}s · {cost}', {'p0': _pct(math.min(0.7, p)), 'p1': s.duration.round(), 'cost': cost}),
+      SkillKind.heal => tr('Hồi {p0} sinh lực · {cost}', {'p0': _pct(p * 2), 'cost': cost}),
+      SkillKind.shield => tr('Khiên {p0} sinh lực {p1}s · {cost}', {'p0': _pct(p), 'p1': s.duration.round(), 'cost': cost}),
+      _ => tr('{p0}% công lực{p1}'
+          '{p2} · {cost}', {'p0': (p * 100).round(), 'p1': s.ticks > 1 ? tr(' ×{ticks}', {'ticks': s.ticks}) : '', 'p2': s.count > 1 && s.kind != SkillKind.line ? tr(' ×{count}', {'count': s.count}) : '', 'cost': cost}),
     };
   }
 
   String _pct(double v) => '${(v * 100).toStringAsFixed(v < 0.1 ? 1 : 0)}%';
 
   String _bonusName(Bonus b) => switch (b) {
-        Bonus.hpPct => 'Sinh lực',
-        Bonus.mpPct => 'Nội lực',
-        Bonus.atkPct => 'Công lực',
-        Bonus.defPct => 'Phòng thủ',
-        Bonus.crit => 'Chí mạng',
-        Bonus.critDmg => 'ST chí mạng',
-        Bonus.dodge => 'Né tránh',
-        Bonus.aspd => 'Tốc đánh',
-        Bonus.move => 'Tốc chạy',
-        Bonus.regen => 'Hồi phục',
-        Bonus.skillDmg => 'Uy lực kỹ năng',
-        Bonus.cdr => 'Giảm hồi chiêu',
-        Bonus.dotPct => 'Uy lực độc',
+        Bonus.hpPct => tr('Sinh lực'),
+        Bonus.mpPct => tr('Nội lực'),
+        Bonus.atkPct => tr('Công lực'),
+        Bonus.defPct => tr('Phòng thủ'),
+        Bonus.crit => tr('Chí mạng'),
+        Bonus.critDmg => tr('ST chí mạng'),
+        Bonus.dodge => tr('Né tránh'),
+        Bonus.aspd => tr('Tốc đánh'),
+        Bonus.move => tr('Tốc chạy'),
+        Bonus.regen => tr('Hồi phục'),
+        Bonus.skillDmg => tr('Uy lực kỹ năng'),
+        Bonus.cdr => tr('Giảm hồi chiêu'),
+        Bonus.dotPct => tr('Uy lực độc'),
       };
 
   // ---------------------------------------------------------- bag
@@ -619,10 +620,10 @@ class _ItemDialogState extends State<ItemDialog> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _statsBlock(it, rc, isWorn ? 'Đang mặc' : 'Trong hành trang')),
+              Expanded(child: _statsBlock(it, rc, isWorn ? tr('Đang mặc') : tr('Trong hành trang'))),
               if (worn != null && !isWorn) ...[
                 const VerticalDivider(color: gold),
-                Expanded(child: _statsBlock(worn, Color(worn.color), 'Đang mặc')),
+                Expanded(child: _statsBlock(worn, Color(worn.color), tr('Đang mặc'))),
               ],
               const SizedBox(width: 12),
               SizedBox(
@@ -632,7 +633,7 @@ class _ItemDialogState extends State<ItemDialog> {
                   children: [
                     if (!isWorn)
                       LButton(
-                        label: it.level > h.level ? 'Cần cấp ${it.level}' : 'Trang bị',
+                        label: it.level > h.level ? tr('Cần cấp {level}', {'level': it.level}) : tr('Trang bị'),
                         small: true,
                         color: jade,
                         enabled: it.level <= h.level,
@@ -643,7 +644,7 @@ class _ItemDialogState extends State<ItemDialog> {
                       )
                     else
                       LButton(
-                        label: 'Tháo ra',
+                        label: tr('Tháo ra'),
                         small: true,
                         enabled: h.bag.length < bagSize,
                         onTap: () {
@@ -657,10 +658,10 @@ class _ItemDialogState extends State<ItemDialog> {
                       children: [
                         Expanded(
                           child: isWorn
-                              ? Text(it.locked ? 'Đã khóa' : 'Khóa để không bán nhầm',
+                              ? Text(it.locked ? tr('Đã khóa') : tr('Khóa để không bán nhầm'),
                                   style: small.copyWith(fontSize: 11))
                               : LButton(
-                                  label: it.locked ? 'Đã khóa' : 'Bán ${fmt(it.sellPrice)}',
+                                  label: it.locked ? tr('Đã khóa') : tr('Bán {p0}', {'p0': fmt(it.sellPrice)}),
                                   small: true,
                                   color: const Color(0xFF5A4A3A),
                                   enabled: !it.locked,
@@ -671,7 +672,7 @@ class _ItemDialogState extends State<ItemDialog> {
                                 ),
                         ),
                         IconButton(
-                          tooltip: it.locked ? 'Mở khóa' : 'Khóa',
+                          tooltip: it.locked ? tr('Mở khóa') : tr('Khóa'),
                           visualDensity: VisualDensity.compact,
                           onPressed: () => setState(() {
                             it.locked = !it.locked;
@@ -685,7 +686,7 @@ class _ItemDialogState extends State<ItemDialog> {
                     if (!isWorn && essenceOf(it) > 0) ...[
                       const SizedBox(height: 4),
                       LButton(
-                        label: 'Phân giải +${essenceOf(it)} Tinh Hoa',
+                        label: tr('Phân giải +{p0} Tinh Hoa', {'p0': essenceOf(it)}),
                         small: true,
                         color: const Color(0xFF3A6A8A),
                         enabled: !it.locked,
@@ -701,7 +702,7 @@ class _ItemDialogState extends State<ItemDialog> {
                     const Spacer(),
                     if (it.golden && it.level < h.level) ...[
                       LButton(
-                        label: 'Đúc lại cấp ${h.level} · ${goldReforgeCost(it.slot)} mảnh',
+                        label: tr('Đúc lại cấp {level} · {p0} mảnh', {'level': h.level, 'p0': goldReforgeCost(it.slot)}),
                         small: true,
                         color: const Color(0xFF8A6A1A),
                         enabled: h.canReforgeGold(it),
@@ -715,11 +716,11 @@ class _ItemDialogState extends State<ItemDialog> {
                       const SizedBox(height: 6),
                     ],
                     if (canEnhance) ...[
-                      Text('Cường hóa', style: bold.copyWith(color: goldLight)),
-                      Text('+${it.plus} → +${it.plus + 1} · tỉ lệ ${(enhanceChance(it.plus) * 100).round()}%', style: small),
+                      Text(tr('Cường hóa'), style: bold.copyWith(color: goldLight)),
+                      Text(tr('+{plus} → +{p0} · tỉ lệ {p1}%', {'plus': it.plus, 'p0': it.plus + 1, 'p1': (enhanceChance(it.plus) * 100).round()}), style: small),
                       const SizedBox(height: 4),
                       LButton(
-                        label: 'Rèn ${fmt(cost)} lượng',
+                        label: tr('Rèn {p0} lượng', {'p0': fmt(cost)}),
                         small: true,
                         color: widget.forge ? seal : const Color(0xFF7A3A1A),
                         enabled: h.gold >= cost,
@@ -755,7 +756,7 @@ class _ItemDialogState extends State<ItemDialog> {
     h.recompute();
     SaveService.instance.save();
     setState(() {
-      _msg = ok ? 'Thành công! +${it.plus}' : 'Thất bại, mất ${fmt(cost)} lượng';
+      _msg = ok ? tr('Thành công! +{plus}', {'plus': it.plus}) : tr('Thất bại, mất {p0} lượng', {'p0': fmt(cost)});
       _msgColor = ok ? const Color(0xFF8CE07A) : const Color(0xFFFF8A7A);
     });
   }
@@ -765,26 +766,26 @@ class _ItemDialogState extends State<ItemDialog> {
     final maxed = it.star >= maxStar;
     final block = h.starBlock(it);
     return [
-      Text('Thăng Tinh ${'★' * it.star}${'☆' * (maxStar - it.star)}', style: bold.copyWith(color: goldLight)),
+      Text(tr('Thăng Tinh {p0}{p1}', {'p0': '★' * it.star, 'p1': '☆' * (maxStar - it.star)}), style: bold.copyWith(color: goldLight)),
       if (maxed)
-        Text('Đã đạt ★$maxStar', style: small)
+        Text(tr('Đã đạt ★{maxStar}', {'maxStar': maxStar}), style: small)
       else ...[
         Wrap(
           spacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            MatCount(Mat.stone, '${starStoneCost[it.star]} (có ${fmt(h.starStones)})', style: small.copyWith(fontSize: 11), size: 16),
+            MatCount(Mat.stone, tr('{p0} (có {p1})', {'p0': starStoneCost[it.star], 'p1': fmt(h.starStones)}), style: small.copyWith(fontSize: 11), size: 16),
             if (starSoulCost[it.star] > 0)
-              MatCount(Mat.soul, '${starSoulCost[it.star]} (có ${h.beastSouls})', style: small.copyWith(fontSize: 11), size: 16),
-            Text('${fmt(starGoldCost(it.star))} lượng', style: small.copyWith(fontSize: 11)),
+              MatCount(Mat.soul, tr('{p0} (có {beastSouls})', {'p0': starSoulCost[it.star], 'beastSouls': h.beastSouls}), style: small.copyWith(fontSize: 11), size: 16),
+            Text(tr('{p0} lượng', {'p0': fmt(starGoldCost(it.star))}), style: small.copyWith(fontSize: 11)),
           ],
         ),
-        Text('+${(starBasePct * 100).round()}% chỉ số gốc, ${starLines[it.slot]!.label.toLowerCase()} +${(starLines[it.slot]!.per * 100).toStringAsFixed(1)}%',
+        Text(tr('+{p0}% chỉ số gốc, {p1} +{p2}%', {'p0': (starBasePct * 100).round(), 'p1': starLines[it.slot]!.label.toLowerCase(), 'p2': (starLines[it.slot]!.per * 100).toStringAsFixed(1)}),
             style: small.copyWith(fontSize: 11, color: const Color(0xFFFFD34A))),
       ],
       const SizedBox(height: 4),
       LButton(
-        label: maxed ? 'Tối đa' : 'Thăng ★${it.star + 1}',
+        label: maxed ? tr('Tối đa') : tr('Thăng ★{p0}', {'p0': it.star + 1}),
         small: true,
         color: const Color(0xFF8A2A6A),
         enabled: block == null,
@@ -792,8 +793,8 @@ class _ItemDialogState extends State<ItemDialog> {
           if (!h.starUp(it)) return;
           SaveService.instance.save();
           setState(() {
-            _msg = 'Thăng Tinh thành công! ★${it.star}'
-                '${h.drillAllowed(it) > it.extraSockets ? ' Đã có thể đục thêm lỗ khảm.' : ''}';
+            _msg = tr('Thăng Tinh thành công! ★{star}'
+                '{p0}', {'star': it.star, 'p0': h.drillAllowed(it) > it.extraSockets ? tr(' Đã có thể đục thêm lỗ khảm.') : ''});
             _msgColor = const Color(0xFFFFD34A);
           });
         },
@@ -801,10 +802,10 @@ class _ItemDialogState extends State<ItemDialog> {
       // Đục lỗ (1.8.0): a fourth socket at ★3, a fifth at ★5.
       if (h.drillAllowed(it) > it.extraSockets) ...[
         const SizedBox(height: 4),
-        Text('Đục lỗ thứ ${it.gems.length + 1}: ${drillGems[it.extraSockets]} ngọc Thần (có ${h.drillGemsHeld}) · ${fmt(drillGold[it.extraSockets])} lượng',
+        Text(tr('Đục lỗ thứ {p0}: {p1} ngọc Thần (có {drillGemsHeld}) · {p2} lượng', {'p0': it.gems.length + 1, 'p1': drillGems[it.extraSockets], 'drillGemsHeld': h.drillGemsHeld, 'p2': fmt(drillGold[it.extraSockets])}),
             style: small.copyWith(fontSize: 11, color: const Color(0xFF8AC8FF))),
         LButton(
-          label: 'Đục lỗ khảm',
+          label: tr('Đục lỗ khảm'),
           small: true,
           color: const Color(0xFF3A6A8A),
           enabled: h.drillBlock(it) == null,
@@ -812,7 +813,7 @@ class _ItemDialogState extends State<ItemDialog> {
             if (!h.drillSocket(it)) return;
             SaveService.instance.save();
             setState(() {
-              _msg = 'Đã đục lỗ khảm thứ ${it.gems.length}!';
+              _msg = tr('Đã đục lỗ khảm thứ {gemsLength}!', {'gemsLength': it.gems.length});
               _msgColor = const Color(0xFF8AC8FF);
             });
           },
@@ -826,22 +827,22 @@ class _ItemDialogState extends State<ItemDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(where, style: small),
-        Text(it.title, style: titleStyle(18, color: rc)),
-        Text('${it.rarityLabel} · ${it.slot.label} · Cấp ${it.level}', style: small.copyWith(color: rc)),
+        Text(tr(it.title), style: titleStyle(18, color: rc)),
+        Text(tr('{rarityLabel} · {slotLabel} · Cấp {level}', {'rarityLabel': it.rarityLabel, 'slotLabel': tr(it.slot.label), 'level': it.level}), style: small.copyWith(color: rc)),
         if (goldSetById[it.set] case final s?)
-          Text('Bộ ${s.name} (${goldPieces(h.equip.values)[s.id] ?? 0}/7)',
+          Text(tr('Bộ {sName} ({p0}/7)', {'sName': tr(s.name), 'p0': goldPieces(h.equip.values)[s.id] ?? 0}),
               style: small.copyWith(fontSize: 11.5, color: rc)),
         const SizedBox(height: 6),
         for (final e in it.base.entries)
-          Text('${e.key.label} ${e.key.format(e.value * it.baseMul)}',
+          Text('${tr(e.key.label)} ${e.key.format(e.value * it.baseMul)}',
               style: bold.copyWith(fontSize: 13)),
         if (it.star > 0)
           Text('★ ${starLines[it.slot]!.at(it.star)}', style: bold.copyWith(fontSize: 13, color: const Color(0xFFFFD34A))),
         if (it.glow > 0)
-          Text('Khai Quang ${it.glow}: chỉ số gốc +${(glowPct(it.glow) * 100).round()}%',
+          Text(tr('Khai Quang {glow}: chỉ số gốc +{p0}%', {'glow': it.glow, 'p0': (glowPct(it.glow) * 100).round()}),
               style: bold.copyWith(fontSize: 13, color: const Color(goldItemColor))),
         for (final e in it.bonus.entries)
-          Text('${e.key.label} ${e.key.format(e.value)}',
+          Text('${tr(e.key.label)} ${e.key.format(e.value)}',
               style: body.copyWith(fontSize: 13, color: const Color(0xFF8AC8FF))),
         if (it.gems.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -852,7 +853,7 @@ class _ItemDialogState extends State<ItemDialog> {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    g == null ? 'Lỗ khảm trống' : '${g.name}: ${gemEffectText(g, banMenh: g.hanh == h.hanh)}',
+                    g == null ? tr('Lỗ khảm trống') : '${g.name}: ${gemEffectText(g, banMenh: g.hanh == h.hanh)}',
                     style: small.copyWith(fontSize: 11.5, color: g == null ? creamDim : hanhColor(g.hanh)),
                   ),
                 ),

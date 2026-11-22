@@ -1,5 +1,6 @@
 import 'festival.dart' show dayAfter;
 import 'hero.dart';
+import 'i18n.dart';
 
 /// Quà hồi quy (1.17.0): a player back after days away gets a gift and a
 /// few days of extra monster EXP and gold to catch up. Firebase on
@@ -107,13 +108,13 @@ List<String> takeComeback(HeroData h, int tier, String today) {
   h.goldShards += shards;
   h.recompute();
   return [
-    '+${_dots(gold)} lượng',
-    '+$pots bình máu, +$pots bình nội lực',
-    '+$pills Song Bội Đan',
-    if (stones > 0) '+$stones Tinh Thạch',
-    if (iron > 0) '+$iron Thần Thiết',
-    if (shards > 0) '+$shards Mảnh Hoàng Kim',
-    '+${(comebackExp * 100).round()}% EXP và lượng từ quái trong ${comebackBoostDays(tier)} ngày',
+    tr('+{p0} lượng', {'p0': _dots(gold)}),
+    tr('+{pots} bình máu, +{pots} bình nội lực', {'pots': pots}),
+    tr('+{pills} Song Bội Đan', {'pills': pills}),
+    if (stones > 0) tr('+{stones} Tinh Thạch', {'stones': stones}),
+    if (iron > 0) tr('+{iron} Thần Thiết', {'iron': iron}),
+    if (shards > 0) tr('+{shards} Mảnh Hoàng Kim', {'shards': shards}),
+    tr('+{p0}% EXP và lượng từ quái trong {p1} ngày', {'p0': (comebackExp * 100).round(), 'p1': comebackBoostDays(tier)}),
   ];
 }
 

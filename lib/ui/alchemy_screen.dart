@@ -7,6 +7,7 @@ import '../services/save.dart';
 import '../services/sound.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Luyện đan: herbs on hand, the furnace's recipes, and pills to take.
 class AlchemyScreen extends StatefulWidget {
@@ -30,13 +31,13 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
   /// Regions where herb [tier] grows.
   String _where(int tier) => [
         for (var i = 0; i < maps.length; i++)
-          if (herbTierOfMap(i) == tier) maps[i].name,
+          if (herbTierOfMap(i) == tier) tr(maps[i].name),
       ].join(', ');
 
   @override
   Widget build(BuildContext context) {
     return SubScreen(
-      title: 'Luyện đan',
+      title: tr('Luyện đan'),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -56,8 +57,8 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Dược liệu', style: titleStyle(18)),
-          Text('Đi qua cây thuốc phát sáng ở bãi luyện công để hái; quái và đầu lĩnh cũng rơi.',
+          Text(tr('Dược liệu'), style: titleStyle(18)),
+          Text(tr('Đi qua cây thuốc phát sáng ở bãi luyện công để hái; quái và đầu lĩnh cũng rơi.'),
               style: small.copyWith(fontSize: 11)),
           const SizedBox(height: 6),
           Expanded(
@@ -74,8 +75,8 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${herbNames[i]} · ${h.herbs[i]}', style: bold.copyWith(fontSize: 13)),
-                              Text(_where(i), style: small.copyWith(fontSize: 10), maxLines: 2),
+                              Text('${tr(herbNames[i])} · ${h.herbs[i]}', style: bold.copyWith(fontSize: 13)),
+                              Text(tr(_where(i)), style: small.copyWith(fontSize: 10), maxLines: 2),
                             ],
                           ),
                         ),
@@ -100,8 +101,8 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Lò luyện đan', style: titleStyle(18)),
-          if (!open) Text('Mở ở cấp $alchemyOpenLevel', style: bold.copyWith(color: const Color(0xFFFF9A7A))),
+          Text(tr('Lò luyện đan'), style: titleStyle(18)),
+          if (!open) Text(tr('Mở ở cấp {alchemyOpenLevel}', {'alchemyOpenLevel': alchemyOpenLevel}), style: bold.copyWith(color: const Color(0xFFFF9A7A))),
           const SizedBox(height: 4),
           Expanded(
             child: ListView(
@@ -131,8 +132,8 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(p.name, style: bold.copyWith(color: Color(p.color))),
-                Text(p.desc, style: small.copyWith(fontSize: 11)),
+                Text(tr(p.name), style: bold.copyWith(color: Color(p.color))),
+                Text(tr(p.desc), style: small.copyWith(fontSize: 11)),
                 const SizedBox(height: 3),
                 Wrap(
                   spacing: 8,
@@ -145,12 +146,12 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
                         Text.rich(
                           TextSpan(children: [
                             WidgetSpan(alignment: PlaceholderAlignment.middle, child: _herbDot(i, size: 11)),
-                            TextSpan(text: ' ${herbNames[i]} ${h.herbs[i]}/${p.herbs[i]}'),
+                            TextSpan(text: ' ${tr(herbNames[i])} ${h.herbs[i]}/${p.herbs[i]}'),
                           ]),
                           style: small.copyWith(
                               fontSize: 11, color: h.herbs[i] >= p.herbs[i] ? cream : const Color(0xFFFF8A7A)),
                         ),
-                    Text('${fmt(p.gold)} lượng',
+                    Text(tr('{p0} lượng', {'p0': fmt(p.gold)}),
                         style: small.copyWith(fontSize: 11, color: h.gold >= p.gold ? goldLight : const Color(0xFFFF8A7A))),
                   ],
                 ),
@@ -159,14 +160,14 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
           ),
           const SizedBox(width: 8),
           LButton(
-            label: 'Luyện',
+            label: tr('Luyện'),
             small: true,
             color: jade,
             enabled: can,
             onTap: () {
               if (!h.craft(p)) return;
               SoundService.instance.cue('magic');
-              _changed('Luyện thành ${p.name}!');
+              _changed(tr('Luyện thành {pName}!', {'pName': tr(p.name)}));
             },
           ),
         ],
@@ -204,20 +205,20 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Đan dược', style: titleStyle(18)),
+          Text(tr('Đan dược'), style: titleStyle(18)),
           if (active.isNotEmpty) ...[
             const SizedBox(height: 4),
             for (final p in active)
-              Text('${p.name}: còn ${(h.buffLeft(p.id) / 60).ceil()} phút',
+              Text(tr('{pName}: còn {p0} phút', {'pName': tr(p.name), 'p0': (h.buffLeft(p.id) / 60).ceil()}),
                   style: small.copyWith(fontSize: 11.5, color: Color(p.color), fontWeight: FontWeight.w700)),
           ],
-          Text('Thời gian bùa lợi chỉ trôi khi đang chơi, cộng dồn tối đa ${maxBuffMinutes ~/ 60} giờ. '
-              'Tẩy Tủy Đan đã dùng: ${h.potentialPills}/$maxPotentialPills',
+          Text(tr('Thời gian bùa lợi chỉ trôi khi đang chơi, cộng dồn tối đa {p0} giờ. '
+              'Tẩy Tủy Đan đã dùng: {potentialPills}/{maxPotentialPills}', {'p0': maxBuffMinutes ~/ 60, 'potentialPills': h.potentialPills, 'maxPotentialPills': maxPotentialPills}),
               style: small.copyWith(fontSize: 10.5)),
           const SizedBox(height: 6),
           Expanded(
             child: owned.isEmpty
-                ? Center(child: Text('Chưa có đan dược nào.', style: small))
+                ? Center(child: Text(tr('Chưa có đan dược nào.'), style: small))
                 : ListView(
                     children: [
                       for (final p in owned) _pillRow(p),
@@ -232,7 +233,7 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
   /// One owned pill: name, then Uống đầy (buffs) and Dùng under it.
   Widget _pillRow(PillDef p) {
     final use = LButton(
-      label: 'Dùng',
+      label: tr('Dùng'),
       small: true,
       color: seal,
       enabled: h.canUsePill(p),
@@ -240,9 +241,9 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
         if (!h.usePill(p)) return;
         SoundService.instance.cue('potion');
         _changed(switch (p.kind) {
-          PillKind.buff => '${p.name}: ${p.desc}',
-          PillKind.potions => '+10 Kim Sang Dược, +10 Ngưng Thần Đan',
-          PillKind.potential => '+$potentialPerPill điểm tiềm năng!',
+          PillKind.buff => '${tr(p.name)}: ${tr(p.desc)}',
+          PillKind.potions => tr('+10 Kim Sang Dược, +10 Ngưng Thần Đan'),
+          PillKind.potential => tr('+{potentialPerPill} điểm tiềm năng!', {'potentialPerPill': potentialPerPill}),
         });
       },
     );
@@ -250,7 +251,7 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
       children: [
         _pillIcon(p, size: 24),
         const SizedBox(width: 8),
-        Expanded(child: Text('${p.name} x${h.pills[p.id]}', style: bold.copyWith(fontSize: 13))),
+        Expanded(child: Text('${tr(p.name)} x${h.pills[p.id]}', style: bold.copyWith(fontSize: 13))),
         if (p.kind != PillKind.buff) use,
       ],
     );
@@ -266,7 +267,7 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               LButton(
-                label: 'Uống đầy',
+                label: tr('Uống đầy'),
                 small: true,
                 color: jade,
                 enabled: h.canUsePill(p),
@@ -274,7 +275,7 @@ class _AlchemyScreenState extends State<AlchemyScreen> {
                   final n = h.fillPill(p);
                   if (n == 0) return;
                   SoundService.instance.cue('potion');
-                  _changed('${p.name} x$n: còn ${(h.buffLeft(p.id) / 60).ceil()} phút');
+                  _changed(tr('{pName} x{n}: còn {p0} phút', {'pName': tr(p.name), 'n': n, 'p0': (h.buffLeft(p.id) / 60).ceil()}));
                 },
               ),
               const SizedBox(width: 6),

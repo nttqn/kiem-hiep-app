@@ -5,6 +5,7 @@ import 'hero.dart';
 import 'ngo_dao.dart';
 import 'weekly_hunt.dart';
 import 'world_boss.dart';
+import 'i18n.dart';
 
 /// Bang hội (1.13.0): players band together. A bang grows with its
 /// members' cống hiến (Điểm danh, Quyên góp, Boss Bang), and its level
@@ -65,7 +66,7 @@ DungeonDef guildBossDef(String day) {
   final boss = guildBossOf(day);
   return DungeonDef(
     id: 'guildboss',
-    name: 'Boss Bang · ${boss.name}',
+    name: tr('Boss Bang · {p0}', {'p0': tr(boss.name)}),
     mapId: mapOfMob(boss.id)!.id,
     level: 99,
     waves: const [],
@@ -203,7 +204,7 @@ extension Guild on HeroData {
     final g = (worldBossGold(damage) * goldMul).round();
     gold += g;
     lastDungeonGold = g;
-    return ['Sát thương: $damage', '+$guildBossRunContrib cống hiến, +$guildBossRunContrib xu Bang', '+$g lượng'];
+    return [tr('Sát thương: {damage}', {'damage': damage}), tr('+{guildBossRunContrib} cống hiến, +{guildBossRunContrib} xu Bang', {'guildBossRunContrib': guildBossRunContrib}), tr('+{g} lượng', {'g': g})];
   }
 
   /// Chest [i] of this week's Boss Bang, opened by the bang's summed
@@ -218,10 +219,10 @@ extension Guild on HeroData {
     guildCoins += c.coins;
     divineIron += c.iron;
     soulPills += c.pills;
-    final lines = ['+${c.coins} xu Bang', '+${c.iron} Thần Thiết', if (c.pills > 0) '+${c.pills} Linh Phách Đơn'];
+    final lines = [tr('+{coins} xu Bang', {'coins': c.coins}), tr('+{iron} Thần Thiết', {'iron': c.iron}), if (c.pills > 0) tr('+{pills} Linh Phách Đơn', {'pills': c.pills})];
     if (c.jade > 0 && daoOpen) {
       tienJade += c.jade;
-      lines.add('+${c.jade} Tiên Ngọc');
+      lines.add(tr('+{jade} Tiên Ngọc', {'jade': c.jade}));
     }
     return lines;
   }
@@ -231,11 +232,11 @@ extension Guild on HeroData {
   /// Why [o] can't be bought now, or null.
   String? guildBuyBlock(GuildOffer o, String day) {
     guildRollDay(day);
-    if (!inGuild) return 'Cần vào bang';
-    if (guildLv < o.minLv) return 'Bang cấp ${o.minLv}';
-    if (guildBoughtOf(o) >= o.limit) return 'Hết lượt tuần';
-    if (o.ware == GuildWare.jade && !daoOpen) return 'Cần Ngộ Đạo';
-    if (guildCoins < o.price) return 'Thiếu xu Bang';
+    if (!inGuild) return tr('Cần vào bang');
+    if (guildLv < o.minLv) return tr('Bang cấp {minLv}', {'minLv': o.minLv});
+    if (guildBoughtOf(o) >= o.limit) return tr('Hết lượt tuần');
+    if (o.ware == GuildWare.jade && !daoOpen) return tr('Cần Ngộ Đạo');
+    if (guildCoins < o.price) return tr('Thiếu xu Bang');
     return null;
   }
 

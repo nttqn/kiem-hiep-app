@@ -1,3 +1,4 @@
+import 'i18n.dart';
 /// Sự kiện: boosts the developer switches on in the Firebase console
 /// (`events/{id}`), no app update needed. Fields (all optional):
 ///
@@ -47,11 +48,11 @@ class LiveEvent {
 
   /// What it boosts, as short labels.
   List<String> get perks => [
-        if (exp > 1) 'EXP quái x${_x(exp)}',
-        if (gold > 1) 'Lượng x${_x(gold)}',
-        if (gems > 1) 'Rơi ngọc x${_x(gems)}',
-        if (iron > 1) 'Thần Thiết Ác Mộng x${_x(iron)}',
-        if (wbRuns > 0) '+$wbRuns lượt Boss Thế Giới',
+        if (exp > 1) tr('EXP quái x{p0}', {'p0': _x(exp)}),
+        if (gold > 1) tr('Lượng x{p0}', {'p0': _x(gold)}),
+        if (gems > 1) tr('Rơi ngọc x{p0}', {'p0': _x(gems)}),
+        if (iron > 1) tr('Thần Thiết Ác Mộng x{p0}', {'p0': _x(iron)}),
+        if (wbRuns > 0) tr('+{wbRuns} lượt Boss Thế Giới', {'wbRuns': wbRuns}),
       ];
 
   static String _x(double v) => v == v.roundToDouble() ? '${v.round()}' : v.toStringAsFixed(1);
@@ -78,7 +79,7 @@ class LiveEvent {
     final runs = m['wbRuns'];
     final e = LiveEvent(
       id: id,
-      name: text('name', 'Sự kiện'),
+      name: text('name', tr('Sự kiện')),
       desc: text('desc', ''),
       from: day('from'),
       until: day('until'),

@@ -18,6 +18,7 @@ import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
 import 'save.dart' show slotCount;
+import '../core/i18n.dart';
 
 export '../core/hero_look.dart' show heroTag, lookRow, statRow;
 
@@ -400,17 +401,17 @@ class Leaderboard extends ChangeNotifier {
     if (e is FirebaseException) {
       switch (e.code) {
         case 'permission-denied':
-          return 'Máy chủ không nhận số liệu của nhân vật này nên chưa lên bảng. '
-              'Nếu bạn chơi bình thường mà vẫn gặp, hãy báo cho nhà phát triển.';
+          return tr('Máy chủ không nhận số liệu của nhân vật này nên chưa lên bảng. '
+              'Nếu bạn chơi bình thường mà vẫn gặp, hãy báo cho nhà phát triển.');
         case 'unauthenticated':
-          return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lên bảng.';
+          return tr('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để lên bảng.');
         case 'unavailable':
         case 'deadline-exceeded':
-          return 'Mạng yếu, chưa gửi được lên bảng. Thử lại sau.';
+          return tr('Mạng yếu, chưa gửi được lên bảng. Thử lại sau.');
       }
-      return 'Chưa gửi được lên bảng (${e.code}). Thử lại sau.';
+      return tr('Chưa gửi được lên bảng ({code}). Thử lại sau.', {'code': e.code});
     }
-    return 'Mạng yếu, chưa gửi được lên bảng. Thử lại sau.';
+    return tr('Mạng yếu, chưa gửi được lên bảng. Thử lại sau.');
   }
 
   /// Row [id] (`{uid}_{slot}`) of the main board read fresh, for "Xem

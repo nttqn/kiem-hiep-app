@@ -4,6 +4,7 @@ import 'content.dart';
 import 'hanh.dart';
 import 'mount_skins.dart';
 import 'mounts.dart';
+import 'i18n.dart';
 
 /// Lôi đài: duels with copies of other players' heroes (from the public
 /// leaderboard) or, offline, invented challengers. Wins and losses move the
@@ -32,7 +33,7 @@ const double arenaRivalSkillCd = 1.3;
 /// The duel ground: Hoa Sơn's summit, where swords are judged.
 DungeonDef arenaDef(ArenaRival r, {String? round}) => DungeonDef(
       id: 'arena',
-      name: round != null ? 'Đại Hội · $round · ${r.name}' : 'Lôi đài · ${r.name}',
+      name: round != null ? tr('Đại Hội · {round} · {rName}', {'round': round, 'rName': tr(r.name)}) : tr('Lôi đài · {rName}', {'rName': tr(r.name)}),
       daiHoi: round != null,
       mapId: 'hoason',
       level: r.level,
@@ -268,8 +269,8 @@ List<ArenaOffer> arenaShop(int level) {
   final herb = math.min(4, level ~/ 22);
   return [
     const ArenaOffer(ArenaWare.mount, 'Thú cưỡi Bạch Hổ', 4000, id: 'bachho'),
-    ArenaOffer(ArenaWare.gem, 'Ngọc cấp $gemTier (hành ngẫu nhiên)', 60 * gemTier * gemTier, tier: gemTier),
-    ArenaOffer(ArenaWare.herbs, '5 dược liệu bậc ${herb + 1}', 80 + herb * 60, tier: herb, count: 5),
+    ArenaOffer(ArenaWare.gem, tr('Ngọc cấp {gemTier} (hành ngẫu nhiên)', {'gemTier': gemTier}), 60 * gemTier * gemTier, tier: gemTier),
+    ArenaOffer(ArenaWare.herbs, tr('5 dược liệu bậc {p0}', {'p0': herb + 1}), 80 + herb * 60, tier: herb, count: 5),
     const ArenaOffer(ArenaWare.pill, 'Song Bội Đan', 150, id: 'songboi'),
     const ArenaOffer(ArenaWare.pill, 'Tẩy Tủy Đan', 1200, id: 'taytuy'),
   ];

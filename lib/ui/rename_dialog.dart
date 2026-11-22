@@ -6,6 +6,7 @@ import '../services/ads.dart';
 import '../services/analytics.dart';
 import '../services/save.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 /// Đổi tên: type a new name, watch a rewarded ad, once a week. True when
 /// the hero was renamed.
@@ -33,9 +34,9 @@ class _RenameDialogState extends State<_RenameDialog> {
 
   String _wait(int ms) {
     final d = Duration(milliseconds: ms);
-    if (d.inDays > 0) return '${d.inDays} ngày ${d.inHours % 24} giờ';
-    if (d.inHours > 0) return '${d.inHours} giờ ${d.inMinutes % 60} phút';
-    return '${d.inMinutes + 1} phút';
+    if (d.inDays > 0) return tr('{inDays} ngày {p0} giờ', {'inDays': d.inDays, 'p0': d.inHours % 24});
+    if (d.inHours > 0) return tr('{inHours} giờ {p0} phút', {'inHours': d.inHours, 'p0': d.inMinutes % 60});
+    return tr('{p0} phút', {'p0': d.inMinutes + 1});
   }
 
   Future<void> _go() async {
@@ -51,7 +52,7 @@ class _RenameDialogState extends State<_RenameDialog> {
     if (!earned) {
       setState(() {
         _busy = false;
-        _error = 'Cần xem hết quảng cáo để đổi tên.';
+        _error = tr('Cần xem hết quảng cáo để đổi tên.');
       });
       return;
     }
@@ -59,7 +60,7 @@ class _RenameDialogState extends State<_RenameDialog> {
     if (!h.rename(_ctl.text, GameClock.nowMs())) {
       setState(() {
         _busy = false;
-        _error = 'Chưa thể đổi tên lúc này.';
+        _error = tr('Chưa thể đổi tên lúc này.');
       });
       return;
     }
@@ -68,7 +69,7 @@ class _RenameDialogState extends State<_RenameDialog> {
     if (!mounted) return;
     Navigator.of(context).pop(true);
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Đã đổi tên: $old → ${h.name}')));
+        .showSnackBar(SnackBar(content: Text(tr('Đã đổi tên: {old} → {hName}', {'old': old, 'hName': h.name}))));
   }
 
   @override
@@ -80,19 +81,19 @@ class _RenameDialogState extends State<_RenameDialog> {
       backgroundColor: lacquer,
       scrollable: true,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-      title: Text('Đổi tên', style: titleStyle(20)),
+      title: Text(tr('Đổi tên'), style: titleStyle(20)),
       content: SizedBox(
         width: 380,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Tên hiện tại: ${h.name}', style: bold.copyWith(color: goldLight)),
+            Text(tr('Tên hiện tại: {hName}', {'hName': h.name}), style: bold.copyWith(color: goldLight)),
             const SizedBox(height: 4),
-            Text('Xem một quảng cáo để đổi tên. Mỗi tuần được đổi 1 lần.', style: small),
+            Text(tr('Xem một quảng cáo để đổi tên. Mỗi tuần được đổi 1 lần.'), style: small),
             const SizedBox(height: 10),
             if (!ready)
-              Text('Lần đổi tiếp theo sau ${_wait(h.renameReadyAt - now)}.',
+              Text(tr('Lần đổi tiếp theo sau {p0}.', {'p0': _wait(h.renameReadyAt - now)}),
                   style: bold.copyWith(color: const Color(0xFFFF8A6A)))
             else
               TextField(
@@ -105,7 +106,7 @@ class _RenameDialogState extends State<_RenameDialog> {
                 },
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: 'Tên mới',
+                  hintText: tr('Tên mới'),
                   hintStyle: small,
                   filled: true,
                   fillColor: lacquerDeep,
@@ -120,12 +121,12 @@ class _RenameDialogState extends State<_RenameDialog> {
         ),
       ),
       actions: [
-        LButton(label: 'Đóng', small: true, color: lacquerDeep, onTap: () => Navigator.of(context).pop(false)),
+        LButton(label: tr('Đóng'), small: true, color: lacquerDeep, onTap: () => Navigator.of(context).pop(false)),
         if (ready)
           ValueListenableBuilder<bool>(
             valueListenable: AdsService.instance.rewardedReady,
             builder: (_, adReady, _) => LButton(
-              label: adReady ? 'Đổi tên (quảng cáo)' : 'Đang tải quảng cáo…',
+              label: adReady ? tr('Đổi tên (quảng cáo)') : tr('Đang tải quảng cáo…'),
               icon: Icons.ondemand_video,
               small: true,
               color: const Color(0xFF8A5A10),

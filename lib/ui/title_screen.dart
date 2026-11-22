@@ -13,10 +13,12 @@ import '../services/sync_plan.dart';
 import 'cloud_panel.dart';
 import 'backdrop.dart';
 import 'create_screen.dart';
+import 'language_picker.dart';
 import 'theme.dart';
 import 'town_screen.dart';
+import '../core/i18n.dart';
 
-const gameTitle = 'Kiếm Hiệp Ngũ Hành';
+String get gameTitle => tr('Kiếm Hiệp Ngũ Hành');
 
 class TitleScreen extends StatefulWidget {
   const TitleScreen({super.key});
@@ -76,6 +78,7 @@ class _TitleScreenState extends State<TitleScreen> {
             builder: (context, _) => Stack(
               children: [
                 const Positioned(right: 8, top: 4, child: CloudButton()),
+                const Positioned(left: 8, top: 4, child: LanguageButton()),
                 Positioned.fill(child: _body()),
               ],
             ),
@@ -93,7 +96,7 @@ class _TitleScreenState extends State<TitleScreen> {
           Text(gameTitle.toUpperCase(), style: titleStyle(34)),
           const SizedBox(height: 4),
           Text(
-            'Ngũ hành tương khắc · Ngũ phái tranh hùng',
+            tr('Ngũ hành tương khắc · Ngũ phái tranh hùng'),
             style: body.copyWith(
               color: goldLight,
               fontWeight: FontWeight.w700,
@@ -152,17 +155,17 @@ class _SlotCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: lacquer,
-        title: Text('Khôi phục bản dự phòng?', style: titleStyle(20)),
+        title: Text(tr('Khôi phục bản dự phòng?'), style: titleStyle(20)),
         content: Text(
-          'Đưa ${b.name} (${b.sect.name}, ${bInfo.levelText}) về ô ${index + 1}.'
-          '${cur == null ? '' : ' Bản đang có (${cur.name}, ${SlotInfo.ofHero(cur).levelText}) sẽ được cất làm bản dự phòng.'}',
+          tr('Đưa {bName} ({sectName}, {levelText}) về ô {p0}.'
+          '{p1}', {'bName': b.name, 'sectName': tr(b.sect.name), 'levelText': bInfo.levelText, 'p0': index + 1, 'p1': cur == null ? '' : tr(' Bản đang có ({curName}, {p0}) sẽ được cất làm bản dự phòng.', {'curName': cur.name, 'p0': SlotInfo.ofHero(cur).levelText})}),
           style: body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Hủy'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Khôi phục', style: TextStyle(color: Color(0xFF8CE07A), fontWeight: FontWeight.w800)),
+            child: Text(tr('Khôi phục'), style: TextStyle(color: Color(0xFF8CE07A), fontWeight: FontWeight.w800)),
           ),
         ],
       ),
@@ -184,7 +187,7 @@ class _SlotCard extends StatelessWidget {
               : TextButton.icon(
                   onPressed: () => _restore(context, b),
                   icon: const Icon(Icons.restore, size: 16, color: goldLight),
-                  label: Text('Bản dự phòng: ${SlotInfo.ofHero(b).levelText}',
+                  label: Text(tr('Bản dự phòng: {p0}', {'p0': SlotInfo.ofHero(b).levelText}),
                       style: small.copyWith(color: goldLight, fontWeight: FontWeight.w700)),
                 ),
         ),
@@ -213,10 +216,10 @@ class _SlotCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Tạo nhân vật',
+                      tr('Tạo nhân vật'),
                       style: bold.copyWith(color: goldLight),
                     ),
-                    Text('Ô ${index + 1}', style: small),
+                    Text(tr('Ô {p0}', {'p0': index + 1}), style: small),
                   ],
                 )
               : Column(
@@ -230,7 +233,7 @@ class _SlotCard extends StatelessWidget {
                             top: -6,
                             right: -8,
                             child: IconButton(
-                              tooltip: 'Xóa nhân vật',
+                              tooltip: tr('Xóa nhân vật'),
                               visualDensity: VisualDensity.compact,
                               icon: Icon(Icons.delete_outline, size: 20, color: creamDim.withValues(alpha: 0.8)),
                               onPressed: () => _confirmDelete(context, h),
@@ -258,7 +261,7 @@ class _SlotCard extends StatelessWidget {
                         const SizedBox(width: 5),
                         Flexible(
                           child: Text(
-                            '${h.sect.name} · Cấp ${h.level}',
+                            tr('{sectName} · Cấp {level}', {'sectName': tr(h.sect.name), 'level': h.level}),
                             style: small.copyWith(color: cream),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -268,7 +271,7 @@ class _SlotCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     LButton(
-                      label: 'Vào game',
+                      label: tr('Vào game'),
                       small: true,
                       onTap: () => _open(context, h),
                     ),
@@ -297,16 +300,16 @@ class _SlotCard extends StatelessWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: lacquer,
-          title: Text('Nhân vật đang mở trên máy khác', style: titleStyle(20)),
+          title: Text(tr('Nhân vật đang mở trên máy khác'), style: titleStyle(20)),
           content: Text(
-            '${h.name} đang được chơi trên một điện thoại khác cùng tài khoản '
-            '(${ago == 0 ? 'vừa xong' : '$ago phút trước'}). Hai máy cùng chơi sẽ ghi đè tiến trình của nhau.\n\n'
-            'Chơi ở máy này thì máy kia sẽ tự dừng lưu.',
+            tr('{hName} đang được chơi trên một điện thoại khác cùng tài khoản '
+            '({p0}). Hai máy cùng chơi sẽ ghi đè tiến trình của nhau.\n\n'
+            'Chơi ở máy này thì máy kia sẽ tự dừng lưu.', {'hName': h.name, 'p0': ago == 0 ? tr('vừa xong') : tr('{ago} phút trước', {'ago': ago})}),
             style: body,
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Thôi')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Chơi ở máy này')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Chơi ở máy này'))),
           ],
         ),
       );
@@ -333,18 +336,18 @@ class _SlotCard extends StatelessWidget {
           return AlertDialog(
             backgroundColor: lacquer,
             scrollable: true,
-            title: Text('Xóa nhân vật?', style: titleStyle(20)),
+            title: Text(tr('Xóa nhân vật?'), style: titleStyle(20)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '${h.name} (${h.sect.name}, ${SlotInfo.ofHero(h).levelText}) sẽ bị xóa khỏi máy và đám mây.',
+                  tr('{hName} ({sectName}, {p0}) sẽ bị xóa khỏi máy và đám mây.', {'hName': h.name, 'sectName': tr(h.sect.name), 'p0': SlotInfo.ofHero(h).levelText}),
                   style: body,
                 ),
                 if (typed) ...[
                   const SizedBox(height: 8),
-                  Text('Gõ tên nhân vật để xác nhận:', style: small.copyWith(color: cream)),
+                  Text(tr('Gõ tên nhân vật để xác nhận:'), style: small.copyWith(color: cream)),
                   TextField(
                     controller: ctrl,
                     autofocus: true,
@@ -358,12 +361,12 @@ class _SlotCard extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Hủy'),
+                child: Text(tr('Hủy')),
               ),
               TextButton(
                 onPressed: match ? () => Navigator.pop(ctx, true) : null,
                 child: Text(
-                  'Xóa',
+                  tr('Xóa'),
                   style: TextStyle(color: match ? const Color(0xFFFF7A6A) : creamDim),
                 ),
               ),

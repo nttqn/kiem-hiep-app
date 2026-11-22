@@ -10,6 +10,7 @@ import '../core/world_boss.dart' show vnDayKey;
 import '../services/save.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
+import '../core/i18n.dart';
 
 const _legendInk = Color(0xFFFF8A3D);
 const _done = Color(0xFF8CE07A);
@@ -51,11 +52,11 @@ class _CodexScreenState extends State<CodexScreen> {
     final gearReady = [for (var t = 0; t < codexTiers; t++) codexGearPage(t)].where(h.codexClaimable).length;
     final landReady = [for (final m in codexLands) codexLandPage(m.id)].where(h.codexClaimable).length;
     return SubScreen(
-      title: 'Đồ giám',
+      title: tr('Đồ giám'),
       actions: [
-        tabChip(gearReady > 0 ? 'Thần binh phổ ($gearReady)' : 'Thần binh phổ', _tab == 0, () => setState(() => _tab = 0)),
-        tabChip(landReady > 0 ? 'Vạn thú phổ ($landReady)' : 'Vạn thú phổ', _tab == 1, () => setState(() => _tab = 1)),
-        tabChip(h.kyPagesReady > 0 ? 'Kỳ ngộ phổ (${h.kyPagesReady})' : 'Kỳ ngộ phổ', _tab == 2, () => setState(() => _tab = 2)),
+        tabChip(gearReady > 0 ? tr('Thần binh phổ ({gearReady})', {'gearReady': gearReady}) : tr('Thần binh phổ'), _tab == 0, () => setState(() => _tab = 0)),
+        tabChip(landReady > 0 ? tr('Vạn thú phổ ({landReady})', {'landReady': landReady}) : tr('Vạn thú phổ'), _tab == 1, () => setState(() => _tab = 1)),
+        tabChip(h.kyPagesReady > 0 ? tr('Kỳ ngộ phổ ({kyPagesReady})', {'kyPagesReady': h.kyPagesReady}) : tr('Kỳ ngộ phổ'), _tab == 2, () => setState(() => _tab = 2)),
       ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,35 +81,35 @@ class _CodexScreenState extends State<CodexScreen> {
       padding: const EdgeInsets.all(10),
       child: ListView(
         children: [
-          Text('Đồ giám Truyền thuyết', style: titleStyle(16, color: _legendInk)),
+          Text(tr('Đồ giám Truyền thuyết'), style: titleStyle(16, color: _legendInk)),
           const SizedBox(height: 4),
           Text(
             _tab == 0
-                ? 'Nhặt được món Truyền thuyết hoặc Hoàng Kim nào là ghi vào ô của bậc và loại ấy, bán hay phân giải rồi vẫn giữ. '
-                    'Đủ ${Slot.values.length} ô một bậc thì nhận thưởng.'
-                : 'Hạ mỗi loại quái $codexMobGoal lần và boss $codexBossGoal lần (đánh ở bản đồ, phó bản đều tính) để trọn một trang.',
+                ? tr('Nhặt được món Truyền thuyết hoặc Hoàng Kim nào là ghi vào ô của bậc và loại ấy, bán hay phân giải rồi vẫn giữ. '
+                    'Đủ {valuesLength} ô một bậc thì nhận thưởng.', {'valuesLength': Slot.values.length})
+                : tr('Hạ mỗi loại quái {codexMobGoal} lần và boss {codexBossGoal} lần (đánh ở bản đồ, phó bản đều tính) để trọn một trang.', {'codexMobGoal': codexMobGoal, 'codexBossGoal': codexBossGoal}),
             style: small.copyWith(fontSize: 11),
           ),
           const Divider(color: gold),
-          _kv('Thần binh phổ', '$gearCells/${codexTiers * Slot.values.length} ô · $gearPages/$codexTiers trang'),
-          _kv('Vạn thú phổ', '$landPages/${codexLands.length} trang'),
+          _kv(tr('Thần binh phổ'), tr('{gearCells}/{p0} ô · {gearPages}/{codexTiers} trang', {'gearCells': gearCells, 'p0': codexTiers * Slot.values.length, 'gearPages': gearPages, 'codexTiers': codexTiers})),
+          _kv(tr('Vạn thú phổ'), tr('{landPages}/{codexLandsLength} trang', {'landPages': landPages, 'codexLandsLength': codexLands.length})),
           const SizedBox(height: 6),
-          Text('Đang được cộng', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+          Text(tr('Đang được cộng'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
           if (b.isEmpty)
-            Text('Chưa có. Nhận trang đầu tiên để được cộng chỉ số vĩnh viễn.', style: small.copyWith(fontSize: 11))
+            Text(tr('Chưa có. Nhận trang đầu tiên để được cộng chỉ số vĩnh viễn.'), style: small.copyWith(fontSize: 11))
           else
             for (final e in b.entries)
               Text('• ${loreBonusLabel(e.key, e.value)}', style: body.copyWith(fontSize: 12, color: _done)),
           const Divider(color: gold),
           Text(
-            'Trọn Thần binh phổ: danh hiệu « $codexGearTitle », '
-            '${codexGearAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}',
+            tr('Trọn Thần binh phổ: danh hiệu « {codexGearTitle} », '
+            '{p0}', {'codexGearTitle': codexGearTitle, 'p0': codexGearAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}),
             style: small.copyWith(fontSize: 11, color: h.codexGearAll ? _done : creamDim),
           ),
           const SizedBox(height: 4),
           Text(
-            'Trọn Vạn thú phổ: danh hiệu « $codexLandTitle », '
-            '${codexLandAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}',
+            tr('Trọn Vạn thú phổ: danh hiệu « {codexLandTitle} », '
+            '{p0}', {'codexLandTitle': codexLandTitle, 'p0': codexLandAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}),
             style: small.copyWith(fontSize: 11, color: h.codexLandAll ? _done : creamDim),
           ),
         ],
@@ -129,7 +130,7 @@ class _CodexScreenState extends State<CodexScreen> {
   Widget _claimButton(String page, String progress) {
     if (h.codexClaimed.contains(page)) return const Icon(Icons.check_circle, color: _done, size: 22);
     final ready = h.codexClaimable(page);
-    return LButton(label: ready ? 'Nhận' : progress, small: true, color: jade, enabled: ready, onTap: () => _claim(page));
+    return LButton(label: ready ? tr('Nhận') : progress, small: true, color: jade, enabled: ready, onTap: () => _claim(page));
   }
 
   // ------------------------------------------------------------ Thần binh phổ
@@ -153,7 +154,7 @@ class _CodexScreenState extends State<CodexScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(codexTierName(t), style: bold.copyWith(color: goldLight, fontSize: 13)),
+                Text(tr(codexTierName(t)), style: bold.copyWith(color: goldLight, fontSize: 13)),
                 Text(codexTierRange(t), style: small.copyWith(fontSize: 10.5)),
               ],
             ),
@@ -165,7 +166,7 @@ class _CodexScreenState extends State<CodexScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(loreBonusLabel(bonus, value), style: bold.copyWith(fontSize: 11.5, color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('+${fmt(codexGearGold(t))} lượng${ess > 0 ? ', +$ess Tinh Hoa' : ''}',
+                Text(tr('+{p0} lượng{p1}', {'p0': fmt(codexGearGold(t)), 'p1': ess > 0 ? tr(', +{ess} Tinh Hoa', {'ess': ess}) : ''}),
                     style: small.copyWith(fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
@@ -198,7 +199,7 @@ class _CodexScreenState extends State<CodexScreen> {
       );
     }
     return Tooltip(
-      message: '${s.label} ${codexTierName(t)}${got ? ' · đã ghi' : ''}',
+      message: '${tr(s.label)} ${tr(codexTierName(t))}${got ? tr(' · đã ghi') : ''}',
       child: Container(
         width: 34,
         height: 34,
@@ -249,8 +250,8 @@ class _CodexScreenState extends State<CodexScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m.name, style: bold.copyWith(color: goldLight, fontSize: 12.5), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('Cấp ${m.minLv}–${m.maxLv}', style: small.copyWith(fontSize: 10.5)),
+                Text(tr(m.name), style: bold.copyWith(color: goldLight, fontSize: 12.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(tr('Cấp {minLv}–{maxLv}', {'minLv': m.minLv, 'maxLv': m.maxLv}), style: small.copyWith(fontSize: 10.5)),
               ],
             ),
           ),
@@ -272,7 +273,7 @@ class _CodexScreenState extends State<CodexScreen> {
               children: [
                 if (b != null)
                   Text(loreBonusLabel(b.$1, b.$2), style: bold.copyWith(fontSize: 11, color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('+${fmt(codexLandGold(i))} lượng', style: small.copyWith(fontSize: 10.5), maxLines: 1),
+                Text(tr('+{p0} lượng', {'p0': fmt(codexLandGold(i))}), style: small.copyWith(fontSize: 10.5), maxLines: 1),
               ],
             ),
           ),
@@ -333,19 +334,19 @@ class _CodexScreenState extends State<CodexScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(n > 0 ? k.label : '???', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
-                Text(n > 0 ? k.desc : 'Chưa gặp kỳ ngộ này.',
+                Text(n > 0 ? k.desc : tr('Chưa gặp kỳ ngộ này.'),
                     style: small.copyWith(fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
           const SizedBox(width: 6),
-          Text('Đã gặp ${fmt(n)}', style: small.copyWith(fontSize: 10.5)),
+          Text(tr('Đã gặp {p0}', {'p0': fmt(n)}), style: small.copyWith(fontSize: 10.5)),
           const SizedBox(width: 6),
           if (done)
             const Icon(Icons.check_circle, color: _done, size: 22)
           else
             LButton(
-              label: ready ? 'Nhận' : '${n.clamp(0, kyPageNeed)}/$kyPageNeed',
+              label: ready ? tr('Nhận') : '${n.clamp(0, kyPageNeed)}/$kyPageNeed',
               small: true,
               color: jade,
               enabled: ready,
@@ -363,24 +364,24 @@ class _CodexScreenState extends State<CodexScreen> {
       padding: const EdgeInsets.all(10),
       child: ListView(
         children: [
-          Text('Kỳ ngộ phổ', style: titleStyle(16, color: _legendInk)),
+          Text(tr('Kỳ ngộ phổ'), style: titleStyle(16, color: _legendInk)),
           const SizedBox(height: 4),
           Text(
-            'Đánh quái ngoài bản đồ (từ cấp $kyMinLevel) thỉnh thoảng gặp kỳ ngộ, tinh anh và boss dễ gặp hơn. '
-            'Gặp mỗi loại $kyPageNeed lần thì nhận thưởng trang: lượng, $kyPageGems ngọc, $kyPageEssence Tinh Hoa.',
+            tr('Đánh quái ngoài bản đồ (từ cấp {kyMinLevel}) thỉnh thoảng gặp kỳ ngộ, tinh anh và boss dễ gặp hơn. '
+            'Gặp mỗi loại {kyPageNeed} lần thì nhận thưởng trang: lượng, {kyPageGems} ngọc, {kyPageEssence} Tinh Hoa.', {'kyMinLevel': kyMinLevel, 'kyPageNeed': kyPageNeed, 'kyPageGems': kyPageGems, 'kyPageEssence': kyPageEssence}),
             style: small.copyWith(fontSize: 11),
           ),
           const Divider(color: gold),
-          _kv('Hôm nay', '${kyDaily - h.kyLeft(day)}/$kyDaily'),
-          _kv('Tổng đã gặp', fmt(h.kyTotal)),
-          _kv('Trang đã nhận', '${h.kyClaimed.length}/${KyNgo.values.length}'),
-          if (h.kyBless > 0) _kv('Tiên nhân chỉ lộ', '${(h.kyBless / 60).ceil()} phút'),
+          _kv(tr('Hôm nay'), '${kyDaily - h.kyLeft(day)}/$kyDaily'),
+          _kv(tr('Tổng đã gặp'), fmt(h.kyTotal)),
+          _kv(tr('Trang đã nhận'), '${h.kyClaimed.length}/${KyNgo.values.length}'),
+          if (h.kyBless > 0) _kv(tr('Tiên nhân chỉ lộ'), tr('{p0} phút', {'p0': (h.kyBless / 60).ceil()})),
           const Divider(color: gold),
-          Text('Danh hiệu', style: bold.copyWith(color: goldLight, fontSize: 12.5)),
+          Text(tr('Danh hiệu'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
           for (final e in kyTotalTitles.entries)
-            Text('« ${e.value} »: gặp ${e.key} kỳ ngộ',
+            Text(tr('« {eValue} »: gặp {key} kỳ ngộ', {'eValue': e.value, 'key': e.key}),
                 style: small.copyWith(fontSize: 11, color: h.seasonTitles.contains(e.value) ? _done : creamDim)),
-          Text('« $kyAllTitle »: nhận đủ ${KyNgo.values.length} trang',
+          Text(tr('« {kyAllTitle} »: nhận đủ {valuesLength} trang', {'kyAllTitle': kyAllTitle, 'valuesLength': KyNgo.values.length}),
               style: small.copyWith(fontSize: 11, color: h.seasonTitles.contains(kyAllTitle) ? _done : creamDim)),
         ],
       ),

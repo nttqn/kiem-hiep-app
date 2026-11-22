@@ -4,6 +4,7 @@ import 'arena.dart';
 import 'content.dart';
 import 'hanh.dart';
 import 'sects.dart';
+import 'i18n.dart';
 
 /// Sư môn: the sect hands out a chain of [sectDutiesPerDay] errands a day.
 /// Each pays cống hiến, which both counts toward the next chức vị and buys
@@ -77,7 +78,7 @@ ArenaRival sectExaminerRival(Hanh h, int r, int level, int rebirths, int power) 
 
 DungeonDef sectTrialDef(ArenaRival r) => DungeonDef(
       id: 'trial',
-      name: 'Khảo hạch · ${r.name}',
+      name: tr('Khảo hạch · {rName}', {'rName': tr(r.name)}),
       mapId: 'hoason',
       level: r.level,
       waves: const [],
@@ -104,15 +105,15 @@ class SectDuty {
   /// Key the world tags the traitor with.
   String get eliteKey => 's:$map:$target';
 
-  String get traitorName => 'Phản đồ ${mobById[target]?.name ?? ''}';
+  String get traitorName => tr('Phản đồ {p0}', {'p0': mobById[target]?.name ?? ''});
 
   String get goal => switch (kind) {
-        DutyKind.kill => 'Hạ $count ${mobById[target]!.name}',
-        DutyKind.boss => 'Đánh bại ${mobById[target]!.name}',
-        DutyKind.herb => 'Hái $count cây thuốc',
-        DutyKind.fish => 'Câu $count con cá',
-        DutyKind.dungeon => 'Vượt ải hoặc leo tháp $count lần',
-        DutyKind.traitor => 'Thanh lý môn hộ: $traitorName',
+        DutyKind.kill => tr('Hạ {count} {p0}', {'count': count, 'p0': tr(mobById[target]!.name)}),
+        DutyKind.boss => tr('Đánh bại {p0}', {'p0': tr(mobById[target]!.name)}),
+        DutyKind.herb => tr('Hái {count} cây thuốc', {'count': count}),
+        DutyKind.fish => tr('Câu {count} con cá', {'count': count}),
+        DutyKind.dungeon => tr('Vượt ải hoặc leo tháp {count} lần', {'count': count}),
+        DutyKind.traitor => tr('Thanh lý môn hộ: {traitorName}', {'traitorName': traitorName}),
       };
 
   Map<String, dynamic> toJson() => {'k': kind.index, 't': target, 'm': map, 'c': count, 'p': progress};

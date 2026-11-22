@@ -9,6 +9,7 @@ import 'nightmare.dart';
 import 'tam_ma.dart' show fmtThousands;
 import 'weekly_hunt.dart';
 import 'world_boss.dart';
+import 'i18n.dart';
 
 /// Ma Vực (1.8.0): an endless climb that starts over every Monday. Floors
 /// begin about where Tháp Thử Luyện's 120th stands and grow by
@@ -47,7 +48,7 @@ DungeonDef maVucFloor(int floor, int week) {
   final land = _lands[(floor - 1) % _lands.length];
   return DungeonDef(
     id: 'mavuc',
-    name: 'Ma Vực · Tầng $floor',
+    name: tr('Ma Vực · Tầng {floor}', {'floor': floor}),
     mapId: mapById.containsKey(land) ? land : maps.last.id,
     level: 99,
     waves: [math.min(18, 10 + floor ~/ 5)],
@@ -107,18 +108,19 @@ extension MaVuc on HeroData {
     final gems = <String>[];
     for (var f = from; f <= to; f++) {
       final s0 = starStones, g0 = gold, i0 = divineIron;
-      final lines = maVucReward(f, rng);
+      final got = <String>[];
+      maVucReward(f, rng, gemsOut: got);
       stones += starStones - s0;
       g += gold - g0;
       iron += divineIron - i0;
-      gems.addAll(lines.where((l) => l.contains('Ngọc')));
+      gems.addAll(got);
     }
     lastDungeonGold = 0;
     return [
-      'Quét tầng $from-$to',
-      '+$stones Tinh Thạch',
-      '+${fmtThousands(g)} lượng',
-      if (iron > 0) '+$iron Thần Thiết',
+      tr('Quét tầng {from}-{to}', {'from': from, 'to': to}),
+      tr('+{stones} Tinh Thạch', {'stones': stones}),
+      tr('+{p0} lượng', {'p0': fmtThousands(g)}),
+      if (iron > 0) tr('+{iron} Thần Thiết', {'iron': iron}),
       ...gems,
     ];
   }
@@ -128,7 +130,7 @@ extension MaVuc on HeroData {
     return mvBest > 0 ? maVucScore(mvWeek, mvBest) : 0;
   }
 
-  List<String> maVucReward(int floor, math.Random rng) {
+  List<String> maVucReward(int floor, math.Random rng, {List<String>? gemsOut}) {
     mvRollWeek();
     if (floor <= mvBest) {
       lastDungeonGold = 0;
@@ -143,15 +145,16 @@ extension MaVuc on HeroData {
     gold += g;
     lastDungeonGold = g;
     lastDungeonExp = 0;
-    final lines = ['+$stones Tinh Thạch', '+${fmtThousands(g)} lượng'];
+    final lines = [tr('+{stones} Tinh Thạch', {'stones': stones}), tr('+{p0} lượng', {'p0': fmtThousands(g)})];
     if (floor % 5 == 0) {
       final gem = Gem(Hanh.values[rng.nextInt(5)], maVucGemTier(floor));
       addGem(gem);
+      gemsOut?.add(gem.name);
       final iron = maVucIron(floor);
       divineIron += iron;
       lines
         ..add(gem.name)
-        ..add('+$iron Thần Thiết');
+        ..add(tr('+{iron} Thần Thiết', {'iron': iron}));
     }
     return lines;
   }

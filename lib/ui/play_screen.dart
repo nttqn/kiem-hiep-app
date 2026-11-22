@@ -41,6 +41,7 @@ import 'theme.dart';
 import 'auto_dialog.dart';
 import 'chat_screen.dart';
 import 'helper_picker.dart';
+import '../core/i18n.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen.field(MapDef this.map, {super.key})
@@ -172,7 +173,7 @@ class _PlayScreenState extends State<PlayScreen> {
     if (_picking || !mounted || !world.canCallHelper) return;
     final day = vnDayKey();
     if (hero.helpsLeft(day) <= 0) {
-      _toast('Hết lượt mời trợ chiến hôm nay', const Color(0xFFFF8A7A));
+      _toast(tr('Hết lượt mời trợ chiến hôm nay'), const Color(0xFFFF8A7A));
       return;
     }
     _picking = true;
@@ -210,10 +211,10 @@ class _PlayScreenState extends State<PlayScreen> {
     return Positioned.fill(
       child: LandSplash(
         map: world.map,
-        title: d?.name ?? widget.map!.name,
+        title: tr(d?.name ?? widget.map!.name),
         subtitle: d == null
-            ? widget.map!.desc
-            : (d.name == d.map.name ? null : d.map.name),
+            ? tr(widget.map!.desc)
+            : (d.name == d.map.name ? null : tr(d.map.name)),
         onDone: _splashDone,
       ),
     );
@@ -275,8 +276,8 @@ class _PlayScreenState extends State<PlayScreen> {
         ? FigurePreview(hanh: r.hanh, female: r.female, scale: 0.9, gear: rivalGear(r), rebirths: r.rebirths, mount: r.mountDef)
         : BossPreview(def: m.def, size: 92);
     final sub = r != null
-        ? '${sectOf(r.hanh).name} · Cấp ${r.level}${r.rebirths > 0 ? ' · Chuyển sinh ${r.rebirths}' : ''}'
-        : (m.def.boss ? 'Đầu lĩnh · ${widget.dungeon?.name ?? world.map.name}' : widget.dungeon?.name ?? world.map.name);
+        ? tr('{p0} · Cấp {level}{p1}', {'p0': tr(sectOf(r.hanh).name), 'level': r.level, 'p1': r.rebirths > 0 ? tr(' · Chuyển sinh {rebirths}', {'rebirths': r.rebirths}) : ''})
+        : (m.def.boss ? tr('Đầu lĩnh · {p0}', {'p0': tr(widget.dungeon?.name ?? world.map.name)}) : tr(widget.dungeon?.name ?? world.map.name));
     return Positioned(
       left: 0,
       right: 0,
@@ -425,7 +426,7 @@ class _PlayScreenState extends State<PlayScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             LButton(
-              label: left == null ? g.label : '${g.label} ($left)',
+              label: left == null ? tr(g.label) : '${tr(g.label)} ($left)',
               icon: g.dungeon != null ? Icons.fort : Icons.directions_walk,
               small: true,
               color: const Color(0xFF8A5A10),
@@ -433,7 +434,7 @@ class _PlayScreenState extends State<PlayScreen> {
             ),
             if (left != null) ...[
               const SizedBox(width: 6),
-              LButton(label: 'Ở lại', small: true, onTap: () => setState(() {
+              LButton(label: tr('Ở lại'), small: true, onTap: () => setState(() {
                     _goStay = g.id;
                     _goAt = null;
                   })),
@@ -443,7 +444,7 @@ class _PlayScreenState extends State<PlayScreen> {
         if (left != null)
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text('Tự đánh sẽ đi làm nhiệm vụ', style: small.copyWith(fontSize: 10.5, color: creamDim)),
+            child: Text(tr('Tự đánh sẽ đi làm nhiệm vụ'), style: small.copyWith(fontSize: 10.5, color: creamDim)),
           ),
       ],
     );
@@ -480,10 +481,7 @@ class _PlayScreenState extends State<PlayScreen> {
   void _onEvent(GameEvent e) {
     switch (e.kind) {
       case EvKind.notice:
-        if (e.text.startsWith('THĂNG CẤP')) SoundService.instance.cue('levelup');
-        if (e.text.startsWith('Hoàn thành') || e.text.startsWith('Hằng ngày')) {
-          SoundService.instance.cue('quest');
-        }
+        if (e.cue != null) SoundService.instance.cue(e.cue!);
         if (e.big) {
           _showBanner(e.text, Color(e.color));
         } else {
@@ -558,23 +556,23 @@ class _PlayScreenState extends State<PlayScreen> {
         builder: (ctx, setD) => AlertDialog(
           scrollable: true,
           backgroundColor: lacquer,
-          title: Text('Thương nhân bí ẩn', style: titleStyle(20)),
+          title: Text(tr('Thương nhân bí ẩn'), style: titleStyle(20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('"Hàng hiếm khó tìm, đại hiệp xem qua. Ta chỉ dừng chân một lát thôi."',
+              Text(tr('"Hàng hiếm khó tìm, đại hiệp xem qua. Ta chỉ dừng chân một lát thôi."'),
                   style: small.copyWith(fontStyle: FontStyle.italic, color: cream)),
               const SizedBox(height: 4),
-              Text('Lượng: ${fmt(hero.gold)}', style: bold.copyWith(color: goldLight, fontSize: 13)),
+              Text(tr('Lượng: {p0}', {'p0': fmt(hero.gold)}), style: bold.copyWith(color: goldLight, fontSize: 13)),
               for (var i = 0; i < wares.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Row(
                     children: [
-                      Expanded(child: Text(wares[i].label, style: body.copyWith(fontSize: 13))),
+                      Expanded(child: Text(tr(wares[i].label), style: body.copyWith(fontSize: 13))),
                       LButton(
-                        label: bought.contains(i) ? 'Đã mua' : fmt(wares[i].price),
+                        label: bought.contains(i) ? tr('Đã mua') : fmt(wares[i].price),
                         icon: bought.contains(i) ? null : Icons.monetization_on,
                         small: true,
                         color: jade,
@@ -583,7 +581,7 @@ class _PlayScreenState extends State<PlayScreen> {
                           final got = hero.buyMerchant(wares[i], level, rng);
                           if (got == null) return;
                           setD(() => bought.add(i));
-                          _toast('Mua được $got', goldLight);
+                          _toast(tr('Mua được {got}', {'got': got}), goldLight);
                         },
                       ),
                     ],
@@ -591,7 +589,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 ),
             ],
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đi tiếp'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Đi tiếp')))],
         ),
       ),
     );
@@ -608,8 +606,8 @@ class _PlayScreenState extends State<PlayScreen> {
     Analytics.instance.log('slow_fps', {'fps': fps.round(), 'auto': 1});
     LiteMode.instance.toggle();
     if (mounted) {
-      _toast('Máy hơi giật (${fps.round()} khung hình/giây): đã bật Chế độ máy yếu. '
-          'Tắt trong Cài đặt hoặc menu Tạm dừng.', goldLight);
+      _toast(tr('Máy hơi giật ({p0} khung hình/giây): đã bật Chế độ máy yếu. '
+          'Tắt trong Cài đặt hoặc menu Tạm dừng.', {'p0': fps.round()}), goldLight);
     }
   }
 
@@ -688,7 +686,7 @@ class _PlayScreenState extends State<PlayScreen> {
     if (earned) {
       reward();
     } else {
-      _toast('Chưa xem hết quảng cáo, chưa nhận thưởng', const Color(0xFFFF8A7A));
+      _toast(tr('Chưa xem hết quảng cáo, chưa nhận thưởng'), const Color(0xFFFF8A7A));
     }
   }
 
@@ -696,7 +694,7 @@ class _PlayScreenState extends State<PlayScreen> {
     return ValueListenableBuilder<bool>(
       valueListenable: AdsService.instance.rewardedReady,
       builder: (_, ready, _) => LButton(
-        label: ready ? label : 'Quảng cáo đang tải…',
+        label: ready ? label : tr('Quảng cáo đang tải…'),
         icon: Icons.ondemand_video,
         width: 280,
         color: const Color(0xFF8A5A10),
@@ -773,7 +771,7 @@ class _PlayScreenState extends State<PlayScreen> {
   void _toggleAuto() {
     world.auto = !world.auto;
     SaveService.instance.setAuto(world.auto);
-    _toast(world.auto ? 'Bật tự động đánh' : 'Tắt tự động đánh', goldLight);
+    _toast(world.auto ? tr('Bật tự động đánh') : tr('Tắt tự động đánh'), goldLight);
   }
 
   void _joyDown(PointerDownEvent e) {
@@ -908,7 +906,7 @@ class _PlayScreenState extends State<PlayScreen> {
                       if (_helperHere && world.canCallHelper && !_dead && _cleared == null) ...[
                         const SizedBox(height: 4),
                         LButton(
-                          label: 'Trợ chiến (${hero.helpsLeft(vnDayKey())})',
+                          label: tr('Trợ chiến ({p0})', {'p0': hero.helpsLeft(vnDayKey())}),
                           icon: Icons.group_add,
                           small: true,
                           color: const Color(0xFF2E6A8A),
@@ -941,7 +939,7 @@ class _PlayScreenState extends State<PlayScreen> {
                         color: const Color(0xAA120A08),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(t.text, style: bold.copyWith(fontSize: 13, color: t.color)),
+                      child: Text(tr(t.text), style: bold.copyWith(fontSize: 13, color: t.color)),
                     ),
                   ),
               ],
@@ -961,7 +959,7 @@ class _PlayScreenState extends State<PlayScreen> {
               Badge(
                 // Full: pickups are being sold, worth a look.
                 isLabelVisible: hero.bag.length >= bagSize,
-                label: const Text('Đầy'),
+                label: Text(tr('Đầy')),
                 backgroundColor: seal,
                 child: RoundIcon(icon: Icons.backpack_outlined, onTap: _openBag),
               ),
@@ -985,7 +983,7 @@ class _PlayScreenState extends State<PlayScreen> {
             right: 8,
             top: 118,
             child: LButton(
-              label: 'Tàng Bảo Đồ (${hero.tbdMaps})',
+              label: tr('Tàng Bảo Đồ ({tbdMaps})', {'tbdMaps': hero.tbdMaps}),
               leading: const MatIcon(Mat.map, size: 26),
               small: true,
               color: const Color(0xFF8A5A10),
@@ -1003,7 +1001,7 @@ class _PlayScreenState extends State<PlayScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: const Color(0x99120A08), borderRadius: BorderRadius.circular(6)),
-                child: Text('Điểm đào ở ${mapById[hero.tbdSpot!.mapId]!.name}',
+                child: Text(tr('Điểm đào ở {p0}', {'p0': tr(mapById[hero.tbdSpot!.mapId]!.name)}),
                     style: small.copyWith(fontSize: 11, color: goldLight)),
               ),
             ),
@@ -1013,7 +1011,7 @@ class _PlayScreenState extends State<PlayScreen> {
             right: 330,
             bottom: 30,
             child: LButton(
-              label: 'Câu cá',
+              label: tr('Câu cá'),
               icon: Icons.phishing,
               small: true,
               color: const Color(0xFF2E6A8A),
@@ -1184,13 +1182,13 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tạm dừng', style: titleStyle(26)),
+              Text(tr('Tạm dừng'), style: titleStyle(26)),
               const SizedBox(height: 6),
-              Text('${hero.name} · Cấp ${hero.level} · ${fmt(hero.gold)} lượng', style: small),
+              Text(tr('{heroName} · Cấp {level} · {p0} lượng', {'heroName': hero.name, 'level': hero.level, 'p0': fmt(hero.gold)}), style: small),
               const SizedBox(height: 14),
-              LButton(label: 'Tiếp tục', width: 240, color: jade, onTap: () => _setPaused(false)),
+              LButton(label: tr('Tiếp tục'), width: 240, color: jade, onTap: () => _setPaused(false)),
               const SizedBox(height: 8),
-              LButton(label: 'Về thành', width: 240, onTap: _leave),
+              LButton(label: tr('Về thành'), width: 240, onTap: _leave),
               const SizedBox(height: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1198,7 +1196,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   ValueListenableBuilder<bool>(
                     valueListenable: SoundService.instance.musicOn,
                     builder: (_, on, _) => LButton(
-                      label: on ? 'Nhạc: Bật' : 'Nhạc: Tắt',
+                      label: on ? tr('Nhạc: Bật') : tr('Nhạc: Tắt'),
                       width: 116,
                       small: true,
                       color: const Color(0xFF5A4A3A),
@@ -1210,7 +1208,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   ValueListenableBuilder<bool>(
                     valueListenable: SoundService.instance.sfxOn,
                     builder: (_, on, _) => LButton(
-                      label: on ? 'Tiếng: Bật' : 'Tiếng: Tắt',
+                      label: on ? tr('Tiếng: Bật') : tr('Tiếng: Tắt'),
                       width: 116,
                       small: true,
                       color: const Color(0xFF5A4A3A),
@@ -1224,7 +1222,7 @@ class _PlayScreenState extends State<PlayScreen> {
               ValueListenableBuilder<bool>(
                 valueListenable: LiteMode.instance.on,
                 builder: (_, on, _) => LButton(
-                  label: on ? 'Máy yếu: Bật' : 'Máy yếu: Tắt',
+                  label: on ? tr('Máy yếu: Bật') : tr('Máy yếu: Tắt'),
                   width: 240,
                   small: true,
                   color: on ? jade : const Color(0xFF5A4A3A),
@@ -1232,7 +1230,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   onTap: LiteMode.instance.toggle,
                 ),
               ),
-              Text('Giật, lag? Bật để bỏ rung màn hình và hiệu ứng mờ.',
+              Text(tr('Giật, lag? Bật để bỏ rung màn hình và hiệu ứng mờ.'),
                   style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
               const SizedBox(height: 8),
               Row(
@@ -1241,7 +1239,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   ValueListenableBuilder<int>(
                     valueListenable: ViewRange.instance.level,
                     builder: (_, lv, _) => LButton(
-                      label: 'Tầm: ${ViewRange.names[lv]}',
+                      label: tr('Tầm: {p0}', {'p0': tr(ViewRange.names[lv])}),
                       width: 116,
                       small: true,
                       color: const Color(0xFF5A4A3A),
@@ -1251,7 +1249,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                   const SizedBox(width: 8),
                   LButton(
-                    label: 'Tự đánh',
+                    label: tr('Tự đánh'),
                     width: 116,
                     small: true,
                     color: const Color(0xFF2E6A5A),
@@ -1260,10 +1258,10 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ],
               ),
-              Text('Tầm xa: thấy rộng hơn, nhân vật nhỏ hơn.',
+              Text(tr('Tầm xa: thấy rộng hơn, nhân vật nhỏ hơn.'),
                   style: small.copyWith(fontSize: 10.5), textAlign: TextAlign.center),
               const SizedBox(height: 12),
-              Text('Bàn phím: WASD đi · J/Space đánh · 1-4 chiêu · Q/E thuốc · T tự động',
+              Text(tr('Bàn phím: WASD đi · J/Space đánh · 1-4 chiêu · Q/E thuốc · T tự động'),
                   style: small.copyWith(fontSize: 11), textAlign: TextAlign.center),
             ],
           ),
@@ -1287,26 +1285,26 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Trọng thương!', style: titleStyle(28, color: const Color(0xFFFF7A6A))),
+              Text(tr('Trọng thương!'), style: titleStyle(28, color: const Color(0xFFFF7A6A))),
               const SizedBox(height: 6),
               Text(
                 inDungeon
-                    ? 'Bạn ngã xuống giữa ${widget.dungeon!.isRealm ? 'bí cảnh' : 'ải'}. Có thể hồi sinh tại chỗ một lần.'
+                    ? tr('Bạn ngã xuống giữa {p0}. Có thể hồi sinh tại chỗ một lần.', {'p0': widget.dungeon!.isRealm ? tr('bí cảnh') : tr('ải')})
                     : hero.level < newbieShieldLevel && hero.rebirths == 0
-                        ? 'Bạn bị đánh bại. Dưới cấp $newbieShieldLevel hồi sinh ở cổng không mất kinh nghiệm.'
-                        : 'Bạn bị đánh bại. Hồi sinh ở cổng sẽ mất 3% kinh nghiệm của cấp hiện tại.',
+                        ? tr('Bạn bị đánh bại. Dưới cấp {newbieShieldLevel} hồi sinh ở cổng không mất kinh nghiệm.', {'newbieShieldLevel': newbieShieldLevel})
+                        : tr('Bạn bị đánh bại. Hồi sinh ở cổng sẽ mất 3% kinh nghiệm của cấp hiện tại.'),
                 style: body,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 14),
-              _adButton('Hồi sinh tại chỗ', () {
+              _adButton(tr('Hồi sinh tại chỗ'), () {
                 world.reviveHere();
                 _resume();
               }),
               const SizedBox(height: 8),
               if (inDungeon)
                 LButton(
-                  label: 'Bỏ cuộc',
+                  label: tr('Bỏ cuộc'),
                   width: 280,
                   onTap: () {
                     setState(() => _dead = false);
@@ -1316,7 +1314,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 )
               else ...[
                 LButton(
-                  label: 'Hồi sinh ở cổng',
+                  label: tr('Hồi sinh ở cổng'),
                   width: 280,
                   color: jade,
                   onTap: () {
@@ -1326,7 +1324,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 ),
                 const SizedBox(height: 8),
                 LButton(
-                  label: 'Về thành',
+                  label: tr('Về thành'),
                   width: 280,
                   onTap: () {
                     world.revive();
@@ -1358,7 +1356,7 @@ class _PlayScreenState extends State<PlayScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Sát thương/giây ${fmt(dps.round())} · đòn mạnh nhất ${fmt(world.bestHit.round())}',
+            Text(tr('Sát thương/giây {p0} · đòn mạnh nhất {p1}', {'p0': fmt(dps.round()), 'p1': fmt(world.bestHit.round())}),
                 style: small.copyWith(fontSize: 11.5, color: cream)),
             for (final r in _records) Text(r, style: bold.copyWith(fontSize: 12, color: goldLight)),
           ],
@@ -1385,7 +1383,7 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(ok ? 'Vượt ải thành công!' : 'Vượt ải thất bại',
+              Text(ok ? tr('Vượt ải thành công!') : tr('Vượt ải thất bại'),
                   style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A))),
               const SizedBox(height: 6),
               if (ok) ...[
@@ -1396,30 +1394,30 @@ class _PlayScreenState extends State<PlayScreen> {
                       Icon(i < _stars ? Icons.star : Icons.star_border, color: goldLight, size: 40),
                   ],
                 ),
-                Text('Thời gian: ${world.finishTime.toStringAsFixed(1)} giây '
-                    '(3 sao ≤ ${d.threeStar.round()}s, 2 sao ≤ ${d.twoStar.round()}s)',
+                Text(tr('Thời gian: {p0} giây '
+                    '(3 sao ≤ {p1}s, 2 sao ≤ {p2}s)', {'p0': world.finishTime.toStringAsFixed(1), 'p1': d.threeStar.round(), 'p2': d.twoStar.round()}),
                     style: small),
                 const SizedBox(height: 6),
                 for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
                 const SizedBox(height: 10),
                 if (!_doubled && hero.lastDungeonGold > 0)
-                  _adButton('Nhân đôi lượng & kinh nghiệm', () {
+                  _adButton(tr('Nhân đôi lượng & kinh nghiệm'), () {
                     hero.gold += hero.lastDungeonGold;
                     hero.gainExp(hero.lastDungeonExp);
                     SaveService.instance.save();
                     setState(() => _doubled = true);
-                    _toast('+${hero.lastDungeonGold} lượng · +${hero.lastDungeonExp.round()} kinh nghiệm',
+                    _toast(tr('+{lastDungeonGold} lượng · +{p0} kinh nghiệm', {'lastDungeonGold': hero.lastDungeonGold, 'p0': hero.lastDungeonExp.round()}),
                         goldLight);
                   })
                 else if (_doubled)
-                  Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+                  Text(tr('Đã nhân đôi phần thưởng!'), style: bold.copyWith(color: goldLight)),
               ] else ...[
-                Text('Hãy luyện thêm cấp, nâng trang bị rồi quay lại.', style: body),
+                Text(tr('Hãy luyện thêm cấp, nâng trang bị rồi quay lại.'), style: body),
                 // 1.14.0: stuck at an ải, call a stronger player in.
                 if (_helperHere && hero.helpsLeft(vnDayKey()) > 0) ...[
                   const SizedBox(height: 10),
                   LButton(
-                    label: 'Đánh lại cùng trợ chiến',
+                    label: tr('Đánh lại cùng trợ chiến'),
                     icon: Icons.group_add,
                     width: 280,
                     color: const Color(0xFF2E6A8A),
@@ -1434,7 +1432,7 @@ class _PlayScreenState extends State<PlayScreen> {
               if (_questGo case final g? when ok) ...[
                 const SizedBox(height: 10),
                 LButton(
-                  label: 'Tiếp nhiệm vụ: ${g.label}${_goAt != null ? ' ($_goLeft)' : ''}',
+                  label: tr('Tiếp nhiệm vụ: {gLabel}{p0}', {'gLabel': tr(g.label), 'p0': _goAt != null ? ' ($_goLeft)' : ''}),
                   icon: Icons.auto_stories,
                   width: 320,
                   color: const Color(0xFF8A5A10),
@@ -1449,17 +1447,17 @@ class _PlayScreenState extends State<PlayScreen> {
                       _goStay = g.id;
                       _goAt = null;
                     }),
-                    child: Text('Không tự đi', style: small.copyWith(color: creamDim)),
+                    child: Text(tr('Không tự đi'), style: small.copyWith(color: creamDim)),
                   ),
               ],
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  LButton(label: 'Về thành', onTap: _leave),
+                  LButton(label: tr('Về thành'), onTap: _leave),
                   const SizedBox(width: 10),
                   LButton(
-                    label: 'Đánh lại',
+                    label: tr('Đánh lại'),
                     color: jade,
                     onTap: () {
                       SaveService.instance.save();
@@ -1489,7 +1487,7 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(ok ? 'Thám hiểm thành công!' : 'Thám hiểm thất bại',
+              Text(ok ? tr('Thám hiểm thành công!') : tr('Thám hiểm thất bại'),
                   style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A))),
               const SizedBox(height: 4),
               if (ok)
@@ -1501,14 +1499,14 @@ class _PlayScreenState extends State<PlayScreen> {
                   ],
                 ),
               Text(
-                'Khám phá $explored% · Rương ${world.chestsOpened}/$realmChests · '
-                'Cứu ${world.captivesFreed}/$realmCaptives người',
+                tr('Khám phá {explored}% · Rương {chestsOpened}/{realmChests} · '
+                'Cứu {captivesFreed}/{realmCaptives} người', {'explored': explored, 'chestsOpened': world.chestsOpened, 'realmChests': realmChests, 'captivesFreed': world.captivesFreed, 'realmCaptives': realmCaptives}),
                 style: small.copyWith(color: cream),
               ),
               Text(
                 ok
-                    ? '★ hạ đầu lĩnh · ★ mở đủ $realmChests rương · ★ khám phá ${(realmExploreStar * 100).round()}%'
-                    : 'Đồ nhặt và lượng từ rương vẫn được giữ.',
+                    ? tr('★ hạ đầu lĩnh · ★ mở đủ {realmChests} rương · ★ khám phá {p0}%', {'realmChests': realmChests, 'p0': (realmExploreStar * 100).round()})
+                    : tr('Đồ nhặt và lượng từ rương vẫn được giữ.'),
                 style: small.copyWith(fontSize: 11),
               ),
               const SizedBox(height: 6),
@@ -1517,23 +1515,23 @@ class _PlayScreenState extends State<PlayScreen> {
                 Text(world.rewardLines.join(' · '), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
               const SizedBox(height: 10),
               if (ok && !_doubled && hero.lastDungeonGold > 0)
-                _adButton('Nhân đôi lượng & kinh nghiệm', () {
+                _adButton(tr('Nhân đôi lượng & kinh nghiệm'), () {
                   hero.gold += hero.lastDungeonGold;
                   hero.gainExp(hero.lastDungeonExp);
                   SaveService.instance.save();
                   setState(() => _doubled = true);
-                  _toast('+${hero.lastDungeonGold} lượng · +${hero.lastDungeonExp.round()} kinh nghiệm', goldLight);
+                  _toast(tr('+{lastDungeonGold} lượng · +{p0} kinh nghiệm', {'lastDungeonGold': hero.lastDungeonGold, 'p0': hero.lastDungeonExp.round()}), goldLight);
                 })
               else if (_doubled)
-                Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+                Text(tr('Đã nhân đôi phần thưởng!'), style: bold.copyWith(color: goldLight)),
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  LButton(label: 'Về thành', onTap: _leave),
+                  LButton(label: tr('Về thành'), onTap: _leave),
                   const SizedBox(width: 10),
                   LButton(
-                    label: left > 0 ? 'Thám hiểm lại ($left)' : 'Hết lượt hôm nay',
+                    label: left > 0 ? tr('Thám hiểm lại ({left})', {'left': left}) : tr('Hết lượt hôm nay'),
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
@@ -1569,37 +1567,37 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Kết thúc khiêu chiến', style: titleStyle(26)),
+              Text(tr('Kết thúc khiêu chiến'), style: titleStyle(26)),
               const SizedBox(height: 6),
               Text(fmt(world.bossDamage.round()), style: titleStyle(40, color: const Color(0xFFFF9A5A))),
-              Text('sát thương lượt này', style: small),
+              Text(tr('sát thương lượt này'), style: small),
               const SizedBox(height: 8),
               Text(
                   guild
-                      ? 'Tổng tuần này: ${fmt(hero.gBossDmg)}'
+                      ? tr('Tổng tuần này: {p0}', {'p0': fmt(hero.gBossDmg)})
                       : golden
-                      ? 'Tổng hôm nay: ${fmt(hero.gbTotal)} · Cao nhất: ${fmt(hero.gbBest)}'
-                      : 'Tổng hôm nay: ${fmt(hero.wbTotal)} · Cao nhất: ${fmt(hero.wbBest)}',
+                      ? tr('Tổng hôm nay: {p0} · Cao nhất: {p1}', {'p0': fmt(hero.gbTotal), 'p1': fmt(hero.gbBest)})
+                      : tr('Tổng hôm nay: {p0} · Cao nhất: {p1}', {'p0': fmt(hero.wbTotal), 'p1': fmt(hero.wbBest)}),
                   style: bold.copyWith(color: cream)),
               for (final l in world.rewardLines.skip(1)) Text(l, style: bold.copyWith(color: goldLight)),
               const SizedBox(height: 10),
               if (!_doubled && hero.lastDungeonGold > 0)
-                _adButton('Nhân đôi lượng', () {
+                _adButton(tr('Nhân đôi lượng'), () {
                   hero.gold += hero.lastDungeonGold;
                   SaveService.instance.save();
                   setState(() => _doubled = true);
-                  _toast('+${fmt(hero.lastDungeonGold)} lượng', goldLight);
+                  _toast(tr('+{p0} lượng', {'p0': fmt(hero.lastDungeonGold)}), goldLight);
                 })
               else if (_doubled)
-                Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+                Text(tr('Đã nhân đôi phần thưởng!'), style: bold.copyWith(color: goldLight)),
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  LButton(label: 'Về', onTap: _leave),
+                  LButton(label: tr('Về'), onTap: _leave),
                   const SizedBox(width: 10),
                   LButton(
-                    label: left > 0 ? 'Đánh tiếp (còn $left)' : golden ? 'Hết lượt khung này' : 'Hết lượt hôm nay',
+                    label: left > 0 ? tr('Đánh tiếp (còn {left})', {'left': left}) : golden ? tr('Hết lượt khung này') : tr('Hết lượt hôm nay'),
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
@@ -1639,24 +1637,24 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(d.isKiep ? (won ? 'Độ kiếp thành công!' : 'Độ kiếp thất bại') : won ? 'Đánh bại ${r.name}!' : 'Thua ${r.name}',
+              Text(d.isKiep ? (won ? tr('Độ kiếp thành công!') : tr('Độ kiếp thất bại')) : won ? tr('Đánh bại {rName}!', {'rName': r.name}) : tr('Thua {rName}', {'rName': r.name}),
                   style: titleStyle(26, color: won ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
               const SizedBox(height: 4),
-              Text(won ? 'Thời gian: ${world.finishTime.toStringAsFixed(1)} giây' : 'Hãy luyện thêm rồi phục thù.',
+              Text(won ? tr('Thời gian: {p0} giây', {'p0': world.finishTime.toStringAsFixed(1)}) : tr('Hãy luyện thêm rồi phục thù.'),
                   style: small),
               const SizedBox(height: 8),
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
               const SizedBox(height: 14),
               LButton(
                   label: d.trial
-                      ? 'Về Sư môn'
+                      ? tr('Về Sư môn')
                       : d.isKiep
-                          ? 'Về Ngộ Đạo'
+                          ? tr('Về Ngộ Đạo')
                           : d.daiHoi
-                              ? 'Về Đại Hội'
+                              ? tr('Về Đại Hội')
                               : d.spar || d.war
-                                  ? 'Quay lại'
-                                  : 'Về Lôi đài',
+                                  ? tr('Quay lại')
+                                  : tr('Về Lôi đài'),
                   color: jade,
                   onTap: _leave),
             ],
@@ -1677,34 +1675,34 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(ok ? 'Vượt tầng ${d.floor}!' : 'Dừng bước ở tầng ${d.floor}',
+              Text(ok ? tr('Vượt tầng {floor}!', {'floor': d.floor}) : tr('Dừng bước ở tầng {floor}', {'floor': d.floor}),
                   style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A))),
               const SizedBox(height: 4),
-              Text('Tầng cao nhất: ${hero.towerBest}', style: small),
+              Text(tr('Tầng cao nhất: {towerBest}', {'towerBest': hero.towerBest}), style: small),
               const SizedBox(height: 8),
               if (ok) ...[
                 for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
                 const SizedBox(height: 10),
                 if (hero.lastDungeonGold > 0 && !_doubled)
-                  _adButton('Nhân đôi lượng & kinh nghiệm', () {
+                  _adButton(tr('Nhân đôi lượng & kinh nghiệm'), () {
                     hero.gold += hero.lastDungeonGold;
                     hero.gainExp(hero.lastDungeonExp);
                     SaveService.instance.save();
                     setState(() => _doubled = true);
-                    _toast('+${hero.lastDungeonGold} lượng', goldLight);
+                    _toast(tr('+{lastDungeonGold} lượng', {'lastDungeonGold': hero.lastDungeonGold}), goldLight);
                   })
                 else if (_doubled)
-                  Text('Đã nhân đôi phần thưởng!', style: bold.copyWith(color: goldLight)),
+                  Text(tr('Đã nhân đôi phần thưởng!'), style: bold.copyWith(color: goldLight)),
               ] else
-                Text('Quái tầng này quá mạnh. Hãy nâng trang bị, ngọc, kỹ năng rồi thử lại.', style: body),
+                Text(tr('Quái tầng này quá mạnh. Hãy nâng trang bị, ngọc, kỹ năng rồi thử lại.'), style: body),
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  LButton(label: 'Về thành', onTap: _leave),
+                  LButton(label: tr('Về thành'), onTap: _leave),
                   const SizedBox(width: 10),
                   LButton(
-                    label: ok ? 'Lên tầng $next' : 'Thử lại',
+                    label: ok ? tr('Lên tầng {next}', {'next': next}) : tr('Thử lại'),
                     color: jade,
                     onTap: () {
                       SaveService.instance.save();
@@ -1734,23 +1732,23 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(ok ? (tm ? 'Thắng Tâm Ma tầng $floor!' : 'Vượt Ma Vực tầng $floor!') : 'Dừng bước ở tầng $floor',
+              Text(ok ? (tm ? tr('Thắng Tâm Ma tầng {floor}!', {'floor': floor}) : tr('Vượt Ma Vực tầng {floor}!', {'floor': floor})) : tr('Dừng bước ở tầng {floor}', {'floor': floor}),
                   style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
               const SizedBox(height: 4),
-              Text(tm ? 'Tầng cao nhất: $best' : 'Tuần này: tầng $best', style: small),
+              Text(tm ? tr('Tầng cao nhất: {best}', {'best': best}) : tr('Tuần này: tầng {best}', {'best': best}), style: small),
               const SizedBox(height: 8),
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
               if (!ok)
-                Text(tm ? 'Nâng trang bị, Thăng Tinh, rồi đối mặt lại chính mình.' : 'Ma khí quá nặng. Hãy mạnh hơn rồi quay lại.',
+                Text(tm ? tr('Nâng trang bị, Thăng Tinh, rồi đối mặt lại chính mình.') : tr('Ma khí quá nặng. Hãy mạnh hơn rồi quay lại.'),
                     style: body, textAlign: TextAlign.center),
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  LButton(label: 'Về', onTap: _leave),
+                  LButton(label: tr('Về'), onTap: _leave),
                   const SizedBox(width: 10),
                   LButton(
-                    label: left <= 0 ? 'Hết lượt hôm nay' : (ok ? 'Lên tầng $next' : 'Thử lại'),
+                    label: left <= 0 ? tr('Hết lượt hôm nay') : (ok ? tr('Lên tầng {next}', {'next': next}) : tr('Thử lại')),
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
@@ -1778,16 +1776,16 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(ok ? 'Hạ ${d.beastName}!' : '${d.beastName} vẫn đứng vững',
+              Text(ok ? tr('Hạ {beastName}!', {'beastName': d.beastName}) : tr('{beastName} vẫn đứng vững', {'beastName': d.beastName}),
                   style: titleStyle(26, color: ok ? goldLight : const Color(0xFFFF7A6A)), textAlign: TextAlign.center),
               const SizedBox(height: 4),
-              Text(ok ? 'Thời gian: ${world.finishTime.toStringAsFixed(1)} giây' : 'Còn ${(100 * (world.boss?.hp ?? 0) / (world.boss?.maxHp ?? 1)).round()}% sinh lực',
+              Text(ok ? tr('Thời gian: {p0} giây', {'p0': world.finishTime.toStringAsFixed(1)}) : tr('Còn {p0}% sinh lực', {'p0': (100 * (world.boss?.hp ?? 0) / (world.boss?.maxHp ?? 1)).round()}),
                   style: small),
               const SizedBox(height: 8),
               for (final l in world.rewardLines) Text(l, style: bold.copyWith(color: cream)),
-              if (!ok) Text('Né vùng đỏ, mang đủ thuốc, Thăng Tinh trang bị rồi thử lại.', style: body, textAlign: TextAlign.center),
+              if (!ok) Text(tr('Né vùng đỏ, mang đủ thuốc, Thăng Tinh trang bị rồi thử lại.'), style: body, textAlign: TextAlign.center),
               const SizedBox(height: 14),
-              LButton(label: 'Về', color: jade, onTap: _leave),
+              LButton(label: tr('Về'), color: jade, onTap: _leave),
             ],
           ),
         ),

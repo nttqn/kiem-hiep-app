@@ -1,3 +1,4 @@
+import 'i18n.dart';
 /// Bảng tin (1.16.3): notices written by hand in the Firestore console
 /// (collection `news`), read by every player from the town. Besides system
 /// news it can point at another game: a picture and a button that opens
@@ -48,7 +49,7 @@ class NewsDef {
   /// only to Google Play stays off iPhones.
   bool showsOn({required bool ios}) => !ios || link.isEmpty || linkIos.isNotEmpty;
 
-  String get buttonLabel => button.isEmpty ? 'Tải ngay' : button;
+  String get buttonLabel => button.isEmpty ? tr('Tải ngay') : button;
 
   static bool _url(String s) => s.startsWith('https://') || s.startsWith('http://') || s.startsWith('market://');
 
