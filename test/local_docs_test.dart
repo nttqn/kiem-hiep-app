@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/i18n.dart';
+import 'package:kiem_hiep/core/live_event.dart';
 import 'package:kiem_hiep/core/mail.dart';
 import 'package:kiem_hiep/core/news.dart';
 
@@ -54,5 +55,19 @@ void main() {
     expect([n.title, n.body, n.tag, n.buttonLabel], ['維護公告', '伺服器維護', '維護', '查看']);
     setLanguage(Lang.vi, const {});
     expect(NewsDef.fromMap('n', doc)!.title, 'Bảo trì');
+  });
+
+  test('events: Chinese name or a generic one, never the Vietnamese; lang filter', () {
+    const ev = {'name': 'Đại hội cuối tuần', 'desc': 'Giang hồ mở hội', 'exp': 2};
+    expect(LiveEvent.fromMap('e', ev)!.name, 'Đại hội cuối tuần');
+    setLanguage(Lang.zhHant, const {'Sự kiện': '活動'});
+    final plain = LiveEvent.fromMap('e', ev)!;
+    expect(plain.name, '活動');
+    expect(plain.desc, '');
+    expect(plain.exp, 2);
+    final zh = LiveEvent.fromMap('e', {...ev, 'name_zh_Hant': '週末大會', 'desc_zh_Hant': '江湖盛會'})!;
+    expect([zh.name, zh.desc], ['週末大會', '江湖盛會']);
+    expect(LiveEvent.fromMap('e', {...ev, 'lang': 'vi'}), isNull);
+    expect(LiveEvent.fromMap('e', {...ev, 'lang': 'vi,zh_Hant'}), isNotNull);
   });
 }

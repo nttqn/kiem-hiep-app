@@ -2,7 +2,11 @@ import 'i18n.dart';
 /// Sự kiện: boosts the developer switches on in the Firebase console
 /// (`events/{id}`), no app update needed. Fields (all optional):
 ///
-/// * `name`, `desc`: shown on a banner in town.
+/// * `name`, `desc`: shown on a banner in town; `name_zh_Hant`,
+///   `desc_zh_Hant` for Chinese players (1.22). Without them those see
+///   "Sự kiện" in their language and only the boosts, never the Vietnamese.
+/// * `lang`: one code or a comma list (`vi`, `zh_Hant`) to run the event
+///   only for players of those languages (boosts too); empty for everyone.
 /// * `from`, `until`: Vietnam days (`20261101` text or a console timestamp),
 ///   `until` inclusive; either may be left out.
 /// * `weekends`: true to run only on Saturdays and Sundays (Vietnam time)
@@ -65,8 +69,10 @@ class LiveEvent {
       return v is num ? v.toDouble().clamp(1.0, 3.0) : 1.0;
     }
 
-    String text(String k, String or) {
-      final v = m[k];
+    if (!langAllows(m['lang'])) return null;
+
+    String text(String k, String or, {bool local = false}) {
+      final v = !local || currentLang == Lang.vi ? m[k] : m['${k}_${currentLang.code}'];
       return v is String && v.trim().isNotEmpty ? v.trim() : or;
     }
 
@@ -79,8 +85,8 @@ class LiveEvent {
     final runs = m['wbRuns'];
     final e = LiveEvent(
       id: id,
-      name: text('name', tr('Sự kiện')),
-      desc: text('desc', ''),
+      name: text('name', tr('Sự kiện'), local: true),
+      desc: text('desc', '', local: true),
       from: day('from'),
       until: day('until'),
       weekends: m['weekends'] == true,

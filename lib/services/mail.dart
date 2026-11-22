@@ -9,6 +9,7 @@ import '../core/live_event.dart';
 import '../core/mail.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
+import 'language.dart';
 
 /// Hòm thư and Sự kiện: reads the gifts posted in `mail` and the boosts in
 /// `events` (Firebase console). No sign-in needed.
@@ -36,6 +37,14 @@ class MailService extends ChangeNotifier {
   List<MailDef> _parsed = const [];
   Lang? _parsedFor;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _mailSub, _eventSub;
+
+  /// Event documents as last heard, read again when the language changes.
+  List<(String, Map<String, dynamic>)> _eventDocs = const [];
+  bool _langHooked = false;
+
+  void _parseEvents() {
+    liveEvents = [for (final (id, m) in _eventDocs) ?LiveEvent.fromMap(id, m)];
+  }
 
   /// Mails to show instead of Firestore (dev build screenshots).
   List<MailDef>? debugMails;
@@ -75,7 +84,15 @@ class MailService extends ChangeNotifier {
     );
     _eventSub ??= db.collection('events').limit(10).snapshots().listen(
       (snap) {
-        liveEvents = [for (final d in snap.docs) ?LiveEvent.fromMap(d.id, _days(d.data()))];
+        _eventDocs = [for (final d in snap.docs) (d.id, _days(d.data()))];
+        _parseEvents();
+        if (!_langHooked) {
+          _langHooked = true;
+          LanguageService.instance.lang.addListener(() {
+            _parseEvents();
+            notifyListeners();
+          });
+        }
         notifyListeners();
       },
       onError: (Object e) {
