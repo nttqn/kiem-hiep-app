@@ -1,0 +1,25 @@
+Google Ads – chiến dịch ứng dụng (App campaign) Kiem Hiep, tiếng Anh
+Ngôn ngữ: English. Chỉ chạy khi bản 1.24.0 (có tiếng Anh) đã lên Play.
+
+== Dòng tiêu đề (≤30) ==
+Kiem Hiep: Wuxia Action RPG      (27)
+Five Sects, Five Elements        (25)
+One Strike Clears the Field      (27)
+Offline Wuxia RPG                (17)
+Fight the World Boss Daily       (26)
+
+== Nội dung mô tả (≤90) ==
+Join one of five martial sects and master the five elements to become Supreme Master.   (85)
+Flashy skills and ultimates. Fight by hand or switch on auto battle and level up fast.   (86)
+World Boss, Arena and the weekly Martial Conclave: prove yourself against the server.    (85)
+Play offline with cloud save. Collect mounts, spirit beasts and wuxia companions.        (81)
+Now in English, with its own world chat. Download free and start your legend!           (77)
+
+== Hình ảnh (store/ads/en/) ==
+Ngang 1.91:1 (1200x628): en-ads-L1-tuyet-ky.png, en-ads-L2-thu-cuoi.png
+Vuông 1:1 (1200x1200):  en-ads-S1-the-gioi.png, en-ads-S2-mon-phai.png
+Dọc 4:5 (1200x1500):    en-ads-P1-hoa-son.png, en-ads-P2-bang-tam.png
+Tạo lại: FF=... node tool/promo/en/ads.js (trong thư mục làm việc của trailer).
+
+== Video (YouTube, Không công khai) ==
+16:9, 9:16, 1:1 trong store/video/kiem-hiep-en-*.mp4

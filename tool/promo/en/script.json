@@ -1,0 +1,51 @@
+[
+  {
+    "id": "s1",
+    "scene": "clip:a_fire",
+    "say": "Kiem Hiep. A wuxia action RPG. The fight begins now!",
+    "sub": "KIEM HIEP\nWuxia Action RPG"
+  },
+  {
+    "id": "s2",
+    "scene": "still:sects",
+    "say": "Five sects, five elements. Strike where your foe is weak.",
+    "sub": "Five sects · Five elements\nHit their weak element"
+  },
+  {
+    "id": "s3",
+    "scene": "clip:b_ice",
+    "say": "Unleash dazzling ultimates and sweep the battlefield.",
+    "sub": "Dazzling skills\nOne ultimate clears the field"
+  },
+  {
+    "id": "s4",
+    "scene": "clip:c_kim",
+    "say": "Fight by hand, or switch on auto battle and level up fast.",
+    "sub": "Manual or auto battle\nLevel up fast"
+  },
+  {
+    "id": "s5",
+    "scene": "clip:f_wboss",
+    "say": "Take on the World Boss every day, against the whole server.",
+    "sub": "Daily World Boss\nCompete with the server"
+  },
+  {
+    "id": "s6",
+    "scene": "stills:comps,mounts",
+    "say": "Recruit companions, ride mounts, and build your own legend.",
+    "sub": "Companions · Mounts · Beasts\nYour own legend"
+  },
+  {
+    "id": "s7",
+    "scene": "clip:e_mount2",
+    "at": 0.3,
+    "say": "Play offline, with cloud save on every phone.",
+    "sub": "Play offline\nCloud save on any phone"
+  },
+  {
+    "id": "s8",
+    "scene": "end",
+    "say": "Kiem Hiep. Free on Google Play!",
+    "sub": "Free on Google Play"
+  }
+]
