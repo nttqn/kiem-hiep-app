@@ -276,7 +276,7 @@ class _SectScreenState extends State<SectScreen> {
     final locked = h.sectRank < o.rank;
     final name = switch (o.kind) {
       SectWare.gem => tr('Ngọc ngũ hành bậc {p0}', {'p0': sectGemTier(h.sectRank)}),
-      _ => o.name,
+      _ => tr(o.name),
     };
     final pageLocked = o.kind == SectWare.page && !h.manualOpen;
     return Padding(

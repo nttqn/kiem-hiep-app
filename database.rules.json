@@ -46,12 +46,12 @@
       },
       "rooms": {
         "$room": {
-          ".read": "$room.matches(/^zh_Hant$/)",
+          ".read": "$room.matches(/^(zh_Hant|ko)$/)",
           ".indexOn": [
             "at"
           ],
           "$id": {
-            ".write": "auth != null && $room.matches(/^zh_Hant$/) && ((!data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && !root.child('chat/bans/' + auth.uid).exists() && newData.parent().parent().parent().child('last/' + auth.uid).val() === now) || (data.exists() && !newData.exists() && data.child('at').val() < now - 259200000))",
+            ".write": "auth != null && $room.matches(/^(zh_Hant|ko)$/) && ((!data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && !root.child('chat/bans/' + auth.uid).exists() && newData.parent().parent().parent().child('last/' + auth.uid).val() === now) || (data.exists() && !newData.exists() && data.child('at').val() < now - 259200000))",
             ".validate": "newData.hasChildren(['uid', 'name', 'hanh', 'level', 'rebirths', 'text', 'at'])",
             "uid": {
               ".validate": "newData.isString()"

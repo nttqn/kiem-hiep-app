@@ -56,6 +56,24 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.23.0, ≤ 500 ký tự)
+1.23.0 – Giang hồ bốn phương
+• Thêm ngôn ngữ 한국어 (tiếng Hàn): máy để tiếng Hàn tự mở bằng tiếng Hàn; có kênh chat Thế Giới riêng.
+• Bảng xếp hạng và bang hội có thêm nhãn KR.
+• Sửa vài chữ chưa dịch: tên dược liệu khi nhặt, mô tả nhiệm vụ chính tuyến, hàng ở Tàng Kinh Các, tên đối thủ ở Võ Lâm Đại Hội.
+
+## What's new (1.23.0, en-US)
+1.23.0 – Jianghu of many tongues
+• New language: 한국어 (Korean). Korean phones open in it, with its own World chat channel.
+• Leaderboards and guilds gain a KR tag.
+• Fixed some untranslated text: herb pickups, main quest stories, the Sutra Pavilion shop, Grand Tournament rivals.
+
+## 更新內容（1.23.0，zh-TW）
+1.23.0 – 江湖四方
+• 新增한국어（韓文）：裝置語言為韓文時自動使用，並有專屬世界頻道。
+• 排行榜與幫會新增 KR 標示。
+• 修正部分未翻譯文字：撿到的藥材名稱、主線任務描述、藏經閣商品、武林大會對手名稱。
+
 ## Có gì mới (bản 1.22.0, ≤ 500 ký tự)
 1.22.0 – Giang hồ hai miền
 • Bảng xếp hạng ghi nhãn VN / 繁中 cạnh tên mỗi cao thủ.
@@ -393,4 +411,83 @@ Support: trungsmail@gmail.com
   - Điện thoại 1920×1080: store/zh_Hant/phone/
   - Máy tính bảng 7" 1920×1200: store/zh_Hant/tablet-7in/
   - Máy tính bảng 10" 2560×1600: store/zh_Hant/tablet-10in/
+- Biểu tượng dùng chung store/icon-512.png.
+
+---
+
+# 한국어 (thêm ngôn ngữ ko-KR trên Play Console)
+
+## 앱 이름 (≤ 30자)
+검협 오행: 무협 액션 RPG
+
+## 간단한 설명 (≤ 80자)
+오행 문파 무협 액션 RPG! 자동 전투, 오프라인 플레이, 클라우드 저장으로 무림지존에 도전하라
+
+## 자세한 설명 (≤ 4000자, 1.23.0 기준)
+강호에 발을 들여 다섯 문파 중 하나에 입문하고, 수련과 관문 돌파, 여섯 번의 환생을 거쳐 무림지존이 되어라!
+
+⚔️ 5대 문파 · 오행상극
+• 금강사(금): 강맹한 곤법, 높은 체력과 방어력. 가장 쉬운 입문 문파.
+• 백독문(목): 비표와 독공, 원거리 공격, 높은 치명타.
+• 벽수암(수): 얼음 법술로 적을 묶고 스스로 치유한다.
+• 열화방(화): 불꽃 도법, 폭발적인 피해와 돌진 베기.
+• 현토관(토): 검기와 흙의 방패, 지진으로 적을 기절시킨다.
+금극목, 목극토, 토극수, 수극화, 화극금: 상극하는 적에게 피해 25% 증가.
+
+🗺️ 드넓은 강호
+• 십여 개의 수련장: 낙안 고도, 자죽림, 황사막, 화염산, 동해 군도, 화산 절정, 구유마역, 유명혈해, 그리고 서역, 묘강, 곤륜 선경……
+• 수십 종의 몬스터와 범위 공격을 피해야 하는 보스: 강시, 화기린, 백룡, 해적, 동해용왕, 구유마존……
+• 3성 평가 관문, 매주 마기가 바뀌는 악몽 관문, 안개에 싸인 비경, 끝없는 시련의 탑.
+• 메인 스토리와 여섯 장의 윤회: 천마노조, 혈마교, 칠살문, 혈해마제……
+• 현상수배 정예, 장보도 보물찾기, 기연, 그리고 수십 종의 물고기를 모으는 낚시.
+
+🏆 전 서버 고수와 겨루기
+• 뇌대: 다른 플레이어 캐릭터의 분신에 도전, 2주 시즌, 순위별 보상.
+• 매주 무림대회: 8강 토너먼트로 무림맹주 칭호를 다툰다.
+• 매일 월드 보스, 주간 사냥, 방회와 방회전, 사도, 친구, 인연.
+• 언어별로 나뉜 월드 채팅, 한국어 플레이어 전용 채널.
+• 전투력, 탑, 레벨, 뇌대, 사냥, 맹주 순위표 (로그인 필요).
+
+🧙 나만의 캐릭터 육성
+• 최고 99레벨, 최대 6회 환생으로 체력, 공격력, 방어력이 영구 상승.
+• 문파마다 스킬 4개, 내공 2개, 절기 1개. 스킬 돌파, 초식을 바꾸는 비급, 오행 경맥, 오도.
+• 장비 7부위, 5단계 희귀도, 강화, 세련, 오행 보석 박기, 황금 세트, 신병 각성과 선기.
+• 저마다 이야기가 있는 동행 협객, 영수, 탈것(비검 포함)과 다양한 외형.
+• 사문에서 장문인까지 승진, 연단, 영초와 누에를 키우는 장원, 도감 수집.
+
+🎁 매일 쏟아지는 선물
+• 폐관 수련: 게임을 꺼도 경험치와 냥을 얻는다, 최대 8시간.
+• 접속 선물, 신규 7일 목표, 일일·주간 활동 상자, 우편함, 주말 이벤트와 축제 이벤트.
+• 업적으로 칭호 해금: 대협, 무성, 오전진인, 육전성인……
+
+🤖 쉽고 편하게, 언제든지
+• 조이스틱과 스킬 버튼으로 실시간 전투, 또는 자동 전투: 임무 몬스터를 찾고, 스킬을 쓰고, 물약을 마시고, 포인트를 분배하고, 장비를 입는다. 자동 전투 방식도 설정 가능.
+• 인터넷 없이 오프라인 플레이 가능 (순위표, 뇌대, 방회, 채팅 제외). 저사양 기기를 위한 저사양 모드.
+• 클라우드 저장 (선택): Google 계정으로 로그인하면 재설치나 기기 변경 후에도 캐릭터 유지. 캐릭터 슬롯 5개.
+• 전투가 끝날 때마다 피해 통계와 개인 기록 표시.
+
+🎵 정통 무협 감성
+• 생동감 넘치는 SD 캐릭터와 몬스터, 초식마다 고유한 이펙트, 비, 천둥, 밤.
+• 고쟁, 얼후, 대나무 피리, 북으로 연주하는 오음계 음악, 지역마다 다른 선율.
+
+무료 플레이, 광고 포함. 대부분의 광고는 직접 선택해 보상을 받는 방식입니다: 제자리 부활, 보상 2배, 무료 물약.
+
+고객 지원: trungsmail@gmail.com
+
+## 업데이트 내용 (1.23.0, ko-KR)
+1.23.0 – 한국어 지원
+• 한국어 추가: 기기 언어가 한국어이면 자동으로 한국어로 열립니다. 캐릭터 선택 화면의 지구본 버튼이나 설정에서 언어를 바꿀 수 있습니다.
+• 한국어 플레이어 전용 월드 채팅 채널.
+• 순위표와 방회에 VN / 繁中 / KR 언어 표시, 같은 언어의 방회가 먼저 표시됩니다.
+• 공지와 우편함이 선택한 언어로 표시됩니다.
+
+## 태그 / 키워드 gợi ý
+롤플레잉, 액션, 오프라인, 무협, 자동 전투
+
+## Hình ảnh (ko)
+- Ảnh nổi bật 1024×500: store/ko/feature-graphic.png (`flutter test tool/gen_feature_test.dart`, cần font Malgun Gothic của Windows)
+- Ảnh chụp màn hình tiếng Hàn (10 ảnh mỗi cỡ, chọn 8): `LANG_SHOT=ko PORT=<cổng> node tool/shots/store_shots.js <cỡ>` (chạy từ thư mục gốc repo)
+  - Điện thoại 1920×1080: store/ko/phone/
+  - Máy tính bảng 7" 1920×1200: store/ko/tablet-7in/
+  - Máy tính bảng 10" 2560×1600: store/ko/tablet-10in/
 - Biểu tượng dùng chung store/icon-512.png.

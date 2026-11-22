@@ -79,7 +79,11 @@ class LangTag extends StatelessWidget {
         margin: const EdgeInsets.only(left: 5),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         decoration: BoxDecoration(
-          color: lang == Lang.vi ? const Color(0xFF8A2A1E) : const Color(0xFF1E4E8A),
+          color: switch (lang) {
+            Lang.vi => const Color(0xFF8A2A1E),
+            Lang.zhHant => const Color(0xFF1E4E8A),
+            Lang.ko => const Color(0xFF2E6B3A),
+          },
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(lang.tag, style: const TextStyle(fontSize: 9, height: 1.2, color: Color(0xFFFFF3C4), fontWeight: FontWeight.w800)),

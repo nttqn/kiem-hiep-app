@@ -3,7 +3,8 @@
 //
 // Run with: flutter test tool/gen_feature_test.dart
 // The 繁體中文 version goes to store/zh_Hant/feature-graphic.png and needs
-// Windows' Microsoft JhengHei Bold (C:/Windows/Fonts/msjhbd.ttc).
+// Windows' Microsoft JhengHei Bold (C:/Windows/Fonts/msjhbd.ttc); the Korean
+// one goes to store/ko/feature-graphic.png with Malgun Gothic Bold.
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -64,11 +65,13 @@ void _text(
 }
 
 void main() {
-  for (final zh in [false, true]) {
-    test(zh ? 'feature graphic zh_Hant' : 'feature graphic', () async {
+  for (final lang in ['vi', 'zh_Hant', 'ko']) {
+    final zh = lang == 'zh_Hant', ko = lang == 'ko';
+    test(lang == 'vi' ? 'feature graphic' : 'feature graphic $lang', () async {
       await _font('Playfair', 'assets/fonts/PlayfairDisplay.ttf');
       await _font('BeVietnam', 'assets/fonts/BeVietnamPro-Bold.ttf');
       if (zh) await _font('JhengHei', 'C:/Windows/Fonts/msjhbd.ttc');
+      if (ko) await _font('Malgun', 'C:/Windows/Fonts/malgunbd.ttf');
       const w = 1024.0, h = 500.0;
       final rec = ui.PictureRecorder();
       final c = Canvas(rec);
@@ -129,7 +132,19 @@ void main() {
         });
       }
 
-      if (zh) {
+      if (ko) {
+        _text(c, '검 협 오 행', const Offset(w / 2, 72), 76, const Color(0xFFF3D27A), family: 'Malgun', outline: 9);
+        _text(
+          c,
+          '5대 문파 · 오행상극 · 오프라인 플레이',
+          const Offset(w / 2, 140),
+          27,
+          const Color(0xFFFFF3C4),
+          family: 'Malgun',
+          outline: 5,
+          weight: FontWeight.w700,
+        );
+      } else if (zh) {
         _text(c, '劍 俠 五 行', const Offset(w / 2, 72), 78, const Color(0xFFF3D27A), family: 'JhengHei', outline: 9);
         _text(
           c,
@@ -157,7 +172,7 @@ void main() {
 
       final img = await rec.endRecording().toImage(w.toInt(), h.toInt());
       final png = await img.toByteData(format: ui.ImageByteFormat.png);
-      final dir = zh ? 'store/zh_Hant' : 'store';
+      final dir = lang == 'vi' ? 'store' : 'store/$lang';
       Directory(dir).createSync(recursive: true);
       File('$dir/feature-graphic.png').writeAsBytesSync(png!.buffer.asUint8List());
     });

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher name on Korean phones (see lib/core/i18n.dart). -->
+<resources>
+    <string name="app_name">검협</string>
+</resources>

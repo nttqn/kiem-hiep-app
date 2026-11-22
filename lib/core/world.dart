@@ -3245,7 +3245,7 @@ class World {
       final tier = _herbTier;
       final n = m.big ? 2 : 1;
       hero.addHerb(tier, n);
-      _text(m.x, m.y - 90, '+$n ${herbNames[tier]}', herbColors[tier], small: true);
+      _text(m.x, m.y - 90, '+$n ${tr(herbNames[tier])}', herbColors[tier], small: true);
     }
     // Gems take the monster's phase; bosses always drop one, a tier up.
     if (m.big || m.nightborn || rng.nextDouble() < gemDropChance * EventBoost(vnDayKey()).gems) {

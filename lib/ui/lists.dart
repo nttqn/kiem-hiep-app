@@ -491,7 +491,7 @@ class _QuestScreenState extends State<QuestScreen> {
                             child: Text(
                                 h.inLuanHoi && h.rbQuest == 0
                                     ? '${tr(luanHoi[h.chapter].intro)}\n\n${tr(q.story)}'
-                                    : q.story,
+                                    : tr(q.story),
                                 style: body.copyWith(fontStyle: FontStyle.italic, height: 1.4)),
                           ),
                         ),

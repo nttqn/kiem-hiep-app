@@ -211,7 +211,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
 
   Widget _entrant(int? slot, {required bool lost}) {
     final me = slot == 0;
-    final name = slot == null ? '?' : (me ? h.name : h.dhFoes[slot - 1].name);
+    final name = slot == null ? '?' : (me ? h.name : h.dhFoes[slot - 1].bot ? tr(h.dhFoes[slot - 1].name) : h.dhFoes[slot - 1].name);
     final power = slot == null ? null : h.dhPowers[slot];
     final hanh = slot == null ? null : (me ? h.hanh : h.dhFoes[slot - 1].hanh);
     return Opacity(
@@ -284,7 +284,7 @@ class _DaiHoiScreenState extends State<DaiHoiScreen> {
               Text(tr('Đã nhận thưởng. Hẹn tuần sau!'), style: small, textAlign: TextAlign.center),
           ] else if (foe != null) ...[
             Text(tr('{p0}: đối thủ', {'p0': daiHoiRounds[h.dhWins]}), style: bold.copyWith(color: goldLight), textAlign: TextAlign.center),
-            Text(foe.name, style: titleStyle(18, color: cream), textAlign: TextAlign.center, maxLines: 1,
+            Text(foe.bot ? tr(foe.name) : foe.name, style: titleStyle(18, color: cream), textAlign: TextAlign.center, maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             Text(tr('{p0} · Cấp {level} · {p1}', {'p0': tr(sectOf(foe.hanh).name), 'level': foe.level, 'p1': fmt(foe.power)}),
                 style: small.copyWith(fontSize: 11, color: hanhColor(foe.hanh)), textAlign: TextAlign.center),

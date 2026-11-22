@@ -9,8 +9,9 @@ import 'package:kiem_hiep/core/i18n.dart';
 import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/core/sects.dart';
 
-Map<String, String> _zh() => (jsonDecode(File('assets/i18n/zh_Hant.json').readAsStringSync()) as Map<String, dynamic>)
+Map<String, String> _table(String code) => (jsonDecode(File('assets/i18n/$code.json').readAsStringSync()) as Map<String, dynamic>)
     .map((k, v) => MapEntry(k, v as String));
+Map<String, String> _zh() => _table('zh_Hant');
 
 void main() {
   tearDown(() => setLanguage(Lang.vi, const {}));
@@ -19,7 +20,7 @@ void main() {
     final ph = RegExp(r'\{\w+\}');
     Set<String> of(String s) => ph.allMatches(s).map((m) => m[0]!).toSet();
     final bad = [
-      for (final e in _zh().entries)
+      for (final e in [..._zh().entries, ..._table('ko').entries])
         if (e.value.isNotEmpty && !of(e.key).containsAll(of(e.value)) || (e.value.isNotEmpty && !of(e.value).containsAll(of(e.key))))
           e.key,
     ];
@@ -55,5 +56,14 @@ void main() {
     expect(defaultLangFor('zh', 'Hans', 'CN'), Lang.vi);
     expect(defaultLangFor('vi', null, 'VN'), Lang.vi);
     expect(defaultLangFor('en', null, 'US'), Lang.vi);
+    expect(defaultLangFor('ko', null, 'KR'), Lang.ko);
+  });
+
+  test('Korean fills placeholders, data names and composed names', () {
+    setLanguage(Lang.ko, _table('ko'));
+    expect(tr('Cấp {level}', {'level': 5}), '레벨 5');
+    expect(tr('Đến {mapName}', {'mapName': 'Tử Trúc Lâm'}), '자죽림(으)로 이동');
+    expect(tr('Huyền Thiết Côn'), '현철곤');
+    expect(thouSep, ',');
   });
 }
