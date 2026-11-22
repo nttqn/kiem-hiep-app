@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/hero.dart';
+import '../core/i18n.dart';
 import '../core/live_event.dart';
 import '../core/mail.dart';
 import '../core/world_boss.dart';
@@ -22,7 +23,18 @@ class MailService extends ChangeNotifier {
   List<MailDef> mails = const [];
 
   /// Every mail document as last heard, before the day and player filter.
-  List<MailDef> _all = const [];
+  List<MailDef> get _all {
+    if (_parsedFor != currentLang) {
+      _parsedFor = currentLang;
+      _parsed = [for (final (id, m) in _docs) ?MailDef.fromMap(id, m)];
+    }
+    return _parsed;
+  }
+
+  /// Documents as last heard; read in the playing language on use.
+  List<(String, Map<String, dynamic>)> _docs = const [];
+  List<MailDef> _parsed = const [];
+  Lang? _parsedFor;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _mailSub, _eventSub;
 
   /// Mails to show instead of Firestore (dev build screenshots).
@@ -51,7 +63,8 @@ class MailService extends ChangeNotifier {
     // or as a timestamp, so dates are filtered here, not in the query.
     _mailSub ??= db.collection('mail').limit(30).snapshots().listen(
       (snap) {
-        _all = [for (final d in snap.docs) ?MailDef.fromMap(d.id, _days(d.data()))];
+        _docs = [for (final d in snap.docs) (d.id, _days(d.data()))];
+        _parsedFor = null;
         _filter();
         notifyListeners();
       },

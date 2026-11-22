@@ -47,6 +47,25 @@ Lang get currentLang => _lang;
 String get thouSep => _lang == Lang.vi ? '.' : ',';
 String get decSep => _lang == Lang.vi ? ',' : '.';
 
+/// A console document's text [key] in the playing language: the field
+/// `<key>_<code>` (`title_zh_Hant`) when it is filled in, else [key] itself,
+/// which is the Vietnamese text every older app version reads.
+Object? localField(Map<String, dynamic> m, String key) {
+  if (_lang != Lang.vi) {
+    final v = m['${key}_${_lang.code}'];
+    if (v is String && v.trim().isNotEmpty) return v;
+  }
+  return m[key];
+}
+
+/// Whether a console document's optional `lang` field lets the playing
+/// language see it: empty or missing for everyone, else one code or a
+/// comma list (`"zh_Hant"`, `"vi"`, `"vi,zh_Hant"`).
+bool langAllows(Object? lang) {
+  if (lang is! String || lang.trim().isEmpty) return true;
+  return lang.split(',').map((c) => c.trim()).contains(_lang.code);
+}
+
 /// Puts [lang] in use with its table ([table] is empty for Vietnamese).
 void setLanguage(Lang lang, Map<String, String> table) {
   _lang = lang;

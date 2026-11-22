@@ -11,7 +11,9 @@ import 'i18n.dart';
 /// (needs this level or any rebirth); and the rewards `gold`, `shards`
 /// (Mảnh Hoàng Kim), `iron` (Thần Thiết), `gems` with `gemTier`, `pages`
 /// (bí kíp pages, once bí kíp is open), `hpPots`, `mpPots`, `jade` (Tiên
-/// Ngọc, 1.13.1).
+/// Ngọc, 1.13.1). 1.22: `title_zh_Hant` / `body_zh_Hant` for players in
+/// that language, and `lang` (`"vi"`, `"zh_Hant"`) to post a gift to one
+/// language only. One document stays one gift whatever the language.
 class MailDef {
   const MailDef({
     required this.id,
@@ -61,7 +63,8 @@ class MailDef {
   /// Reads a console document; null when it is not a mail. Amounts are
   /// capped so a typo cannot hand out a fortune.
   static MailDef? fromMap(String id, Map<String, dynamic> m) {
-    final t = m['title'];
+    if (!langAllows(m['lang'])) return null;
+    final t = localField(m, 'title');
     final title = t is String && t.trim().isNotEmpty ? t : tr('Thư từ nhà phát triển');
     int n(String k, int max) {
       final v = m[k];
@@ -74,7 +77,7 @@ class MailDef {
       return RegExp(r'^\d{8}$').hasMatch(s) ? s : '';
     }
 
-    final body = m['body'];
+    final body = localField(m, 'body');
     return MailDef(
       id: id,
       title: title.trim(),

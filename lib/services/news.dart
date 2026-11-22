@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/i18n.dart';
 import '../core/news.dart';
 import '../core/world_boss.dart' show vnDayKey;
 import 'analytics.dart';
@@ -23,7 +24,18 @@ class NewsService extends ChangeNotifier {
   /// Notices to show instead of Firestore (dev build screenshots).
   List<NewsDef>? debugNews;
 
-  List<NewsDef> _all = const [];
+  /// Documents as last heard; read in the playing language on use.
+  List<(String, Map<String, dynamic>)> _docs = const [];
+  List<NewsDef> _parsed = const [];
+  Lang? _parsedFor;
+  List<NewsDef> get _all {
+    if (_parsedFor != currentLang) {
+      _parsedFor = currentLang;
+      _parsed = [for (final (id, m) in _docs) ?NewsDef.fromMap(id, m)];
+    }
+    return _parsed;
+  }
+
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _sub;
   Set<String> _read = {};
   Set<String> _popped = {};
@@ -44,7 +56,8 @@ class NewsService extends ChangeNotifier {
     // listener reads every document.
     _sub ??= FirebaseFirestore.instance.collection('news').limit(20).snapshots().listen(
       (snap) {
-        _all = [for (final d in snap.docs) ?NewsDef.fromMap(d.id, _days(d.data()))];
+        _docs = [for (final d in snap.docs) (d.id, _days(d.data()))];
+        _parsedFor = null;
         if (!_first.isCompleted) _first.complete();
         notifyListeners();
       },

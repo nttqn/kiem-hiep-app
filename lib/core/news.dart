@@ -18,7 +18,11 @@ import 'i18n.dart';
 ///   or console timestamps;
 /// - `order`: a number, bigger first (pinned); ties go newest `from` first;
 /// - `popup`: true to open the board by itself once when the player first
-///   reaches town after it is posted (use for the important ones only).
+///   reaches town after it is posted (use for the important ones only);
+/// - `title_zh_Hant`, `body_zh_Hant`, `tag_zh_Hant`, `button_zh_Hant`
+///   (1.22): the text for players in that language (else the plain field);
+/// - `lang`: `"vi"` or `"zh_Hant"` (or `"vi,zh_Hant"`) to show the notice
+///   only in those languages; missing for everyone.
 class NewsDef {
   const NewsDef({
     required this.id,
@@ -53,10 +57,12 @@ class NewsDef {
 
   static bool _url(String s) => s.startsWith('https://') || s.startsWith('http://') || s.startsWith('market://');
 
-  /// Reads a console document; null when it has no title.
+  /// Reads a console document in the playing language; null when it has
+  /// no title or is not for this language.
   static NewsDef? fromMap(String id, Map<String, dynamic> m) {
+    if (!langAllows(m['lang'])) return null;
     String s(String k, [int max = 4000]) {
-      final v = m[k];
+      final v = localField(m, k);
       if (v is! String) return '';
       final t = v.trim().replaceAll(r'\n', '\n');
       return t.length > max ? t.substring(0, max) : t;
