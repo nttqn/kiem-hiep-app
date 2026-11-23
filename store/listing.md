@@ -58,10 +58,10 @@ Hỗ trợ: trungsmail@gmail.com
 
 ## Có gì mới (bản 1.24.0, ≤ 500 ký tự)
 1.24.0 – Giang hồ năm châu
-• Thăng Tinh mở tới ★10: mỗi sao mới +4% chỉ số gốc, tốn nhiều Tinh Thạch và Tinh Phách.
+• Thăng Tinh mở tới ★10: mỗi sao mới +4% chỉ số gốc.
 • Thêm tiếng Anh, có kênh chat Thế Giới riêng; nhân vật đang chơi vẫn giữ tiếng Việt.
 • Chat nhanh: bấm mặt cười cạnh ô chat để gửi câu soạn sẵn (hiện theo ngôn ngữ người đọc) hoặc biểu cảm.
-• Tân hiệp khách: nhân vật mới tạo khi chơi tiếng Trung, Hàn, Anh được +50% EXP và lượng từ quái trong 7 ngày đầu, kèm 3 Song Bội Đan.
+• Tân hiệp khách: nhân vật mới chơi tiếng Trung, Hàn, Anh được +50% EXP và lượng 7 ngày đầu, kèm 3 Song Bội Đan.
 • Bảng xếp hạng và bang hội có thêm nhãn EN; tên đồng xu lễ hội được dịch đầy đủ.
 
 ## What's new (1.24.0, en-US)
