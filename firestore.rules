@@ -81,10 +81,11 @@ service cloud.firestore {
           && (!('look' in d) || (d.look is map && d.look.size() <= 7))
           // Thần binh (1.24): the Thần Thiết its level took past 20, doubled
           // (4116 + 500n + 25n(n-1), n = dv - 20), within what play time can
-          // earn: 800 an hour and 2,000 besides, as in lib/core/hoard_check.dart.
+          // earn: 2,500 an hour and 2,000 besides, as in lib/core/hoard_check.dart
+          // (x72: 36 * 2 * iron <= 144000 + 50 * play).
           && (!('look' in d) || !('dv' in d.look) || !('play' in d) || d.look.dv <= 20
-              || 9 * (4116 + 500 * (d.look.dv - 20) + 25 * (d.look.dv - 20) * (d.look.dv - 21))
-                  <= 36000 + 4 * d.play)
+              || 36 * (4116 + 500 * (d.look.dv - 20) + 25 * (d.look.dv - 20) * (d.look.dv - 21))
+                  <= 144000 + 50 * d.play)
           && (!('st' in d) || (d.st is list && d.st.size() <= 10));
       }
 

@@ -41,6 +41,17 @@ import 'i18n.dart';
 
 const double heroRadius = 18;
 
+/// Seconds a field boss takes to come back after it falls.
+const int fieldBossRespawnSec = 150;
+
+/// Seconds still to wait, on entering a field, for a boss last felled at
+/// [killedAtMs] (null: never); a clock set back counts as a full wait.
+double fieldBossWait(int? killedAtMs, int nowMs) {
+  if (killedAtMs == null) return 0;
+  final left = fieldBossRespawnSec - (nowMs - killedAtMs) / 1000;
+  return left.clamp(0, fieldBossRespawnSec).toDouble();
+}
+
 /// Autopilot, ranged heroes: a melee monster this close makes them back off
 /// for [autoBackTime] seconds (or until it is [autoBackClear] away), then
 /// they hold their ground at least [autoBackRest] seconds.
@@ -1004,7 +1015,13 @@ class World {
         _spawnInCamp(_camps.length - 1);
       }
     }
-    _spawnBoss();
+    // A boss felled lately is still on its way back (1.24).
+    final wait = fieldBossWait(hero.fieldBossAt[map.id], GameClock.nowMs());
+    if (wait <= 0) {
+      _spawnBoss();
+    } else {
+      bossRespawnAt = time + wait;
+    }
   }
 
   /// Herb plants of the map's tier, scattered away from the gate.
@@ -2148,9 +2165,9 @@ class World {
       mobs.remove(m);
       _spawnInCamp(m.camp);
     }
-    if (boss != null && !boss!.alive && bossRespawnAt > 0 &&
+    if ((boss == null || !boss!.alive) && bossRespawnAt > 0 &&
         time >= bossRespawnAt) {
-      mobs.remove(boss);
+      if (boss != null) mobs.remove(boss);
       bossRespawnAt = -1;
       _spawnBoss();
       events.add(GameEvent(EvKind.boss,
@@ -3202,7 +3219,8 @@ class World {
         drops.add(Drop(m.x - 30, m.y, gem: Gem(m.def.hanh, math.min(maxDropTier, dropTier(m.level, boss: true) + 1))));
       }
       if (m == boss) {
-        bossRespawnAt = time + 150;
+        bossRespawnAt = time + fieldBossRespawnSec;
+        if (dungeon == null) hero.fieldBossAt[map.id] = GameClock.nowMs();
       } else if (!m.elite && m.camp >= 0) {
         m.respawnAt = time + 9 + rng.nextDouble() * 6;
       }

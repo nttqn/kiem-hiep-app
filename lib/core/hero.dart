@@ -380,6 +380,12 @@ class HeroData {
   String activePet = '';
   final Map<String, int> bossKillsById = {};
 
+  /// When each field's boss last fell (ms, by map id), so leaving and
+  /// coming back does not bring it back before [fieldBossRespawnSec]
+  /// (1.24: re-entering U Minh Huyết Hải every 20 s farmed its boss ~6x
+  /// faster than standing there).
+  final Map<String, int> fieldBossAt = {};
+
   /// Times reborn (chuyển sinh), 0..[maxRebirths].
   int rebirths = 0;
 
@@ -3471,6 +3477,7 @@ class HeroData {
         if (paidFlag || firstPayTaken) 'fp': [paidFlag ? 1 : 0, firstPayTaken ? 1 : 0],
         'mail': mailClaimed.toList(),
         if (mailJade.isNotEmpty) 'mj': mailJade.toList(),
+        if (fieldBossAt.isNotEmpty) 'fba': fieldBossAt,
         'fat': [fatigueDay, fatigueSec.round()],
         'fun': [bornDay, deaths, funnel.toList()],
         if (bornLang.isNotEmpty) 'bl': bornLang,
@@ -3878,6 +3885,9 @@ class HeroData {
     }
     h.mailClaimed.addAll([for (final v in m['mail'] as List? ?? const []) '$v']);
     h.mailJade.addAll([for (final v in m['mj'] as List? ?? const []) '$v']);
+    (m['fba'] as Map? ?? const {}).forEach((k, v) {
+      if (v is int) h.fieldBossAt['$k'] = v;
+    });
     final fat = m['fat'];
     if (fat is List && fat.length == 2) {
       h.fatigueDay = fat[0] as String;

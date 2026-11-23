@@ -7,16 +7,18 @@ import 'hero.dart';
 ///
 /// Measured 2026-11-23 on real saves: non-stop auto-fight in U Minh Huyết
 /// Hải kills ~116 monsters a minute, ~420 Thần Thiết an hour at 6% plus
-/// ~190 from its boss every 150 s, so ~610 an hour at most. Days, weeks,
-/// the tower and Ác Mộng add a couple of thousand on top. The limits below
-/// leave room above that; the edited save that set them (BachDoc) held
-/// ~530k Thần Thiết and ~490k Mảnh Hoàng Kim in 62 hours, ten times over.
+/// ~190 from its boss every 150 s, so ~610 an hour standing in the field.
+/// Before 1.24 leaving and re-entering brought the boss straight back, and
+/// a top player (Nhân Long) farmed it every ~23 s: 28k boss kills, ~313k
+/// Thần Thiết in 217 h (~1,440 an hour). That was the game's bug, not an
+/// edit, so the limit leaves room for it. The edited save that set the
+/// limits (BachDoc) held ~530k Thần Thiết and ~490k Mảnh Hoàng Kim in 62 h.
 
 /// Thần Thiết that may come from anything but play time.
 const int hoardIronBase = 2000;
 
 /// Thần Thiết an hour of play may bring at most.
-const int hoardIronPerHour = 800;
+const int hoardIronPerHour = 2500;
 
 /// Mảnh Hoàng Kim held, at most, besides [hoardShardsPerHour].
 const int hoardShardsBase = 5000;
