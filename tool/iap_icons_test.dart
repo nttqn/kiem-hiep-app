@@ -302,6 +302,96 @@ void _goldPack(Canvas c) {
   }
 }
 
+/// One lacquered chest of [scale] standing on [base], heaped with sycee.
+void _chest(Canvas c, Offset base, double k) {
+  c.save();
+  c.translate(base.dx, base.dy);
+  c.scale(k);
+  const body = Rect.fromLTRB(-146, -160, 146, 0);
+  c.drawRRect(RRect.fromRectAndRadius(body, const Radius.circular(18)),
+      Paint()..shader = ui.Gradient.linear(body.topCenter, body.bottomCenter, [const Color(0xFFB3261E), const Color(0xFF5A0E0A)]));
+  final band = Paint()..color = _gold;
+  c.drawRect(const Rect.fromLTRB(-146, -130, 146, -114), band);
+  c.drawRect(const Rect.fromLTRB(-16, -160, 16, 0), band);
+  c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTRB(-20, -100, 20, -58), const Radius.circular(6)),
+      Paint()..color = const Color(0xFF7A4A08));
+  final lid = Path()
+    ..moveTo(-146, -160)
+    ..lineTo(-106, -280)
+    ..lineTo(106, -280)
+    ..lineTo(146, -160)
+    ..close();
+  c.drawPath(lid, Paint()..color = const Color(0xFF3A0A08));
+  for (final (x, y, w) in [
+    (-80.0, -162.0, 110.0), (80.0, -162.0, 110.0), (0.0, -168.0, 130.0),
+    (-50.0, -208.0, 110.0), (50.0, -208.0, 110.0), (0.0, -244.0, 120.0),
+  ]) {
+    _sycee(c, Offset(x, y), w);
+  }
+  c.restore();
+}
+
+/// Rương Ngân Lượng: two heaped chests, sycee spilling in front.
+void _goldChest(Canvas c) {
+  _frame(c, const Color(0xFFB0501A), const Color(0xFF2A0C04));
+  _glow(c, const Offset(_s / 2, _s * 0.5), 240, const Color(0xAAFFD34A));
+  _chest(c, const Offset(160, 360), 0.62);
+  _chest(c, const Offset(352, 360), 0.62);
+  _chest(c, const Offset(256, 440), 0.78);
+  for (final (x, y, w) in [(90.0, 446.0, 70.0), (420.0, 446.0, 70.0)]) {
+    _sycee(c, Offset(x, y), w);
+  }
+  for (final (p, r) in [
+    (const Offset(110, 110), 22.0),
+    (const Offset(400, 100), 26.0),
+    (const Offset(256, 70), 16.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFFFF4C8));
+  }
+}
+
+/// Kho Ngân Lượng: a red treasury gate over a mountain of sycee, star
+/// crystals at its feet.
+void _goldVault(Canvas c) {
+  _frame(c, const Color(0xFF9A1A3A), const Color(0xFF1A0410));
+  _glow(c, const Offset(_s / 2, _s * 0.48), 250, const Color(0xBBFFD34A));
+  // Roof.
+  final roof = Path()
+    ..moveTo(70, 160)
+    ..quadraticBezierTo(150, 150, 190, 92)
+    ..lineTo(322, 92)
+    ..quadraticBezierTo(362, 150, 442, 160)
+    ..lineTo(442, 176)
+    ..lineTo(70, 176)
+    ..close();
+  c.drawPath(roof, Paint()..shader = ui.Gradient.linear(const Offset(0, 92), const Offset(0, 176), [const Color(0xFF3A6A4A), const Color(0xFF173A26)]));
+  c.drawRect(const Rect.fromLTRB(70, 172, 442, 184), Paint()..color = _gold);
+  // Pillars and the dark doorway.
+  c.drawRect(const Rect.fromLTRB(118, 184, 394, 400), Paint()..color = const Color(0xFF2A0606));
+  for (final x in [100.0, 380.0]) {
+    c.drawRect(Rect.fromLTWH(x, 184, 32, 230),
+        Paint()..shader = ui.Gradient.linear(Offset(x, 0), Offset(x + 32, 0), [const Color(0xFFD8342A), const Color(0xFF7A100C)]));
+  }
+  c.drawRect(const Rect.fromLTRB(176, 196, 336, 222), Paint()..color = _goldDeep);
+  // Gold heaped out of the door.
+  for (final (x, y, w) in [
+    (150.0, 420.0, 100.0), (256.0, 424.0, 120.0), (362.0, 420.0, 100.0),
+    (200.0, 380.0, 100.0), (312.0, 380.0, 100.0), (256.0, 340.0, 110.0),
+    (210.0, 300.0, 84.0), (302.0, 300.0, 84.0), (256.0, 266.0, 90.0),
+  ]) {
+    _sycee(c, Offset(x, y), w);
+  }
+  _crystal(c, const Offset(76, 452), 58, 120, const Color(0xFF8FD8FF), const Color(0xFF2A5AB8));
+  _crystal(c, const Offset(436, 452), 58, 130, const Color(0xFFB08CFF), const Color(0xFF4A2A98));
+  for (final (p, r) in [
+    (const Offset(80, 110), 22.0),
+    (const Offset(436, 96), 24.0),
+    (const Offset(256, 60), 18.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFFFF4C8));
+  }
+}
+
 /// Gói lễ hội (Đông Chí): a big snowflake on night blue, a red lantern
 /// hanging beside it.
 void _fest(Canvas c) {
@@ -467,5 +557,7 @@ void main() {
     await _write('kh_goi_thang_tinh', _starPack);
     await _write('kh_goi_le_hoi', _fest);
     await _write('kh_hom_ngan_luong', _goldPack);
+    await _write('kh_ruong_ngan_luong', _goldChest);
+    await _write('kh_kho_ngan_luong', _goldVault);
   });
 }

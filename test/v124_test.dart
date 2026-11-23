@@ -7,6 +7,7 @@ import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/i18n.dart';
 import 'package:kiem_hiep/core/newcomer.dart';
+import 'package:kiem_hiep/core/premium.dart';
 import 'package:kiem_hiep/core/quick_chat.dart';
 import 'package:kiem_hiep/ui/quick_chat_button.dart';
 
@@ -48,6 +49,24 @@ void main() {
     final back = HeroData.fromJson(jsonDecode(jsonEncode(h.toJson())) as Map<String, dynamic>);
     expect(back.bornLang, 'en');
     expect(HeroData.fromJson(jsonDecode(jsonEncode((HeroData(name: 'B', hanh: Hanh.moc)).toJson())) as Map<String, dynamic>).bornLang, '');
+  });
+
+  test('Rương and Kho Ngân Lượng: bigger, for lv80+ or reborn', () {
+    expect(allSkus, containsAll([skuGoldChest, skuGoldVault]));
+    expect(bigGoldOpen(79, 0), isFalse);
+    expect(bigGoldOpen(80, 0), isTrue);
+    expect(bigGoldOpen(10, 1), isTrue);
+    final h = HeroData(name: 'A', hanh: Hanh.kim)
+      ..level = 99
+      ..rebirths = 6;
+    final g0 = h.gold, s0 = h.starStones;
+    h.grantGoldPack(goldChestMul);
+    expect(h.gold - g0, goldPackFor(99, 6) * 6);
+    expect(h.gold - g0, 45780000);
+    final lines = h.grantGoldVault();
+    expect(h.gold - g0, goldPackFor(99, 6) * 21);
+    expect(h.starStones - s0, goldVaultStones);
+    expect(lines, hasLength(2));
   });
 
   testWidgets('the quick chat sheet fits a small phone and sends a line', (t) async {

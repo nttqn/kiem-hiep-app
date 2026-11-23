@@ -33,6 +33,8 @@ class PurchaseLog {
         skuPass => tr('Lệnh Bài Hào Kiệt'),
         skuFest => tr('Gói lễ hội'),
         skuGoldPack => tr('Hòm Ngân Lượng'),
+        skuGoldChest => tr('Rương Ngân Lượng'),
+        skuGoldVault => tr('Kho Ngân Lượng'),
         _ => sku,
       };
 
@@ -321,6 +323,10 @@ class PurchaseService {
         text = tr('Gói Thăng Tinh cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantStarPack().join(', ')});
       case skuGoldPack:
         text = tr('Hòm Ngân Lượng cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantGoldPack().join(', ')});
+      case skuGoldChest:
+        text = tr('Rương Ngân Lượng cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantGoldPack(goldChestMul).join(', ')});
+      case skuGoldVault:
+        text = tr('Kho Ngân Lượng cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantGoldVault().join(', ')});
       case skuFest:
         text = tr('Gói lễ hội cho {hName}: {p0}', {'hName': h.name, 'p0': h.grantFestPack().join(', ')});
       case skuPass:

@@ -3524,5 +3524,12 @@
  "Chat nhanh": "빠른 채팅",
  "Câu chat nhanh hiện bằng ngôn ngữ của người đọc.": "빠른 채팅 문장은 읽는 사람의 언어로 보입니다.",
  "Tân hiệp khách: +{p0}% EXP và lượng": "신참 협객: 경험치와 냥 +{p0}%",
- "Từ quái, tới hết ngày {p0}. Chào mừng đến giang hồ!": "몬스터 처치 시, {p0}까지. 강호에 오신 것을 환영합니다!"
+ "Từ quái, tới hết ngày {p0}. Chào mừng đến giang hồ!": "몬스터 처치 시, {p0}까지. 강호에 오신 것을 환영합니다!",
+ "Rương Ngân Lượng": "냥 큰 상자",
+ "Kho Ngân Lượng": "냥 보물고",
+ "Rương Ngân Lượng cho {hName}: {p0}": "{hName}의 냥 큰 상자: {p0}",
+ "Kho Ngân Lượng cho {hName}: {p0}": "{hName}의 냥 보물고: {p0}",
+ "Bằng {p0} Hòm Ngân Lượng": "냥 상자 {p0}개 분량",
+ "Giá tốt nhất, cho {hName}:": "최고 가성비, {hName}에게:",
+ "Tặng {starPackStones} Tinh Thạch": "성석 {starPackStones}개 추가"
 }

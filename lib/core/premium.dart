@@ -29,7 +29,21 @@ const String skuStarPack = 'kh_goi_thang_tinh';
 const String skuPass = 'kh_lenh_bai';
 /// Hòm Ngân Lượng (1.11.1): gold for one hero, any number of times.
 const String skuGoldPack = 'kh_hom_ngan_luong';
-const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest, skuGoldPack};
+/// Rương / Kho Ngân Lượng (1.24.0): the bigger gold buys for the top
+/// players, cheaper a lượng than the Hòm.
+const String skuGoldChest = 'kh_ruong_ngan_luong';
+const String skuGoldVault = 'kh_kho_ngan_luong';
+const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest, skuGoldPack, skuGoldChest, skuGoldVault};
+
+/// Hòms a Rương and a Kho hold (sold at about 4x and 8x a Hòm's price).
+const int goldChestMul = 6, goldVaultMul = 15;
+
+/// Tinh Thạch thrown in with a Kho.
+const int goldVaultStones = 30;
+
+/// The Rương and Kho show from this level, or once reborn.
+const int bigGoldLevel = 80;
+bool bigGoldOpen(int level, int rebirths) => level >= bigGoldLevel || rebirths > 0;
 
 /// Gold in a Hòm Ngân Lượng: grows with level and rebirths so it keeps its
 /// worth (about 6.5 million at level 99 after five rebirths, less than a
@@ -217,11 +231,17 @@ extension Premium on HeroData {
     return [tr('+{starPackStones} Tinh Thạch', {'starPackStones': starPackStones}), tr('+{starPackSouls} Hung Thú Tinh Phách', {'starPackSouls': starPackSouls})];
   }
 
-  /// Hòm Ngân Lượng bought.
-  List<String> grantGoldPack() {
-    final g = goldPackFor(level, rebirths);
+  /// Hòm Ngân Lượng bought ([mul] Hòms for a Rương or a Kho).
+  List<String> grantGoldPack([int mul = 1]) {
+    final g = goldPackFor(level, rebirths) * mul;
     gold += g;
     return [tr('+{g} lượng', {'g': g})];
+  }
+
+  /// Kho Ngân Lượng bought.
+  List<String> grantGoldVault() {
+    starStones += goldVaultStones;
+    return [...grantGoldPack(goldVaultMul), tr('+{starPackStones} Tinh Thạch', {'starPackStones': goldVaultStones})];
   }
 
   bool canClaimCard(String today) => cardActive(today) && cardClaimDay != today;

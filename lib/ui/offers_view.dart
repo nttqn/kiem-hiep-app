@@ -79,7 +79,7 @@ class _OffersViewState extends State<OffersView> {
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final card in [_firstPay(), _monthCard(), _goldPack(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
+            for (final card in [_firstPay(), _monthCard(), _goldPack(), if (bigGoldOpen(h.level, h.rebirths)) ...[_goldVault(), _goldChest()], _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
           ],
         );
       },
@@ -239,6 +239,39 @@ class _OffersViewState extends State<OffersView> {
           _line(tr('Mua bao nhiêu lần cũng được')),
           const Spacer(),
           _buy(skuGoldPack),
+        ],
+      );
+
+  /// Rương Ngân Lượng (1.24.0): six Hòms, lv80+ or reborn.
+  Widget _goldChest() => _box(
+        title: tr('Rương Ngân Lượng'),
+        color: const Color(0xFFFFB04A),
+        icon: Icons.inventory_2,
+        children: [
+          Text(tr('Nhận ngay cho {hName}:', {'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
+          const SizedBox(height: 4),
+          _line(tr('{p0} lượng', {'p0': fmt(goldPackFor(h.level, h.rebirths) * goldChestMul)})),
+          _line(tr('Bằng {p0} Hòm Ngân Lượng', {'p0': goldChestMul})),
+          _line(tr('Mua bao nhiêu lần cũng được')),
+          const Spacer(),
+          _buy(skuGoldChest),
+        ],
+      );
+
+  /// Kho Ngân Lượng (1.24.0): fifteen Hòms and Tinh Thạch, the best price.
+  Widget _goldVault() => _box(
+        title: tr('Kho Ngân Lượng'),
+        color: const Color(0xFFFF8A3A),
+        icon: Icons.account_balance,
+        children: [
+          Text(tr('Giá tốt nhất, cho {hName}:', {'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
+          const SizedBox(height: 4),
+          _line(tr('{p0} lượng', {'p0': fmt(goldPackFor(h.level, h.rebirths) * goldVaultMul)})),
+          _line(tr('Bằng {p0} Hòm Ngân Lượng', {'p0': goldVaultMul})),
+          _line(tr('Tặng {starPackStones} Tinh Thạch', {'starPackStones': goldVaultStones})),
+          _line(tr('Mua bao nhiêu lần cũng được')),
+          const Spacer(),
+          _buy(skuGoldVault),
         ],
       );
 
