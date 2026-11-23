@@ -56,6 +56,26 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.24.2, ≤ 500 ký tự)
+1.24.2
+• Cải thiện độ ổn định của quảng cáo nhận thưởng.
+• Tăng cường bảo vệ dữ liệu nhân vật.
+
+## What's new (1.24.2, en-US)
+1.24.2
+• More reliable rewarded ads.
+• Stronger protection for hero data.
+
+## 更新內容（1.24.2，zh-TW）
+1.24.2
+• 獎勵廣告更穩定。
+• 加強角色資料保護。
+
+## 업데이트 내용 (1.24.2, ko-KR)
+1.24.2
+• 보상형 광고 안정성 개선.
+• 캐릭터 데이터 보호 강화.
+
 ## Có gì mới (bản 1.24.1, ≤ 500 ký tự)
 1.24.1 – Giang hồ công bằng
 • Boss ở bản đồ ngoài giữ đúng thời gian hồi sinh: ra vào lại bản đồ không làm boss xuất hiện ngay.
