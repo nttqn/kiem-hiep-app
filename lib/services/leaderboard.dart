@@ -8,6 +8,7 @@ import '../core/arena.dart';
 import '../core/hanh.dart';
 import '../core/hero.dart';
 import '../core/hero_look.dart';
+import '../core/hoard_check.dart';
 import '../core/gold_boss.dart';
 import '../core/hung_thu.dart';
 import '../core/ledger.dart';
@@ -309,6 +310,9 @@ class Leaderboard extends ChangeNotifier {
   final Map<String, int> _sentPower = {};
   final Map<String, int> _sentHunt = {};
   final Map<String, DateTime> _sentAt = {};
+
+  /// Rows already taken down this session for [hoardReason].
+  final Set<String> _hoardPulled = {};
   static const Duration _powerQuiet = Duration(minutes: 30);
 
   /// Writes [h] (in [slot]) to the board. Called with every cloud upload;
@@ -319,6 +323,19 @@ class Leaderboard extends ChangeNotifier {
     if (hidden || uid == null || debugEntries != null) return;
     h.huntRollDay(vnDayKey());
     final id = '${uid}_$slot';
+    // An edited save (more Thần Thiết or Mảnh Hoàng Kim than its play time
+    // could earn) stays off the boards, and its old row comes down.
+    final why = hoardReason(h);
+    if (why != null) {
+      if (_hoardPulled.add(id)) {
+        debugPrint('leaderboard: $id kept off ($why)');
+        await withdraw(slot: slot);
+      }
+      submitError = tr('Máy chủ không nhận số liệu của nhân vật này nên chưa lên bảng. '
+          'Nếu bạn chơi bình thường mà vẫn gặp, hãy báo cho nhà phát triển.');
+      notifyListeners();
+      return;
+    }
     final row = <String, Object>{
       'uid': uid,
       'name': h.name.length > 24 ? h.name.substring(0, 24) : h.name,
@@ -481,6 +498,7 @@ class Leaderboard extends ChangeNotifier {
     final day = golden ? h.gbDay : h.wbDay;
     final total = golden ? h.gbTotal : h.wbTotal;
     if (hidden || uid == null || debugBoss != null || day.isEmpty) return;
+    if (hoardReason(h) != null) return;
     final sentKey = '${golden ? 'g' : ''}$day/${uid}_$slot';
     if (_bossSent[sentKey] == total) return; // nothing new to write
     try {

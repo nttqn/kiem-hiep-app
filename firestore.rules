@@ -79,6 +79,12 @@ service cloud.firestore {
           && (!('rk' in d) || d.rk == d.rank * 1000 + ('dao' in d ? d.dao : 0))
           // Looks, worn gear and stats for "Xem thông tin" (1.12.0+), by size.
           && (!('look' in d) || (d.look is map && d.look.size() <= 7))
+          // Thần binh (1.24): the Thần Thiết its level took past 20, doubled
+          // (4116 + 500n + 25n(n-1), n = dv - 20), within what play time can
+          // earn: 800 an hour and 2,000 besides, as in lib/core/hoard_check.dart.
+          && (!('look' in d) || !('dv' in d.look) || !('play' in d) || d.look.dv <= 20
+              || 9 * (4116 + 500 * (d.look.dv - 20) + 25 * (d.look.dv - 20) * (d.look.dv - 21))
+                  <= 36000 + 4 * d.play)
           && (!('st' in d) || (d.st is list && d.st.size() <= 10));
       }
 
