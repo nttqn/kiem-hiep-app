@@ -24,6 +24,10 @@ const int hoardIronPerHour = 2500;
 const int hoardShardsBase = 5000;
 const int hoardShardsPerHour = 100;
 
+/// Lượng a save may hold beyond its ledger (sổ vàng) before it counts as
+/// edited; an honest save is off by none.
+const int hoardGoldSlack = 1000000;
+
 /// Thần Thiết spent to take Thần binh from 0 to [lv].
 int divineIronTotal(int lv) {
   var s = 0;
@@ -39,5 +43,6 @@ String? hoardReason(HeroData h) {
   final iron = divineIronTotal(h.divine) + h.divineIron;
   if (iron > hoardIronBase + hoardIronPerHour * hours) return 'iron';
   if (h.goldShards > hoardShardsBase + hoardShardsPerHour * hours) return 'shards';
+  if (h.goldUnaccounted > hoardGoldSlack) return 'gold';
   return null;
 }

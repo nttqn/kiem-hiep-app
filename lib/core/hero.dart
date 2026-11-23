@@ -273,7 +273,27 @@ class HeroData {
   bool female;
   int level = 1;
   int exp = 0;
-  int gold = 80;
+
+  /// Lượng, with its ledger (sổ vàng, 1.24.1): every change goes through
+  /// [gold]'s setter, which adds it to [goldIn] or [goldOut], so the
+  /// balance always equals what came in less what went out. A save whose
+  /// "gold" was edited by hand no longer does ([goldUnaccounted]). Saves
+  /// from before the ledger open it with the gold they held.
+  int _gold = 80;
+  int goldIn = 80, goldOut = 0;
+  int get gold => _gold;
+  set gold(int v) {
+    final d = v - _gold;
+    if (d > 0) {
+      goldIn += d;
+    } else {
+      goldOut -= d;
+    }
+    _gold = v;
+  }
+
+  /// Lượng held beyond what the ledger accounts for (0 on an honest save).
+  int get goldUnaccounted => _gold - (goldIn - goldOut);
 
   /// Points put in str, dex, vit, ene on top of the sect's base.
   final List<int> spent = [0, 0, 0, 0];
@@ -3386,6 +3406,7 @@ class HeroData {
         'level': level,
         'exp': exp,
         'gold': gold,
+        'gl': [goldIn, goldOut],
         'spent': spent,
         'free': freePoints,
         'sp': skillPoints,
@@ -3506,6 +3527,12 @@ class HeroData {
     h.level = (m['level'] as int).clamp(1, maxLevel);
     h.exp = m['exp'] as int;
     h.gold = m['gold'] as int;
+    // The ledger, read before anything below pays or charges gold.
+    final gl = m['gl'];
+    if (gl is List && gl.length == 2 && gl[0] is int && gl[1] is int) {
+      h.goldIn = gl[0] as int;
+      h.goldOut = gl[1] as int;
+    }
     final sp = m['spent'] as List;
     for (var i = 0; i < 4; i++) {
       h.spent[i] = sp[i] as int;
