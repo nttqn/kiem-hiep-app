@@ -227,9 +227,22 @@ void main() {
       h.beastSouls = 10;
       expect(h.starUp(it), isTrue);
       expect(h.starUp(it), isTrue);
+      // Tinh Hồn (1.24.0): ★6-★10, each taking more Tinh Phách.
+      expect(it.star, 5);
+      expect(h.starBlock(it), StarBlock.souls);
+      h.starStones += 1000;
+      h.beastSouls += 100;
+      for (var s = 5; s < maxStar; s++) {
+        expect(h.starUp(it), isTrue);
+      }
+      expect(it.star, 10);
       expect(h.starBlock(it), StarBlock.maxed);
-      expect(h.starStones, 1000 - starStoneCost.reduce((a, b) => a + b));
-      expect(h.beastSouls, 10 - starSoulCost.reduce((a, b) => a + b));
+      expect(h.starStones, 2000 - starStoneCost.reduce((a, b) => a + b));
+      expect(h.beastSouls, 110 - starSoulCost.reduce((a, b) => a + b));
+      // ★10: +30% base to ★5, +4% for each star after; lines at half rate.
+      expect(starMul(5), closeTo(1.30, 1e-9));
+      expect(starMul(10), closeTo(1.50, 1e-9));
+      expect(starLineUnits(10), 7.5);
       expect(h.power, greaterThan(p0));
       expect(h.allBonuses()[Bonus.skillDmg]!, greaterThanOrEqualTo(starLines[Slot.weapon]!.per * 5));
     });

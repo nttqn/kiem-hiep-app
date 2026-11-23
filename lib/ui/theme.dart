@@ -389,7 +389,11 @@ class ItemTile extends StatelessWidget {
                 right: 3,
                 bottom: 1,
                 child: Text('★${it.star}',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFFFD34A), shadows: _tileTextShadow)),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(it.star > starLowMax ? starHighColor : 0xFFFFD34A),
+                        shadows: _tileTextShadow)),
               ),
             if (it != null)
               Positioned(

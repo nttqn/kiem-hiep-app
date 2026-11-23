@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'hero.dart';
 import 'items.dart';
 import 'sects.dart';
@@ -5,7 +7,9 @@ import 'sects.dart';
 /// Thăng Tinh (1.8.0): a +[maxPlus] item rises ★1 to ★[maxStar]. Each star
 /// adds [starBasePct] to its base stats (items.dart) and a line of its
 /// slot's own ([starLines]). Tinh Thạch come from Tâm Ma Ảo Cảnh and Ma
-/// Vực; the last two stars also take Hung Thú Tinh Phách.
+/// Vực; ★4 and up also take Hung Thú Tinh Phách. ★6-★10 (Tinh Hồn,
+/// 1.24.0) give less a star ([starHighPct], half a line) at a steep price:
+/// months of Ma Vực and Hung Thú for a full set.
 class StarLine {
   const StarLine(this.bonus, this.per, this.label);
   final Bonus bonus;
@@ -14,8 +18,11 @@ class StarLine {
   final double per;
   final String label;
 
-  String at(int star) => '$label +${(per * star * 100).toStringAsFixed(1)}%';
+  String at(int star) => '$label +${(per * starLineUnits(star) * 100).toStringAsFixed(1)}%';
 }
+
+/// Line units [star] stars give: one a star to ★5, half one after.
+double starLineUnits(int star) => math.min(star, starLowMax) + 0.5 * math.max(0, star - starLowMax);
 
 const starLines = <Slot, StarLine>{
   Slot.weapon: StarLine(Bonus.skillDmg, 0.04, 'Sát thương kỹ năng'),
@@ -28,8 +35,8 @@ const starLines = <Slot, StarLine>{
 };
 
 /// Tinh Thạch, Tinh Phách and gold to go from [star] to star + 1.
-const starStoneCost = [10, 20, 35, 55, 80];
-const starSoulCost = [0, 0, 0, 2, 4];
+const starStoneCost = [10, 20, 35, 55, 80, 100, 125, 150, 180, 220];
+const starSoulCost = [0, 0, 0, 2, 4, 5, 6, 7, 8, 10];
 int starGoldCost(int star) => 500000 * (star + 1);
 
 /// The star lines of every worn item.
@@ -38,7 +45,7 @@ Map<Bonus, double> starBonuses(Iterable<Item> worn) {
   for (final it in worn) {
     if (it.star <= 0) continue;
     final l = starLines[it.slot]!;
-    out[l.bonus] = (out[l.bonus] ?? 0) + l.per * it.star;
+    out[l.bonus] = (out[l.bonus] ?? 0) + l.per * starLineUnits(it.star);
   }
   return out;
 }

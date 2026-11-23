@@ -121,7 +121,7 @@ class Item {
 
   /// What enhancement, stars and Khai Quang multiply the base stats by.
   double get baseMul =>
-      (1 + 0.1 * plus) * (1 + starBasePct * star) * (1 + glowPct(glow)) * (1 + tienBasePct * tien);
+      (1 + 0.1 * plus) * starMul(star) * (1 + glowPct(glow)) * (1 + tienBasePct * tien);
   int get color => golden ? goldItemColor : rarity.color;
   String get rarityLabel => golden ? tr('Hoàng Kim') : tr(rarity.label);
 
@@ -215,9 +215,22 @@ const int maxTien = 9;
 const double tienBasePct = 0.05;
 
 /// Thăng Tinh (1.8.0): stars a +[maxPlus] item can rise, and the base-stat
-/// gain of each.
-const int maxStar = 5;
+/// gain of each. Tinh Hồn (1.24.0) adds ★6-★10 for the top players, each
+/// worth [starHighPct] (★10: +50% base, was +30% at ★5).
+const int maxStar = 10;
+const int starLowMax = 5;
 const double starBasePct = 0.06;
+const double starHighPct = 0.04;
+
+/// The colour of ★6-★10.
+const int starHighColor = 0xFFFF5A4A;
+
+/// What [star] stars multiply an item's base stats by.
+double starMul(int star) =>
+    1 + starBasePct * math.min(star, starLowMax) + starHighPct * math.max(0, star - starLowMax);
+
+/// The base-stat gain of the star after [star].
+double nextStarPct(int star) => star < starLowMax ? starBasePct : starHighPct;
 
 /// Khai Quang (1.9.0): a Hoàng Kim piece's base stats rise by these shares
 /// at levels 1-5, so its 2.1x over a common piece reaches 2.6x.

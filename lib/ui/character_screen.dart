@@ -766,7 +766,16 @@ class _ItemDialogState extends State<ItemDialog> {
     final maxed = it.star >= maxStar;
     final block = h.starBlock(it);
     return [
-      Text(tr('Thăng Tinh {p0}{p1}', {'p0': '★' * it.star, 'p1': '☆' * (maxStar - it.star)}), style: bold.copyWith(color: goldLight)),
+      // Two rows of five past ★5 (1.24.0), the second in Tinh Hồn red.
+      Text.rich(
+          TextSpan(children: [
+            TextSpan(text: tr('Thăng Tinh {p0}{p1}', {'p0': '★' * math.min(it.star, starLowMax), 'p1': '☆' * (starLowMax - math.min(it.star, starLowMax))})),
+            if (it.star >= starLowMax)
+              TextSpan(
+                  text: ' ${'★' * (it.star - starLowMax)}${'☆' * (maxStar - it.star)}',
+                  style: const TextStyle(color: Color(starHighColor))),
+          ]),
+          style: bold.copyWith(color: goldLight)),
       if (maxed)
         Text(tr('Đã đạt ★{maxStar}', {'maxStar': maxStar}), style: small)
       else ...[
@@ -780,7 +789,7 @@ class _ItemDialogState extends State<ItemDialog> {
             Text(tr('{p0} lượng', {'p0': fmt(starGoldCost(it.star))}), style: small.copyWith(fontSize: 11)),
           ],
         ),
-        Text(tr('+{p0}% chỉ số gốc, {p1} +{p2}%', {'p0': (starBasePct * 100).round(), 'p1': starLines[it.slot]!.label.toLowerCase(), 'p2': (starLines[it.slot]!.per * 100).toStringAsFixed(1)}),
+        Text(tr('+{p0}% chỉ số gốc, {p1} +{p2}%', {'p0': (nextStarPct(it.star) * 100).round(), 'p1': tr(starLines[it.slot]!.label).toLowerCase(), 'p2': (starLines[it.slot]!.per * (it.star < starLowMax ? 1 : 0.5) * 100).toStringAsFixed(1)}),
             style: small.copyWith(fontSize: 11, color: const Color(0xFFFFD34A))),
       ],
       const SizedBox(height: 4),
