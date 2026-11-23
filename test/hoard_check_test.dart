@@ -27,7 +27,7 @@ void main() {
   test('top real farmers pass', () {
     // TranQuanKyy: Tiên binh 100 after 219 h of auto-fight.
     expect(hoardReason(hero(divine: 100, iron: 3339, shards: 30, play: 790349)), isNull);
-    // Nhân Long: farmed the re-entry boss bug (fixed in 1.24), 313k iron.
+    // Nhân Long: farmed the re-entry boss bug (fixed in 1.24.1), 313k iron.
     expect(hoardReason(hero(divine: 76, iron: 258422, shards: 2544, play: 781578)), isNull);
     // PoPo-like: 70 after 360 h.
     expect(hoardReason(hero(divine: 70, iron: 5000, shards: 3000, play: 360 * 3600)), isNull);

@@ -1015,7 +1015,7 @@ class World {
         _spawnInCamp(_camps.length - 1);
       }
     }
-    // A boss felled lately is still on its way back (1.24).
+    // A boss felled lately is still on its way back (1.24.1).
     final wait = fieldBossWait(hero.fieldBossAt[map.id], GameClock.nowMs());
     if (wait <= 0) {
       _spawnBoss();

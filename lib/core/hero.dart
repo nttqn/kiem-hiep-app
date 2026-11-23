@@ -382,7 +382,7 @@ class HeroData {
 
   /// When each field's boss last fell (ms, by map id), so leaving and
   /// coming back does not bring it back before [fieldBossRespawnSec]
-  /// (1.24: re-entering U Minh Huyết Hải every 20 s farmed its boss ~6x
+  /// (1.24.1: re-entering U Minh Huyết Hải every 20 s farmed its boss ~6x
   /// faster than standing there).
   final Map<String, int> fieldBossAt = {};
 

@@ -56,6 +56,26 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.24.1, ≤ 500 ký tự)
+1.24.1 – Giang hồ công bằng
+• Boss ở bản đồ ngoài giữ đúng thời gian hồi sinh: ra vào lại bản đồ không làm boss xuất hiện ngay.
+• Bảng xếp hạng tự loại các nhân vật có dữ liệu bất thường, giữ cuộc đua công bằng cho mọi người.
+
+## What's new (1.24.1, en-US)
+1.24.1 – Fair play
+• Field bosses keep their respawn time: leaving and re-entering a map no longer brings the boss back at once.
+• Leaderboards now leave out heroes with impossible data, keeping the race fair for everyone.
+
+## 更新內容（1.24.1，zh-TW）
+1.24.1 – 公平江湖
+• 野外首領保持重生時間：離開再進入地圖不會讓首領立即重生。
+• 排行榜自動排除數據異常的角色，維護公平競爭。
+
+## 업데이트 내용 (1.24.1, ko-KR)
+1.24.1 – 공정한 강호
+• 필드 보스의 부활 시간 유지: 맵을 나갔다 다시 들어와도 보스가 바로 나타나지 않습니다.
+• 순위표에서 비정상 데이터를 가진 캐릭터를 자동으로 제외해 공정한 경쟁을 지킵니다.
+
 ## Có gì mới (bản 1.24.0, ≤ 500 ký tự)
 1.24.0 – Giang hồ năm châu
 • Thăng Tinh mở tới ★10: mỗi sao mới +4% chỉ số gốc.
