@@ -83,6 +83,11 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // gma_mediation_unity 1.11.1 pins Unity Ads SDK 4.17.0 next to Google's
+    // Unity adapter 4.20.1.0, which is built for SDK 4.20.1 and does not pull
+    // it in: Unity saw our requests but not one impression (ticket
+    // #00945147, Nov 2026). Gradle takes the higher version, this one.
+    implementation("com.unity3d.ads:unity-ads:4.20.1")
 }
 
 // Firebase reads its project settings from google-services.json. Until that
