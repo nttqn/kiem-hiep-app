@@ -61,16 +61,18 @@ Hỗ trợ: trungsmail@gmail.com
 • Thăng Tinh mở tới ★10: mỗi sao mới +4% chỉ số gốc.
 • Thêm tiếng Anh, có kênh chat Thế Giới riêng; nhân vật đang chơi vẫn giữ tiếng Việt.
 • Chat nhanh: bấm mặt cười cạnh ô chat để gửi câu soạn sẵn (hiện theo ngôn ngữ người đọc) hoặc biểu cảm.
-• Tân hiệp khách: nhân vật mới chơi tiếng Trung, Hàn, Anh được +50% EXP và lượng 7 ngày đầu, kèm 3 Song Bội Đan.
-• Bảng xếp hạng và bang hội có thêm nhãn EN; tên đồng xu lễ hội được dịch đầy đủ.
+• Tân hiệp khách: nhân vật mới chơi tiếng Trung, Hàn, Anh được +50% EXP và lượng 7 ngày đầu.
+• Ưu đãi mới từ cấp 80: Rương và Kho Ngân Lượng, nhiều lượng hơn, giá tốt hơn.
+• Thêm nhãn EN; dịch tên đồng xu lễ hội.
 
 ## What's new (1.24.0, en-US)
 1.24.0 – Now in English
 • Star Up now goes to ★10: each new star adds +4% base stats.
 • The whole game is now in English, with its own World chat channel.
 • Quick chat: tap the smiley by the chat box for ready-made lines (shown in each reader's language) and emotes.
-• Newcomers who start in English, Chinese or Korean get +50% EXP and gold from monsters for their first 7 days, plus 3 Double Pills.
-• Leaderboards and guilds show an EN tag; festival coin names are now translated.
+• Newcomers who start in English, Chinese or Korean get +50% EXP and gold for their first 7 days.
+• New offers from level 80: Gold Hoard and Gold Vault, more gold at a better price.
+• EN tags; festival coin names translated.
 
 ## 更新內容（1.24.0，zh-TW）
 1.24.0 – 江湖五洲
@@ -78,6 +80,7 @@ Hỗ trợ: trungsmail@gmail.com
 • 新增 English（英文），並有專屬世界頻道。可在地球按鈕或設定中切換語言。
 • 快速聊天：點聊天框旁的笑臉，可發送預設句子（自動以讀者的語言顯示）或插入表情，世界與幫會頻道皆可用。
 • 新俠客：以中文、韓文、英文建立的新角色，前 7 天打怪經驗與銀兩 +50%，並獲得 3 顆雙倍丹。
+• 新優惠（80 級起）：銀兩大箱與銀兩寶庫，銀兩更多、價格更划算。
 • 排行榜與幫會新增 EN 標示；節慶貨幣名稱完整翻譯。
 
 ## 업데이트 내용 (1.24.0, ko-KR)
@@ -86,6 +89,7 @@ Hỗ trợ: trungsmail@gmail.com
 • English(영어) 추가, 영어 전용 월드 채팅 채널. 지구본 버튼이나 설정에서 언어를 바꿀 수 있습니다.
 • 빠른 채팅: 채팅창 옆 웃는 얼굴을 눌러 준비된 문장(읽는 사람의 언어로 표시)이나 이모티콘을 보낼 수 있습니다. 월드·방회 채팅 모두 가능.
 • 신참 협객: 한국어·중국어·영어로 만든 새 캐릭터는 첫 7일간 몬스터 경험치와 냥 +50%, 쌍배단 3개 지급.
+• 새 특가(80레벨부터): 냥 큰 상자와 냥 보물고, 더 많은 냥을 더 좋은 가격에.
 • 순위표와 방회에 EN 표시 추가, 축제 화폐 이름 번역.
 
 ## Có gì mới (bản 1.23.0, ≤ 500 ký tự)
