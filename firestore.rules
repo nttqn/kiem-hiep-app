@@ -460,7 +460,7 @@ service cloud.firestore {
         && request.resource.data.rb is int && request.resource.data.rb >= 0 && request.resource.data.rb <= 9
         && request.resource.data.k in ['req', 'ok', 'tt', 'bye']
         && (request.resource.data.k != 'req' || request.resource.data.level >= 40 || request.resource.data.rb > 0)
-        && (request.resource.data.k == 'bye' || !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid));
+        && (request.resource.data.k == 'bye' || !exists(/databases/$(database)/documents/lbBans/$(request.auth.uid)));
     }
   }
 }
