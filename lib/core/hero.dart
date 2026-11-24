@@ -281,6 +281,10 @@ class HeroData {
   /// from before the ledger open it with the gold they held.
   int _gold = 80;
   int goldIn = 80, goldOut = 0;
+
+  /// Lượng bought with real money (Hòm/Rương/Kho Ngân Lượng), counted from
+  /// 1.25 on; the hoard check lets a buyer spend that much more.
+  int goldBought = 0;
   int get gold => _gold;
   set gold(int v) {
     final d = v - _gold;
@@ -3407,6 +3411,7 @@ class HeroData {
         'exp': exp,
         'gold': gold,
         'gl': [goldIn, goldOut],
+        if (goldBought > 0) 'gbo': goldBought,
         'spent': spent,
         'free': freePoints,
         'sp': skillPoints,
@@ -3533,6 +3538,8 @@ class HeroData {
       h.goldIn = gl[0] as int;
       h.goldOut = gl[1] as int;
     }
+    final gbo = m['gbo'];
+    if (gbo is int && gbo > 0) h.goldBought = gbo;
     final sp = m['spent'] as List;
     for (var i = 0; i < 4; i++) {
       h.spent[i] = sp[i] as int;

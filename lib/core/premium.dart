@@ -235,6 +235,7 @@ extension Premium on HeroData {
   List<String> grantGoldPack([int mul = 1]) {
     final g = goldPackFor(level, rebirths) * mul;
     gold += g;
+    goldBought += g;
     return [tr('+{g} lượng', {'g': g})];
   }
 

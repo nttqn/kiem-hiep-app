@@ -28,6 +28,23 @@ const int hoardShardsPerHour = 100;
 /// edited; an honest save is off by none.
 const int hoardGoldSlack = 1000000;
 
+/// Lượng spent on Thần binh / Tiên binh that may come from anything but
+/// play time or purchases (1.25). Measured 2026-11-24 on the top 15:
+/// honest heroes spent 0.7–1.4M an hour of play, Nhân Long (the field-boss
+/// bug) 2.2M; TranQuanKyy, editing gold with GameGuardian, 4.7M (1.08
+/// billion in 232 h).
+const int hoardDivGoldBase = 150000000;
+const int hoardDivGoldPerHour = 3000000;
+
+/// Lượng spent to take Thần binh from 0 to [lv].
+int divineGoldTotal(int lv) {
+  var s = 0;
+  for (var i = 0; i < lv; i++) {
+    s += divineGoldCost(i);
+  }
+  return s;
+}
+
 /// Thần Thiết spent to take Thần binh from 0 to [lv].
 int divineIronTotal(int lv) {
   var s = 0;
@@ -44,5 +61,6 @@ String? hoardReason(HeroData h) {
   if (iron > hoardIronBase + hoardIronPerHour * hours) return 'iron';
   if (h.goldShards > hoardShardsBase + hoardShardsPerHour * hours) return 'shards';
   if (h.goldUnaccounted > hoardGoldSlack) return 'gold';
+  if (divineGoldTotal(h.divine) > hoardDivGoldBase + hoardDivGoldPerHour * hours + h.goldBought) return 'divgold';
   return null;
 }
