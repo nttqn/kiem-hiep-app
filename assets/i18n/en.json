@@ -3531,5 +3531,17 @@
  "Kho Ngân Lượng cho {hName}: {p0}": "Gold Vault for {hName}: {p0}",
  "Bằng {p0} Hòm Ngân Lượng": "Worth {p0} Gold Chests",
  "Giá tốt nhất, cho {hName}:": "Best value, for {hName}:",
- "Tặng {starPackStones} Tinh Thạch": "Plus {starPackStones} Star Stones"
+ "Tặng {starPackStones} Tinh Thạch": "Plus {starPackStones} Star Stones",
+ "Mã quà {key}": "Gift code {key}",
+ "Mã quà không đúng.": "That gift code is not valid.",
+ "Nhập sai nhiều lần. Thử lại sau {p0} giây.": "Too many wrong tries. Try again in {p0} seconds.",
+ "Cần kết nối mạng để nhập mã quà.": "You need a connection to redeem a gift code.",
+ "Không kết nối được. Kiểm tra mạng rồi thử lại.": "Could not connect. Check your connection and try again.",
+ "Mã quà chưa đến ngày dùng.": "This gift code is not open yet.",
+ "Mã quà đã hết hạn.": "This gift code has expired.",
+ "Nhập mã quà": "Redeem code",
+ "{hName} đã nhận mã này rồi.": "{hName} has already redeemed this code.",
+ "Mã này cần cấp {minLevel}.": "This code needs level {minLevel}.",
+ "Mã quà được phát trên kênh và trang của game. Mỗi nhân vật nhận mỗi mã một lần.": "Gift codes are shared on the game's channel and page. Each hero can redeem each code once.",
+ "Mã quà": "Gift code"
 }

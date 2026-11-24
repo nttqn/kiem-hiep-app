@@ -99,3 +99,49 @@ class MailDef {
     );
   }
 }
+
+// ------------------------------------------------------------- mã quà tặng
+
+/// Mã quà tặng (1.24.2): a code the developer hands out (video, fan page)
+/// as the console document `codes/{CODE}`, with the same fields as a mail.
+/// Players type it in Hòm thư; each hero takes it once, kept in
+/// `mailClaimed` as [giftCodeId]. The rules let a player read one code by
+/// name but never list them. A code never gives Nguyệt thẻ days: those are
+/// a store product, and the App Store does not allow unlocking one by code.
+///
+/// [raw] as typed, made the document name: spaces dropped, upper case;
+/// null when it cannot be a code (3–24 of A–Z, 0–9, `_`, `-`).
+String? giftCodeKey(String raw) {
+  final k = raw.replaceAll(RegExp(r'\s+'), '').toUpperCase();
+  return RegExp(r'^[A-Z0-9_-]{3,24}$').hasMatch(k) ? k : null;
+}
+
+/// The claim id kept in `mailClaimed` for code [key].
+String giftCodeId(String key) => 'code:$key';
+
+/// Code [key]'s console document as a gift; null when it is not one for
+/// this player's language. Its `card` field is ignored (see [giftCodeKey]).
+MailDef? giftCodeFromMap(String key, Map<String, dynamic> m) {
+  final d = MailDef.fromMap(giftCodeId(key), {...m, 'card': 0, 'uid': ''});
+  if (d == null) return null;
+  final t = localField(m, 'title');
+  return t is String && t.trim().isNotEmpty
+      ? d
+      : MailDef(
+          id: d.id,
+          title: tr('Mã quà {key}', {'key': key}),
+          body: d.body,
+          from: d.from,
+          until: d.until,
+          minLevel: d.minLevel,
+          gold: d.gold,
+          shards: d.shards,
+          iron: d.iron,
+          gems: d.gems,
+          gemTier: d.gemTier,
+          pages: d.pages,
+          hpPots: d.hpPots,
+          mpPots: d.mpPots,
+          jade: d.jade,
+        );
+}

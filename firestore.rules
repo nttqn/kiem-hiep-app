@@ -126,6 +126,12 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // Mã quà tặng (1.24.2): codes written by hand in the console. A player
+    // reads one code by its name (get) but can never list them.
+    match /codes/{code} {
+      allow get: if true;
+    }
+
     // Bảng tin (1.16.3): notices written by hand in the console.
     match /news/{id} {
       allow read: if true;

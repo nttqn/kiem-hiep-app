@@ -122,4 +122,45 @@ class MailService extends ChangeNotifier {
     final day = vnDayKey();
     return [for (final m in mails) if (h.canClaimMail(m, day)) m];
   }
+
+  // ----------------------------------------------------------- mã quà tặng
+
+  /// Wrong codes in a row; past [_codeTries] the next look waits.
+  int _codeMisses = 0;
+  int _codeWaitUntil = 0;
+  static const int _codeTries = 5;
+
+  /// Looks up code [raw] (Mã quà tặng, 1.24.2). Gives the gift, or the
+  /// line to show when there is none.
+  Future<(MailDef?, String?)> lookupCode(String raw) async {
+    final key = giftCodeKey(raw);
+    if (key == null) return (null, tr('Mã quà không đúng.'));
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now < _codeWaitUntil) {
+      return (null, tr('Nhập sai nhiều lần. Thử lại sau {p0} giây.', {'p0': ((_codeWaitUntil - now) / 1000).ceil()}));
+    }
+    if (!CloudSave.instance.available) return (null, tr('Cần kết nối mạng để nhập mã quà.'));
+    Map<String, dynamic>? data;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('codes').doc(key).get().timeout(const Duration(seconds: 10));
+      data = doc.data();
+    } catch (e) {
+      debugPrint('code lookup: $e');
+      return (null, tr('Không kết nối được. Kiểm tra mạng rồi thử lại.'));
+    }
+    final gift = data == null ? null : giftCodeFromMap(key, _days(data));
+    final today = vnDayKey();
+    if (gift == null) {
+      _codeMisses++;
+      if (_codeMisses >= _codeTries) {
+        _codeMisses = 0;
+        _codeWaitUntil = now + 60000;
+      }
+      return (null, tr('Mã quà không đúng.'));
+    }
+    _codeMisses = 0;
+    if (gift.from.isNotEmpty && gift.from.compareTo(today) > 0) return (null, tr('Mã quà chưa đến ngày dùng.'));
+    if (gift.until.isNotEmpty && gift.until.compareTo(today) < 0) return (null, tr('Mã quà đã hết hạn.'));
+    return (gift, null);
+  }
 }

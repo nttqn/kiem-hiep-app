@@ -58,21 +58,25 @@ Hỗ trợ: trungsmail@gmail.com
 
 ## Có gì mới (bản 1.24.2, ≤ 500 ký tự)
 1.24.2
+• Mã quà tặng: vào Hòm thư → Nhập mã quà để nhận quà từ kênh và trang của game.
 • Cải thiện độ ổn định của quảng cáo nhận thưởng.
 • Tăng cường bảo vệ dữ liệu nhân vật.
 
 ## What's new (1.24.2, en-US)
 1.24.2
+• Gift codes: open Mail → Redeem code to claim gifts shared on the game's channel and page.
 • More reliable rewarded ads.
 • Stronger protection for hero data.
 
 ## 更新內容（1.24.2，zh-TW）
 1.24.2
+• 禮包碼：打開信箱 → 兌換禮包碼，領取遊戲頻道與粉絲專頁發放的禮物。
 • 獎勵廣告更穩定。
 • 加強角色資料保護。
 
 ## 업데이트 내용 (1.24.2, ko-KR)
 1.24.2
+• 선물 코드: 우편함 → 선물 코드 입력에서 게임 채널과 페이지에서 배포한 선물을 받으세요.
 • 보상형 광고 안정성 개선.
 • 캐릭터 데이터 보호 강화.
 

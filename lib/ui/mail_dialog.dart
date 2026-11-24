@@ -81,6 +81,13 @@ class _MailDialogState extends State<_MailDialog> {
               ),
       ),
       actions: [
+        TextButton(
+          onPressed: () async {
+            await showDialog<void>(context: context, builder: (_) => const _CodeDialog());
+            if (mounted) setState(() {});
+          },
+          child: Text(tr('Nhập mã quà')),
+        ),
         if (open.length > 1)
           TextButton(
             onPressed: () {
@@ -139,6 +146,108 @@ class _MailDialogState extends State<_MailDialog> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Mã quà tặng (1.24.2): type a code, take its gift once per hero.
+class _CodeDialog extends StatefulWidget {
+  const _CodeDialog();
+
+  @override
+  State<_CodeDialog> createState() => _CodeDialogState();
+}
+
+class _CodeDialogState extends State<_CodeDialog> {
+  final _field = TextEditingController();
+  final _rng = math.Random();
+  bool _busy = false;
+  String? _say;
+  List<String>? _got;
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _say = null;
+    });
+    final (gift, why) = await MailService.instance.lookupCode(_field.text);
+    if (!mounted) return;
+    final h = SaveService.instance.hero;
+    String? say = why;
+    List<String>? got;
+    if (gift != null) {
+      final key = gift.id.substring(5);
+      if (h.mailClaimed.contains(gift.id)) {
+        say = tr('{hName} đã nhận mã này rồi.', {'hName': h.name});
+      } else if (h.rebirths == 0 && h.level < gift.minLevel) {
+        say = tr('Mã này cần cấp {minLevel}.', {'minLevel': gift.minLevel});
+      } else {
+        got = h.claimMail(gift, vnDayKey(), _rng);
+        h.recompute();
+        SaveService.instance.save();
+        Analytics.instance.log('code_claim', {'code': key});
+        say = tr(gift.title);
+      }
+    } else {
+      Analytics.instance.log('code_fail', {'why': why ?? ''});
+    }
+    setState(() {
+      _busy = false;
+      _say = say;
+      _got = got;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final got = _got;
+    return AlertDialog(
+      backgroundColor: lacquer,
+      title: Text(tr('Nhập mã quà'), style: titleStyle(20)),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(tr('Mã quà được phát trên kênh và trang của game. Mỗi nhân vật nhận mỗi mã một lần.'),
+                  style: small.copyWith(fontSize: 11.5)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _field,
+                enabled: !_busy,
+                autofocus: true,
+                maxLength: 24,
+                textCapitalization: TextCapitalization.characters,
+                autocorrect: false,
+                enableSuggestions: false,
+                style: bold.copyWith(letterSpacing: 2),
+                decoration: InputDecoration(hintText: tr('Mã quà'), counterText: ''),
+                onSubmitted: (_) => _submit(),
+              ),
+              if (_say != null) ...[
+                const SizedBox(height: 8),
+                Text(_say!, style: bold.copyWith(color: got != null ? goldLight : cream)),
+              ],
+              if (got != null && got.isNotEmpty)
+                Text(tr('Đã nhận: {p0}', {'p0': got.join(', ')}),
+                    style: small.copyWith(fontSize: 11.5, color: const Color(0xFF8CE07A))),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('Đóng'))),
+        LButton(label: tr('Nhận'), small: true, color: jade, enabled: !_busy, onTap: _submit),
+      ],
     );
   }
 }

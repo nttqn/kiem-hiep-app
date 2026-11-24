@@ -21,13 +21,14 @@ Giang hồ nay có Miêu Cương, Côn Lôn, Kỳ ngộ, Sư đồ và Kết duy
 ## Từ khóa (≤ 100, 97)
 kiếm hiệp,võ lâm,nhập vai,rpg,ngũ hành,môn phái,offline,tự động đánh,chuyển sinh,bang hội,võ hiệp
 
-## Có gì mới (646 ký tự)
+## Có gì mới (684 ký tự)
 1.24.2 – Giang hồ năm châu
 - Thêm ngôn ngữ English, 繁體中文 và 한국어; kênh Thế Giới tách theo ngôn ngữ, chat nhanh bằng câu soạn sẵn.
 - Vùng đất mới: Miêu Cương Cổ Lâm (cấp 20–35) và Côn Lôn Tiên Cảnh (cấp 85–99), thêm phó bản, bí cảnh, thú cưỡi Hắc Báo và Tiên Hạc.
 - Kỳ ngộ ngoài bản đồ và Kỳ ngộ phổ; Đồ giám Truyền thuyết cộng chỉ số vĩnh viễn.
 - Sư đồ và Kết duyên: bái sư, thu đồ đệ, kết phu thê với hảo hữu, nâng Nhẫn Đồng Tâm.
 - Tinh Hoa, Phân giải, Khắc ấn, Tẩy luyện định hướng; Thăng Tinh mở tới 10 sao.
+- Mã quà tặng: Hòm thư → Nhập mã quà.
 - Quà hồi quy cho người chơi quay lại; ưu đãi mới từ cấp 80.
 - Sửa lỗi, chống gian lận bảng xếp hạng, quảng cáo nhận thưởng ổn định hơn.
 
@@ -108,13 +109,14 @@ Five sects, five elements. Train, be reborn, join a guild and rise to Supreme Ma
 ## Từ khóa (≤ 100, 92)
 wuxia,martial arts,kung fu,rpg,idle,offline,auto battle,sect,guild,cultivation,sword,jianghu
 
-## Có gì mới (706 ký tự)
+## Có gì mới (740 ký tự)
 1.24.2 – Now in four languages
 - The game is now in English, 繁體中文 and 한국어; World chat is split by language, with quick-chat lines.
 - New lands: the Miao Frontier Forest (level 20–35) and the Kunlun Fairyland (level 85–99), with new dungeons, secret realms and the Black Panther and Crane mounts.
 - Random encounters in the field and an Encounter log; the Legend Codex gives lasting stat bonuses.
 - Mentorship and Bonds: take a master or disciples, bond with a friend and raise your ring together.
 - Essence, Salvage, Engrave and aimed reforging; Star Up now goes to 10 stars.
+- Gift codes: Mail → Redeem code.
 - Welcome-back gifts for returning players; new offers from level 80.
 - Fixes, fairer leaderboards and more reliable rewarded ads.
 
@@ -187,13 +189,14 @@ Support: trungsmail@gmail.com
 ## Từ khóa (≤ 100, 43)
 武俠,江湖,角色扮演,RPG,動作,離線,自動戰鬥,門派,幫會,修仙,劍俠,五行,放置
 
-## Có gì mới (232 ký tự)
+## Có gì mới (250 ký tự)
 1.24.2 – 江湖五洲
 - 新增繁體中文、English 與 한국어；世界頻道依語言分開，並有快速聊天。
 - 新地區：苗疆古林（20–35 級）與崑崙仙境（85–99 級），新增副本、秘境，以及黑豹、仙鶴坐騎。
 - 野外奇遇與奇遇譜；傳說圖鑑提供永久屬性加成。
 - 師徒與結緣：拜師、收徒，與好友結為夫妻，一同升級同心戒。
 - 精華、分解、刻印、定向洗練；升星開放至 10 星。
+- 禮包碼：信箱 → 兌換禮包碼。
 - 回歸禮包；80 級起新增優惠。
 - 修正錯誤、排行榜更公平、獎勵廣告更穩定。
 
@@ -264,13 +267,14 @@ Support: trungsmail@gmail.com
 ## Từ khóa (≤ 100, 46)
 무협,강호,RPG,롤플레잉,액션,오프라인,자동전투,문파,방회,환생,검협,오행,방치형
 
-## Có gì mới (310 ký tự)
+## Có gì mới (335 ký tự)
 1.24.2 – 다섯 대륙의 강호
 - 한국어, 繁體中文, English 지원. 월드 채팅은 언어별로 나뉘며 빠른 채팅 문장도 쓸 수 있습니다.
 - 새 지역: 묘강 고림(20–35레벨)과 곤륜 선경(85–99레벨). 새 던전, 비경, 흑표범·선학 탈것.
 - 필드 기연과 기연보, 전설 도감으로 영구 능력치 보너스.
 - 사도와 인연 맺기: 스승 모시기, 제자 받기, 친구와 부부 맺고 반지 강화.
 - 정화, 분해, 각인, 지정 세련. 승성 10성까지 개방.
+- 선물 코드: 우편함 → 선물 코드 입력.
 - 복귀 선물, 80레벨부터 새 특가.
 - 버그 수정, 더 공정한 순위표, 보상형 광고 안정성 개선.
 

@@ -3531,5 +3531,17 @@
  "Kho Ngân Lượng cho {hName}: {p0}": "{hName} 的銀兩寶庫：{p0}",
  "Bằng {p0} Hòm Ngân Lượng": "等於 {p0} 個銀兩寶箱",
  "Giá tốt nhất, cho {hName}:": "最划算，給 {hName}：",
- "Tặng {starPackStones} Tinh Thạch": "加贈 {starPackStones} 星石"
+ "Tặng {starPackStones} Tinh Thạch": "加贈 {starPackStones} 星石",
+ "Mã quà {key}": "禮包碼 {key}",
+ "Mã quà không đúng.": "禮包碼不正確。",
+ "Nhập sai nhiều lần. Thử lại sau {p0} giây.": "輸入錯誤次數過多，請 {p0} 秒後再試。",
+ "Cần kết nối mạng để nhập mã quà.": "需要網路連線才能兌換禮包碼。",
+ "Không kết nối được. Kiểm tra mạng rồi thử lại.": "無法連線，請檢查網路後再試。",
+ "Mã quà chưa đến ngày dùng.": "此禮包碼尚未開放。",
+ "Mã quà đã hết hạn.": "此禮包碼已過期。",
+ "Nhập mã quà": "兌換禮包碼",
+ "{hName} đã nhận mã này rồi.": "{hName} 已兌換過此禮包碼。",
+ "Mã này cần cấp {minLevel}.": "此禮包碼需要 {minLevel} 級。",
+ "Mã quà được phát trên kênh và trang của game. Mỗi nhân vật nhận mỗi mã một lần.": "禮包碼會在遊戲的頻道與粉絲專頁發放。每個角色每組禮包碼限兌換一次。",
+ "Mã quà": "禮包碼"
 }

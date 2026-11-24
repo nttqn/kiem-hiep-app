@@ -3531,5 +3531,17 @@
  "Kho Ngân Lượng cho {hName}: {p0}": "{hName}의 냥 보물고: {p0}",
  "Bằng {p0} Hòm Ngân Lượng": "냥 상자 {p0}개 분량",
  "Giá tốt nhất, cho {hName}:": "최고 가성비, {hName}에게:",
- "Tặng {starPackStones} Tinh Thạch": "성석 {starPackStones}개 추가"
+ "Tặng {starPackStones} Tinh Thạch": "성석 {starPackStones}개 추가",
+ "Mã quà {key}": "선물 코드 {key}",
+ "Mã quà không đúng.": "선물 코드가 올바르지 않습니다.",
+ "Nhập sai nhiều lần. Thử lại sau {p0} giây.": "잘못 입력한 횟수가 많습니다. {p0}초 후 다시 시도하세요.",
+ "Cần kết nối mạng để nhập mã quà.": "선물 코드를 입력하려면 인터넷 연결이 필요합니다.",
+ "Không kết nối được. Kiểm tra mạng rồi thử lại.": "연결할 수 없습니다. 네트워크를 확인한 뒤 다시 시도하세요.",
+ "Mã quà chưa đến ngày dùng.": "아직 사용할 수 없는 선물 코드입니다.",
+ "Mã quà đã hết hạn.": "기간이 지난 선물 코드입니다.",
+ "Nhập mã quà": "선물 코드 입력",
+ "{hName} đã nhận mã này rồi.": "{hName}은(는) 이미 이 코드를 받았습니다.",
+ "Mã này cần cấp {minLevel}.": "이 코드는 {minLevel}레벨이 필요합니다.",
+ "Mã quà được phát trên kênh và trang của game. Mỗi nhân vật nhận mỗi mã một lần.": "선물 코드는 게임 채널과 페이지에서 배포됩니다. 캐릭터마다 코드당 한 번 받을 수 있습니다.",
+ "Mã quà": "선물 코드"
 }
