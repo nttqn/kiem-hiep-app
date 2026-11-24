@@ -9,11 +9,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kiem_hiep/core/clock.dart';
+import 'package:kiem_hiep/core/festival.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
 import 'package:kiem_hiep/core/premium.dart';
 import 'package:kiem_hiep/services/purchase.dart';
 import 'package:kiem_hiep/services/save.dart';
+import 'package:kiem_hiep/ui/fest_screen.dart';
 import 'package:kiem_hiep/ui/offers_view.dart';
 import 'package:kiem_hiep/ui/pass_screen.dart';
 import 'package:kiem_hiep/ui/shop_screen.dart';
@@ -27,6 +30,9 @@ const _prices = {
   skuStarPack: '49.000 ₫',
   skuPass: '99.000 ₫',
   skuGoldPack: '25.000 ₫',
+  skuGoldChest: '199.000 ₫',
+  skuGoldVault: '399.000 ₫',
+  skuFest: '49.000 ₫',
 };
 
 Future<void> _fonts() async {
@@ -52,7 +58,7 @@ Future<void> _fonts() async {
 
 final _frame = ValueNotifier<Rect?>(null);
 
-Future<void> _shot(WidgetTester tester, Widget screen, String sku, Finder target, {bool card = true}) async {
+Future<void> _shot(WidgetTester tester, Widget screen, String sku, Finder target, {bool card = true, Finder? scroller, Finder? scrollTo}) async {
   tester.view.physicalSize = const Size(874, 402) * 3;
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
@@ -91,6 +97,9 @@ Future<void> _shot(WidgetTester tester, Widget screen, String sku, Finder target
   if (card) {
     await tester.scrollUntilVisible(target, 150, scrollable: find.descendant(of: find.byType(OffersView), matching: find.byType(Scrollable)).first);
   }
+  if (scroller != null) {
+    await tester.scrollUntilVisible(scrollTo ?? target, 150, scrollable: scroller);
+  }
   await Scrollable.ensureVisible(tester.element(target.first), alignment: 0.5);
   await tester.pump(const Duration(milliseconds: 500));
   final box = card ? find.ancestor(of: target.first, matching: find.byType(Panel)).first : target.first;
@@ -109,7 +118,7 @@ void main() {
     _prices.forEach((id, p) {
       iap.products[id] = ProductDetails(id: id, title: id, description: '', price: p, rawPrice: 0, currencyCode: 'VND');
     });
-    final h = HeroData(name: 'Lãng Khách', hanh: Hanh.kim)..level = 62;
+    final h = HeroData(name: 'Lãng Khách', hanh: Hanh.kim)..level = 82; // lv80+ shows Rương/Kho Ngân Lượng
     h.recompute();
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
@@ -118,6 +127,8 @@ void main() {
   const cards = {
     skuMonthCard: 'Nguyệt thẻ',
     skuGoldPack: 'Hòm Ngân Lượng',
+    skuGoldChest: 'Rương Ngân Lượng',
+    skuGoldVault: 'Kho Ngân Lượng',
     skuStarPack: 'Gói Thăng Tinh',
     skuStarter: 'Gói tân thủ',
     skuNoAds: 'Bỏ quảng cáo',
@@ -130,5 +141,17 @@ void main() {
 
   testWidgets(skuPass, (tester) async {
     await _shot(tester, const PassScreen(), skuPass, find.ancestor(of: find.textContaining('Mở Hào Kiệt'), matching: find.byType(LButton)), card: false);
+  });
+
+  // Gói lễ hội only shows while a festival is on: the clock is put on
+  // Đông Chí (2026-12-20).
+  testWidgets(skuFest, (tester) async {
+    final real = GameClock.deviceMs;
+    GameClock.deviceMs = () => DateTime.utc(2026, 12, 20, 5).millisecondsSinceEpoch;
+    addTearDown(() => GameClock.deviceMs = real);
+    await _shot(tester, const FestScreen(), skuFest,
+        find.ancestor(of: find.text('Gói lễ hội'), matching: find.byType(Panel)), card: false,
+        scroller: find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first,
+        scrollTo: find.text('Gói lễ hội'));
   });
 }

@@ -384,6 +384,13 @@
 	<string>Cho phép để nhận quảng cáo phù hợp hơn với bạn. Game vẫn chơi đầy đủ dù bạn chọn gì.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>vi</string>
+		<string>zh-Hant</string>
+		<string>ko</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
