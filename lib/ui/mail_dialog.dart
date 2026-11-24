@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/mail.dart';
@@ -81,7 +82,9 @@ class _MailDialogState extends State<_MailDialog> {
               ),
       ),
       actions: [
-        TextButton(
+        // Android only: App Review rejected redeem codes under 3.1.1 (1.24.2).
+        if (defaultTargetPlatform != TargetPlatform.iOS)
+          TextButton(
           onPressed: () async {
             await showDialog<void>(context: context, builder: (_) => const _CodeDialog());
             if (mounted) setState(() {});

@@ -28,7 +28,6 @@ kiếm hiệp,võ lâm,nhập vai,rpg,ngũ hành,môn phái,offline,tự động
 - Kỳ ngộ ngoài bản đồ và Kỳ ngộ phổ; Đồ giám Truyền thuyết cộng chỉ số vĩnh viễn.
 - Sư đồ và Kết duyên: bái sư, thu đồ đệ, kết phu thê với hảo hữu, nâng Nhẫn Đồng Tâm.
 - Tinh Hoa, Phân giải, Khắc ấn, Tẩy luyện định hướng; Thăng Tinh mở tới 10 sao.
-- Mã quà tặng: Hòm thư → Nhập mã quà.
 - Quà hồi quy cho người chơi quay lại; ưu đãi mới từ cấp 80.
 - Sửa lỗi, chống gian lận bảng xếp hạng, quảng cáo nhận thưởng ổn định hơn.
 
@@ -116,7 +115,6 @@ wuxia,martial arts,kung fu,rpg,idle,offline,auto battle,sect,guild,cultivation,s
 - Random encounters in the field and an Encounter log; the Legend Codex gives lasting stat bonuses.
 - Mentorship and Bonds: take a master or disciples, bond with a friend and raise your ring together.
 - Essence, Salvage, Engrave and aimed reforging; Star Up now goes to 10 stars.
-- Gift codes: Mail → Redeem code.
 - Welcome-back gifts for returning players; new offers from level 80.
 - Fixes, fairer leaderboards and more reliable rewarded ads.
 
@@ -196,7 +194,6 @@ Support: trungsmail@gmail.com
 - 野外奇遇與奇遇譜；傳說圖鑑提供永久屬性加成。
 - 師徒與結緣：拜師、收徒，與好友結為夫妻，一同升級同心戒。
 - 精華、分解、刻印、定向洗練；升星開放至 10 星。
-- 禮包碼：信箱 → 兌換禮包碼。
 - 回歸禮包；80 級起新增優惠。
 - 修正錯誤、排行榜更公平、獎勵廣告更穩定。
 
@@ -274,7 +271,6 @@ Support: trungsmail@gmail.com
 - 필드 기연과 기연보, 전설 도감으로 영구 능력치 보너스.
 - 사도와 인연 맺기: 스승 모시기, 제자 받기, 친구와 부부 맺고 반지 강화.
 - 정화, 분해, 각인, 지정 세련. 승성 10성까지 개방.
-- 선물 코드: 우편함 → 선물 코드 입력.
 - 복귀 선물, 80레벨부터 새 특가.
 - 버그 수정, 더 공정한 순위표, 보상형 광고 안정성 개선.
 
