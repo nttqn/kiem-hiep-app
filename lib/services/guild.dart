@@ -729,6 +729,52 @@ class GuildService extends ChangeNotifier {
   /// In-memory `guildWar` for tests: week → gid → row.
   final Map<int, Map<String, WarRow>> dWar = {};
 
+  /// Which members of bang [gid] are one copied save ([Leaderboard.heroGroups]
+  /// over their board rows), read at most every half hour per bang. Empty
+  /// (every member counts) when the board cannot be read.
+  Future<Map<String, String>> heroGroups(String gid, List<GuildMember> all) async {
+    final c = _groups[gid];
+    final have = c != null && all.every((m) => c.$2.containsKey(m.row));
+    if (have && DateTime.now().difference(c.$1) < const Duration(minutes: 30)) return c.$2;
+    try {
+      final rows = await this.rows([for (final m in all) m.row]);
+      final byId = {for (final e in rows) e.id: e};
+      // Board order (strongest first), so the hero a copy is kept as is
+      // the same on every phone.
+      final ordered = [for (final m in all) ?byId[m.row]]..sort((a, b) => b.power != a.power ? b.power.compareTo(a.power) : a.id.compareTo(b.id));
+      final groups = Leaderboard.heroGroups(ordered);
+      final out = {for (final m in all) m.row: groups[m.row] ?? m.row};
+      _groups[gid] = (DateTime.now(), out);
+      return out;
+    } catch (e) {
+      debugPrint('hero groups failed: $e');
+      return c?.$2 ?? const {};
+    }
+  }
+
+  final Map<String, (DateTime, Map<String, String>)> _groups = {};
+
+  /// A bang's Chiến công for [week] and its count of heroes (2026-11-25):
+  /// one save copied onto several accounts (Chiến Thần: four rows of one
+  /// hero) counts once, with its best copy; banned rows not at all. [mine]
+  /// stands for [myRow]'s own row, which may not be read yet.
+  static (int, int) warTotal(List<GuildMember> all, Map<String, String> groups, Set<String> bans, String? myRow,
+      int mine, int week) {
+    final best = <String, int>{};
+    var seen = false;
+    for (final m in all) {
+      if (Leaderboard.bannedRow(bans, m.row)) continue;
+      final pts = m.row == myRow ? mine : m.warIn(week);
+      if (m.row == myRow) seen = true;
+      final k = groups[m.row] ?? m.row;
+      final b = best[k];
+      if (b == null || pts > b) best[k] = pts;
+    }
+    if (!seen && myRow != null) best[myRow] = mine;
+    final sum = best.values.fold<int>(0, (a, b) => a + b);
+    return (sum, best.isEmpty ? 1 : best.length);
+  }
+
   /// Writes this hero's Chiến công to their member row, then the bang's sum
   /// for the week to `guildWar/{week}/g/{gid}` (1.16.0). [all] are the
   /// members as just read. False when it could not be written.
@@ -737,8 +783,7 @@ class GuildService extends ChangeNotifier {
     if (u == null || row == null) return false;
     final week = h.gwWeek;
     final mine = h.warPtsFor(g.id);
-    final sum = all.fold<int>(0, (a, m) => a + (m.row == row ? mine : m.warIn(week)));
-    final n = all.isEmpty ? 1 : all.length;
+    final (sum, n) = warTotal(all, await heroGroups(g.id, all), await _lb.bans(), row, mine, week);
     if (debug) {
       final ms = _dMembers[g.id];
       final me = ms?[row];

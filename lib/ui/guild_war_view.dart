@@ -50,6 +50,11 @@ class _GuildWarViewState extends State<GuildWarView> {
   List<GuildMember>? _targets;
   bool _busy = false;
 
+  /// Copies of one save among this bang's members, and the banned rows:
+  /// counted once and not at all in [_mySum] ([GuildService.warTotal]).
+  Map<String, String> _groups = const {};
+  Set<String> _bans = const {};
+
   @override
   void initState() {
     super.initState();
@@ -66,21 +71,7 @@ class _GuildWarViewState extends State<GuildWarView> {
 
   int get _week => h.gwWeek;
 
-  int get _mySum {
-    final row = gs.myRow;
-    final mine = h.warPtsFor(g.id);
-    var sum = 0;
-    var seen = false;
-    for (final m in _members) {
-      if (m.row == row) {
-        seen = true;
-        sum += mine;
-      } else {
-        sum += m.warIn(_week);
-      }
-    }
-    return seen ? sum : sum + mine;
-  }
+  int get _mySum => GuildService.warTotal(_members, _groups, _bans, gs.myRow, h.warPtsFor(g.id), _week).$1;
 
   Future<void> _load() async {
     setState(() {
@@ -90,6 +81,8 @@ class _GuildWarViewState extends State<GuildWarView> {
     h.warRollDay(_day);
     try {
       if (h.gwRankDue) await _settle();
+      _bans = await Leaderboard.instance.bans();
+      _groups = await gs.heroGroups(g.id, _members);
       await gs.pushWar(g, h, _members);
       _board = await gs.warBoard(_week);
       final foes = <String, String>{};
@@ -143,12 +136,17 @@ class _GuildWarViewState extends State<GuildWarView> {
       final mine = gs.uid;
       final bans = await Leaderboard.instance.bans();
       // Never a hero of this same account (one parked in another bang), nor
-      // one banned from the boards (lbBans).
+      // one banned from the boards (lbBans), and one save copied onto
+      // several accounts shown once (Chiến Thần, 2026-11-25).
+      final groups = await gs.heroGroups(id, ms);
+      final shown = <String>{};
       final list = [
-        for (final m in ms)
-          if ((mine == null || !m.row.startsWith('${mine}_')) && !Leaderboard.bannedRow(bans, m.row)) m
-      ]
-        ..sort((a, b) => b.power.compareTo(a.power));
+        for (final m in [...ms]..sort((a, b) => b.power.compareTo(a.power)))
+          if ((mine == null || !m.row.startsWith('${mine}_')) &&
+              !Leaderboard.bannedRow(bans, m.row) &&
+              shown.add(groups[m.row] ?? m.row))
+            m
+      ];
       if (mounted && _foeId == id) setState(() => _targets = list);
     } catch (_) {
       if (mounted && _foeId == id) {
@@ -171,6 +169,7 @@ class _GuildWarViewState extends State<GuildWarView> {
       await Navigator.of(context).push(fadeRoute(PlayScreen.dungeon(warDef(e.toRival(), _foeName ?? ''))));
       try {
         _members = await gs.members(g.id);
+        _groups = await gs.heroGroups(g.id, _members);
       } catch (_) {}
       if (!await gs.pushWar(g, h, _members)) _toast(tr('Chưa ghi được Chiến công lên máy chủ, sẽ thử lại.'));
       try {

@@ -293,11 +293,14 @@ class Leaderboard extends ChangeNotifier {
     return _banned;
   }
 
-  /// Whether row [id] (`{uid}_{slot}`) belongs to a banned account.
+  /// Whether row [id] (`{uid}_{slot}`) belongs to a banned account, or is
+  /// banned alone: `lbBans/{uid}_{slot}` hides one copied hero and leaves
+  /// the account's other heroes be (Chiến Thần, 2026-11-25).
   static bool bannedRow(Set<String> bans, String id) {
     if (bans.isEmpty) return false;
+    if (bans.contains(id)) return true;
     final i = id.lastIndexOf('_');
-    return bans.contains(i > 0 ? id.substring(0, i) : id);
+    return i > 0 && bans.contains(id.substring(0, i));
   }
 
   /// Day boards of Boss Thế Giới read lately (1.9.1), cleared on this
@@ -745,6 +748,30 @@ class Leaderboard extends ChangeNotifier {
   /// can only be one save.
   static const int dupePlaySeconds = 3600;
 
+  /// What gives away one save on several rows ([dedupe]): any key shared
+  /// makes two rows one hero.
+  static List<String> dupeKeys(LbEntry e) => [
+        if (e.hs != 0) 'h${e.hs}',
+        if (e.play >= dupePlaySeconds) 'p${e.hanh}|${e.play}',
+        ?e.gearMark,
+      ];
+
+  /// Row → the first row of its save among [rows]: rows that are one hero
+  /// by [dupeKeys] share it, a row alone maps to itself.
+  static Map<String, String> heroGroups(List<LbEntry> rows) {
+    final byKey = <String, String>{};
+    final out = <String, String>{};
+    for (final e in rows) {
+      final keys = dupeKeys(e);
+      final g = [for (final k in keys) ?byKey[k]].firstOrNull ?? e.id;
+      out[e.id] = g;
+      for (final k in keys) {
+        byKey.putIfAbsent(k, () => g);
+      }
+    }
+    return out;
+  }
+
   /// One hero per save (1.13.6): "Chuyển sang tài khoản này" copies the
   /// heroes into the new account while the old one keeps its rows, so one
   /// save stood on the boards three times (MrTuan, 2026-11-14), the last
@@ -756,11 +783,7 @@ class Leaderboard extends ChangeNotifier {
     final seen = <String>{};
     final out = <LbEntry>[];
     for (final e in rows) {
-      final keys = [
-        if (e.hs != 0) 'h${e.hs}',
-        if (e.play >= dupePlaySeconds) 'p${e.hanh}|${e.play}',
-        ?e.gearMark,
-      ];
+      final keys = dupeKeys(e);
       if (keys.any(seen.contains)) continue;
       seen.addAll(keys);
       out.add(e);
