@@ -59,9 +59,12 @@ service cloud.firestore {
           && (!('ht' in d)
               || (d.ht is int && d.ht >= 0 && d.ht % 10000 < 4000 && d.ht < (wk + 1) * 10000))
           // Play seconds (1.2.2+; older apps omit it): at least 2 hours per
-          // rebirth and a minute per level. The fastest real hero seen (a
-          // non-stop auto-fight farmer) took about 4.5 hours per rebirth.
-          && (!('play' in d) || (d.play is int && d.play >= d.rebirths * 7200 + d.level * 60))
+          // rebirth and a minute per level past 30. The fastest real hero seen
+          // (a non-stop auto-fight farmer) took about 4.5 hours per rebirth.
+          // 2026-11-25: a new hero reached level 9 in 7 minutes and was
+          // refused, so the first 30 levels need no minimum.
+          && (!('play' in d) || (d.play is int
+              && d.play >= d.rebirths * 7200 + (d.level > 30 ? (d.level - 30) * 60 : 0)))
           // Potential points (1.2.4+): no more than the game hands out, as in
           // HeroData.maxPotential (5 a level, 40 a rebirth, 90 from pills, 100
           // slack, and 5 more a level in the sixth life, 1.6.0+).
