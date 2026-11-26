@@ -2809,7 +2809,7 @@ class HeroData {
   int fishBookClaim(String mapId) {
     if (fishBooks.contains(mapId) || !fishBookDone(mapId)) return 0;
     fishBooks.add(mapId);
-    final g = fishBookGold(maps.indexWhere((m) => m.id == mapId));
+    final g = fishBookGold(pondTier(mapId));
     gold += g;
     fishCoins += fishBookCoins;
     return g;
@@ -3795,9 +3795,6 @@ class HeroData {
         if (fishById.containsKey(k) && v is int && v > 0) h.fishCaught['$k'] = v;
       });
       h.fishBooks.addAll([for (final v in fish[4] as List) '$v']);
-      // Before 1.26 the four later regions had no fish, so their empty page
-      // counted as finished; it opens again for the new fish.
-      h.fishBooks.removeWhere((id) => !h.fishBookDone(id));
     }
     final fish2 = m['fish2'];
     if (fish2 is Map) {

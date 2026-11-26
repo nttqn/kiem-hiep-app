@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kiem_hiep/core/content.dart';
 import 'package:kiem_hiep/core/fishing.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/core/hero.dart';
@@ -20,7 +19,8 @@ void main() {
 
   test('every field map has a pond of four, one of each rarity', () {
     expect(fishes.length, 52);
-    for (final m in maps) {
+    expect(pondMaps.length, 13);
+    for (final m in pondMaps) {
       final pond = fishOfMap(m.id);
       expect(pond.length, 4, reason: m.id);
       expect(pond.map((f) => f.rarity).toSet(), FishRarity.values.toSet(), reason: m.id);
@@ -132,7 +132,7 @@ void main() {
     expect(h.fishExtraBait, fishShopBait - 1);
   });
 
-  test('a finished page pays Ngư tệ; an empty page from before 1.26 opens again', () {
+  test('a finished page pays Ngư tệ, and a later region\'s page pays by its level', () {
     final h = hero();
     for (final f in fishOfMap('ngoaithanh')) {
       h.catchFish(f, math.Random(2), day: week5);
@@ -140,12 +140,13 @@ void main() {
     final coins = h.fishCoins;
     expect(h.fishBookClaim('ngoaithanh'), greaterThan(0));
     expect(h.fishCoins, coins + fishBookCoins);
-    // An old save claimed Đông Hải's page while it had no fish.
-    final json = h.toJson();
-    ((json['fish'] as List)[4] as List).add('donghai');
-    final back = HeroData.fromJson(jsonDecode(jsonEncode(json)) as Map<String, dynamic>);
-    expect(back.fishBooks, contains('ngoaithanh'));
-    expect(back.fishBooks, isNot(contains('donghai')));
+    expect(h.fishBookClaim('conlon'), 0);
+    for (final f in fishOfMap('conlon')) {
+      h.catchFish(f, math.Random(2), day: week5);
+    }
+    final gold = h.gold;
+    expect(h.fishBookClaim('conlon'), fishBookGold(8));
+    expect(h.gold, gold + fishBookGold(8));
   });
 
   test('the 1.26 fishing state survives a save', () {

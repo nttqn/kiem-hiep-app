@@ -26,7 +26,7 @@ Future<void> showFishBook(BuildContext context, HeroData h) {
                 Text(tr('Mỗi bãi luyện công có một hồ câu cạnh cổng. Câu đủ 4 loài của một hồ để nhận thưởng và {fishBookCoins} Ngư tệ.', {'fishBookCoins': fishBookCoins}),
                     style: small.copyWith(fontSize: 11)),
                 const SizedBox(height: 6),
-                for (var i = 0; i < maps.length; i++) _mapRow(h, i, () => setState(() {})),
+                for (final m in pondMaps) _mapRow(h, m, () => setState(() {})),
               ],
             ),
           ),
@@ -37,8 +37,7 @@ Future<void> showFishBook(BuildContext context, HeroData h) {
   );
 }
 
-Widget _mapRow(HeroData h, int i, VoidCallback changed) {
-  final m = maps[i];
+Widget _mapRow(HeroData h, MapDef m, VoidCallback changed) {
   final done = h.fishBookDone(m.id);
   final paid = h.fishBooks.contains(m.id);
   return Padding(
@@ -95,7 +94,7 @@ Widget _mapRow(HeroData h, int i, VoidCallback changed) {
           child: paid
               ? Text(tr('Đã nhận'), style: small.copyWith(color: const Color(0xFF8CE07A)), textAlign: TextAlign.center)
               : LButton(
-                  label: fmt(fishBookGold(i)),
+                  label: fmt(fishBookGold(pondTier(m.id))),
                   small: true,
                   color: jade,
                   enabled: done,

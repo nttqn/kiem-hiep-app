@@ -192,8 +192,14 @@ FishDef rollFish(String mapId, math.Random rng) {
   return pool.first;
 }
 
-/// Gold for finishing map index [i]'s page of the Ngư phổ.
+/// Gold for finishing a page of the Ngư phổ of pond tier [i].
 int fishBookGold(int i) => 3000 + 3000 * i;
+
+/// A map's pond tier (as [FishDef.tier]), -1 without a pond.
+int pondTier(String mapId) => _laterPonds[mapId] ?? maps.indexWhere((m) => m.id == mapId);
+
+/// Field maps with a pond, in the order the map list shows them.
+List<MapDef> get pondMaps => [for (final m in fieldMaps) if (fishOfMap(m.id).isNotEmpty) m];
 
 /// First catch of a kind pays this many times its price on top.
 const int fishFirstBonus = 5;

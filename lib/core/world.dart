@@ -579,7 +579,9 @@ class World {
 
   /// The fishing pond by the gate of a field map.
   // Cửu U Ma Vực has no fish of its own.
-  bool get hasPond => mode == WorldMode.field && !isSideMap(map);
+  /// 1.26: every field map whose pond has fish, the later regions too
+  /// (they were side maps, and side maps had none).
+  bool get hasPond => mode == WorldMode.field && fishOfMap(map.id).isNotEmpty;
   double get pondX => pondDx;
   double get pondY => height / 2 + pondDy;
 
