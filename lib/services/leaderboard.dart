@@ -311,6 +311,16 @@ class Leaderboard extends ChangeNotifier {
     return i > 0 && bans.contains(id.substring(0, i));
   }
 
+  /// A hero banned wherever it goes: `lbBans/hs_{tag}` ([heroTag], the
+  /// `hs` field of its rows) follows a save copied onto a new account and
+  /// renamed (TranQuanKyy came back as CôTấm, 2026-11-26).
+  static bool bannedHero(Set<String> bans, Object? hs) =>
+      hs is num && hs != 0 && bans.isNotEmpty && bans.contains('hs_${hs.toInt()}');
+
+  /// [bannedRow] or [bannedHero] for a board document.
+  static bool bannedDoc(Set<String> bans, String id, Map<String, dynamic> m) =>
+      bannedRow(bans, id) || bannedHero(bans, m['hs']);
+
   /// Day boards of Boss Thế Giới read lately (1.9.1), cleared on this
   /// player's own write.
   final Map<String, (DateTime, List<LbEntry>)> _bossCache = {};
@@ -338,7 +348,7 @@ class Leaderboard extends ChangeNotifier {
     final id = '${uid}_$slot';
     // An edited save (more Thần Thiết or Mảnh Hoàng Kim than its play time
     // could earn) stays off the boards, and its old row comes down.
-    final why = hoardReason(h);
+    final why = hoardReason(h) ?? (bannedHero(await _bans(), heroTag(h.seed)) ? 'banned hero' : null);
     if (why != null) {
       if (_hoardPulled.add(id)) {
         debugPrint('leaderboard: $id kept off ($why)');
@@ -559,7 +569,7 @@ class Leaderboard extends ChangeNotifier {
         .timeout(const Duration(seconds: 15));
     final rows = [
       for (final d in snap.docs)
-        if (_plausibleBoss(d.data(), golden) && !bannedRow(bans, d.id))
+        if (_plausibleBoss(d.data(), golden) && !bannedDoc(bans, d.id, d.data()))
           ?LbEntry.fromDoc(d.id, {...d.data(), 'power': d.data()['dmg']}),
     ];
     _bossCache[key] = (DateTime.now(), rows);
@@ -711,7 +721,7 @@ class Leaderboard extends ChangeNotifier {
     final bans = await _bans();
     final snap = await q.limit(limit).get().timeout(const Duration(seconds: 15));
     final page = LbPage(
-      _plausible(board, [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]),
+      _plausible(board, [for (final d in snap.docs) if (!bannedDoc(bans, d.id, d.data())) ?LbEntry.fromDoc(d.id, d.data())]),
       snap.docs.length == limit ? snap.docs.last : null,
     );
     if (after == null) _topCache[key] = (DateTime.now(), page);
@@ -744,8 +754,8 @@ class Leaderboard extends ChangeNotifier {
           const Duration(seconds: 15),
         );
     return (
-      _plausible(board, [for (final d in up.docs.reversed) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]),
-      _plausible(board, [for (final d in down.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]),
+      _plausible(board, [for (final d in up.docs.reversed) if (!bannedDoc(bans, d.id, d.data())) ?LbEntry.fromDoc(d.id, d.data())]),
+      _plausible(board, [for (final d in down.docs) if (!bannedDoc(bans, d.id, d.data())) ?LbEntry.fromDoc(d.id, d.data())]),
     );
   }
 
@@ -830,7 +840,7 @@ class Leaderboard extends ChangeNotifier {
           .limit(40)
           .get()
           .timeout(const Duration(seconds: 10));
-      rows = _plausible(LbBoard.power, [for (final d in snap.docs) if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data())]);
+      rows = _plausible(LbBoard.power, [for (final d in snap.docs) if (!bannedDoc(bans, d.id, d.data())) ?LbEntry.fromDoc(d.id, d.data())]);
     }
     final out = [
       for (final e in rows)
@@ -858,7 +868,7 @@ class Leaderboard extends ChangeNotifier {
       final snap = await q.orderBy('power').limit(limit).get().timeout(const Duration(seconds: 10));
       return _plausible(LbBoard.power, [
         for (final d in snap.docs)
-          if (!bannedRow(bans, d.id)) ?LbEntry.fromDoc(d.id, d.data()),
+          if (!bannedDoc(bans, d.id, d.data())) ?LbEntry.fromDoc(d.id, d.data()),
       ]).where((e) => !mine(e)).toList();
     }
     var rows = await read(power * 4, 30);

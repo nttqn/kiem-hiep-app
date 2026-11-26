@@ -19,6 +19,17 @@ void main() {
     expect(Leaderboard.bannedRow(const {}, 'abc_0'), isFalse);
   });
 
+  test('a hero ban follows the hero onto any account and name', () {
+    const bans = {'hs_1322539578'};
+    expect(Leaderboard.bannedHero(bans, 1322539578), isTrue);
+    expect(Leaderboard.bannedHero(bans, 1322539579), isFalse);
+    expect(Leaderboard.bannedHero(bans, null), isFalse);
+    expect(Leaderboard.bannedHero({'hs_0'}, 0), isFalse);
+    expect(Leaderboard.bannedDoc(bans, 'newuid_0', {'hs': 1322539578, 'name': 'CôTấm'}), isTrue);
+    expect(Leaderboard.bannedDoc(bans, 'newuid_1', {'hs': 5}), isFalse);
+    expect(Leaderboard.bannedDoc({'newuid'}, 'newuid_1', {'hs': 5}), isTrue);
+  });
+
   test('copies of one save are one group, by hero mark or play time', () {
     final g = Leaderboard.heroGroups([
       lb('a_0', 8224238, hs: 77),
