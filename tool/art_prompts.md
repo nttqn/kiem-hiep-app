@@ -221,3 +221,18 @@ Left to right:
 | `fish_magiao.png` | 1. Murky moat fish, grey-green. 2. Dark crimson-scaled fish with sharp teeth. 3. Half-transparent ghostly shadow fish, purple-grey. 4. Legendary demon flood-dragon fish: black and blood red, horns, demonic purple aura. |
 | `fish_vanvu.png` | 1. Fluffy pale fish like a little cloud. 2. Sky-blue carp. 3. Fish with a long crane-like beak, white and red crest. 4. Legendary white dragon fish: pearl white, long flowing fins, small dragon horns, cloud wisps. |
 | `fish_hoason.png` | 1. Swordfish with a needle-sharp snout like a sword tip. 2. Fish with pine-needle shaped green fins swimming up a waterfall. 3. Silver fish with a faint blue sword-energy aura. 4. Legendary Hua Mountain god fish: silver and gold, fins shaped like crossed sword blades, a blue sword aura. |
+
+---
+
+## 6. Cá 4 vùng mới (1.26)
+
+Cùng khung prompt với §5 (4 con một tấm, từ thường đến huyền thoại). Làm
+trong **cùng cuộc chat** với các tấm cá trước, hoặc gửi kèm
+`art_in/fish_ngoaithanh.png` và nói "match this style exactly".
+
+| Lưu thành | 4 dòng mô tả |
+|---|---|
+| `fish_mieucuong.png` | 1. Small grey-green stream catfish with short whiskers, mossy spots. 2. Dark jungle fish with a tiny golden gu-insect glowing inside its translucent belly. 3. Iridescent rainbow fish whose scales shift through seven colours. 4. Legendary golden silkworm fish king: gold scales patterned like silkworm segments, venom-green fins, small crown crest, faint green aura. |
+| `fish_tayvuc.png` | 1. Rust-red fish the colour of desert sandstone, rough scales. 2. Pale fish with white bones showing through thin translucent skin. 3. Fish with a flame-shaped dorsal fin in red and orange, like a small fire spirit. 4. Legendary glass fish: body clear as coloured glaze (blue-turquoise), golden fins like silk, water-drop halo. |
+| `fish_donghai.png` | 1. Silver mackerel with blue-striped back. 2. Small squid glowing soft cyan-blue, curling tentacles. 3. Pink-white fish holding a shining pearl in its mouth. 4. Legendary dragon-palace guard fish: jade-green scales, small dragon horns and whiskers, trident-shaped tail, sea-foam swirl. |
+| `fish_conlon.png` | 1. Small snow-white fish with pale blue fins, frosty sparkle. 2. Fish clear green like jade, gold-rimmed fins. 3. White-pink fish curled under a frosted lotus leaf. 4. Legendary Kunlun immortal fish: pearl white and pale gold, long flowing fins like clouds, riding a small cloud, soft halo. |

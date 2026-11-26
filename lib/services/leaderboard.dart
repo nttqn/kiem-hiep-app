@@ -15,6 +15,7 @@ import '../core/ledger.dart';
 import '../core/ma_vuc.dart';
 import '../core/star_up.dart' show starSoulCost;
 import '../core/tam_ma.dart';
+import '../core/fishing.dart';
 import '../core/weekly_hunt.dart';
 import '../core/world_boss.dart';
 import 'cloud.dart';
@@ -40,6 +41,7 @@ class LbEntry {
     this.tm = 0,
     this.mv = 0,
     this.ht = 0,
+    this.fw = 0,
     this.mount,
     this.mountLv = 1,
     this.skin = '',
@@ -92,6 +94,9 @@ class LbEntry {
   /// Tâm Ma Ảo Cảnh best floor; Ma Vực week and floor ([maVucScore]);
   /// Hung Thú week, difficulty and speed ([beastScore]) (1.8.0+).
   final int tm, mv, ht;
+
+  /// Câu cá tuần: week and points as one number ([fishScore], 1.26).
+  final int fw;
 
   /// The mount ridden, for Lôi đài copies; '' on foot, null when the row
   /// was written by an app older than 1.4.0, which did not send it.
@@ -180,6 +185,7 @@ class LbEntry {
         tm: (m['tm'] as num?)?.toInt() ?? 0,
         mv: (m['mv'] as num?)?.toInt() ?? 0,
         ht: (m['ht'] as num?)?.toInt() ?? 0,
+        fw: (m['fw'] as num?)?.toInt() ?? 0,
         mount: m['mount'] as String?,
         mountLv: (m['mountLv'] as num?)?.toInt() ?? 1,
         skin: m['skin'] as String? ?? '',
@@ -204,7 +210,7 @@ class LbPage {
   final Object? next;
 }
 
-enum LbBoard { power, tower, rank, arena, hunt, daiHoi, tamMa, maVuc, beast }
+enum LbBoard { power, tower, rank, arena, hunt, daiHoi, tamMa, maVuc, beast, fish }
 
 extension LbBoardField on LbBoard {
   String get field => switch (this) {
@@ -217,6 +223,7 @@ extension LbBoardField on LbBoard {
         LbBoard.tamMa => 'tm',
         LbBoard.maVuc => 'mv',
         LbBoard.beast => 'ht',
+        LbBoard.fish => 'fw',
       };
 
   int valueOf(LbEntry e) => switch (this) {
@@ -229,6 +236,7 @@ extension LbBoardField on LbBoard {
         LbBoard.tamMa => e.tm,
         LbBoard.maVuc => e.mv,
         LbBoard.beast => e.ht,
+        LbBoard.fish => e.fw,
       };
 }
 
@@ -312,6 +320,7 @@ class Leaderboard extends ChangeNotifier {
   final Map<String, String> _sent = {};
   final Map<String, int> _sentPower = {};
   final Map<String, int> _sentHunt = {};
+  final Map<String, int> _sentFish = {};
   final Map<String, DateTime> _sentAt = {};
 
   /// Rows already taken down this session for [hoardReason].
@@ -325,6 +334,7 @@ class Leaderboard extends ChangeNotifier {
     final uid = myUid;
     if (hidden || uid == null || debugEntries != null) return;
     h.huntRollDay(vnDayKey());
+    h.fishRollWeek(vnDayKey());
     final id = '${uid}_$slot';
     // An edited save (more Thần Thiết or Mảnh Hoàng Kim than its play time
     // could earn) stays off the boards, and its old row comes down.
@@ -362,6 +372,8 @@ class Leaderboard extends ChangeNotifier {
       'ts': soulsInvested(h.equip.values),
       if (h.maVucBoardValue > 0) 'mv': h.maVucBoardValue,
       if (h.beastBoardValue > 0) 'ht': h.beastBoardValue,
+      if (h.fishBoardValue > 0) 'fw': h.fishBoardValue,
+      if (h.fishLastScore > 0) 'fwLast': h.fishLastScore,
       'mount': h.ridingMount?.id ?? '',
       'mountLv': h.mountLevels[h.activeMount] ?? 1,
       'skin': h.ridingMount == null ? '' : h.mountSkin[h.activeMount] ?? '',
@@ -375,13 +387,14 @@ class Leaderboard extends ChangeNotifier {
     // [_powerQuiet].
     final key = (Map.of(row)
           ..remove('power')
-          ..remove('wk'))
+          ..remove('wk')
+          ..remove('fw'))
         .toString();
     final last = _sentPower[id];
     final now = DateTime.now();
     final at = _sentAt[id];
     final quiet = at != null && now.difference(at) < _powerQuiet;
-    final same = _sent[id] == key && last == h.power && _sentHunt[id] == h.huntBoardValue;
+    final same = _sent[id] == key && last == h.power && _sentHunt[id] == h.huntBoardValue && _sentFish[id] == h.fishBoardValue;
     // Forced or not, a row identical to the one sent is not sent again
     // (1.9.1: opening the board used to write every time).
     if (same ||
@@ -389,7 +402,8 @@ class Leaderboard extends ChangeNotifier {
             _sent[id] == key &&
             last != null &&
             ((h.power - last).abs() < last * 0.03 && quiet) &&
-            (_sentHunt[id] == h.huntBoardValue || quiet))) {
+            (_sentHunt[id] == h.huntBoardValue || quiet) &&
+            (_sentFish[id] == h.fishBoardValue || quiet))) {
       return;
     }
     try {
@@ -410,6 +424,7 @@ class Leaderboard extends ChangeNotifier {
       _sent[id] = key;
       _sentPower[id] = h.power;
       _sentHunt[id] = h.huntBoardValue;
+      _sentFish[id] = h.fishBoardValue;
       _sentAt[id] = now;
       _topCache.clear(); // show this player's new numbers next time
       if (submitError != null) {
@@ -649,6 +664,7 @@ class Leaderboard extends ChangeNotifier {
         LbBoard.tamMa => 1,
         LbBoard.maVuc => maVucScore(huntWeekOf(vnDayKey()), 1),
         LbBoard.beast => beastScore(huntWeekOf(vnDayKey()), 1, beastTime),
+        LbBoard.fish => fishScore(huntWeekOf(vnDayKey()), 0),
         _ => 0,
       };
 
@@ -659,6 +675,7 @@ class Leaderboard extends ChangeNotifier {
         LbBoard.hunt => huntScore(huntWeekOf(vnDayKey()) + 1, 0),
         LbBoard.maVuc => maVucScore(huntWeekOf(vnDayKey()) + 1, 0),
         LbBoard.beast => beastScore(huntWeekOf(vnDayKey()) + 1, 0, 999),
+        LbBoard.fish => fishScore(huntWeekOf(vnDayKey()) + 1, 0),
         _ => 0,
       };
 
@@ -878,6 +895,9 @@ class Leaderboard extends ChangeNotifier {
   /// 1-based place of [score] (a [huntScore]) in its finished week, the
   /// same way.
   Future<int?> placeLastWeek(int score) => _placeLast(score, 1000000, 'wk', 'wkLast');
+
+  /// 1-based place of [score] (a [fishScore]) in its finished Câu cá week.
+  Future<int?> placeLastFishWeek(int score) => _placeLast(score, 1000000, 'fw', 'fwLast');
 
   Future<int?> _placeLast(int score, int unit, String current, String last) async {
     if (debugEntries != null) return 2;

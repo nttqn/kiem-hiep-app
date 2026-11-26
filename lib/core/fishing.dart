@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'content.dart';
+import 'i18n.dart';
 
 /// Câu cá: a pond by the gate of every field map. Each cast uses a bait;
 /// a bite must be struck in time, then the line held by tapping while the
@@ -37,8 +38,86 @@ class FishDef {
 
   int get mapIndex => maps.indexWhere((m) => m.id == map);
 
+  /// How far along the pond is (0 = first map): its place in the list for
+  /// the first nine, by level for the later regions (1.26).
+  int get tier => _laterPonds[map] ?? mapIndex;
+
   /// Gold the trader pays.
-  int get price => ((20 + 30 * mapIndex) * const [1, 3, 8, 30][rarity.index]).round();
+  int get price => ((20 + 30 * tier) * const [1, 3, 8, 30][rarity.index]).round();
+}
+
+/// The ponds of the regions added after the first nine maps, as tiers.
+const _laterPonds = {'mieucuong': 3, 'tayvuc': 5, 'donghai': 7, 'conlon': 8};
+
+// ---------------------------------------------------------------- 1.26
+
+/// A fish's usual weight in cân by rarity, growing with the pond's tier.
+double fishAvgWeight(FishDef f) => const [1.2, 2.5, 5.0, 12.0][f.rarity.index] * (1 + 0.15 * f.tier);
+
+/// The catch's weight in tenths of a cân: from about half the usual to
+/// twice it, light ones the most common.
+int rollFishWeight(FishDef f, math.Random rng) {
+  final k = 0.55 + 1.45 * math.pow(rng.nextDouble(), 1.8);
+  return math.max(1, (fishAvgWeight(f) * k * 10).round());
+}
+
+/// "12,4 cân" from tenths.
+String fishWeightText(int tenths) => tr('{p0} cân', {'p0': '${tenths ~/ 10},${tenths % 10}'});
+
+/// Câu cá tuần points for a catch: its weight, counted more for rarer fish.
+int fishPoints(FishDef f, int tenths) => math.max(1, (tenths * const [2, 4, 8, 16][f.rarity.index] / 10).round());
+
+/// Most points one week may count (the board packs week and points).
+const int fishWeekMax = 999999;
+
+/// The Câu cá tuần board's value: week first, as Săn quái tuần.
+int fishScore(int week, int pts) => week * 1000000 + pts.clamp(0, fishWeekMax);
+
+/// Ngư tệ for a catch, spent at the Ngư phủ.
+const fishCoinsOf = [1, 3, 8, 30];
+
+/// Ngư tệ for finishing a page of the Ngư phổ.
+const int fishBookCoins = 50;
+
+class FishWeekReward {
+  const FishWeekReward(this.iron, this.coins, this.title);
+  final int iron, coins;
+  final String title;
+}
+
+FishWeekReward? fishWeekReward(int place) => switch (place) {
+      1 => const FishWeekReward(8, 300, 'Ngư Vương'),
+      <= 3 => const FishWeekReward(5, 200, ''),
+      <= 10 => const FishWeekReward(3, 120, ''),
+      <= 50 => const FishWeekReward(1, 60, ''),
+      _ => null,
+    };
+
+enum FishWare { bait, iron, shards, gem, pill, page }
+
+/// A Ngư phủ ware: its Ngư tệ price and how many a week.
+class FishOffer {
+  const FishOffer(this.id, this.kind, this.name, this.price, this.perWeek, {this.count = 1, this.tier = 0, this.pill = ''});
+  final String id;
+  final FishWare kind;
+  final String name;
+  final int price, perWeek, count, tier;
+  final String pill;
+}
+
+/// Baits bought at the Ngư phủ, five at a time.
+const int fishShopBait = 5;
+
+List<FishOffer> fishShop(int level) {
+  final gemTier = level < 50 ? 3 : level < 80 ? 4 : 5;
+  return [
+    const FishOffer('bait', FishWare.bait, 'Mồi câu ×5', 12, 10, count: fishShopBait),
+    const FishOffer('shards', FishWare.shards, '2 Mảnh Hoàng Kim', 30, 5, count: 2),
+    const FishOffer('iron', FishWare.iron, 'Thần Thiết', 45, 5),
+    FishOffer('gem', FishWare.gem, tr('Ngọc cấp {gemTier} (hành ngẫu nhiên)', {'gemTier': gemTier}), 20 * gemTier, 3, tier: gemTier),
+    const FishOffer('page', FishWare.page, 'Trang bí kíp', 35, 3),
+    const FishOffer('taytuy', FishWare.pill, 'Tẩy Tủy Đan', 90, 2, pill: 'taytuy'),
+  ];
 }
 
 const fishes = <FishDef>[
@@ -78,6 +157,23 @@ const fishes = <FishDef>[
   FishDef('tungphong', 'Tùng Phong Ngư', 'hoason', FishRarity.fine, 'Vây như lá tùng, bơi ngược thác.'),
   FishDef('kiemhon', 'Kiếm Hồn Ngư', 'hoason', FishRarity.rare, 'Thấm kiếm khí của các bậc tiền bối.'),
   FishDef('hoasonthan', 'Hoa Sơn Thần Ngư', 'hoason', FishRarity.legend, 'Kẻ câu được nó, kiếm pháp tự thông.'),
+  // 1.26: the ponds of the later regions.
+  FishDef('casuoi', 'Cá Lăng Suối', 'mieucuong', FishRarity.common, 'Nấp dưới thác nước giữa rừng Miêu Cương.'),
+  FishDef('cotrung', 'Cổ Trùng Ngư', 'mieucuong', FishRarity.fine, 'Trong bụng nuôi một con cổ trùng nhỏ.'),
+  FishDef('thatsac', 'Thất Sắc Ngư', 'mieucuong', FishRarity.rare, 'Đổi màu bảy lần mỗi khi trời đổ mưa.'),
+  FishDef('kimtam', 'Kim Tằm Ngư Vương', 'mieucuong', FishRarity.legend, 'Vạn Độc Cổ Vương nuôi nó bằng kim tằm.'),
+  FishDef('sathach', 'Sa Thạch Ngư', 'tayvuc', FishRarity.common, 'Màu đỏ như đá núi Tây Vực.'),
+  FishDef('bachcot', 'Bạch Cốt Ngư', 'tayvuc', FishRarity.fine, 'Xương trắng lộ ra dưới lớp vảy mỏng.'),
+  FishDef('baihoa', 'Bái Hỏa Ngư', 'tayvuc', FishRarity.rare, 'Bái Hỏa giáo thờ nó như một ngọn lửa nhỏ.'),
+  FishDef('luuly', 'Lưu Ly Thần Ngư', 'tayvuc', FishRarity.legend, 'Thân trong như lưu ly, sống trong suối ngầm sa mạc.'),
+  FishDef('cathu', 'Cá Thu Đảo', 'donghai', FishRarity.common, 'Từng đàn thu bạc lượn quanh các đảo.'),
+  FishDef('mucquang', 'Mực Lân Quang', 'donghai', FishRarity.fine, 'Phát sáng xanh khi bị kéo khỏi mặt nước.'),
+  FishDef('ngoctrai', 'Ngọc Trai Ngư', 'donghai', FishRarity.rare, 'Ngậm trong miệng một viên ngọc trai.'),
+  FishDef('longcung', 'Long Cung Ngư', 'donghai', FishRarity.legend, 'Thị vệ của Đông Hải Long Vương, vảy xanh như ngọc.'),
+  FishDef('tuyetlinh', 'Tuyết Linh Ngư', 'conlon', FishRarity.common, 'Bơi dưới lớp băng mỏng của suối tiên.'),
+  FishDef('ngocho', 'Ngọc Hồ Ngư', 'conlon', FishRarity.fine, 'Sống trong hồ nước xanh như ngọc trên đỉnh núi.'),
+  FishDef('tienlien', 'Tiên Liên Ngư', 'conlon', FishRarity.rare, 'Ngủ dưới lá sen tuyết nghìn năm.'),
+  FishDef('conlonthan', 'Côn Lôn Thần Ngư', 'conlon', FishRarity.legend, 'Cưỡi mây mà bơi, tương truyền là thú cưỡi của tiên nhân.'),
 ];
 
 final Map<String, FishDef> fishById = {for (final f in fishes) f.id: f};

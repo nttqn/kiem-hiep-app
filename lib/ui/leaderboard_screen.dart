@@ -67,6 +67,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.rank => rankScore(h.rebirths, h.level, h.daoLv),
         LbBoard.arena => arenaBoardValue(h),
         LbBoard.hunt => h.huntBoardValue,
+        LbBoard.fish => h.fishBoardValue,
         LbBoard.daiHoi => h.dhChamps,
         LbBoard.tamMa || LbBoard.maVuc || LbBoard.beast => endgameBoardMine(b, h),
       };
@@ -173,6 +174,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       LbBoard.rank: 'Cấp độ',
       LbBoard.arena: 'Lôi đài',
       LbBoard.hunt: 'Săn quái tuần',
+      LbBoard.fish: 'Câu cá tuần',
       LbBoard.daiHoi: 'Minh Chủ',
     };
     return SubScreen(
@@ -325,6 +327,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         LbBoard.rank => e.dao > 0 ? daoName(e.dao) : e.rebirths > 0 ? tr('CS{rebirths} · {level}', {'rebirths': e.rebirths, 'level': e.level}) : tr('Cấp {level}', {'level': e.level}),
         LbBoard.arena => tr('{p0} điểm', {'p0': e.arenaS % 100000}),
         LbBoard.hunt => tr('{p0} quái', {'p0': fmt(e.wk % 1000000)}),
+        LbBoard.fish => tr('{p0} điểm', {'p0': fmt(e.fw % 1000000)}),
         LbBoard.daiHoi => tr('{dhC} lần vô địch', {'dhC': e.dhC}),
         LbBoard.tamMa || LbBoard.maVuc || LbBoard.beast => endgameBoardLabel(_board, e),
       };
@@ -332,6 +335,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   bool get _offBoard =>
       (_board == LbBoard.arena && arenaBoardValue(h) == 0) ||
       (_board == LbBoard.hunt && h.huntBoardValue == 0) ||
+      (_board == LbBoard.fish && h.fishBoardValue == 0) ||
       (_board == LbBoard.daiHoi && h.dhChamps == 0);
 
   Widget _mePanel() {
@@ -354,6 +358,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           if (h.daoLv > 0) _stat(tr('Ngộ Đạo'), daoName(h.daoLv)),
           _stat(tr('Lôi đài'), tr('{arenaPoints} điểm', {'arenaPoints': h.arenaPoints})),
           _stat(tr('Săn quái tuần'), fmt(h.huntKills)),
+          _stat(tr('Câu cá tuần'), fmt(h.fishPts)),
           _stat(tr('Minh Chủ'), tr('{dhChamps} lần', {'dhChamps': h.dhChamps})),
           const SizedBox(height: 8),
           if (lb.available && !lb.hidden)
@@ -363,6 +368,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ? tr('Đấu một trận Lôi đài mùa này để lên bảng')
                         : _board == LbBoard.daiHoi
                         ? tr('Vô địch Võ Lâm Đại Hội để lên bảng')
+                        : _board == LbBoard.fish
+                        ? tr('Câu một con cá tuần này để lên bảng')
                         : tr('Hạ một con quái tuần này để lên bảng'))
                     : (_place == null ? tr('Đang tính hạng…') : tr('Hạng của bạn: #{_place}', {'_place': _place})),
                 style: titleStyle(_offBoard ? 14 : 17, color: goldLight)),
@@ -374,6 +381,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(lb.submitError!, style: small.copyWith(color: hpRed, fontWeight: FontWeight.w700)),
+            ),
+          if (_board == LbBoard.fish)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                  tr('Bảng mới mỗi thứ Hai, còn {p0} ngày. Điểm theo cân nặng, cá càng quý càng nhiều điểm. '
+                  'Top 50 nhận Thần Thiết và Ngư tệ, hạng 1 thêm danh hiệu « Ngư Vương ».', {'p0': huntDaysLeft(vnDayKey())}),
+                  style: small.copyWith(fontSize: 10.5, color: goldLight)),
             ),
           if (_board == LbBoard.hunt)
             Padding(

@@ -521,6 +521,19 @@ class HeroData {
   final Map<String, int> fishCaught = {};
   final Set<String> fishBooks = {};
 
+  // 1.26: heaviest catch by fish (tenths of a cân), Ngư tệ, Câu cá tuần
+  // (week, points, the finished week's score waiting for its rank), Ngư
+  // phủ buys this week by ware id, and bought baits (kept until used).
+  final Map<String, int> fishBest = {};
+  int fishCoins = 0;
+  int fishWeek = 0;
+  int fishPts = 0;
+  int fishLastScore = 0;
+  bool fishRankDue = false;
+  final Map<String, int> fishBought = {};
+  int fishBoughtWeek = 0;
+  int fishExtraBait = 0;
+
   // Ải Ác Mộng: best stars by id, and per day the paid clears.
   final Map<String, int> nmStars = {};
   String nmDay = '';
@@ -2655,14 +2668,91 @@ class HeroData {
     fishAds = 0;
   }
 
-  int get fishBaitLeft => fishBaitPerDay + fishAds * fishAdBait - fishUsed;
+  /// Today's baits left plus the ones bought at the Ngư phủ.
+  int get fishBaitLeft => math.max(0, fishBaitPerDay + fishAds * fishAdBait - fishUsed) + fishExtraBait;
 
-  /// Uses a bait for a cast; false when none are left.
+  /// Uses a bait for a cast (today's first, then bought ones); false when
+  /// none are left.
   bool fishCast(String day) {
     fishRollDay(day);
-    if (fishBaitLeft <= 0) return false;
-    fishUsed++;
+    if (fishBaitPerDay + fishAds * fishAdBait - fishUsed > 0) {
+      fishUsed++;
+      return true;
+    }
+    if (fishExtraBait <= 0) return false;
+    fishExtraBait--;
     return true;
+  }
+
+  /// Moves Câu cá tuần to [day]'s week; a finished week with points waits
+  /// for its rank. Ngư phủ limits start over each week too.
+  void fishRollWeek(String day) {
+    final w = huntWeekOf(day);
+    if (w != fishBoughtWeek) {
+      fishBoughtWeek = w;
+      fishBought.clear();
+    }
+    if (w == fishWeek) return;
+    if (fishWeek > 0 && fishPts > 0 && w > fishWeek) {
+      fishLastScore = fishScore(fishWeek, fishPts);
+      fishRankDue = true;
+    }
+    fishWeek = w;
+    fishPts = 0;
+  }
+
+  /// This week's Câu cá board value: 0 until the first catch.
+  int get fishBoardValue => fishWeek > 0 && fishPts > 0 ? fishScore(fishWeek, fishPts) : 0;
+
+  /// Pays the finished week's reward once its [place] is known.
+  List<String> payFishRank(int place) {
+    if (!fishRankDue) return const [];
+    fishRankDue = false;
+    final r = fishWeekReward(place);
+    if (r == null) return const [];
+    divineIron += r.iron;
+    fishCoins += r.coins;
+    final lines = [
+      tr('Hạng {place} Câu cá tuần trước:', {'place': place}),
+      tr('+{iron} Thần Thiết', {'iron': r.iron}),
+      tr('+{coins} Ngư tệ', {'coins': r.coins}),
+    ];
+    if (r.title.isNotEmpty && seasonTitles.add(r.title)) lines.add(tr('Danh hiệu « {rTitle} »', {'rTitle': tr(r.title)}));
+    return lines;
+  }
+
+  /// Ngư phủ buys of [o] left this week.
+  int fishOfferLeft(FishOffer o, String day) {
+    fishRollWeek(day);
+    return math.max(0, o.perWeek - (fishBought[o.id] ?? 0));
+  }
+
+  /// Buys [o] with Ngư tệ; the line says what came in, null when it cannot.
+  String? fishBuy(FishOffer o, String day, math.Random rng) {
+    if (fishOfferLeft(o, day) <= 0 || fishCoins < o.price) return null;
+    if (o.kind == FishWare.page && !manualOpen) return null;
+    fishCoins -= o.price;
+    fishBought[o.id] = (fishBought[o.id] ?? 0) + 1;
+    switch (o.kind) {
+      case FishWare.bait:
+        fishExtraBait += o.count;
+        return tr('+{count} mồi câu', {'count': o.count});
+      case FishWare.iron:
+        divineIron += o.count;
+        return tr('+{iron} Thần Thiết', {'iron': o.count});
+      case FishWare.shards:
+        goldShards += o.count;
+        return tr('+{p0} Mảnh Hoàng Kim', {'p0': o.count});
+      case FishWare.gem:
+        final gem = Gem(Hanh.values[rng.nextInt(5)], o.tier);
+        addGem(gem);
+        return tr(gem.name);
+      case FishWare.pill:
+        pills[o.pill] = (pills[o.pill] ?? 0) + o.count;
+        return tr(o.name);
+      case FishWare.page:
+        return gainManualPage(rng);
+    }
   }
 
   /// A rewarded ad adds [fishAdBait] baits, once a day.
@@ -2673,16 +2763,34 @@ class HeroData {
     return true;
   }
 
+  /// The last catch's weight (tenths of a cân), whether it beat that fish's
+  /// record, and the Câu cá tuần points it brought.
+  int lastFishWeight = 0, lastFishPts = 0;
+  bool lastFishRecord = false;
+
   /// Sells catch [f] and logs it; rare ones may hold a gem, legendary ones
-  /// a bí kíp page and Hoàng Kim shards.
-  List<String> catchFish(FishDef f, math.Random rng) {
+  /// a bí kíp page and Hoàng Kim shards. 1.26: it has a weight (kept as the
+  /// fish's record when heaviest), brings Câu cá tuần points and Ngư tệ.
+  List<String> catchFish(FishDef f, math.Random rng, {String? day}) {
     final first = (fishCaught[f.id] ?? 0) == 0;
     fishCaught[f.id] = (fishCaught[f.id] ?? 0) + 1;
     final g = f.price * (first ? 1 + fishFirstBonus : 1);
     gold += g;
-    final lines = [tr('+{p0} lượng{p1}', {'p0': _thousands(g), 'p1': first ? tr(' (lần đầu)') : ''})];
+    final w = rollFishWeight(f, rng);
+    lastFishWeight = w;
+    lastFishRecord = w > (fishBest[f.id] ?? 0);
+    if (lastFishRecord) fishBest[f.id] = w;
+    fishRollWeek(day ?? vnDayKey());
+    lastFishPts = fishPoints(f, w);
+    fishPts = math.min(fishWeekMax, fishPts + lastFishPts);
+    final coins = fishCoinsOf[f.rarity.index];
+    fishCoins += coins;
+    final lines = [
+      tr('+{p0} lượng{p1}', {'p0': _thousands(g), 'p1': first ? tr(' (lần đầu)') : ''}),
+      tr('+{coins} Ngư tệ · +{pts} điểm tuần', {'coins': coins, 'pts': lastFishPts}),
+    ];
     if (f.rarity == FishRarity.rare && rng.nextDouble() < 0.3) {
-      final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, 1 + f.mapIndex ~/ 2));
+      final gem = Gem(Hanh.values[rng.nextInt(5)], math.min(maxDropTier, 1 + f.tier ~/ 2));
       addGem(gem);
       lines.add(tr('Trong bụng cá có {gemName}', {'gemName': tr(gem.name)}));
     }
@@ -2703,6 +2811,7 @@ class HeroData {
     fishBooks.add(mapId);
     final g = fishBookGold(maps.indexWhere((m) => m.id == mapId));
     gold += g;
+    fishCoins += fishBookCoins;
     return g;
   }
 
@@ -3463,6 +3572,17 @@ class HeroData {
         'sect': [sectRank, sectContrib, sectCoins, sectDay, sectDone, sectDuty?.toJson()],
         'manual': [manualPages, manualOn],
         'fish': [fishDay, fishUsed, fishAds, fishCaught, fishBooks.toList()],
+        'fish2': {
+          'b': fishBest,
+          'c': fishCoins,
+          'w': fishWeek,
+          'p': fishPts,
+          'l': fishLastScore,
+          'd': fishRankDue,
+          's': fishBought,
+          'sw': fishBoughtWeek,
+          'x': fishExtraBait,
+        },
         'nm': [nmStars, nmDay, nmRuns, nmAds],
         'realm': [realmStars, realmDay, realmRuns, realmAds],
         'tbd': [tbdMaps, tbdSpot?.mapId ?? '', tbdSpot?.x ?? 0, tbdSpot?.y ?? 0, tbdDay, tbdDropped, tbdDug],
@@ -3675,6 +3795,32 @@ class HeroData {
         if (fishById.containsKey(k) && v is int && v > 0) h.fishCaught['$k'] = v;
       });
       h.fishBooks.addAll([for (final v in fish[4] as List) '$v']);
+      // Before 1.26 the four later regions had no fish, so their empty page
+      // counted as finished; it opens again for the new fish.
+      h.fishBooks.removeWhere((id) => !h.fishBookDone(id));
+    }
+    final fish2 = m['fish2'];
+    if (fish2 is Map) {
+      int n(String k) => fish2[k] is num ? math.max(0, (fish2[k] as num).toInt()) : 0;
+      final best = fish2['b'];
+      if (best is Map) {
+        best.forEach((k, v) {
+          if (fishById.containsKey(k) && v is num && v > 0) h.fishBest['$k'] = v.toInt();
+        });
+      }
+      h.fishCoins = n('c');
+      h.fishWeek = n('w');
+      h.fishPts = math.min(fishWeekMax, n('p'));
+      h.fishLastScore = n('l');
+      h.fishRankDue = fish2['d'] == true;
+      final bought = fish2['s'];
+      if (bought is Map) {
+        bought.forEach((k, v) {
+          if (v is num && v > 0) h.fishBought['$k'] = v.toInt();
+        });
+      }
+      h.fishBoughtWeek = n('sw');
+      h.fishExtraBait = n('x');
     }
     final nm = m['nm'];
     if (nm is List && nm.length >= 3) {

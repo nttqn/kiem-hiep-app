@@ -23,7 +23,7 @@ Future<void> showFishBook(BuildContext context, HeroData h) {
             height: 280,
             child: ListView(
               children: [
-                Text(tr('Mỗi bãi luyện công có một hồ câu cạnh cổng. Câu đủ 4 loài của một hồ để nhận thưởng.'),
+                Text(tr('Mỗi bãi luyện công có một hồ câu cạnh cổng. Câu đủ 4 loài của một hồ để nhận thưởng và {fishBookCoins} Ngư tệ.', {'fishBookCoins': fishBookCoins}),
                     style: small.copyWith(fontSize: 11)),
                 const SizedBox(height: 6),
                 for (var i = 0; i < maps.length; i++) _mapRow(h, i, () => setState(() {})),
@@ -68,11 +68,21 @@ Widget _mapRow(HeroData h, int i, VoidCallback changed) {
                           ),
                     const SizedBox(width: 3),
                     Expanded(
-                      child: Text(
-                        (h.fishCaught[f.id] ?? 0) > 0 ? tr('{fName} ×{p0}', {'fName': tr(f.name), 'p0': h.fishCaught[f.id]}) : '???',
-                        style: small.copyWith(fontSize: 10.5, color: Color(fishRarityColors[f.rarity.index])),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            (h.fishCaught[f.id] ?? 0) > 0 ? tr('{fName} ×{p0}', {'fName': tr(f.name), 'p0': h.fishCaught[f.id]}) : '???',
+                            style: small.copyWith(fontSize: 10.5, color: Color(fishRarityColors[f.rarity.index])),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // 1.26: the heaviest one caught.
+                          if ((h.fishBest[f.id] ?? 0) > 0)
+                            Text(tr('Kỷ lục {w}', {'w': fishWeightText(h.fishBest[f.id]!)}),
+                                style: small.copyWith(fontSize: 9.5, color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ],
                       ),
                     ),
                   ],

@@ -11,6 +11,7 @@ import '../services/analytics.dart';
 import '../services/save.dart';
 import '../services/sound.dart';
 import 'fish_book.dart';
+import 'fish_shop.dart';
 import 'theme.dart';
 import '../core/i18n.dart';
 
@@ -154,8 +155,8 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
   void _land() {
     final f = _fish!;
     final lines = h.catchFish(f, _rng);
-    SoundService.instance.cue(f.rarity.index >= 2 ? 'levelup' : 'loot');
-    Analytics.instance.log('fish_catch', {'id': f.id, 'rarity': f.rarity.index});
+    SoundService.instance.cue(f.rarity.index >= 2 || h.lastFishRecord ? 'levelup' : 'loot');
+    Analytics.instance.log('fish_catch', {'id': f.id, 'rarity': f.rarity.index, 'weight': h.lastFishWeight});
     SaveService.instance.save();
     setState(() {
       _state = _Fs.caught;
@@ -205,6 +206,19 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                     small: true,
                     color: const Color(0xFF2E6A8A),
                     onTap: () => showFishBook(context, h).then((_) => setState(() {})),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Visibility(
+                  visible: !playing,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: LButton(
+                    label: tr('Ngư phủ'),
+                    small: true,
+                    color: const Color(0xFF7A5A1A),
+                    onTap: () => showFishShop(context, h).then((_) => setState(() {})),
                   ),
                 ),
                 const Spacer(),
@@ -289,6 +303,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
         );
       case _Fs.caught:
         final c = Color(fishRarityColors[f!.rarity.index]);
+        final record = tr('Kỷ lục mới!');
         return Row(
           children: [
             ArtIcon('fish_${f.id}', fallback: Icons.set_meal, size: 52, color: c),
@@ -298,7 +313,16 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${tr(f.name)} [${tr(fishRarityNames[f.rarity.index])}]', style: bold.copyWith(color: c, fontSize: 16)),
-                  Text(tr(f.desc), style: small.copyWith(fontStyle: FontStyle.italic), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  // 1.26: the weight, and a record when it is the heaviest yet.
+                  Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: fishWeightText(h.lastFishWeight), style: bold.copyWith(color: cream, fontSize: 13)),
+                      if (h.lastFishRecord)
+                        TextSpan(text: '  $record', style: bold.copyWith(color: const Color(0xFFFFD34A), fontSize: 13)),
+                    ]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   Text(_lines.join(' · '), style: small.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),

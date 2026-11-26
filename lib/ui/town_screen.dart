@@ -114,6 +114,7 @@ class _TownScreenState extends State<TownScreen> {
     if (mounted && h.lastLoginDate != todayKey()) await showLoginGiftDialog(context, h);
     if (mounted && h.newbieReady(vnDayKey())) await showNewbieDialog(context);
     await _huntReward();
+    await _fishReward();
     // Bought on the title screen, before a hero was open.
     // ...and purchases a sync gave back (a save from another phone had lost them).
     final back = CloudSave.instance.restoredGrants.join('\n');
@@ -215,6 +216,18 @@ class _TownScreenState extends State<TownScreen> {
     await SaveService.instance.save();
     final who = names.length <= 3 ? names.join(', ') : tr('{p0} và {p1} người khác', {'p0': names.take(3).join(', '), 'p1': names.length - 3});
     await _gotDialog(tr('Hiệp nghĩa'), tr('{who} đã mời {hName} trợ chiến.', {'who': who, 'hName': h.name}), lines);
+  }
+
+  /// Last week's Câu cá place and its reward (1.26), as Săn quái tuần.
+  Future<void> _fishReward() async {
+    h.fishRollWeek(vnDayKey());
+    if (!h.fishRankDue || !Leaderboard.instance.available) return;
+    final place = await Leaderboard.instance.placeLastFishWeek(h.fishLastScore);
+    if (place == null || !mounted) return;
+    final lines = h.payFishRank(place);
+    await SaveService.instance.save();
+    if (lines.isEmpty || !mounted) return;
+    await _gotDialog(tr('Thưởng Câu cá tuần'), lines.first, lines.skip(1).toList());
   }
 
   /// Last week's Săn quái place and its reward, once the board can be

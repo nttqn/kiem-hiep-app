@@ -45,6 +45,9 @@ service cloud.firestore {
           // its rank reward.
           && (!('wk' in d) || (d.wk is int && d.wk >= 0 && d.wk < (wk + 1) * 1000000))
           && (!('wkLast' in d) || (d.wkLast is int && d.wkLast >= 0 && d.wkLast < (wk + 1) * 1000000))
+          // Câu cá tuần (1.26): week * 1000000 + points, and the finished week's.
+          && (!('fw' in d) || (d.fw is int && d.fw >= 0 && d.fw < (wk + 1) * 1000000))
+          && (!('fwLast' in d) || (d.fwLast is int && d.fwLast >= 0 && d.fwLast < (wk + 1) * 1000000))
           // The mount ridden (1.4.0+), shown on Lôi đài copies, and its look (1.7.0+).
           && (!('mount' in d) || (d.mount is string && d.mount.size() <= 20))
           && (!('skin' in d) || (d.skin is string && d.skin.size() <= 24))

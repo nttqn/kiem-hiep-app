@@ -46,6 +46,11 @@ const sheets = {
   fish_magiao: ['fish_cahao', 'fish_huyetlan', 'fish_maanh', 'fish_thienma'],
   fish_vanvu: ['fish_vanngu', 'fish_thanhvan', 'fish_tienhac', 'fish_bachlong'],
   fish_hoason: ['fish_kiemngu', 'fish_tungphong', 'fish_kiemhon', 'fish_hoasonthan'],
+  // 1.26: the later regions' ponds.
+  fish_mieucuong: ['fish_casuoi', 'fish_cotrung', 'fish_thatsac', 'fish_kimtam'],
+  fish_tayvuc: ['fish_sathach', 'fish_bachcot', 'fish_baihoa', 'fish_luuly'],
+  fish_donghai: ['fish_cathu', 'fish_mucquang', 'fish_ngoctrai', 'fish_longcung'],
+  fish_conlon: ['fish_tuyetlinh', 'fish_ngocho', 'fish_tienlien', 'fish_conlonthan'],
 };
 
 // Shown big (Lôi đài card, podium): cut at 192 instead of 128.
