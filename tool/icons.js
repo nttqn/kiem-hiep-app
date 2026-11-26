@@ -26,7 +26,30 @@ const sheets = {
   skills_thuy: ['sk_thuy1', 'sk_thuy2', 'sk_thuy3', 'sk_thuy4', 'sk_thuy5', 'sk_thuy6', 'sk_thuy7'],
   skills_hoa: ['sk_hoa1', 'sk_hoa2', 'sk_hoa3', 'sk_hoa4', 'sk_hoa5', 'sk_hoa6', 'sk_hoa7'],
   skills_tho: ['sk_tho1', 'sk_tho2', 'sk_tho3', 'sk_tho4', 'sk_tho5', 'sk_tho6', 'sk_tho7'],
+  // Town tiles and top bar (tool/art_prompts.md §1).
+  town_1: ['t_maps', 't_dungeons', 't_challenge', 't_quests', 't_hero'],
+  town_2: ['t_manor', 't_companions', 't_rank', 't_guild', 't_alchemy'],
+  town_3: ['t_activity', 't_sect', 't_shop', 't_forge', 't_ach'],
+  town_4: ['t_gift', 't_bag', 't_guide', 't_news', 't_mail'],
+  town_5: ['t_chat', 't_friends'],
+  // Lôi đài tiers, podium medals, guild crests (§3).
+  arena_1: ['arena_0', 'arena_1', 'arena_2', 'arena_3'],
+  arena_2: ['arena_4', 'arena_5', 'arena_6'],
+  ranks: ['rank_1', 'rank_2', 'rank_3', 'guild_crest', 'guild_war'],
+  // Sổ cá (§5): four per region, common to legend, as in core/fishing.dart.
+  fish_ngoaithanh: ['fish_diecvang', 'fish_chepco', 'fish_chephong', 'fish_lyngu'],
+  fish_truclam: ['fish_rotruc', 'fish_trevan', 'fish_ngoctruc', 'fish_tutrucvuong'],
+  fish_hacphong: ['fish_camu', 'fish_lattinh', 'fish_hacnguyet', 'fish_uminh'],
+  fish_hoangsa: ['fish_lockhat', 'fish_sakim', 'fish_baothach', 'fish_samacvuong'],
+  fish_bangnguyen: ['fish_hoibang', 'fish_tuyetly', 'fish_hanngoc', 'fish_bangphach'],
+  fish_hoadiem: ['fish_chaythan', 'fish_diemlan', 'fish_phuongvi', 'fish_hoalong'],
+  fish_magiao: ['fish_cahao', 'fish_huyetlan', 'fish_maanh', 'fish_thienma'],
+  fish_vanvu: ['fish_vanngu', 'fish_thanhvan', 'fish_tienhac', 'fish_bachlong'],
+  fish_hoason: ['fish_kiemngu', 'fish_tungphong', 'fish_kiemhon', 'fish_hoasonthan'],
 };
+
+// Shown big (Lôi đài card, podium): cut at 192 instead of 128.
+const bigSheets = ['arena_1', 'arena_2', 'ranks'];
 
 async function cut(sheet, names) {
   const { data, info } = await sharp(path.join(inDir, sheet + '.png')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -200,8 +223,9 @@ async function cut(sheet, names) {
       }
     }
     const piece = await sharp(px, { raw: { width: bw, height: bh, channels: 4 } }).png().toBuffer();
-    const icon = sharp(piece).resize(116, 116, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .extend({ top: 6, bottom: 6, left: 6, right: 6, background: { r: 0, g: 0, b: 0, alpha: 0 } });
+    const side = bigSheets.includes(sheet) ? 180 : 116, pad = 6;
+    const icon = sharp(piece).resize(side, side, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: 0, g: 0, b: 0, alpha: 0 } });
     const buf = await icon.png().toBuffer();
     await sharp(buf).webp({ quality: 88, alphaQuality: 95 }).toFile(path.join(out, names[i] + '.webp'));
     outs.push(buf);

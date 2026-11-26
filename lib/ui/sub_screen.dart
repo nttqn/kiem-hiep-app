@@ -34,7 +34,29 @@ class SubScreen extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.arrow_back, color: goldLight),
                       ),
-                      Text(title, style: titleStyle(22)),
+                      // 1.25: the title on a painted paper scroll.
+                      SizedBox(
+                        height: 42,
+                        child: Stack(
+                          fit: StackFit.passthrough,
+                          children: [
+                            Positioned.fill(
+                              child: SliceFrame(uiTitleArt,
+                                  slice: SliceFrame.title.$1, imageSize: SliceFrame.title.$2, scale: narrow ? 7 : 5.2),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: narrow ? 24 : 34),
+                              child: Center(
+                                widthFactor: 1,
+                                child: Text(title,
+                                    style: titleStyle(narrow ? 18 : 20, color: lacquer)
+                                        .copyWith(shadows: const [Shadow(color: Color(0x80FFFFFF), offset: Offset(0, 1))]),
+                                    maxLines: 1),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       // Tabs slide sideways when the screen is too narrow.
                       Expanded(
                         child: Align(

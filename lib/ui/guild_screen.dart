@@ -296,7 +296,11 @@ class _GuildTabState extends State<_GuildTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(g.name, style: titleStyle(20, color: _bangTint), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Row(children: [
+            const ArtIcon('guild_crest', fallback: Icons.shield, size: 40),
+            const SizedBox(width: 6),
+            Expanded(child: Text(g.name, style: titleStyle(20, color: _bangTint), maxLines: 1, overflow: TextOverflow.ellipsis)),
+          ]),
           Text(tr('Cấp {lv} · {_membersLength}/{p0} người', {'lv': lv, '_membersLength': _members.length, 'p0': guildMaxMembers(lv)}), style: bold.copyWith(color: cream, fontSize: 13)),
           const SizedBox(height: 4),
           Bar(

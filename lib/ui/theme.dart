@@ -101,6 +101,7 @@ class Panel extends StatelessWidget {
     this.border = gold,
     this.radius = 10,
     this.art,
+    this.outset = 5,
   });
 
   final Widget child;
@@ -113,9 +114,32 @@ class Panel extends StatelessWidget {
   /// and fading into lacquer on the left where the text sits (1.11.2).
   final String? art;
 
+  /// How far the painted frame reaches past the box (small tiles: less).
+  final double outset;
+
   @override
   Widget build(BuildContext context) {
     final art = this.art;
+    // 1.25: the painted lacquer board with gold cloud corners, for every
+    // plain panel; tinted or pictured panels keep the drawn look.
+    if (art == null && color == null && border == gold) {
+      // The frame reaches a few points past the box, so the corner scrolls
+      // sit mostly outside the content instead of under the first words.
+      return Stack(
+        fit: StackFit.passthrough,
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: -outset,
+            top: -outset,
+            right: -outset,
+            bottom: -outset,
+            child: SliceFrame(uiPanelArt, slice: SliceFrame.panel.$1, imageSize: SliceFrame.panel.$2, scale: 4.6),
+          ),
+          Padding(padding: padding, child: child),
+        ],
+      );
+    }
     return Container(
       padding: art == null ? padding : EdgeInsets.zero,
       clipBehavior: art == null ? Clip.none : Clip.antiAlias,
@@ -165,6 +189,56 @@ class Panel extends StatelessWidget {
   }
 }
 
+/// Painted UI frames (assets/art/ui, tool/ui_art.js).
+const uiPanelArt = 'assets/art/ui/panel.webp';
+const uiTitleArt = 'assets/art/ui/title_bar.webp';
+const uiButtonArt = 'assets/art/ui/btn_primary.webp';
+const uiButtonDarkArt = 'assets/art/ui/btn_secondary.webp';
+const uiButtonOffArt = 'assets/art/ui/btn_disabled.webp';
+String uiSlotArt(int rarity) => 'assets/art/ui/slot_${rarity.clamp(0, 4)}.webp';
+
+/// A painted nine-slice frame filling its box. [slice] is the stretchable
+/// middle in image pixels of an [imageSize] picture; [scale] image pixels
+/// make one point. A box too small for the fixed edges gets a bigger
+/// scale (smaller edges) instead of a broken draw.
+class SliceFrame extends StatelessWidget {
+  const SliceFrame(this.asset, {super.key, required this.slice, required this.imageSize, required this.scale, this.shadow = false});
+  final String asset;
+  final Rect slice;
+  final Size imageSize;
+  final double scale;
+  final bool shadow;
+
+  static const panel = (Rect.fromLTRB(95, 80, 505, 355), Size(600, 435));
+  static const button = (Rect.fromLTRB(70, 32, 236, 64), Size(306, 96));
+  static const title = (Rect.fromLTRB(180, 70, 720, 160), Size(900, 226));
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, k) {
+        final w = k.maxWidth, h = k.maxHeight;
+        if (!w.isFinite || !h.isFinite || w < 2 || h < 2) return const SizedBox.shrink();
+        final s = math.max(scale,
+            math.max((imageSize.width - slice.width) / (w - 1), (imageSize.height - slice.height) / (h - 1)));
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            boxShadow: shadow ? const [BoxShadow(color: Colors.black45, blurRadius: 3, offset: Offset(0, 3))] : null,
+            image: DecorationImage(
+              image: AssetImage(asset),
+              centerSlice: Rect.fromLTRB(slice.left / s, slice.top / s, slice.right / s, slice.bottom / s),
+              scale: s,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
+        );
+      });
+}
+
+/// Read once at start so the first screen does not show bare frames.
+Future<void> precacheUiArt(BuildContext context) => Future.wait([
+      for (final p in [uiPanelArt, uiTitleArt, uiButtonArt, uiButtonDarkArt, uiButtonOffArt, for (var i = 0; i < 5; i++) uiSlotArt(i)])
+        precacheImage(AssetImage(p), context, onError: (_, _) {}),
+    ]);
+
 /// The painted vignette of a region (assets/art/map_{theme}.webp, 1.11.2).
 String mapArtPath(String theme) => 'assets/art/map_$theme.webp';
 
@@ -205,6 +279,15 @@ class _LButtonState extends State<LButton> {
     final on = widget.enabled && widget.onTap != null;
     final c = on ? widget.color : const Color(0xFF4A4038);
     final h = widget.small ? 34.0 : 44.0;
+    // 1.25: the painted red, dark and greyed buttons; other colours (jade,
+    // purple...) keep the drawn lacquer so their meaning still shows.
+    final painted = !on
+        ? uiButtonOffArt
+        : widget.color == seal
+            ? uiButtonArt
+            : (widget.color == lacquer || widget.color == lacquerLight || widget.color == lacquerDeep)
+                ? uiButtonDarkArt
+                : null;
     return GestureDetector(
       onTapDown: on ? (_) => setState(() => _down = true) : null,
       onTapCancel: () => setState(() => _down = false),
@@ -220,8 +303,10 @@ class _LButtonState extends State<LButton> {
         width: widget.width,
         height: h,
         margin: EdgeInsets.only(top: _down ? 3 : 0, bottom: _down ? 0 : 3),
-        padding: EdgeInsets.symmetric(horizontal: widget.small ? 12 : 18),
-        decoration: BoxDecoration(
+        padding: painted != null ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: widget.small ? 12 : 18),
+        decoration: painted != null
+            ? null
+            : BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -233,7 +318,7 @@ class _LButtonState extends State<LButton> {
               ? null
               : [BoxShadow(color: Color.lerp(c, Colors.black, 0.6)!, offset: const Offset(0, 3))],
         ),
-        child: Row(
+        child: _framed(painted, Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -253,8 +338,24 @@ class _LButtonState extends State<LButton> {
               ),
             ),
           ],
-        ),
+        )),
       ),
+    );
+  }
+
+  /// The label on the painted button; its ends carry a cloud scroll, so the
+  /// label keeps clear of them.
+  Widget _framed(String? painted, Widget label) {
+    if (painted == null) return label;
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        Positioned.fill(
+          child: SliceFrame(painted,
+              slice: SliceFrame.button.$1, imageSize: SliceFrame.button.$2, scale: widget.small ? 4.4 : 3.2, shadow: !_down),
+        ),
+        Padding(padding: EdgeInsets.symmetric(horizontal: widget.small ? 15 : 22), child: label),
+      ],
     );
   }
 }
@@ -338,16 +439,37 @@ class ItemTile extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          gradient: RadialGradient(colors: [
-            Color.lerp(lacquerLight, c, it == null ? 0 : 0.35)!,
-            lacquerDeep,
-          ]),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: selected ? Colors.white : c, width: selected ? 2.4 : 1.6),
-        ),
+        // 1.25: an item sits in the painted frame of its rarity, a soft glow
+        // of its colour inside; an empty slot keeps the plain drawn one.
+        foregroundDecoration: selected && it != null
+            ? BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white, width: 2.4))
+            : null,
+        decoration: it != null
+            ? BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(uiSlotArt(it.rarity.index)),
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.medium,
+                ),
+              )
+            : BoxDecoration(
+                gradient: const RadialGradient(colors: [lacquerLight, lacquerDeep]),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: selected ? Colors.white : c, width: selected ? 2.4 : 1.6),
+              ),
         child: Stack(
           children: [
+            if (it != null)
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsets.all(size * 0.14),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(colors: [c.withValues(alpha: 0.38), c.withValues(alpha: 0)]),
+                    ),
+                  ),
+                ),
+              ),
             Positioned.fill(
               child: () {
                 final glyph = CustomPaint(
@@ -357,7 +479,7 @@ class ItemTile extends StatelessWidget {
                 if (path == null) return glyph;
                 // 1.11.1: the painted icon of its kind and material tier.
                 return Padding(
-                  padding: EdgeInsets.all(size * 0.08),
+                  padding: EdgeInsets.all(size * 0.13),
                   child: Image.asset(path, filterQuality: FilterQuality.medium, errorBuilder: (_, _, _) => glyph),
                 );
               }(),
@@ -808,6 +930,25 @@ enum Mat { stone, iron, shard, soul, soulPill, hp, mp, jade, map, herb1, herb2, 
 
 /// Herb [tier] (0-4) as a [Mat].
 Mat herbMat(int tier) => Mat.values[Mat.herb1.index + tier.clamp(0, 4)];
+
+/// A painted icon from assets/art/icons/[name].webp (town doors, emblems,
+/// fish), the plain [fallback] glyph if the picture is missing.
+class ArtIcon extends StatelessWidget {
+  const ArtIcon(this.name, {super.key, required this.fallback, this.size = 24, this.color = goldLight});
+  final String name;
+  final IconData fallback;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+        'assets/art/icons/$name.webp',
+        width: size,
+        height: size,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => Icon(fallback, size: size * 0.85, color: color),
+      );
+}
 
 /// A material's painted icon; a plain dot if the picture is missing.
 class MatIcon extends StatelessWidget {

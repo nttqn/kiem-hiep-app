@@ -5,6 +5,7 @@ import '../core/content.dart';
 import '../core/scenery.dart';
 import 'art_figures.dart';
 import 'art_landmarks.dart';
+import 'ground_tex.dart';
 import 'quality.dart';
 
 class Palette {
@@ -40,8 +41,18 @@ void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
   final pal = palettes[s.theme]!;
   // Outside the playfield.
   c.drawRect(view.inflate(10), fillOf(pal.edge));
-  c.drawRect(Rect.fromLTWH(0, 0, w, h), fillOf(pal.ground));
-  for (final p in s.patches) {
+  // A painted texture (1.25) when loaded; the drawn ground otherwise.
+  final tex = GroundTex.paint(s.theme);
+  if (tex != null) {
+    final field = Rect.fromLTWH(0, 0, w, h).intersect(view.inflate(10));
+    c.drawRect(field, tex);
+    // A light wash of the region's colour: ties it to the scenery and keeps
+    // the brightest pictures from outshining the fighters.
+    c.drawRect(field, Paint()..color = Color(pal.ground).withValues(alpha: 0.18));
+  } else {
+    c.drawRect(Rect.fromLTWH(0, 0, w, h), fillOf(pal.ground));
+  }
+  for (final p in tex != null ? const <Patch>[] : s.patches) {
     if (p.x + p.rx < view.left || p.x - p.rx > view.right ||
         p.y + p.ry < view.top || p.y - p.ry > view.bottom) {
       continue;
@@ -50,7 +61,7 @@ void drawGround(Canvas c, Scenery s, Rect view, double w, double h, double t) {
     c.drawOval(Rect.fromCenter(center: Offset(p.x, p.y), width: p.rx * 2, height: p.ry * 2),
         Paint()..color = Color(colr).withValues(alpha: 0.35 + p.shade.abs() * 0.3));
   }
-  if (s.theme == MapTheme.fortress) _tiles(c, view, w, h, pal);
+  if (s.theme == MapTheme.fortress && tex == null) _tiles(c, view, w, h, pal);
   _paths(c, s, view, pal);
   if (s.theme == MapTheme.sea) _shore(c, view, w, t);
   for (final d in s.decals) {

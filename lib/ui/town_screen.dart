@@ -573,13 +573,13 @@ class _TownScreenState extends State<TownScreen> {
                                 isLabelVisible: h.bag.length >= bagSize - 10,
                                 label: Text(h.bag.length >= bagSize ? tr('Đầy') : '${h.bag.length}'),
                                 backgroundColor: seal,
-                                child: const Icon(Icons.backpack_outlined, color: goldLight),
+                                child: const ArtIcon('t_bag', fallback: Icons.backpack_outlined, size: 30),
                               ),
                             ),
                             IconButton(
                               tooltip: tr('Nên làm gì tiếp'),
                               onPressed: _showSteps,
-                              icon: const Icon(Icons.lightbulb_outline, color: goldLight),
+                              icon: const ArtIcon('t_guide', fallback: Icons.lightbulb_outline, size: 30),
                             ),
                             IconButton(
                               tooltip: tr('Bảng tin'),
@@ -591,7 +591,7 @@ class _TownScreenState extends State<TownScreen> {
                                 isLabelVisible: NewsService.instance.unread > 0,
                                 label: Text('${NewsService.instance.unread}'),
                                 backgroundColor: seal,
-                                child: const Icon(Icons.campaign_outlined, color: goldLight),
+                                child: const ArtIcon('t_news', fallback: Icons.campaign_outlined, size: 30),
                               ),
                             ),
                             IconButton(
@@ -604,13 +604,13 @@ class _TownScreenState extends State<TownScreen> {
                                 isLabelVisible: MailService.instance.open(h).isNotEmpty,
                                 label: Text('${MailService.instance.open(h).length}'),
                                 backgroundColor: seal,
-                                child: const Icon(Icons.mail_outline, color: goldLight),
+                                child: const ArtIcon('t_mail', fallback: Icons.mail_outline, size: 30),
                               ),
                             ),
                             IconButton(
                               tooltip: tr('Kênh Thế Giới'),
                               onPressed: () => _go(const ChatScreen()),
-                              icon: const Icon(Icons.forum_outlined, color: goldLight),
+                              icon: const ArtIcon('t_chat', fallback: Icons.forum_outlined, size: 30),
                             ),
                             const SettingsButton(),
                             IconButton(
@@ -825,6 +825,7 @@ class _TownScreenState extends State<TownScreen> {
       return _Tile(
         tr(f.label),
         icon,
+        art: 't_$id',
         ok
             ? () {
                 if (h.seenFeatures.add(id)) SaveService.instance.save();
@@ -880,9 +881,12 @@ class _TownScreenState extends State<TownScreen> {
 }
 
 class _Tile extends StatelessWidget {
-  const _Tile(this.label, this.icon, this.onTap, {this.badge = 0, this.lockedAt = 0, this.fresh = false});
+  const _Tile(this.label, this.icon, this.onTap, {required this.art, this.badge = 0, this.lockedAt = 0, this.fresh = false});
   final String label;
   final IconData icon;
+
+  /// The painted icon (assets/art/icons/t_{id}.webp, 1.25).
+  final String art;
   final VoidCallback onTap;
   final int badge;
 
@@ -903,14 +907,15 @@ class _Tile extends StatelessWidget {
             child: Opacity(
               opacity: lockedAt > 0 ? 0.45 : 1,
               child: Panel(
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                outset: 1,
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(icon, color: goldLight, size: lockedAt > 0 ? 17 : 21),
+                        ArtIcon(art, fallback: icon, size: lockedAt > 0 ? 24 : 30),
                         if (lockedAt > 0) ...[
                           const SizedBox(width: 2),
                           const Icon(Icons.lock, size: 10, color: creamDim),

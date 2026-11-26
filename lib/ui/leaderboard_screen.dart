@@ -285,8 +285,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         children: [
           SizedBox(
             width: 36,
-            child: Text('$place',
-                textAlign: TextAlign.center, style: titleStyle(place <= 3 ? 20 : 16, color: medal ?? cream)),
+            child: place <= 3
+                ? ArtIcon('rank_$place', fallback: Icons.military_tech, size: 34, color: medal ?? cream)
+                : Text('$place', textAlign: TextAlign.center, style: titleStyle(16, color: cream)),
           ),
           Container(
             width: 12,

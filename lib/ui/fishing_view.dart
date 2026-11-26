@@ -289,12 +289,20 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
         );
       case _Fs.caught:
         final c = Color(fishRarityColors[f!.rarity.index]);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Row(
           children: [
-            Text('${f.name} [${tr(fishRarityNames[f.rarity.index])}]', style: bold.copyWith(color: c, fontSize: 16)),
-            Text(tr(f.desc), style: small.copyWith(fontStyle: FontStyle.italic), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(_lines.join(' · '), style: small.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ArtIcon('fish_${f.id}', fallback: Icons.set_meal, size: 52, color: c),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${tr(f.name)} [${tr(fishRarityNames[f.rarity.index])}]', style: bold.copyWith(color: c, fontSize: 16)),
+                  Text(tr(f.desc), style: small.copyWith(fontStyle: FontStyle.italic), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(_lines.join(' · '), style: small.copyWith(color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
           ],
         );
       case _Fs.escaped:

@@ -57,11 +57,25 @@ Widget _mapRow(HeroData h, int i, VoidCallback changed) {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: Color(fishRarityColors[f.rarity.index]).withValues(alpha: 0.6)),
                 ),
-                child: Text(
-                  (h.fishCaught[f.id] ?? 0) > 0 ? tr('{fName} ×{p0}', {'fName': tr(f.name), 'p0': h.fishCaught[f.id]}) : '???',
-                  style: small.copyWith(fontSize: 10.5, color: Color(fishRarityColors[f.rarity.index])),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    // Not caught yet: a dark shadow of the fish.
+                    (h.fishCaught[f.id] ?? 0) > 0
+                        ? ArtIcon('fish_${f.id}', fallback: Icons.set_meal, size: 26)
+                        : ColorFiltered(
+                            colorFilter: const ColorFilter.mode(Color(0xFF0E0806), BlendMode.srcATop),
+                            child: ArtIcon('fish_${f.id}', fallback: Icons.set_meal, size: 26, color: creamDim),
+                          ),
+                    const SizedBox(width: 3),
+                    Expanded(
+                      child: Text(
+                        (h.fishCaught[f.id] ?? 0) > 0 ? tr('{fName} ×{p0}', {'fName': tr(f.name), 'p0': h.fishCaught[f.id]}) : '???',
+                        style: small.copyWith(fontSize: 10.5, color: Color(fishRarityColors[f.rarity.index])),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

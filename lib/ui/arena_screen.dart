@@ -94,6 +94,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(child: ArtIcon('arena_${r[1]}', fallback: Icons.shield, size: 96, color: Color(tier.color))),
             Text(tr('Hạng cuối mùa: {tierName} ({p0} điểm)', {'tierName': tr(tier.name), 'p0': r[2]}), style: bold.copyWith(color: Color(tier.color))),
             const SizedBox(height: 6),
             for (final l in lines) Text('• $l', style: body),
@@ -175,7 +176,9 @@ class _ArenaScreenState extends State<ArenaScreen> {
       ),
       child: Row(
         children: [
-          SizedBox(width: 108, child: Text(tr(t.name), style: bold.copyWith(fontSize: 12, color: Color(t.color)))),
+          ArtIcon('arena_$i', fallback: Icons.shield, size: 26, color: Color(t.color)),
+          const SizedBox(width: 4),
+          SizedBox(width: 104, child: Text(tr(t.name), style: bold.copyWith(fontSize: 12, color: Color(t.color)))),
           Expanded(
             child: Text(
               tr('{p0} Uy danh · {p1} lượng'
@@ -304,6 +307,7 @@ class _ArenaScreenState extends State<ArenaScreen> {
           Expanded(
             child: ListView(
               children: [
+          Center(child: ArtIcon('arena_${h.arenaTier}', fallback: Icons.shield, size: 84, color: Color(tier.color))),
           Text(tr(tier.name), style: titleStyle(22, color: Color(tier.color)), textAlign: TextAlign.center),
           Text(tr('{arenaPoints} điểm', {'arenaPoints': h.arenaPoints}), style: bold.copyWith(color: cream), textAlign: TextAlign.center),
           if (next != null)

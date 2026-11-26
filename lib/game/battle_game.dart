@@ -3,6 +3,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/world.dart';
+import '../render/ground_tex.dart';
 import '../render/quality.dart';
 import '../render/vfx.dart';
 import '../render/world_renderer.dart';
@@ -59,6 +60,10 @@ class BattleGame extends Game {
   /// Dev build only: print each sound cue so a recorder can lay the game's
   /// own effects under a captured video.
   static bool debugLogSfx = false;
+
+  /// The painted ground is read before the first frame.
+  @override
+  Future<void> onLoad() => GroundTex.load(world.scenery.theme);
 
   double _clock = 0;
   double _sinceHud = 0;

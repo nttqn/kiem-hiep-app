@@ -201,12 +201,18 @@ class _GuildWarViewState extends State<GuildWarView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          tr('Tuần {_week} · còn {p0} ngày · Chiến lệnh {left}/{warPerDay}', {'_week': _week, 'p0': huntDaysLeft(day), 'left': left, 'warPerDay': warPerDay}),
-          style: bold.copyWith(color: _warTint, fontSize: 12.5),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        Row(children: [
+          const ArtIcon('guild_war', fallback: Icons.flag, size: 30),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              tr('Tuần {_week} · còn {p0} ngày · Chiến lệnh {left}/{warPerDay}', {'_week': _week, 'p0': huntDaysLeft(day), 'left': left, 'warPerDay': warPerDay}),
+              style: bold.copyWith(color: _warTint, fontSize: 12.5),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ]),
         Text(
           tr('Chiến công: bạn {p0} · bang {p1}{p2}', {'p0': h.warPtsFor(g.id), 'p1': fmt(_mySum), 'p2': place >= 0 ? tr(' (hạng {p0})', {'p0': place + 1}) : ''}),
           style: small.copyWith(fontSize: 11.5, color: cream),

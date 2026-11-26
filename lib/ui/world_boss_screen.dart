@@ -117,7 +117,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           tr('Lượt còn: {p0} · Uy danh: {p1}', {'p0': arenaOpen ? h.arenaFightsLeft : 0, 'p1': fmt(h.arenaCoins)}),
           tr('Tỷ thí với bản sao cao thủ khác, đổi Uy danh lấy thú cưỡi, ngọc, đan dược.'),
         ],
-        art: Icon(Icons.sports_kabaddi, size: 110, color: Color(arenaTiers[h.arenaTier].color).withValues(alpha: 0.85)),
+        art: ArtIcon('arena_${h.arenaTier}', fallback: Icons.sports_kabaddi, size: 110, color: Color(arenaTiers[h.arenaTier].color)),
         button: arenaOpen ? tr('Lên lôi đài') : tr('Mở ở cấp {arenaOpenLevel}', {'arenaOpenLevel': arenaOpenLevel}),
         enabled: arenaOpen,
         onTap: () => _go(const ArenaScreen()),

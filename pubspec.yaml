@@ -85,6 +85,8 @@ flutter:
     - assets/audio/music/
     - assets/art/
     - assets/art/icons/
+    - assets/art/ground/
+    - assets/art/ui/
     - assets/i18n/zh_Hant.json
     - assets/i18n/ko.json
     - assets/i18n/en.json
