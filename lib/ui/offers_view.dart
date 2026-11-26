@@ -79,7 +79,7 @@ class _OffersViewState extends State<OffersView> {
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final card in [_firstPay(), _monthCard(), _goldPack(), if (bigGoldOpen(h.level, h.rebirths)) ...[_goldVault(), _goldChest()], _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
+            for (final card in [_firstPay(), _monthCard(), _goldPack(), _goldVault(), _goldChest(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
           ],
         );
       },

@@ -4,7 +4,7 @@ Play Console: Sản phẩm trong ứng dụng → mỗi sản phẩm → Thêm b
 Giới hạn Play: tên ≤ 55, mô tả ≤ 200 ký tự. App Store Connect: tên hiển thị ≤ 30, mô tả ≤ 45 ký tự.
 Icon: 512px trong build/shots/iap_<id>.png (`flutter test tool/iap_icons_test.dart`), 1024px trong store/iap-icons-1024/.
 
-Rương/Kho Ngân Lượng chỉ hiện trong Ưu đãi từ cấp 80 hoặc sau chuyển sinh. Lượng = Hòm Ngân Lượng
+Rương/Kho Ngân Lượng hiện trong Ưu đãi ở mọi cấp (trước 1.25.0: từ cấp 80 hoặc sau chuyển sinh). Lượng = Hòm Ngân Lượng
 (100k + 10k·cấp)·(1 + chuyển sinh) × 6 hoặc × 15; ở lv99 CS6: 7,63M / 45,8M / 114,5M.
 
 ## kh_bo_quang_cao
@@ -90,8 +90,8 @@ Tiêu hao (Consumable) · 199.000 ₫
 
 | | Tên | Mô tả (Play) | Mô tả (App Store) |
 |---|---|---|---|
-| vi | Rương Ngân Lượng | Lượng bằng 6 Hòm Ngân Lượng cho nhân vật đang chơi, tăng theo cấp và số lần chuyển sinh. Mở từ cấp 80 hoặc sau chuyển sinh. Mua bao nhiêu lần cũng được. | Lượng bằng 6 Hòm Ngân Lượng |
-| en | Gold Hoard | Gold worth 6 Gold Chests for the current hero, growing with level and rebirths. From level 80 or after a rebirth. Buy as often as you like. | Gold worth 6 Gold Chests |
+| vi | Rương Ngân Lượng | Lượng bằng 6 Hòm Ngân Lượng cho nhân vật đang chơi, tăng theo cấp và số lần chuyển sinh. Mua bao nhiêu lần cũng được. | Lượng bằng 6 Hòm Ngân Lượng |
+| en | Gold Hoard | Gold worth 6 Gold Chests for the current hero, growing with level and rebirths. Buy as often as you like. | Gold worth 6 Gold Chests |
 | zh-TW | 銀兩大箱 | 為目前角色提供 6 個銀兩寶箱的銀兩，隨等級與轉生次數提高。80 級或轉生後開放，可重複購買。 | 等於 6 個銀兩寶箱 |
 | ko | 냥 큰 상자 | 현재 캐릭터에게 냥 상자 6개 분량의 냥을 지급하며, 레벨과 환생 횟수에 따라 증가합니다. 80레벨 또는 환생 후 개방, 반복 구매 가능. | 냥 상자 6개 분량의 냥 |
 
@@ -101,7 +101,7 @@ Tiêu hao (Consumable) · 399.000 ₫
 
 | | Tên | Mô tả (Play) | Mô tả (App Store) |
 |---|---|---|---|
-| vi | Kho Ngân Lượng | Giá tốt nhất: lượng bằng 15 Hòm Ngân Lượng cho nhân vật đang chơi, tặng 30 Tinh Thạch. Tăng theo cấp và chuyển sinh. Mở từ cấp 80 hoặc sau chuyển sinh. | 15 Hòm Ngân Lượng + 30 Tinh Thạch |
-| en | Gold Vault | Best value: gold worth 15 Gold Chests for the current hero, plus 30 Star Stones. Grows with level and rebirths. From level 80 or after a rebirth. | 15 Gold Chests of gold + 30 Star Stones |
+| vi | Kho Ngân Lượng | Giá tốt nhất: lượng bằng 15 Hòm Ngân Lượng cho nhân vật đang chơi, tặng 30 Tinh Thạch. Tăng theo cấp và chuyển sinh. | 15 Hòm Ngân Lượng + 30 Tinh Thạch |
+| en | Gold Vault | Best value: gold worth 15 Gold Chests for the current hero, plus 30 Star Stones. Grows with level and rebirths. | 15 Gold Chests of gold + 30 Star Stones |
 | zh-TW | 銀兩寶庫 | 最划算：為目前角色提供 15 個銀兩寶箱的銀兩，加贈 30 星石。隨等級與轉生提高，80 級或轉生後開放。 | 15 個銀兩寶箱 + 30 星石 |
 | ko | 냥 보물고 | 최고 가성비: 현재 캐릭터에게 냥 상자 15개 분량의 냥과 성석 30개 지급. 레벨과 환생에 따라 증가, 80레벨 또는 환생 후 개방. | 냥 상자 15개 분량 + 성석 30개 |

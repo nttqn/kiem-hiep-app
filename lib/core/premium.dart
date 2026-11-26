@@ -41,9 +41,6 @@ const int goldChestMul = 6, goldVaultMul = 15;
 /// Tinh Thạch thrown in with a Kho.
 const int goldVaultStones = 30;
 
-/// The Rương and Kho show from this level, or once reborn.
-const int bigGoldLevel = 80;
-bool bigGoldOpen(int level, int rebirths) => level >= bigGoldLevel || rebirths > 0;
 
 /// Gold in a Hòm Ngân Lượng: grows with level and rebirths so it keeps its
 /// worth (about 6.5 million at level 99 after five rebirths, less than a

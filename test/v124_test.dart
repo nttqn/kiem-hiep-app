@@ -51,11 +51,8 @@ void main() {
     expect(HeroData.fromJson(jsonDecode(jsonEncode((HeroData(name: 'B', hanh: Hanh.moc)).toJson())) as Map<String, dynamic>).bornLang, '');
   });
 
-  test('Rương and Kho Ngân Lượng: bigger, for lv80+ or reborn', () {
+  test('Rương and Kho Ngân Lượng: bigger, open at any level', () {
     expect(allSkus, containsAll([skuGoldChest, skuGoldVault]));
-    expect(bigGoldOpen(79, 0), isFalse);
-    expect(bigGoldOpen(80, 0), isTrue);
-    expect(bigGoldOpen(10, 1), isTrue);
     final h = HeroData(name: 'A', hanh: Hanh.kim)
       ..level = 99
       ..rebirths = 6;
