@@ -1312,6 +1312,12 @@ class World {
     }
   }
 
+  /// Walking out of a boss run (Tạm dừng → Về thành, or the app closing)
+  /// still pays the damage dealt so far: the run is spent either way.
+  void payBossOnLeave() {
+    if ((dungeon?.isWorldBoss ?? false) && !finished && bossDamage > 0) _endWorldBoss();
+  }
+
   /// Ends a Boss Thế Giới run (time up or knocked out) and pays for it.
   void _endWorldBoss() {
     if (finished) return;
@@ -2560,7 +2566,7 @@ class World {
         }
       case SkillKind.nova:
         fx.add(Fx(s.fx, p.x, p.y, life: s.ultimate ? 1.0 : 0.55, radius: s.radius));
-        _shake(s.radius > 200 ? 8 : 4);
+        if (s.ultimate || s.radius > 200) _shake(6);
         for (final m in mobs) {
           if (m.alive &&
               _d2(m.x, m.y, p.x, p.y) < _sq(s.radius + m.radius)) {
@@ -3053,8 +3059,9 @@ class World {
     if (!small) {
       final hy = m.y - 30 * m.def.size;
       cues.add(VfxCue(big ? CueKind.crit : CueKind.hit, m.x, hy, big ? hero.hanh.color : 0xFFFFF3C4));
-      // A crit freezes the picture for a blink, not more than every 0.3 s.
-      if (big && time - _lastStop > 0.3) {
+      // A crit freezes the picture for a blink, at most once a second and
+      // never while the hero walks (1.24.2 review: "stutters when moving").
+      if (big && !player.moving && time - _lastStop > 1.0) {
         _lastStop = time;
         hitStop = math.max(hitStop, 0.045);
       }
@@ -3102,7 +3109,7 @@ class World {
     if (bossFell) {
       slowMo = 0.7;
       hitStop = math.max(hitStop, 0.09);
-    } else if (m.big) {
+    } else if (m.big && !player.moving) {
       hitStop = math.max(hitStop, 0.07);
     }
     // A beaten challenger pays through the duel result only.
@@ -3743,7 +3750,9 @@ class World {
       z.next += z.interval > 0 ? z.interval : 999;
       z.ticks--;
       if (z.fromHero) {
-        if (z.interval == 0) _shake(z.r > 160 ? 7 : 3);
+        // Only the big ones: auto-fight casts all the time, and a shake on
+        // every skill kept the screen trembling.
+        if (z.interval == 0 && z.r > 160) _shake(5);
         for (final m in mobs) {
           if (m.alive && _d2(m.x, m.y, z.x, z.y) < _sq(z.r + m.radius)) {
             _hitMob(m, z.power,

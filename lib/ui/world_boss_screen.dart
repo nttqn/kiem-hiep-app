@@ -29,6 +29,7 @@ import 'play_screen.dart';
 import 'sub_screen.dart';
 import 'theme.dart';
 import '../core/i18n.dart';
+import 'run_gate.dart';
 
 /// Thử thách: the endless tower, the daily world boss and the Lôi đài.
 class ChallengeScreen extends StatefulWidget {
@@ -347,7 +348,7 @@ class _WorldBossScreenState extends State<WorldBossScreen> {
   }
 
   Future<void> _fight() async {
-    if (!h.wbStartRun(_day)) return;
+    if (!RunGate.take() || !h.wbStartRun(_day)) return;
     await SaveService.instance.save();
     if (!mounted) return;
     await Navigator.of(context).push(fadeRoute(PlayScreen.dungeon(worldBossDef())));

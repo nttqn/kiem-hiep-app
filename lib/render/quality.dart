@@ -5,6 +5,9 @@ import 'dart:ui';
 /// LiteMode (services/perf.dart).
 bool liteGraphics = false;
 
+/// Rung màn hình (Cài đặt), on by default; Chế độ máy yếu turns it off too.
+bool screenShake = true;
+
 /// World units visible top to bottom in battle (Tầm nhìn); set from
 /// ViewRange (services/perf.dart).
 double viewSpan = 460;

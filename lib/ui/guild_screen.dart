@@ -24,6 +24,7 @@ import 'world_boss_screen.dart' show BossPreview;
 import '../core/i18n.dart';
 import '../core/quick_chat.dart';
 import 'quick_chat_button.dart';
+import 'run_gate.dart';
 
 const _bangTint = Color(0xFF8CC8FF);
 
@@ -411,7 +412,7 @@ class _GuildTabState extends State<_GuildTab> {
                 small: true,
                 enabled: left > 0,
                 onTap: () async {
-                  if (!h.guildBossStart(day)) return;
+                  if (!RunGate.take() || !h.guildBossStart(day)) return;
                   await SaveService.instance.save();
                   if (!mounted) return;
                   await Navigator.of(context).push(fadeRoute(PlayScreen.dungeon(guildBossDef(day))));

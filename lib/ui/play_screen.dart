@@ -41,6 +41,7 @@ import 'theme.dart';
 import 'auto_dialog.dart';
 import 'chat_screen.dart';
 import 'helper_picker.dart';
+import 'run_gate.dart';
 import '../core/i18n.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -124,6 +125,7 @@ class _PlayScreenState extends State<PlayScreen> {
   @override
   void initState() {
     super.initState();
+    RunGate.opened();
     world = widget.dungeon != null
         ? World.dungeon(hero, widget.dungeon!)
         : World.field(hero, widget.map!);
@@ -250,6 +252,7 @@ class _PlayScreenState extends State<PlayScreen> {
         d.daiHoi ? hero.daiHoiResult(false) : hero.arenaResult(false, d.rival!);
       }
     }
+    world.payBossOnLeave();
     if (!_logged) _logRun(RunResult.left);
     SaveService.instance.save();
     super.dispose();
@@ -1535,6 +1538,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
+                      if (!RunGate.take()) return;
                       if (!hero.realmStartRun(day)) return;
                       SaveService.instance.save();
                       Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(realmDungeon(d.realm - 1, hero.level))));
@@ -1601,6 +1605,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     color: jade,
                     enabled: left > 0,
                     onTap: () {
+                      if (!RunGate.take()) return;
                       if (!(guild
                           ? hero.guildBossStart(day)
                           : golden

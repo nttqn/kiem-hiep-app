@@ -55,7 +55,6 @@ class WorldRenderer {
   }
   bool _placed = false;
   double shake = 0;
-  final math.Random _r = math.Random(3);
 
   /// Sparks, motes, dust and footprints.
   final Vfx vfx = Vfx();
@@ -117,8 +116,10 @@ class WorldRenderer {
     camY = cy.toDouble();
     var sx = 0.0, sy = 0.0;
     if (shake > 0.2) {
-      sx = (_r.nextDouble() - 0.5) * shake;
-      sy = (_r.nextDouble() - 0.5) * shake;
+      // A smooth wobble, not a new random spot every frame (on 120 Hz
+      // screens that read as violent shaking).
+      sx = math.sin(t * 53) * shake * 0.5;
+      sy = math.cos(t * 41) * shake * 0.5;
       shake *= math.pow(0.004, dt).toDouble();
     } else {
       shake = 0;

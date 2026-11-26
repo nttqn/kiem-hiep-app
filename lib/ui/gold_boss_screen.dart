@@ -15,6 +15,7 @@ import 'sub_screen.dart';
 import 'theme.dart';
 import 'world_boss_screen.dart' show BossPreview;
 import '../core/i18n.dart';
+import 'run_gate.dart';
 
 const _goldTint = Color(0xFFFFD34A);
 
@@ -104,7 +105,7 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
   }
 
   Future<void> _fight() async {
-    if (!h.gbStartRun(_day)) return;
+    if (!RunGate.take() || !h.gbStartRun(_day)) return;
     await SaveService.instance.save();
     if (!mounted) return;
     await Navigator.of(context).push(fadeRoute(PlayScreen.dungeon(goldBossDef())));

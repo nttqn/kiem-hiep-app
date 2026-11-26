@@ -11,6 +11,7 @@ import 'lore_screen.dart';
 import 'play_screen.dart';
 import 'theme.dart';
 import '../core/i18n.dart';
+import 'run_gate.dart';
 
 /// Bí cảnh: one wide land per field map, explored a few times a day.
 class RealmView extends StatefulWidget {
@@ -37,6 +38,7 @@ class _RealmViewState extends State<RealmView> {
   }
 
   void _enter(int i) {
+    if (!RunGate.take()) return;
     if (!h.realmStartRun(vnDayKey())) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr('Hết lượt thám hiểm hôm nay, mai quay lại nhé.'))),

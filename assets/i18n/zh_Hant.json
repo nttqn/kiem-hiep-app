@@ -3543,5 +3543,7 @@
  "{hName} đã nhận mã này rồi.": "{hName} 已兌換過此禮包碼。",
  "Mã này cần cấp {minLevel}.": "此禮包碼需要 {minLevel} 級。",
  "Mã quà được phát trên kênh và trang của game. Mỗi nhân vật nhận mỗi mã một lần.": "禮包碼會在遊戲的頻道與粉絲專頁發放。每個角色每組禮包碼限兌換一次。",
- "Mã quà": "禮包碼"
+ "Mã quà": "禮包碼",
+ "Rung màn hình": "畫面震動",
+ "Khi tung tuyệt kỹ và hạ quái lớn": "施放絕技與擊倒大型怪物時"
 }

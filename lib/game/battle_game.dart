@@ -124,7 +124,10 @@ class BattleGame extends Game {
       world.events.clear();
       for (final e in events) {
         if (e.kind == EvKind.shake) {
-          if (!liteGraphics) renderer.shake = (renderer.shake + e.value).clamp(0, 14).toDouble();
+          // The strongest at once, not the sum: many hits together used to
+          // stack into a violent jitter (1.24.2 review).
+          final v = e.value * 0.7;
+          if (!liteGraphics && screenShake && v > renderer.shake) renderer.shake = v > 8 ? 8 : v;
         } else {
           onEvent(e);
         }

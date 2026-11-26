@@ -230,6 +230,16 @@ Future<void> showSettings(BuildContext context) {
                   onChanged: (_) => LiteMode.instance.toggle(),
                 ),
               ),
+              ValueListenableBuilder<bool>(
+                valueListenable: ShakeSetting.instance.on,
+                builder: (_, on, _) => _Toggle(
+                  icon: Icons.vibration,
+                  label: tr('Rung màn hình'),
+                  hint: tr('Khi tung tuyệt kỹ và hạ quái lớn'),
+                  on: on,
+                  onChanged: (_) => ShakeSetting.instance.toggle(),
+                ),
+              ),
               ListenableBuilder(
                 listenable: NotifyService.instance,
                 builder: (_, _) {

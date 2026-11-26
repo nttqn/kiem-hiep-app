@@ -30,6 +30,7 @@ Future<void> main() async {
   SoundService.instance.init();
   await LanguageService.instance.load();
   await LiteMode.instance.load();
+  await ShakeSetting.instance.load();
   await ViewRange.instance.load();
   await SaveService.instance.load();
   await Leaderboard.instance.load();

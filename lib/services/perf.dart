@@ -47,6 +47,35 @@ class LiteMode {
   }
 }
 
+/// Rung màn hình: a 1.24.2 review found the battle shaking too much.
+/// Remembered on the device.
+class ShakeSetting {
+  ShakeSetting._();
+  static final ShakeSetting instance = ShakeSetting._();
+
+  final ValueNotifier<bool> on = ValueNotifier(true);
+
+  Future<void> load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _apply(prefs.getBool('screen_shake') ?? true);
+    } catch (_) {}
+  }
+
+  Future<void> toggle() async {
+    _apply(!on.value);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('screen_shake', on.value);
+    } catch (_) {}
+  }
+
+  void _apply(bool v) {
+    on.value = v;
+    screenShake = v;
+  }
+}
+
 /// Tầm nhìn: how much of the map a battle shows. Gần was the only view
 /// before 1.2.8; players on long screens found it narrow.
 class ViewRange {
