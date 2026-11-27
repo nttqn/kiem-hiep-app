@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kiem_hiep/core/codex.dart';
 import 'package:kiem_hiep/core/fishing.dart';
+import 'package:kiem_hiep/core/items.dart';
+import 'package:kiem_hiep/ui/codex_screen.dart';
 import 'package:kiem_hiep/core/hanh.dart';
 import 'package:kiem_hiep/ui/fish_book.dart';
 import 'package:kiem_hiep/ui/fish_shop.dart';
@@ -105,5 +108,16 @@ void main() {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
       await tester.pump();
     });
+  });
+  testWidgets('legend', (tester) async {
+    final h = _hero();
+    for (var n = 0; n < legendNames.length; n++) {
+      for (final sl in Slot.values.take(n + 2 > Slot.values.length ? Slot.values.length : n + 2)) {
+        h.codexGear.add(codexLegendKey(n, sl));
+      }
+    }
+    h.codexClaimed.add(codexLegendPage(5));
+    _as(h);
+    await _shot(tester, const CodexScreen(tab: 3), 'legend');
   });
 }

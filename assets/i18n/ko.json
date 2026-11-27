@@ -3646,5 +3646,12 @@
  "Mồi Tôm ×{n}": "새우 미끼 ×{n}",
  "Đang có {n}": "보유 {n}",
  "+{n} Mồi Tôm": "+{n} 새우 미끼",
- "  · Lên {next}: vạch xanh rộng hơn, kim chậm hơn, cá nặng hơn": "  · {next}(으)로: 초록 칸 넓게, 바늘 느리게, 물고기 무겁게"
+ "  · Lên {next}: vạch xanh rộng hơn, kim chậm hơn, cá nặng hơn": "  · {next}(으)로: 초록 칸 넓게, 바늘 느리게, 물고기 무겁게",
+ "Truyền Thuyết Tàng Gia": "전설 수집가",
+ "Truyền thuyết phổ trọn bộ! Danh hiệu « {t} »": "전설보 완성! 칭호 « {t} »",
+ "Truyền thuyết phổ: ghi nhận {name} · {slot} ({n}/{all})": "전설보: {name} · {slot} 기록 ({n}/{all})",
+ "Truyền thuyết phổ ({n})": "전설보 ({n})",
+ "Truyền thuyết phổ": "전설보",
+ "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "전설 장비는 {n}가지 이름 중 하나를 지닌다(패왕, 경홍…). 얻으면 그 이름과 부위 칸에 기록되며, 팔거나 분해해도 남는다. 황금 장비는 제외. 한 이름의 {slots}칸을 채우면 보상.",
+ "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "전설보 완성: 칭호 « {t} », {p0}"
 }

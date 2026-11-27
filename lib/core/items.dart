@@ -333,7 +333,9 @@ String slotNoun(Slot slot, SectDef sect) => switch (slot) {
       Slot.ring => 'Giới Chỉ',
     };
 
-const _legendNames = [
+/// The names a Truyền thuyết piece is forged under (Truyền thuyết phổ,
+/// 1.26.0, collects each one in every slot).
+const legendNames = [
   'Bá Vương',
   'Kinh Hồng',
   'Thiên Cơ',
@@ -360,7 +362,7 @@ Item makeItem({
   }
   var name = '${tierName(level)} ${slotNoun(slot, sect)}';
   if (rarity == Rarity.legend) {
-    name = '${_legendNames[rng.nextInt(_legendNames.length)]} '
+    name = '${legendNames[rng.nextInt(legendNames.length)]} '
         '${slotNoun(slot, sect)}';
   }
   return Item(
@@ -371,6 +373,16 @@ Item makeItem({
     bonus: bonus,
     name: name,
   );
+}
+
+/// Which of [legendNames] a Truyền thuyết piece bears, -1 for any other
+/// piece (Hoàng Kim ones included).
+int legendNameOf(Item it) {
+  if (it.rarity != Rarity.legend || it.golden) return -1;
+  for (var i = 0; i < legendNames.length; i++) {
+    if (it.name.startsWith('${legendNames[i]} ')) return i;
+  }
+  return -1;
 }
 
 /// Tẩy luyện: gold to reroll [it]'s extra lines keeping [locks] of them.

@@ -67,6 +67,29 @@ const Map<String, (Bonus, double)> codexLandBonus = {
   'conlon': (Bonus.crit, 0.005),
 };
 
+// ------------------------------------------------- Truyền thuyết phổ (1.26.0)
+// One page for each name a Truyền thuyết piece is forged under (Bá Vương,
+// Kinh Hồng...), a cell for each slot. Only Truyền thuyết pieces count, not
+// Hoàng Kim. Cells are kept in [HeroData.codexGear] as 'l<name>.<slot>'.
+
+String codexLegendKey(int name, Slot slot) => 'l$name.${slot.index}';
+String codexLegendPage(int name) => 'l$name';
+
+/// What each Truyền thuyết phổ page grants, by [legendNames] index.
+const List<(Bonus, double)> codexLegendBonus = [
+  (Bonus.atkPct, 0.02), // Bá Vương
+  (Bonus.dodge, 0.01), // Kinh Hồng
+  (Bonus.skillDmg, 0.025), // Thiên Cơ
+  (Bonus.aspd, 0.02), // Phong Vân
+  (Bonus.critDmg, 0.04), // Lăng Tiêu
+  (Bonus.hpPct, 0.02), // Vô Song
+];
+
+int codexLegendGold(int name) => 1000000 + 250000 * name;
+const int codexLegendEssence = 20;
+const String codexLegendTitle = 'Truyền Thuyết Tàng Gia';
+const Map<Bonus, double> codexLegendAllBonus = {Bonus.atkPct: 0.03, Bonus.hpPct: 0.03};
+
 const String codexGearTitle = 'Thần Binh Bác Lãm';
 const String codexLandTitle = 'Vạn Thú Đồ Phổ';
 const Map<Bonus, double> codexGearAllBonus = {Bonus.atkPct: 0.03};
@@ -85,11 +108,18 @@ extension Codex on HeroData {
     return codexGear.add(codexGearKey(codexTierOf(it.level), it.slot));
   }
 
+  /// Notes [it] in Truyền thuyết phổ; true when it filled a new cell.
+  bool codexNoteLegend(Item it) {
+    final n = legendNameOf(it);
+    return n >= 0 && codexGear.add(codexLegendKey(n, it.slot));
+  }
+
   /// Notes every piece worn or carried (old saves, pieces given straight
   /// into the bag).
   void codexScanOwned() {
     for (final it in [...equip.values, ...bag]) {
       codexNote(it);
+      codexNoteLegend(it);
     }
   }
 
@@ -101,6 +131,10 @@ extension Codex on HeroData {
 
   int codexGearCount(int tier) => [for (final s in Slot.values) if (codexGear.contains(codexGearKey(tier, s))) s].length;
   bool codexGearDone(int tier) => codexGearCount(tier) >= Slot.values.length;
+
+  int codexLegendCount(int name) => [for (final s in Slot.values) if (codexGear.contains(codexLegendKey(name, s))) s].length;
+  bool codexLegendDone(int name) => codexLegendCount(name) >= Slot.values.length;
+  bool get codexLegendAll => [for (var i = 0; i < legendNames.length; i++) codexLegendPage(i)].every(codexClaimed.contains);
 
   int codexMobCount(String id) => math.min(codexMobGoal, mobKills[id] ?? 0);
   int codexBossCount(String id) => math.min(codexBossGoal, bossKillsById[id] ?? 0);
@@ -121,6 +155,10 @@ extension Codex on HeroData {
       final m = mapById[page.substring(2)];
       return m != null && codexLandDone(m);
     }
+    if (page.startsWith('l')) {
+      final n = int.tryParse(page.substring(1));
+      return n != null && n >= 0 && n < legendNames.length && codexLegendDone(n);
+    }
     final t = int.tryParse(page.substring(1));
     return t != null && t >= 0 && t < codexTiers && codexGearDone(t);
   }
@@ -128,6 +166,7 @@ extension Codex on HeroData {
   List<String> get codexPages => [
         for (var t = 0; t < codexTiers; t++) codexGearPage(t),
         for (final m in codexLands) codexLandPage(m.id),
+        for (var i = 0; i < legendNames.length; i++) codexLegendPage(i),
       ];
 
   /// Pages to take, Kỳ ngộ phổ's (1.20.0) among them.
@@ -151,6 +190,18 @@ extension Codex on HeroData {
       if (b != null) lines.add(loreBonusLabel(b.$1, b.$2));
       if (codexLandAll && seasonTitles.add(codexLandTitle)) {
         lines.add(tr('Vạn thú phổ trọn bộ! Danh hiệu « {codexLandTitle} »', {'codexLandTitle': codexLandTitle}));
+      }
+    } else if (page.startsWith('l')) {
+      final n = int.parse(page.substring(1));
+      final g = codexLegendGold(n);
+      gold += g;
+      essence += codexLegendEssence;
+      lines.add(tr('+{p0} lượng', {'p0': fmtThousands(g)}));
+      lines.add(tr('+{e} Tinh Hoa', {'e': codexLegendEssence}));
+      final b = codexLegendBonus[n];
+      lines.add(loreBonusLabel(b.$1, b.$2));
+      if (codexLegendAll && seasonTitles.add(codexLegendTitle)) {
+        lines.add(tr('Truyền thuyết phổ trọn bộ! Danh hiệu « {t} »', {'t': tr(codexLegendTitle)}));
       }
     } else {
       final t = int.parse(page.substring(1));
@@ -179,12 +230,16 @@ extension Codex on HeroData {
     for (var t = 0; t < codexTiers; t++) {
       if (codexClaimed.contains(codexGearPage(t))) add(codexGearBonus[t].$1, codexGearBonus[t].$2);
     }
+    for (var i = 0; i < legendNames.length; i++) {
+      if (codexClaimed.contains(codexLegendPage(i))) add(codexLegendBonus[i].$1, codexLegendBonus[i].$2);
+    }
     for (final e in codexLandBonus.entries) {
       if (codexClaimed.contains(codexLandPage(e.key))) add(e.value.$1, e.value.$2);
     }
     // The title keeps the set bonus when later books add pages.
     if (codexGearAll || seasonTitles.contains(codexGearTitle)) codexGearAllBonus.forEach(add);
     if (codexLandAll || seasonTitles.contains(codexLandTitle)) codexLandAllBonus.forEach(add);
+    if (codexLegendAll || seasonTitles.contains(codexLegendTitle)) codexLegendAllBonus.forEach(add);
     return out;
   }
 
@@ -195,7 +250,7 @@ extension Codex on HeroData {
     try {
       for (final v in o[0] as List) {
         final k = '$v';
-        if (RegExp(r'^g\d\.\d$').hasMatch(k)) codexGear.add(k);
+        if (RegExp(r'^[gl]\d\.\d$').hasMatch(k)) codexGear.add(k);
       }
       (o[1] as Map).forEach((k, v) {
         if (v is num && mobById.containsKey('$k')) mobKills['$k'] = v.toInt().clamp(0, codexMobGoal);

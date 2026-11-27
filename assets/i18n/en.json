@@ -3646,5 +3646,12 @@
  "Mồi Tôm ×{n}": "Shrimp Bait ×{n}",
  "Đang có {n}": "Have {n}",
  "+{n} Mồi Tôm": "+{n} Shrimp Bait",
- "  · Lên {next}: vạch xanh rộng hơn, kim chậm hơn, cá nặng hơn": "  · To {next}: wider green mark, slower needle, heavier fish"
+ "  · Lên {next}: vạch xanh rộng hơn, kim chậm hơn, cá nặng hơn": "  · To {next}: wider green mark, slower needle, heavier fish",
+ "Truyền Thuyết Tàng Gia": "Legend Collector",
+ "Truyền thuyết phổ trọn bộ! Danh hiệu « {t} »": "Legend compendium complete! Title « {t} »",
+ "Truyền thuyết phổ: ghi nhận {name} · {slot} ({n}/{all})": "Legend compendium: {name} · {slot} logged ({n}/{all})",
+ "Truyền thuyết phổ ({n})": "Legend compendium ({n})",
+ "Truyền thuyết phổ": "Legend compendium",
+ "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "Legendary pieces bear one of {n} names (Overlord, Swan…). Each one picked up fills the cell of its name and slot, kept even after selling or salvaging. Golden pieces do not count. Fill all {slots} cells of a name for its reward.",
+ "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "Complete legend compendium: title « {t} », {p0}"
 }

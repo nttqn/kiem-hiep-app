@@ -19,7 +19,8 @@ const _done = Color(0xFF8CE07A);
 class CodexScreen extends StatefulWidget {
   const CodexScreen({super.key, this.tab = 0});
 
-  /// 0: Thần binh phổ, 1: Vạn thú phổ, 2: Kỳ ngộ phổ (1.20.0).
+  /// 0: Thần binh phổ, 1: Vạn thú phổ, 2: Kỳ ngộ phổ (1.20.0),
+  /// 3: Truyền thuyết phổ (1.26.0).
   final int tab;
 
   @override
@@ -51,17 +52,20 @@ class _CodexScreenState extends State<CodexScreen> {
   Widget build(BuildContext context) {
     final gearReady = [for (var t = 0; t < codexTiers; t++) codexGearPage(t)].where(h.codexClaimable).length;
     final landReady = [for (final m in codexLands) codexLandPage(m.id)].where(h.codexClaimable).length;
+    final legendReady = [for (var i = 0; i < legendNames.length; i++) codexLegendPage(i)].where(h.codexClaimable).length;
     return SubScreen(
       title: tr('Đồ giám'),
       actions: [
         tabChip(gearReady > 0 ? tr('Thần binh phổ ({gearReady})', {'gearReady': gearReady}) : tr('Thần binh phổ'), _tab == 0, () => setState(() => _tab = 0)),
         tabChip(landReady > 0 ? tr('Vạn thú phổ ({landReady})', {'landReady': landReady}) : tr('Vạn thú phổ'), _tab == 1, () => setState(() => _tab = 1)),
+        tabChip(legendReady > 0 ? tr('Truyền thuyết phổ ({n})', {'n': legendReady}) : tr('Truyền thuyết phổ'), _tab == 3,
+            () => setState(() => _tab = 3)),
         tabChip(h.kyPagesReady > 0 ? tr('Kỳ ngộ phổ ({kyPagesReady})', {'kyPagesReady': h.kyPagesReady}) : tr('Kỳ ngộ phổ'), _tab == 2, () => setState(() => _tab = 2)),
       ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: switch (_tab) { 0 => _gear(), 1 => _lands(), _ => _ky() }),
+          Expanded(child: switch (_tab) { 0 => _gear(), 1 => _lands(), 3 => _legends(), _ => _ky() }),
           const SizedBox(width: 10),
           SizedBox(width: 220, child: _tab == 2 ? _kySide() : _side()),
         ],
@@ -73,7 +77,8 @@ class _CodexScreenState extends State<CodexScreen> {
 
   Widget _side() {
     final b = h.codexBonuses();
-    final gearCells = h.codexGear.length;
+    final gearCells = h.codexGear.where((k) => k.startsWith('g')).length;
+    final legendPages = [for (var i = 0; i < legendNames.length; i++) codexLegendPage(i)].where(h.codexClaimed.contains).length;
     final gearPages = [for (var t = 0; t < codexTiers; t++) codexGearPage(t)].where(h.codexClaimed.contains).length;
     final landPages = [for (final m in codexLands) codexLandPage(m.id)].where(h.codexClaimed.contains).length;
     return Panel(
@@ -84,7 +89,11 @@ class _CodexScreenState extends State<CodexScreen> {
           Text(tr('Đồ giám Truyền thuyết'), style: titleStyle(16, color: _legendInk)),
           const SizedBox(height: 4),
           Text(
-            _tab == 0
+            _tab == 3
+                ? tr('Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, '
+                    'bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.',
+                    {'n': legendNames.length, 'slots': Slot.values.length})
+                : _tab == 0
                 ? tr('Nhặt được món Truyền thuyết hoặc Hoàng Kim nào là ghi vào ô của bậc và loại ấy, bán hay phân giải rồi vẫn giữ. '
                     'Đủ {valuesLength} ô một bậc thì nhận thưởng.', {'valuesLength': Slot.values.length})
                 : tr('Hạ mỗi loại quái {codexMobGoal} lần và boss {codexBossGoal} lần (đánh ở bản đồ, phó bản đều tính) để trọn một trang.', {'codexMobGoal': codexMobGoal, 'codexBossGoal': codexBossGoal}),
@@ -93,6 +102,7 @@ class _CodexScreenState extends State<CodexScreen> {
           const Divider(color: gold),
           _kv(tr('Thần binh phổ'), tr('{gearCells}/{p0} ô · {gearPages}/{codexTiers} trang', {'gearCells': gearCells, 'p0': codexTiers * Slot.values.length, 'gearPages': gearPages, 'codexTiers': codexTiers})),
           _kv(tr('Vạn thú phổ'), tr('{landPages}/{codexLandsLength} trang', {'landPages': landPages, 'codexLandsLength': codexLands.length})),
+          _kv(tr('Truyền thuyết phổ'), tr('{landPages}/{codexLandsLength} trang', {'landPages': legendPages, 'codexLandsLength': legendNames.length})),
           const SizedBox(height: 6),
           Text(tr('Đang được cộng'), style: bold.copyWith(color: goldLight, fontSize: 12.5)),
           if (b.isEmpty)
@@ -111,6 +121,14 @@ class _CodexScreenState extends State<CodexScreen> {
             tr('Trọn Vạn thú phổ: danh hiệu « {codexLandTitle} », '
             '{p0}', {'codexLandTitle': codexLandTitle, 'p0': codexLandAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', ')}),
             style: small.copyWith(fontSize: 11, color: h.codexLandAll ? _done : creamDim),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            tr('Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}', {
+              't': tr(codexLegendTitle),
+              'p0': codexLegendAllBonus.entries.map((e) => loreBonusLabel(e.key, e.value)).join(', '),
+            }),
+            style: small.copyWith(fontSize: 11, color: h.codexLegendAll ? _done : creamDim),
           ),
         ],
       ),
@@ -131,6 +149,49 @@ class _CodexScreenState extends State<CodexScreen> {
     if (h.codexClaimed.contains(page)) return const Icon(Icons.check_circle, color: _done, size: 22);
     final ready = h.codexClaimable(page);
     return LButton(label: ready ? tr('Nhận') : progress, small: true, color: jade, enabled: ready, onTap: () => _claim(page));
+  }
+
+  // ------------------------------------------------------- Truyền thuyết phổ
+
+  Widget _legends() => ListView.builder(
+        itemCount: legendNames.length,
+        itemBuilder: (_, i) => _legendRow(i),
+      );
+
+  Widget _legendRow(int n) {
+    final page = codexLegendPage(n);
+    final (bonus, value) = codexLegendBonus[n];
+    return Panel(
+      padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+      border: h.codexClaimable(page) ? goldLight : (h.codexClaimed.contains(page) ? jade : gold),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(tr(legendNames[n]), style: bold.copyWith(color: _legendInk, fontSize: 13.5)),
+          ),
+          // The higher tiers' icons, a different one for each name.
+          for (final s in Slot.values)
+            Padding(
+              padding: const EdgeInsets.only(right: 3),
+              child: _cell(codexTiers - legendNames.length + n, s,
+                  got: h.codexGear.contains(codexLegendKey(n, s)), tip: '${tr(legendNames[n])} · ${tr(s.label)}'),
+            ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(loreBonusLabel(bonus, value), style: bold.copyWith(fontSize: 11.5, color: cream), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(tr('+{p0} lượng{p1}', {'p0': fmt(codexLegendGold(n)), 'p1': tr(', +{ess} Tinh Hoa', {'ess': codexLegendEssence})}),
+                    style: small.copyWith(fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+          _claimButton(page, '${h.codexLegendCount(n)}/${Slot.values.length}'),
+        ],
+      ),
+    );
   }
 
   // ------------------------------------------------------------ Thần binh phổ
@@ -177,14 +238,14 @@ class _CodexScreenState extends State<CodexScreen> {
     );
   }
 
-  Widget _cell(int t, Slot s) {
-    final got = h.codexGear.contains(codexGearKey(t, s));
+  Widget _cell(int t, Slot s, {bool? got, String? tip}) {
+    final have = got ?? h.codexGear.contains(codexGearKey(t, s));
     final path = _iconPath(t, s);
-    final glyph = Icon(Icons.shield_outlined, size: 18, color: got ? _legendInk : creamDim);
+    final glyph = Icon(Icons.shield_outlined, size: 18, color: have ? _legendInk : creamDim);
     Widget img = path == null
         ? glyph
         : Image.asset(path, filterQuality: FilterQuality.medium, errorBuilder: (_, _, _) => glyph);
-    if (!got) {
+    if (!have) {
       img = Opacity(
         opacity: 0.3,
         child: ColorFiltered(
@@ -199,7 +260,7 @@ class _CodexScreenState extends State<CodexScreen> {
       );
     }
     return Tooltip(
-      message: '${tr(s.label)} ${tr(codexTierName(t))}${got ? tr(' · đã ghi') : ''}',
+      message: '${tip ?? '${tr(s.label)} ${tr(codexTierName(t))}'}${have ? tr(' · đã ghi') : ''}',
       child: Container(
         width: 34,
         height: 34,
@@ -207,7 +268,7 @@ class _CodexScreenState extends State<CodexScreen> {
         decoration: BoxDecoration(
           color: lacquerDeep,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: got ? _legendInk : gold.withValues(alpha: 0.35), width: got ? 1.6 : 1),
+          border: Border.all(color: have ? _legendInk : gold.withValues(alpha: 0.35), width: have ? 1.6 : 1),
         ),
         child: img,
       ),

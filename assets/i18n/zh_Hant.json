@@ -3646,5 +3646,12 @@
  "Mồi Tôm ×{n}": "蝦餌 ×{n}",
  "Đang có {n}": "持有 {n}",
  "+{n} Mồi Tôm": "+{n} 蝦餌",
- "  · Lên {next}: vạch xanh rộng hơn, kim chậm hơn, cá nặng hơn": "  · 升至{next}：綠區更寬、指針更慢、魚更重"
+ "  · Lên {next}: vạch xanh rộng hơn, kim chậm hơn, cá nặng hơn": "  · 升至{next}：綠區更寬、指針更慢、魚更重",
+ "Truyền Thuyết Tàng Gia": "傳說藏家",
+ "Truyền thuyết phổ trọn bộ! Danh hiệu « {t} »": "傳說譜集齊！稱號「{t}」",
+ "Truyền thuyết phổ: ghi nhận {name} · {slot} ({n}/{all})": "傳說譜：收錄{name} · {slot}（{n}/{all}）",
+ "Truyền thuyết phổ ({n})": "傳說譜（{n}）",
+ "Truyền thuyết phổ": "傳說譜",
+ "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "傳說裝備帶有 {n} 種名號之一（霸王、驚鴻…）。撿到即收錄於該名號與部位的格子，賣出或分解後仍保留。黃金裝備不計。一個名號集滿 {slots} 格即可領獎。",
+ "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "集齊傳說譜：稱號「{t}」，{p0}"
 }

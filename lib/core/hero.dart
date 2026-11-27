@@ -1328,6 +1328,17 @@ class HeroData {
     if (it.rarity == Rarity.legend) ownedLegend = true;
     // 1.19.0: Đồ giám keeps it even if it is sold or broken down below.
     lastCodexNew = codexNote(it);
+    // 1.26.0: Truyền thuyết phổ, by the name the piece bears.
+    if (codexNoteLegend(it)) {
+      notices.add(Notice(
+          tr('Truyền thuyết phổ: ghi nhận {name} · {slot} ({n}/{all})', {
+            'name': tr(legendNames[legendNameOf(it)]),
+            'slot': tr(it.slot.label),
+            'n': codexLegendCount(legendNameOf(it)),
+            'all': Slot.values.length,
+          }),
+          color: 0xFFFF8A3D));
+    }
     if (lastCodexNew) {
       notices.add(Notice(tr('Đồ giám: ghi nhận {rarityLabel} {p0} · {slotLabel}', {'rarityLabel': it.rarityLabel, 'p0': codexTierName(codexTierOf(it.level)), 'slotLabel': tr(it.slot.label)}),
           color: 0xFFFF8A3D));
