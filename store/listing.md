@@ -56,6 +56,38 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.26.0, ≤ 500 ký tự)
+1.26.0
+• Câu cá mở rộng: nâng cấp 7 loại cần câu, mồi đặc biệt (Mồi Tôm, Linh Mồi, Thần Mồi).
+• Giờ cá ăn (6–8h, 17–19h, 22–23h): cá quý cắn nhiều hơn, cá nặng hơn, gấp đôi Ngư tệ.
+• 3 danh hiệu câu cá và 2 ngoại trang mới ở Ngư phủ.
+• Đồ giám thêm Truyền thuyết phổ: sưu tầm đủ 6 bộ tên đồ Truyền thuyết để nhận chỉ số vĩnh viễn và danh hiệu « Truyền Thuyết Tàng Gia ».
+• Giao diện nút bấm mới, đồ Hoàng Kim có khung riêng.
+
+## What's new (1.26.0, en-US)
+1.26.0
+• Bigger fishing: 7 rod upgrades and special baits (Shrimp, Spirit and Divine Bait).
+• Feeding time (6–8, 17–19, 22–23h): rarer and heavier fish, double Tokens.
+• 3 fishing titles and 2 new outfits at the Fishery.
+• The Codex adds a Legend compendium: collect all 6 named Legendary sets for lasting stats and the title « Legend Collector ».
+• New button art, and Golden gear now has its own frame.
+
+## 更新內容（1.26.0，zh-TW）
+1.26.0
+• 釣魚擴充：7 階釣竿升級，新增特殊魚餌（蝦餌、靈餌、神餌）。
+• 魚汛時段（6–8、17–19、22–23 時）：珍稀魚更常上鉤、魚更重、漁幣加倍。
+• 3 個釣魚稱號與 2 套漁府新外裝。
+• 圖鑑新增傳說譜：集齊 6 種名號的傳說裝備，獲得永久屬性與稱號「傳說藏家」。
+• 全新按鈕美術，黃金裝備擁有專屬邊框。
+
+## 업데이트 내용 (1.26.0, ko-KR)
+1.26.0
+• 낚시 확장: 낚싯대 7단계 강화, 특수 미끼(새우 미끼, 영미끼, 신미끼) 추가.
+• 물때(6–8시, 17–19시, 22–23시): 귀한 물고기가 더 자주 물고 더 무거우며 어폐 2배.
+• 낚시 칭호 3종과 어부의 새 외형 2종.
+• 도감에 전설보 추가: 이름별 전설 장비 6세트를 모아 영구 능력치와 칭호 « 전설 수집가 » 획득.
+• 새 버튼 디자인, 황금 장비 전용 테두리.
+
 ## Có gì mới (bản 1.24.2, ≤ 500 ký tự)
 1.24.2
 • Mã quà tặng: vào Hòm thư → Nhập mã quà để nhận quà từ kênh và trang của game.
