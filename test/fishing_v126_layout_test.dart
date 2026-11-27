@@ -32,7 +32,10 @@ HeroData _hero() {
   final h = HeroData(name: 'Ngư Ông', hanh: Hanh.thuy)
     ..level = 90
     ..fishCoins = 123456
-    ..fishPts = 98765;
+    ..fishPts = 98765
+    ..fishRod = 5
+    ..fishLure = 'than';
+  h.fishLures.addAll({'tom': 120, 'linh': 33, 'than': 9});
   for (final f in fishes) {
     h.fishCaught[f.id] = 123;
     h.fishBest[f.id] = 1234;

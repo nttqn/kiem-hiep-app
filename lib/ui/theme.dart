@@ -198,6 +198,30 @@ const uiButtonOffArt = 'assets/art/ui/btn_disabled.webp';
 
 /// btn_primary with the red lacquer turned jade (gold trim kept).
 const uiButtonJadeArt = 'assets/art/ui/btn_jade.webp';
+
+/// 1.26.0: amber, blue and purple lacquer the same way, so every button
+/// colour has a painted look (see [paintedButtonFor]).
+const uiButtonAmberArt = 'assets/art/ui/btn_amber.webp';
+const uiButtonBlueArt = 'assets/art/ui/btn_blue.webp';
+const uiButtonPurpleArt = 'assets/art/ui/btn_purple.webp';
+
+/// The painted button for lacquer colour [c], by its colour family: red,
+/// amber (also gold and cream), jade, blue, purple; greys and dark browns
+/// take the dark one.
+String paintedButtonFor(Color c) {
+  if (c == seal) return uiButtonArt;
+  if (c == jade) return uiButtonJadeArt;
+  if (c == lacquer || c == lacquerLight || c == lacquerDeep) return uiButtonDarkArt;
+  final hsv = HSVColor.fromColor(c);
+  if (hsv.saturation < 0.25) return hsv.value > 0.6 ? uiButtonAmberArt : uiButtonDarkArt;
+  if (hsv.saturation < 0.4 && hsv.value < 0.45) return uiButtonDarkArt;
+  final hue = hsv.hue;
+  if (hue < 15 || hue >= 340) return uiButtonArt;
+  if (hue < 65) return uiButtonAmberArt;
+  if (hue < 185) return uiButtonJadeArt;
+  if (hue < 255) return uiButtonBlueArt;
+  return uiButtonPurpleArt;
+}
 String uiSlotArt(int rarity) => 'assets/art/ui/slot_${rarity.clamp(0, 4)}.webp';
 
 /// Hoàng Kim's own frame: slot_4 with pale-gold flames and jade gems, so a
@@ -242,7 +266,7 @@ class SliceFrame extends StatelessWidget {
 
 /// Read once at start so the first screen does not show bare frames.
 Future<void> precacheUiArt(BuildContext context) => Future.wait([
-      for (final p in [uiPanelArt, uiTitleArt, uiButtonArt, uiButtonJadeArt, uiButtonDarkArt, uiButtonOffArt, uiSlotGoldArt, for (var i = 0; i < 5; i++) uiSlotArt(i)])
+      for (final p in [uiPanelArt, uiTitleArt, uiButtonArt, uiButtonJadeArt, uiButtonAmberArt, uiButtonBlueArt, uiButtonPurpleArt, uiButtonDarkArt, uiButtonOffArt, uiSlotGoldArt, for (var i = 0; i < 5; i++) uiSlotArt(i)])
         precacheImage(AssetImage(p), context, onError: (_, _) {}),
     ]);
 
@@ -284,19 +308,9 @@ class _LButtonState extends State<LButton> {
   @override
   Widget build(BuildContext context) {
     final on = widget.enabled && widget.onTap != null;
-    final c = on ? widget.color : const Color(0xFF4A4038);
     final h = widget.small ? 34.0 : 44.0;
-    // 1.25: the painted red, jade, dark and greyed buttons; other colours
-    // (purple, blue...) keep the drawn lacquer so their meaning still shows.
-    final painted = !on
-        ? uiButtonOffArt
-        : widget.color == seal
-            ? uiButtonArt
-            : widget.color == jade
-                ? uiButtonJadeArt
-                : (widget.color == lacquer || widget.color == lacquerLight || widget.color == lacquerDeep)
-                ? uiButtonDarkArt
-                : null;
+    // 1.25: painted buttons; 1.26.0: every colour, by its family.
+    final painted = !on ? uiButtonOffArt : paintedButtonFor(widget.color);
     return GestureDetector(
       onTapDown: on ? (_) => setState(() => _down = true) : null,
       onTapCancel: () => setState(() => _down = false),
@@ -312,59 +326,41 @@ class _LButtonState extends State<LButton> {
         width: widget.width,
         height: h,
         margin: EdgeInsets.only(top: _down ? 3 : 0, bottom: _down ? 0 : 3),
-        padding: painted != null ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: widget.small ? 12 : 18),
-        decoration: painted != null
-            ? null
-            : BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color.lerp(c, Colors.white, 0.18)!, c],
-          ),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: on ? goldLight.withValues(alpha: 0.85) : Colors.white24, width: 1.4),
-          boxShadow: _down
-              ? null
-              : [BoxShadow(color: Color.lerp(c, Colors.black, 0.6)!, offset: const Offset(0, 3))],
-        ),
-        child: _framed(painted, Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
+        // The label keeps clear of the cloud scrolls at the ends.
+        child: Stack(
+          fit: StackFit.passthrough,
           children: [
-            if (widget.leading != null || widget.icon != null) ...[
-              widget.leading ?? Icon(widget.icon, size: widget.small ? 16 : 20, color: on ? cream : Colors.white38),
-              const SizedBox(width: 6),
-            ],
-            Flexible(
-              child: Text(
-                widget.label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: widget.small ? 13 : 15,
-                  fontWeight: FontWeight.w800,
-                  color: on ? cream : Colors.white38,
-                ),
+            Positioned.fill(
+              child: SliceFrame(painted,
+                  slice: SliceFrame.button.$1, imageSize: SliceFrame.button.$2, scale: widget.small ? 4.4 : 3.2, shadow: !_down),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.small ? 15 : 22),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.leading != null || widget.icon != null) ...[
+                    widget.leading ?? Icon(widget.icon, size: widget.small ? 16 : 20, color: on ? cream : Colors.white38),
+                    const SizedBox(width: 6),
+                  ],
+                  Flexible(
+                    child: Text(
+                      widget.label,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: widget.small ? 13 : 15,
+                        fontWeight: FontWeight.w800,
+                        color: on ? cream : Colors.white38,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        )),
-      ),
-    );
-  }
-
-  /// The label on the painted button; its ends carry a cloud scroll, so the
-  /// label keeps clear of them.
-  Widget _framed(String? painted, Widget label) {
-    if (painted == null) return label;
-    return Stack(
-      fit: StackFit.passthrough,
-      children: [
-        Positioned.fill(
-          child: SliceFrame(painted,
-              slice: SliceFrame.button.$1, imageSize: SliceFrame.button.$2, scale: widget.small ? 4.4 : 3.2, shadow: !_down),
         ),
-        Padding(padding: EdgeInsets.symmetric(horizontal: widget.small ? 15 : 22), child: label),
-      ],
+      ),
     );
   }
 }

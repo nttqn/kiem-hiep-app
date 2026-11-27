@@ -534,6 +534,12 @@ class HeroData {
   int fishBoughtWeek = 0;
   int fishExtraBait = 0;
 
+  // 1.26.0: rod level, special baits in stock by id and the one chosen
+  // ('' = plain).
+  int fishRod = 0;
+  final Map<String, int> fishLures = {};
+  String fishLure = '';
+
   // Ải Ác Mộng: best stars by id, and per day the paid clears.
   final Map<String, int> nmStars = {};
   String nmDay = '';
@@ -1573,6 +1579,7 @@ class HeroData {
         CostumeSource.abyss => abyssBossKills >= c.need,
         CostumeSource.week => weekChest,
         CostumeSource.bloodSea => bloodSeaBossKills >= c.need,
+        CostumeSource.fish => c.need == 1 && fishAllLegends,
         CostumeSource.worldBoss || CostumeSource.gold || CostumeSource.pass || CostumeSource.fest || CostumeSource.firstPay => false,
       };
 
@@ -2752,7 +2759,91 @@ class HeroData {
         return tr(o.name);
       case FishWare.page:
         return gainManualPage(rng);
+      case FishWare.lure:
+        fishLures[o.pill] = (fishLures[o.pill] ?? 0) + o.count;
+        return tr(o.name);
     }
+  }
+
+  // ---------------------------------------------- câu cá phần 2 (1.26.0)
+
+  FishRod? get fishRodNext => fishRod < fishRodMax ? fishRods[fishRod + 1] : null;
+
+  /// Why the next rod cannot be had now, null when it can.
+  String? fishRodBlock() {
+    final r = fishRodNext;
+    if (r == null) return tr('Đã là cần tốt nhất');
+    if (level < r.level && rebirths == 0) return tr('Cần cấp {lv}', {'lv': r.level});
+    if (gold < r.gold) return tr('Thiếu lượng');
+    if (fishCoins < r.coins) return tr('Thiếu Ngư tệ');
+    return null;
+  }
+
+  bool fishRodUp() {
+    if (fishRodBlock() != null) return false;
+    final r = fishRodNext!;
+    gold -= r.gold;
+    fishCoins -= r.coins;
+    fishRod++;
+    return true;
+  }
+
+  /// Buys [fishShrimpPack] Mồi Tôm for gold.
+  bool fishBuyShrimp() {
+    final p = fishShrimpPrice(level);
+    if (gold < p) return false;
+    gold -= p;
+    fishLures['tom'] = (fishLures['tom'] ?? 0) + fishShrimpPack;
+    return true;
+  }
+
+  /// Chooses the special bait for the next casts ('' = plain).
+  void fishChooseLure(String id) => fishLure = (id.isEmpty || (fishLures[id] ?? 0) > 0) ? id : '';
+
+  /// After a cast: spends one of the chosen special bait and says which,
+  /// '' when none (running out goes back to plain).
+  String fishSpendLure() {
+    final id = fishLure;
+    final n = fishLures[id] ?? 0;
+    if (id.isEmpty || n <= 0) {
+      fishLure = '';
+      return '';
+    }
+    if (n <= 1) {
+      fishLures.remove(id);
+    } else {
+      fishLures[id] = n - 1;
+    }
+    return id;
+  }
+
+  int get fishTotal => fishCaught.values.fold(0, (s, v) => s + v);
+  bool get fishAllLegends => fishLegends.every((f) => (fishCaught[f.id] ?? 0) > 0);
+  bool get fishAllBooks => pondMaps.every((m) => fishBooks.contains(m.id));
+
+  /// Grants the fishing titles (and the legend outfit) whose goal is met.
+  List<String> fishTitles() {
+    final lines = <String>[];
+    void title(bool ok, String t) {
+      if (ok && seasonTitles.add(t)) lines.add(tr('Danh hiệu « {t} »', {'t': tr(t)}));
+    }
+
+    title(fishTotal >= fishTitleCatches, fishTitleCatch);
+    title(fishAllBooks, fishTitleBook);
+    title(fishAllLegends, fishTitleLegend);
+    final c = costumeById[fishCostumeLegend];
+    if (fishAllLegends && c != null && ownedCostumes.add(c.id)) {
+      lines.add(tr('Ngoại trang « {c} »', {'c': tr(c.name)}));
+    }
+    return lines;
+  }
+
+  /// Buys the Ngư phủ outfit with Ngư tệ.
+  bool fishBuyCostume() {
+    if (ownedCostumes.contains(fishCostumeShop) || fishCoins < fishCostumePrice) return false;
+    fishCoins -= fishCostumePrice;
+    ownedCostumes.add(fishCostumeShop);
+    return true;
   }
 
   /// A rewarded ad adds [fishAdBait] baits, once a day.
@@ -2771,19 +2862,20 @@ class HeroData {
   /// Sells catch [f] and logs it; rare ones may hold a gem, legendary ones
   /// a bí kíp page and Hoàng Kim shards. 1.26: it has a weight (kept as the
   /// fish's record when heaviest), brings Câu cá tuần points and Ngư tệ.
-  List<String> catchFish(FishDef f, math.Random rng, {String? day}) {
+  List<String> catchFish(FishDef f, math.Random rng, {String? day, bool feed = false}) {
     final first = (fishCaught[f.id] ?? 0) == 0;
     fishCaught[f.id] = (fishCaught[f.id] ?? 0) + 1;
     final g = f.price * (first ? 1 + fishFirstBonus : 1);
     gold += g;
-    final w = rollFishWeight(f, rng);
+    // 1.26.0: a better rod and the feeding hours bring heavier fish.
+    final w = math.max(1, (rollFishWeight(f, rng) * rodWeightMul(fishRod) * (feed ? fishFeedWeightMul : 1)).round());
     lastFishWeight = w;
     lastFishRecord = w > (fishBest[f.id] ?? 0);
     if (lastFishRecord) fishBest[f.id] = w;
     fishRollWeek(day ?? vnDayKey());
     lastFishPts = fishPoints(f, w);
     fishPts = math.min(fishWeekMax, fishPts + lastFishPts);
-    final coins = fishCoinsOf[f.rarity.index];
+    final coins = fishCoinsOf[f.rarity.index] * (feed ? fishFeedCoinMul : 1);
     fishCoins += coins;
     final lines = [
       tr('+{p0} lượng{p1}', {'p0': _thousands(g), 'p1': first ? tr(' (lần đầu)') : ''}),
@@ -2800,6 +2892,7 @@ class HeroData {
       if (manualOpen) lines.add(gainManualPage(rng));
     }
     _progressDuty((d) => d.kind == DutyKind.fish);
+    lines.addAll(fishTitles());
     return lines;
   }
 
@@ -2812,6 +2905,9 @@ class HeroData {
     final g = fishBookGold(pondTier(mapId));
     gold += g;
     fishCoins += fishBookCoins;
+    for (final t in fishTitles()) {
+      notices.add(Notice(t, color: 0xFFFFD34A, big: true));
+    }
     return g;
   }
 
@@ -3582,6 +3678,9 @@ class HeroData {
           's': fishBought,
           'sw': fishBoughtWeek,
           'x': fishExtraBait,
+          if (fishRod > 0) 'r': fishRod,
+          if (fishLures.isNotEmpty) 'm': fishLures,
+          if (fishLure.isNotEmpty) 'ms': fishLure,
         },
         'nm': [nmStars, nmDay, nmRuns, nmAds],
         'realm': [realmStars, realmDay, realmRuns, realmAds],
@@ -3818,6 +3917,14 @@ class HeroData {
       }
       h.fishBoughtWeek = n('sw');
       h.fishExtraBait = n('x');
+      h.fishRod = math.min(fishRodMax, n('r'));
+      final lures = fish2['m'];
+      if (lures is Map) {
+        lures.forEach((k, v) {
+          if (fishBaitById.containsKey(k) && v is num && v > 0) h.fishLures['$k'] = v.toInt();
+        });
+      }
+      h.fishChooseLure(fish2['ms'] is String ? fish2['ms'] as String : '');
     }
     final nm = m['nm'];
     if (nm is List && nm.length >= 3) {

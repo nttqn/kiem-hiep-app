@@ -5,7 +5,7 @@ import 'i18n.dart';
 /// Ngoại trang: outfits that only change how the hero looks. Each one is
 /// earned once (tower, rebirth, level 99, Boss Thế Giới, a Lôi đài season)
 /// or bought with gold, and kept for good.
-enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass, fest, firstPay }
+enum CostumeSource { tower, rebirth, level, worldBoss, gold, arena, sect, abyss, week, bloodSea, pass, fest, firstPay, fish }
 
 class CostumeDef {
   const CostumeDef({
@@ -49,6 +49,7 @@ class CostumeDef {
         CostumeSource.pass => tr('Lệnh Bài: bậc 30 nhánh Hào Kiệt (mùa {p0}, {p1}, {p2}…)', {'p0': need + 1, 'p1': need + 4, 'p2': need + 7}),
         CostumeSource.fest => tr('Đổi ở cửa hàng lễ hội'),
         CostumeSource.firstPay => tr('Quà nạp đầu (mua bất kỳ gói nào trong Ưu đãi)'),
+        CostumeSource.fish => need == 0 ? tr('Đổi 600 Ngư tệ ở Ngư phủ') : tr('Câu được đủ 13 loài cá Huyền thoại'),
       };
 }
 
@@ -190,6 +191,18 @@ const costumes = <CostumeDef>[
     source: CostumeSource.firstPay, need: 0,
     robe: 0xFF1C1A22, trim: 0xFFFFD34A, pants: 0xFF0E0C12, cape: 0xFFB8862A, glow: 0xFFFFE07A,
     aura: 0xFFFFD34A, armor: 4,
+  ),
+  // Câu cá (1.26.0): bought at the Ngư phủ, or for every legend fish.
+  CostumeDef(
+    id: 'ngu_thanhba', name: 'Thanh Ba Ngư Y', desc: 'Áo tơi xanh sóng nước, đai cỏ bện của ngư phủ ven hồ.',
+    source: CostumeSource.fish, need: 0,
+    robe: 0xFF3E7A8A, trim: 0xFFD8C08A, pants: 0xFF2A4A52, cape: 0xFF8A7A4A,
+  ),
+  CostumeDef(
+    id: 'ngu_longmon', name: 'Long Môn Ngư Bào', desc: 'Bào vảy cá chép hóa rồng, chỉ dành cho kẻ câu được mọi loài cá Huyền thoại.',
+    source: CostumeSource.fish, need: 1,
+    robe: 0xFFC8402A, trim: 0xFFFFD34A, pants: 0xFF2A1A3A, cape: 0xFF2A6AC8, glow: 0xFF8AD8FF,
+    aura: 0xFFFFE08A, armor: 3,
   ),
 ];
 

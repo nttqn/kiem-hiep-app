@@ -49,6 +49,10 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
   List<String> _lines = const [];
   bool _adBusy = false;
 
+  /// 1.26.0: whether this cast was in a feeding window, and its bait.
+  bool _feed = false;
+  String _lure = '';
+
   @override
   void initState() {
     super.initState();
@@ -82,7 +86,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
           SoundService.instance.cue('loot');
           setState(() {
             _state = _Fs.bite;
-            _biteEnd = _t + 0.95 - 0.1 * _rar;
+            _biteEnd = _t + 0.95 - 0.1 * _rar + rodBiteTime(h.fishRod);
           });
           return;
         }
@@ -92,7 +96,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
           return;
         }
       case _Fs.reel:
-        _phase += dt * fishSpeed[_rar] * (1 + 0.12 * _hits);
+        _phase += dt * rodSpeed(_rar, h.fishRod) * (1 + 0.12 * _hits);
       case _Fs.ready || _Fs.caught || _Fs.escaped:
         break;
     }
@@ -101,11 +105,13 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
 
   void _cast() {
     if (!h.fishCast(vnDayKey())) return;
+    _lure = h.fishSpendLure();
+    _feed = fishFeedAt(vnNow()) >= 0;
     SaveService.instance.save();
     setState(() {
-      _fish = rollFish(widget.mapId, _rng);
+      _fish = rollFishWith(widget.mapId, _rng, bait: _lure, feed: _feed);
       _state = _Fs.waiting;
-      _biteAt = _t + (FishingPanel.debugBite ?? 1.2 + _rng.nextDouble() * 2.6);
+      _biteAt = _t + (FishingPanel.debugBite ?? (1.2 + _rng.nextDouble() * 2.6) * (_feed ? fishFeedWaitMul : 1));
       _hits = 0;
       _phase = _rng.nextDouble();
     });
@@ -119,7 +125,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
   }
 
   void _newZone() {
-    final w = fishZone[_rar];
+    final w = rodZone(_rar, h.fishRod);
     _zone = w / 2 + _rng.nextDouble() * (1 - w);
   }
 
@@ -135,7 +141,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
           _newZone();
         });
       case _Fs.reel:
-        final w = fishZone[_rar];
+        final w = rodZone(_rar, h.fishRod);
         if ((_needle - _zone).abs() > w / 2) {
           _escape(tr('Trượt nhịp, {_fishName} vùng thoát!', {'_fishName': tr(_fish!.name)}));
           return;
@@ -154,7 +160,7 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
 
   void _land() {
     final f = _fish!;
-    final lines = h.catchFish(f, _rng);
+    final lines = h.catchFish(f, _rng, feed: _feed);
     SoundService.instance.cue(f.rarity.index >= 2 || h.lastFishRecord ? 'levelup' : 'loot');
     Analytics.instance.log('fish_catch', {'id': f.id, 'rarity': f.rarity.index, 'weight': h.lastFishWeight});
     SaveService.instance.save();
@@ -182,7 +188,8 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
     final f = _fish;
     final bait = h.fishBaitLeft;
     final playing = _state == _Fs.waiting || _state == _Fs.bite || _state == _Fs.reel;
-    return Panel(
+    // Scrolls on phones too short for it.
+    return SingleChildScrollView(child: Panel(
       padding: const EdgeInsets.all(14),
       child: SizedBox(
         width: 540,
@@ -225,19 +232,21 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
                 Text(tr('Mồi câu: {bait}', {'bait': bait}), style: bold.copyWith(color: bait > 0 ? cream : const Color(0xFFFF8A7A))),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
+            _gearRow(playing),
+            const SizedBox(height: 4),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTapDown: playing ? (_) => _strike() : null,
               child: SizedBox(
-                height: 130,
+                height: 112,
                 child: CustomPaint(
                   painter: _PondPainter(
                     t: _t,
                     state: _state,
                     needle: _needle,
                     zone: _zone,
-                    zoneW: fishZone[_rar],
+                    zoneW: rodZone(_rar, h.fishRod),
                     hits: _hits,
                     need: fishHits[_rar],
                     fishColor: f == null ? null : Color(fishRarityColors[f.rarity.index]),
@@ -281,6 +290,57 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
           ],
         ),
       ),
+    ));
+  }
+
+  /// 1.26.0: the rod, the bait for the next casts and the feeding hours.
+  Widget _gearRow(bool playing) {
+    final vn = vnNow();
+    final feed = fishFeedAt(vn);
+    final wait = fishFeedWait(vn);
+    final left = '${wait.inHours}:${(wait.inMinutes % 60).toString().padLeft(2, '0')}';
+    final chipText = feed >= 0
+        ? tr('Giờ cá ăn · {name} · còn {left}', {'name': tr(fishFeedNames[feed]), 'left': left})
+        : tr('Giờ cá ăn sau {left}', {'left': left});
+    final ids = ['', ...fishBaits.map((b) => b.id).where((id) => (h.fishLures[id] ?? 0) > 0)];
+    String lureName(String id) => id.isEmpty ? tr('Mồi thường') : '${tr(fishBaitById[id]!.name)} ×${h.fishLures[id] ?? 0}';
+    return Row(
+      children: [
+        const Icon(Icons.straighten, size: 14, color: goldLight),
+        const SizedBox(width: 3),
+        Text(tr(fishRods[h.fishRod].name), style: small.copyWith(fontSize: 11.5, color: cream)),
+        const SizedBox(width: 10),
+        const Icon(Icons.bug_report_outlined, size: 14, color: goldLight),
+        const SizedBox(width: 2),
+        // Tap to cycle through the special baits in stock.
+        GestureDetector(
+          onTap: playing || ids.length < 2
+              ? null
+              : () => setState(() {
+                    final i = ids.indexOf(h.fishLure);
+                    h.fishChooseLure(ids[(i + 1) % ids.length]);
+                    SaveService.instance.save();
+                  }),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: lacquerDeep,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: h.fishLure.isEmpty ? gold.withValues(alpha: 0.35) : const Color(0xFFC88CFF)),
+            ),
+            child: Text(ids.length < 2 ? lureName('') : '${lureName(h.fishLure)} ▸',
+                style: small.copyWith(fontSize: 11.5, color: h.fishLure.isEmpty ? cream : const Color(0xFFE0C0FF))),
+          ),
+        ),
+        const Spacer(),
+        Flexible(
+          child: Text(chipText,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: small.copyWith(fontSize: 11, color: feed >= 0 ? const Color(0xFF8CE07A) : creamDim)),
+        ),
+      ],
     );
   }
 
@@ -293,7 +353,14 @@ class _FishingPanelState extends State<FishingPanel> with SingleTickerProviderSt
           style: small,
         );
       case _Fs.waiting:
-        return Center(child: Text(tr('Đang chờ cá cắn câu…'), style: body.copyWith(color: creamDim)));
+        return Center(
+            child: Text(
+                [
+                  tr('Đang chờ cá cắn câu…'),
+                  if (_lure.isNotEmpty) tr(fishBaitById[_lure]!.name),
+                  if (_feed) tr('Giờ cá ăn'),
+                ].join(' · '),
+                style: body.copyWith(color: creamDim)));
       case _Fs.bite:
         return Center(child: Text(tr('CẮN CÂU! Giật ngay!'), style: titleStyle(22, color: const Color(0xFFFF8A5A))));
       case _Fs.reel:

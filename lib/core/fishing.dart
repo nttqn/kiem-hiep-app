@@ -93,7 +93,7 @@ FishWeekReward? fishWeekReward(int place) => switch (place) {
       _ => null,
     };
 
-enum FishWare { bait, iron, shards, gem, pill, page }
+enum FishWare { bait, iron, shards, gem, pill, page, lure }
 
 /// A Ngư phủ ware: its Ngư tệ price and how many a week.
 class FishOffer {
@@ -117,6 +117,9 @@ List<FishOffer> fishShop(int level) {
     FishOffer('gem', FishWare.gem, tr('Ngọc cấp {gemTier} (hành ngẫu nhiên)', {'gemTier': gemTier}), 20 * gemTier, 3, tier: gemTier),
     const FishOffer('page', FishWare.page, 'Trang bí kíp', 35, 3),
     const FishOffer('taytuy', FishWare.pill, 'Tẩy Tủy Đan', 90, 2, pill: 'taytuy'),
+    // 1.26.0: special baits; [FishOffer.pill] holds the bait id.
+    const FishOffer('linh', FishWare.lure, 'Linh Mồi ×3', 15, 5, count: 3, pill: 'linh'),
+    const FishOffer('than', FishWare.lure, 'Thần Mồi', 40, 3, pill: 'than'),
   ];
 }
 
@@ -203,3 +206,125 @@ List<MapDef> get pondMaps => [for (final m in fieldMaps) if (fishOfMap(m.id).isN
 
 /// First catch of a kind pays this many times its price on top.
 const int fishFirstBonus = 5;
+
+// ---------------------------------------------------------------- 1.26.0
+// Câu cá phần 2: cần câu, mồi đặc biệt, giờ cá ăn, danh hiệu và ngoại trang.
+
+/// A rod level: its name, and what reaching it costs (gold, Ngư tệ, the
+/// hero level it needs; a rebirth counts as level 99).
+class FishRod {
+  const FishRod(this.name, this.gold, this.coins, this.level);
+  final String name;
+  final int gold, coins, level;
+}
+
+const fishRods = <FishRod>[
+  FishRod('Cần Trúc', 0, 0, 0),
+  FishRod('Cần Tre Già', 50000, 30, 10),
+  FishRod('Cần Mây Tía', 200000, 60, 25),
+  FishRod('Cần Đồng Đen', 600000, 100, 40),
+  FishRod('Cần Bạc Hoa', 1500000, 160, 60),
+  FishRod('Cần Hàn Ngọc', 4000000, 240, 80),
+  FishRod('Cần Long Tu', 10000000, 360, 99),
+];
+
+int get fishRodMax => fishRods.length - 1;
+
+/// The green mark grows 7% a rod level (never past 45% of the bar).
+double rodZone(int rarity, int rod) => math.min(0.45, fishZone[rarity] * (1 + 0.07 * rod));
+
+/// The needle slows 3.5% a rod level.
+double rodSpeed(int rarity, int rod) => fishSpeed[rarity] * (1 - 0.035 * rod);
+
+/// Extra seconds to strike after a bite.
+double rodBiteTime(int rod) => 0.05 * rod;
+
+/// Catches weigh 4% more a rod level.
+double rodWeightMul(int rod) => 1 + 0.04 * rod;
+
+/// A special bait, used on top of the day's bait: it shifts what bites
+/// (multipliers on [fishWeights] by rarity).
+class FishBait {
+  const FishBait(this.id, this.name, this.desc, this.mul);
+  final String id, name, desc;
+  final List<double> mul;
+}
+
+const fishBaits = <FishBait>[
+  FishBait('tom', 'Mồi Tôm', 'Cá Hiếm cắn nhiều hơn.', [0.7, 1.6, 1.3, 1.2]),
+  FishBait('linh', 'Linh Mồi', 'Cá Quý và Huyền thoại cắn nhiều hơn.', [0.4, 1.2, 2.2, 2.0]),
+  FishBait('than', 'Thần Mồi', 'Cá Huyền thoại cắn gấp năm lần.', [0.3, 1.0, 1.6, 5.0]),
+];
+
+final Map<String, FishBait> fishBaitById = {for (final b in fishBaits) b.id: b};
+
+/// Mồi Tôm is sold for gold at the Ngư phủ, five at a time, any number.
+const int fishShrimpPack = 5;
+int fishShrimpPrice(int level) => 4000 * (1 + level ~/ 10);
+
+/// Giờ cá ăn, Vietnam time: (start hour, end hour).
+const fishFeedHours = [(6, 8), (17, 19), (22, 23)];
+const fishFeedNames = ['Sáng sớm', 'Chiều tà', 'Đêm trăng'];
+
+/// The feeding window at VN time [vn], -1 outside them.
+int fishFeedAt(DateTime vn) {
+  for (var i = 0; i < fishFeedHours.length; i++) {
+    if (vn.hour >= fishFeedHours[i].$1 && vn.hour < fishFeedHours[i].$2) return i;
+  }
+  return -1;
+}
+
+/// Time left in the current window, or until the next one opens.
+Duration fishFeedWait(DateTime vn) {
+  final day = DateTime.utc(vn.year, vn.month, vn.day);
+  final i = fishFeedAt(vn);
+  if (i >= 0) return day.add(Duration(hours: fishFeedHours[i].$2)).difference(vn);
+  for (final w in fishFeedHours) {
+    final at = day.add(Duration(hours: w.$1));
+    if (at.isAfter(vn)) return at.difference(vn);
+  }
+  return day.add(Duration(days: 1, hours: fishFeedHours.first.$1)).difference(vn);
+}
+
+/// In a feeding window: Quý and Huyền thoại bite 1.5x as often, bites come
+/// twice as fast, catches weigh 15% more and bring double Ngư tệ.
+const fishFeedRareMul = 1.5;
+const fishFeedWeightMul = 1.15;
+const fishFeedWaitMul = 0.5;
+const fishFeedCoinMul = 2;
+
+/// Fishing titles: total catches, every Ngư phổ page, every legend fish.
+const int fishTitleCatches = 300;
+const fishTitleCatch = 'Ngư Ông';
+const fishTitleBook = 'Ngư Phổ Đại Sư';
+const fishTitleLegend = 'Long Môn Ngư Khách';
+
+/// The outfit sold for Ngư tệ at the Ngư phủ.
+const int fishCostumePrice = 600;
+const fishCostumeShop = 'ngu_thanhba';
+
+/// The outfit for catching every legend fish.
+const fishCostumeLegend = 'ngu_longmon';
+
+List<FishDef> get fishLegends => [for (final f in fishes) if (f.rarity == FishRarity.legend) f];
+
+/// What bites in the pond of map [mapId] with bait [bait] ('' = plain),
+/// in a feeding window when [feed].
+FishDef rollFishWith(String mapId, math.Random rng, {String bait = '', bool feed = false}) {
+  final b = fishBaitById[bait];
+  final pool = fishOfMap(mapId);
+  double w(FishDef f) {
+    final r = f.rarity.index;
+    var v = fishWeights[r] * (b?.mul[r] ?? 1.0);
+    if (feed && r >= FishRarity.rare.index) v *= fishFeedRareMul;
+    return v;
+  }
+
+  final total = pool.fold<double>(0, (s, f) => s + w(f));
+  var r = rng.nextDouble() * total;
+  for (final f in pool) {
+    r -= w(f);
+    if (r < 0) return f;
+  }
+  return pool.last;
+}

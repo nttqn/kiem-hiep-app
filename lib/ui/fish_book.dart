@@ -25,6 +25,20 @@ Future<void> showFishBook(BuildContext context, HeroData h) {
               children: [
                 Text(tr('Mỗi bãi luyện công có một hồ câu cạnh cổng. Câu đủ 4 loài của một hồ để nhận thưởng và {fishBookCoins} Ngư tệ.', {'fishBookCoins': fishBookCoins}),
                     style: small.copyWith(fontSize: 11)),
+                const SizedBox(height: 4),
+                // 1.26.0: the fishing titles and how far along each is.
+                Wrap(
+                  spacing: 12,
+                  children: [
+                    _goal(h, fishTitleCatch, tr('Câu {n}/{need} con', {'n': fmt(h.fishTotal), 'need': fishTitleCatches})),
+                    _goal(h, fishTitleBook,
+                        tr('Đủ trang {n}/{need}', {'n': pondMaps.where((m) => h.fishBooks.contains(m.id)).length, 'need': pondMaps.length})),
+                    _goal(h, fishTitleLegend, tr('Cá Huyền thoại {n}/{need} (kèm ngoại trang)', {
+                      'n': fishLegends.where((f) => (h.fishCaught[f.id] ?? 0) > 0).length,
+                      'need': fishLegends.length,
+                    })),
+                  ],
+                ),
                 const SizedBox(height: 6),
                 for (final m in pondMaps) _mapRow(h, m, () => setState(() {})),
               ],
@@ -108,5 +122,15 @@ Widget _mapRow(HeroData h, MapDef m, VoidCallback changed) {
         ),
       ],
     ),
+  );
+}
+
+Widget _goal(HeroData h, String title, String progress) {
+  final done = h.seasonTitles.contains(title);
+  return Text.rich(
+    TextSpan(children: [
+      TextSpan(text: '« ${tr(title)} » ', style: bold.copyWith(fontSize: 11, color: done ? const Color(0xFF8CE07A) : goldLight)),
+      TextSpan(text: done ? tr('Đã đạt') : progress, style: small.copyWith(fontSize: 10.5)),
+    ]),
   );
 }
