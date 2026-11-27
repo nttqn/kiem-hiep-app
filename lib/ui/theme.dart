@@ -195,7 +195,14 @@ const uiTitleArt = 'assets/art/ui/title_bar.webp';
 const uiButtonArt = 'assets/art/ui/btn_primary.webp';
 const uiButtonDarkArt = 'assets/art/ui/btn_secondary.webp';
 const uiButtonOffArt = 'assets/art/ui/btn_disabled.webp';
+
+/// btn_primary with the red lacquer turned jade (gold trim kept).
+const uiButtonJadeArt = 'assets/art/ui/btn_jade.webp';
 String uiSlotArt(int rarity) => 'assets/art/ui/slot_${rarity.clamp(0, 4)}.webp';
+
+/// Hoàng Kim's own frame: slot_4 with pale-gold flames and jade gems, so a
+/// set piece reads apart from a Truyền thuyết one (both were fire dragons).
+const uiSlotGoldArt = 'assets/art/ui/slot_gold.webp';
 
 /// A painted nine-slice frame filling its box. [slice] is the stretchable
 /// middle in image pixels of an [imageSize] picture; [scale] image pixels
@@ -235,7 +242,7 @@ class SliceFrame extends StatelessWidget {
 
 /// Read once at start so the first screen does not show bare frames.
 Future<void> precacheUiArt(BuildContext context) => Future.wait([
-      for (final p in [uiPanelArt, uiTitleArt, uiButtonArt, uiButtonDarkArt, uiButtonOffArt, for (var i = 0; i < 5; i++) uiSlotArt(i)])
+      for (final p in [uiPanelArt, uiTitleArt, uiButtonArt, uiButtonJadeArt, uiButtonDarkArt, uiButtonOffArt, uiSlotGoldArt, for (var i = 0; i < 5; i++) uiSlotArt(i)])
         precacheImage(AssetImage(p), context, onError: (_, _) {}),
     ]);
 
@@ -279,13 +286,15 @@ class _LButtonState extends State<LButton> {
     final on = widget.enabled && widget.onTap != null;
     final c = on ? widget.color : const Color(0xFF4A4038);
     final h = widget.small ? 34.0 : 44.0;
-    // 1.25: the painted red, dark and greyed buttons; other colours (jade,
-    // purple...) keep the drawn lacquer so their meaning still shows.
+    // 1.25: the painted red, jade, dark and greyed buttons; other colours
+    // (purple, blue...) keep the drawn lacquer so their meaning still shows.
     final painted = !on
         ? uiButtonOffArt
         : widget.color == seal
             ? uiButtonArt
-            : (widget.color == lacquer || widget.color == lacquerLight || widget.color == lacquerDeep)
+            : widget.color == jade
+                ? uiButtonJadeArt
+                : (widget.color == lacquer || widget.color == lacquerLight || widget.color == lacquerDeep)
                 ? uiButtonDarkArt
                 : null;
     return GestureDetector(
@@ -447,7 +456,7 @@ class ItemTile extends StatelessWidget {
         decoration: it != null
             ? BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(uiSlotArt(it.rarity.index)),
+                  image: AssetImage(it.golden ? uiSlotGoldArt : uiSlotArt(it.rarity.index)),
                   fit: BoxFit.fill,
                   filterQuality: FilterQuality.medium,
                 ),
