@@ -53,14 +53,21 @@ class _CodexScreenState extends State<CodexScreen> {
     final gearReady = [for (var t = 0; t < codexTiers; t++) codexGearPage(t)].where(h.codexClaimable).length;
     final landReady = [for (final m in codexLands) codexLandPage(m.id)].where(h.codexClaimable).length;
     final legendReady = [for (var i = 0; i < legendNames.length; i++) codexLegendPage(i)].where(h.codexClaimable).length;
+    // 1.26.0: four tabs do not fit beside the title on a phone; short names
+    // there (the side panel shows the full one).
+    final short = MediaQuery.sizeOf(context).width < 860;
+    String tab(String full, String brief, int ready) {
+      final name = short ? tr(brief) : tr(full);
+      return ready > 0 ? '$name ($ready)' : name;
+    }
     return SubScreen(
       title: tr('Đồ giám'),
       actions: [
-        tabChip(gearReady > 0 ? tr('Thần binh phổ ({gearReady})', {'gearReady': gearReady}) : tr('Thần binh phổ'), _tab == 0, () => setState(() => _tab = 0)),
-        tabChip(landReady > 0 ? tr('Vạn thú phổ ({landReady})', {'landReady': landReady}) : tr('Vạn thú phổ'), _tab == 1, () => setState(() => _tab = 1)),
-        tabChip(legendReady > 0 ? tr('Truyền thuyết phổ ({n})', {'n': legendReady}) : tr('Truyền thuyết phổ'), _tab == 3,
+        tabChip(tab('Thần binh phổ', 'Thần binh', gearReady), _tab == 0, () => setState(() => _tab = 0)),
+        tabChip(tab('Vạn thú phổ', 'Vạn thú', landReady), _tab == 1, () => setState(() => _tab = 1)),
+        tabChip(tab('Truyền thuyết phổ', 'Truyền thuyết', legendReady), _tab == 3,
             () => setState(() => _tab = 3)),
-        tabChip(h.kyPagesReady > 0 ? tr('Kỳ ngộ phổ ({kyPagesReady})', {'kyPagesReady': h.kyPagesReady}) : tr('Kỳ ngộ phổ'), _tab == 2, () => setState(() => _tab = 2)),
+        tabChip(tab('Kỳ ngộ phổ', 'Kỳ ngộ', h.kyPagesReady), _tab == 2, () => setState(() => _tab = 2)),
       ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,7 +93,9 @@ class _CodexScreenState extends State<CodexScreen> {
       padding: const EdgeInsets.all(10),
       child: ListView(
         children: [
-          Text(tr('Đồ giám Truyền thuyết'), style: titleStyle(16, color: _legendInk)),
+          // The open book's name (it said "Đồ giám Truyền thuyết" on every tab).
+          Text(switch (_tab) { 0 => tr('Thần binh phổ'), 1 => tr('Vạn thú phổ'), _ => tr('Truyền thuyết phổ') },
+              style: titleStyle(16, color: _legendInk)),
           const SizedBox(height: 4),
           Text(
             _tab == 3

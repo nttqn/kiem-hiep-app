@@ -3653,5 +3653,7 @@
  "Truyền thuyết phổ ({n})": "傳說譜（{n}）",
  "Truyền thuyết phổ": "傳說譜",
  "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "傳說裝備帶有 {n} 種名號之一（霸王、驚鴻…）。撿到即收錄於該名號與部位的格子，賣出或分解後仍保留。黃金裝備不計。一個名號集滿 {slots} 格即可領獎。",
- "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "集齊傳說譜：稱號「{t}」，{p0}"
+ "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "集齊傳說譜：稱號「{t}」，{p0}",
+ "Vạn thú": "萬獸",
+ "Kỳ ngộ": "奇遇"
 }

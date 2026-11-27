@@ -29,8 +29,8 @@ Future<void> _fonts() async {
   await load('Playfair', ['PlayfairDisplay.ttf']);
 }
 
-Future<void> _shot(WidgetTester tester, Widget home, String name, {Future<void> Function()? then}) async {
-  tester.view.physicalSize = const Size(915, 412) * 2;
+Future<void> _shot(WidgetTester tester, Widget home, String name, {Future<void> Function()? then, Size size = const Size(915, 412)}) async {
+  tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(const SizedBox());
@@ -120,4 +120,12 @@ void main() {
     _as(h);
     await _shot(tester, const CodexScreen(tab: 3), 'legend');
   });
+  for (final sz in const [Size(760, 344), Size(800, 380)]) {
+    testWidgets('codex_phone_${sz.width.toInt()}', (tester) async {
+      final h = _hero()..gold = 465399720;
+      h.codexClaimed.add(codexLegendPage(5));
+      _as(h);
+      await _shot(tester, const CodexScreen(), 'codex_phone_${sz.width.toInt()}', size: sz);
+    });
+  }
 }
