@@ -121,6 +121,12 @@ class _PlayScreenState extends State<PlayScreen> {
   Offset _joyKnob = Offset.zero;
   static const _joyRadius = 56.0;
 
+  /// 1.28.0: the stick redraws on its own. A setState per finger move used
+  /// to rebuild the whole battle screen, painted buttons and all, 60 to 120
+  /// times a second while walking.
+  final ValueNotifier<int> _joyTick = ValueNotifier(0);
+  void _joyRepaint() => _joyTick.value++;
+
   final Set<LogicalKeyboardKey> _keys = {};
 
   @override
@@ -243,6 +249,7 @@ class _PlayScreenState extends State<PlayScreen> {
     _introTimer?.cancel();
     game.hudTick.removeListener(_pruneToasts);
     game.hudTick.removeListener(_questTick);
+    _joyTick.dispose();
     // Walking out of a duel concedes it (a khảo hạch or Độ kiếp can just be
     // retried; a Tỉ thí just ends, its turn spent).
     final d = widget.dungeon;
@@ -637,6 +644,7 @@ class _PlayScreenState extends State<PlayScreen> {
     game.halted = true;
     _keys.clear();
     _joyBase = null;
+    _joyRepaint();
     world.input
       ..attack = false
       ..moveX = 0
@@ -660,6 +668,7 @@ class _PlayScreenState extends State<PlayScreen> {
       _joyPointer = null;
       _joyBase = null;
       _joyKnob = Offset.zero;
+      _joyRepaint();
     }
   }
 
@@ -788,11 +797,10 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _joyDown(PointerDownEvent e) {
     if (_joyPointer != null) return;
-    setState(() {
-      _joyPointer = e.pointer;
-      _joyBase = e.localPosition;
-      _joyKnob = Offset.zero;
-    });
+    _joyPointer = e.pointer;
+    _joyBase = e.localPosition;
+    _joyKnob = Offset.zero;
+    _joyRepaint();
   }
 
   void _joyMove(PointerMoveEvent e) {
@@ -805,7 +813,8 @@ class _PlayScreenState extends State<PlayScreen> {
     }
     final len = math.min(d.distance, _joyRadius);
     final dir = d.distance > 0 ? d / d.distance : Offset.zero;
-    setState(() => _joyKnob = dir * len);
+    _joyKnob = dir * len;
+    _joyRepaint();
     final mag = len / _joyRadius;
     world.input.moveX = mag < 0.15 ? 0 : dir.dx * mag;
     world.input.moveY = mag < 0.15 ? 0 : dir.dy * mag;
@@ -813,11 +822,10 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _joyUp(PointerEvent e) {
     if (e.pointer != _joyPointer) return;
-    setState(() {
-      _joyPointer = null;
-      _joyBase = null;
-      _joyKnob = Offset.zero;
-    });
+    _joyPointer = null;
+    _joyBase = null;
+    _joyKnob = Offset.zero;
+    _joyRepaint();
     world.input.moveX = 0;
     world.input.moveY = 0;
   }
@@ -865,11 +873,24 @@ class _PlayScreenState extends State<PlayScreen> {
                     onPointerCancel: _joyUp,
                   ),
                 ),
+                if (!PlayScreen.debugHideHud)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: RepaintBoundary(
+                        child: ValueListenableBuilder<int>(
+                          valueListenable: _joyTick,
+                          builder: (_, _, _) => _joystick(),
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned.fill(
                   child: SafeArea(
-                    child: ValueListenableBuilder<int>(
-                      valueListenable: game.hudTick,
-                      builder: (_, _, _) => PlayScreen.debugHideHud ? const SizedBox.shrink() : _hud(size),
+                    child: RepaintBoundary(
+                      child: ValueListenableBuilder<int>(
+                        valueListenable: game.hudTick,
+                        builder: (_, _, _) => PlayScreen.debugHideHud ? const SizedBox.shrink() : _hud(size),
+                      ),
                     ),
                   ),
                 ),
@@ -897,6 +918,31 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  /// The stick, over the battle and under the HUD: where the thumb is, or
+  /// a faint one at rest. The finger's position is in the screen's
+  /// coordinates (the touch zone is not inside the safe area).
+  Widget _joystick() {
+    final base = _joyBase;
+    if (base != null) {
+      return Stack(children: [
+        Positioned(
+          left: base.dx - _joyRadius,
+          top: base.dy - _joyRadius,
+          child: JoystickView(knob: _joyKnob, radius: _joyRadius),
+        ),
+      ]);
+    }
+    return SafeArea(
+      child: Stack(children: [
+        Positioned(
+          left: 70,
+          bottom: 40,
+          child: Opacity(opacity: 0.45, child: JoystickView(knob: Offset.zero, radius: _joyRadius)),
+        ),
+      ]),
+    );
+  }
+
   Widget _hud(Size size) {
     final ids = _activeIdx;
     return Stack(
@@ -905,7 +951,11 @@ class _PlayScreenState extends State<PlayScreen> {
         Positioned(
             left: 8,
             top: 80,
-            child: world.realm != null
+            // 1.28.0: the HUD rebuilds 15 times a second for the bars; the
+            // painted buttons around them sit in their own layers so they
+            // are not drawn again with every tick.
+            child: RepaintBoundary(
+              child: world.realm != null
                 ? RealmTracker(world: world)
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -927,7 +977,7 @@ class _PlayScreenState extends State<PlayScreen> {
                         ),
                       ],
                     ],
-                  )),
+                  ))),
         Positioned(
           left: 0,
           right: 0,
@@ -961,7 +1011,8 @@ class _PlayScreenState extends State<PlayScreen> {
         Positioned(
           right: 8,
           top: 6,
-          child: Row(
+          child: RepaintBoundary(
+            child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (_chatAllowed) ...[
@@ -986,7 +1037,7 @@ class _PlayScreenState extends State<PlayScreen> {
               const SizedBox(width: 6),
               if (world.mode == WorldMode.field || world.realm != null) MiniMap(world: world),
             ],
-          ),
+          )),
         ),
         Positioned(left: 60, right: 60, bottom: 2, child: ExpStrip(hero: hero)),
         // Tàng Bảo Đồ: read one here, or a reminder of where the spot is.
@@ -994,7 +1045,8 @@ class _PlayScreenState extends State<PlayScreen> {
           Positioned(
             right: 8,
             top: 118,
-            child: LButton(
+            child: RepaintBoundary(
+              child: LButton(
               label: tr('Tàng Bảo Đồ ({tbdMaps})', {'tbdMaps': hero.tbdMaps}),
               leading: const MatIcon(Mat.map, size: 26),
               small: true,
@@ -1003,7 +1055,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 world.readTreasureMap();
                 SaveService.instance.save();
               },
-            ),
+            )),
           )
         else if (world.mode == WorldMode.field && hero.tbdSpot != null && world.digSpot == null)
           Positioned(
@@ -1022,27 +1074,14 @@ class _PlayScreenState extends State<PlayScreen> {
           Positioned(
             right: 330,
             bottom: 30,
-            child: LButton(
+            child: RepaintBoundary(
+              child: LButton(
               label: tr('Câu cá'),
               icon: Icons.phishing,
               small: true,
               color: const Color(0xFF2E6A8A),
               onTap: () => _setFishing(true),
-            ),
-          ),
-        if (_joyBase != null)
-          Positioned(
-            left: _joyBase!.dx - _joyRadius,
-            top: _joyBase!.dy - _joyRadius - MediaQuery.paddingOf(context).top,
-            child: IgnorePointer(child: JoystickView(knob: _joyKnob, radius: _joyRadius)),
-          )
-        else
-          Positioned(
-            left: 70,
-            bottom: 40,
-            child: IgnorePointer(
-              child: Opacity(opacity: 0.45, child: JoystickView(knob: Offset.zero, radius: _joyRadius)),
-            ),
+            )),
           ),
         // Combat buttons.
         Positioned(

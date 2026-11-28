@@ -149,7 +149,8 @@ class BattleGame extends Game {
       world.sounds.clear();
     }
     _sinceHud += dt;
-    if (_sinceHud >= 1 / 15) {
+    // Chế độ máy yếu: the HUD (bars, cooldowns) refreshes 8 times a second.
+    if (_sinceHud >= (liteGraphics ? 1 / 8 : 1 / 15)) {
       _sinceHud = 0;
       hudTick.value++;
     }

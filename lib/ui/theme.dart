@@ -252,12 +252,13 @@ class SliceFrame extends StatelessWidget {
             math.max((imageSize.width - slice.width) / (w - 1), (imageSize.height - slice.height) / (h - 1)));
         return DecoratedBox(
           decoration: BoxDecoration(
-            boxShadow: shadow ? const [BoxShadow(color: Colors.black45, blurRadius: 3, offset: Offset(0, 3))] : null,
+            // Chế độ máy yếu (1.28.0): no soft shadow, plainer sampling.
+            boxShadow: shadow && !liteGraphics ? const [BoxShadow(color: Colors.black45, blurRadius: 3, offset: Offset(0, 3))] : null,
             image: DecorationImage(
               image: AssetImage(asset),
               centerSlice: Rect.fromLTRB(slice.left / s, slice.top / s, slice.right / s, slice.bottom / s),
               scale: s,
-              filterQuality: FilterQuality.medium,
+              filterQuality: liteGraphics ? FilterQuality.low : FilterQuality.medium,
             ),
           ),
         );
