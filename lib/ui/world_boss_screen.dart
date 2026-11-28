@@ -585,6 +585,10 @@ const bossArtIds = {
   'gbSpear', 'gbBandit', 'gbLady',
 };
 
+/// Bosses whose portrait is still to be painted (drawn meanwhile); the art
+/// test lets these through until assets/art/{id}.webp lands.
+const bossArtPending = {'gbWood', 'gbFire'};
+
 /// A boss's painted portrait, or a gently animated drawing of the monster
 /// for those without one yet.
 class BossPreview extends StatefulWidget {

@@ -236,3 +236,35 @@ trong **cùng cuộc chat** với các tấm cá trước, hoặc gửi kèm
 | `fish_tayvuc.png` | 1. Rust-red fish the colour of desert sandstone, rough scales. 2. Pale fish with white bones showing through thin translucent skin. 3. Fish with a flame-shaped dorsal fin in red and orange, like a small fire spirit. 4. Legendary glass fish: body clear as coloured glaze (blue-turquoise), golden fins like silk, water-drop halo. |
 | `fish_donghai.png` | 1. Silver mackerel with blue-striped back. 2. Small squid glowing soft cyan-blue, curling tentacles. 3. Pink-white fish holding a shining pearl in its mouth. 4. Legendary dragon-palace guard fish: jade-green scales, small dragon horns and whiskers, trident-shaped tail, sea-foam swirl. |
 | `fish_conlon.png` | 1. Small snow-white fish with pale blue fins, frosty sparkle. 2. Fish clear green like jade, gold-rimmed fins. 3. White-pink fish curled under a frosted lotus leaf. 4. Legendary Kunlun immortal fish: pearl white and pale gold, long flowing fins like clouds, riding a small cloud, soft halo. |
+
+---
+
+## 7. Boss Hoàng Kim hệ Mộc và Hỏa (1.28)
+
+Mỗi khối là một ảnh chân dung toàn thân, cùng kiểu với `assets/art/gbSpear.webp`.
+Gửi kèm `gbSpear.webp` (hoặc `gbLady.webp`) và nói "match this style exactly".
+Bỏ PNG vào `art_in/`. Khi có ảnh, gỡ id khỏi `bossArtPending` và thêm vào
+`bossArtIds` (lib/ui/world_boss_screen.dart).
+
+### 7a – Lưu thành `gbWood.png`
+
+> Full-body character painting, Chinese wuxia fantasy, polished painted
+> mobile-RPG style, rich colours, fine gold filigree, standing in a dynamic
+> 3/4 pose, transparent background, no text. An ancient forest demon elder,
+> "Green Vine Elder Fiend": tall old man with long white hair and beard, deep
+> green layered robe with brown bark-textured trim, a mossy dark-green cape,
+> living vines and small leaves twining around his arms and shoulders, holding
+> a gnarled wooden staff topped with a glowing pale-green jade bud, faint
+> green spirit light and drifting leaves around him. Menacing, regal, boss
+> presence.
+
+### 7b – Lưu thành `gbFire.png`
+
+> Full-body character painting, Chinese wuxia fantasy, polished painted
+> mobile-RPG style, rich colours, fine gold filigree, standing in a dynamic
+> 3/4 pose, transparent background, no text. A fire demon lord, "Crimson Flame
+> Demon Lord": fierce man with a small gold crown on a black topknot, crimson
+> lacquered armour with blackened-iron plates and amber-gold trim, a ragged
+> charcoal-black cape with glowing ember edges, wielding a broad curved saber
+> whose blade glows orange like molten metal, flame wisps and sparks swirling
+> at his feet. Menacing, regal, boss presence.

@@ -3698,5 +3698,11 @@
  "Đánh thử {p0} giây, xem sát thương theo từng nguồn.": "Hit it for {p0} s and see your damage by source.",
  "Không tốn lượt, không có thưởng.": "Free, no rewards.",
  "Thể": "VIT",
- "{p0}: đã mất": "{p0}: gone"
+ "{p0}: đã mất": "{p0}: gone",
+ "Thanh Đằng Lão Quái": "Green Vine Elder Fiend",
+ "Xích Diễm Ma Tôn": "Crimson Flame Demon Lord",
+ "Ngày mai": "Tomorrow",
+ "Ngày kia": "In 2 days",
+ "{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)": "{day}: {boss} ({hanh}; {strong} hits hard)",
+ "{n} ngày nữa": "In {n} days"
 }

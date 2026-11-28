@@ -179,8 +179,8 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
   }
 
   Widget _rewards() {
-    const days = ['Thứ 2, 4, 6', 'Thứ 3, 5, 7', 'Chủ nhật'];
-    final today = goldBossOf().id;
+    final schedule = goldBossSchedule();
+    const days = ['Hôm nay', 'Ngày mai', 'Ngày kia'];
     return Panel(
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -216,10 +216,15 @@ class _GoldBossScreenState extends State<GoldBossScreen> {
                 for (var i = 0; i < goldRankBrackets.length; i++) _bracket(i),
                 const SizedBox(height: 6),
                 Text(tr('Lịch xuất hiện'), style: bold.copyWith(color: goldLight)),
-                for (var i = 0; i < goldBossMobs.length; i++)
-                  Text('${tr(days[i])}: ${tr(goldBossMobs[i].name)}',
-                      style: small.copyWith(
-                          fontSize: 12, color: goldBossMobs[i].id == today ? _goldTint : creamDim)),
+                for (var i = 0; i < schedule.length; i++)
+                  Text(
+                      tr('{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)', {
+                        'day': i < days.length ? tr(days[i]) : tr('{n} ngày nữa', {'n': i}),
+                        'boss': tr(schedule[i].name),
+                        'hanh': tr(schedule[i].hanh.label),
+                        'strong': tr(schedule[i].hanh.overcomeBy.label),
+                      }),
+                      style: small.copyWith(fontSize: 12, color: i == 0 ? _goldTint : creamDim)),
               ],
             ),
           ),

@@ -56,6 +56,30 @@ Game miễn phí, có quảng cáo. Phần lớn quảng cáo do bạn tự ch�
 
 Hỗ trợ: trungsmail@gmail.com
 
+## Có gì mới (bản 1.28.0, ≤ 500 ký tự)
+1.28.0
+• Boss Hoàng Kim thêm 2 boss mới: Thanh Đằng Lão Quái (hệ Mộc) và Xích Diễm Ma Tôn (hệ Hỏa).
+• Boss Hoàng Kim nay xoay vòng đủ 5 hệ, mỗi ngày một boss: mỗi môn phái đều có ngày khắc chế boss.
+• Màn Boss Hoàng Kim hiện lịch 5 ngày tới và hệ đánh mạnh mỗi ngày.
+
+## What's new (1.28.0, en-US)
+1.28.0
+• Golden Boss: 2 new bosses, Green Vine Elder Fiend (Wood) and Crimson Flame Demon Lord (Fire).
+• Golden Bosses now rotate through all 5 elements, one a day: every sect gets a day with the advantage.
+• The Golden Boss screen shows the next 5 days and which element hits hard.
+
+## 更新內容（1.28.0，zh-TW）
+1.28.0
+• 黃金首領新增 2 位：青藤老怪（木系）與赤焰魔尊（火系）。
+• 黃金首領改為五行輪替，每天一位：每個門派都有剋制首領的日子。
+• 黃金首領畫面顯示未來 5 天的首領與傷害較高的屬性。
+
+## 업데이트 내용 (1.28.0, ko-KR)
+1.28.0
+• 황금 보스 2종 추가: 청등노괴(목)와 적염마존(화).
+• 황금 보스가 오행 5계열을 하루씩 순환: 모든 문파에 상성 우위인 날이 생깁니다.
+• 황금 보스 화면에 앞으로 5일 일정과 강한 계열 표시.
+
 ## Có gì mới (bản 1.27.0, ≤ 500 ký tự)
 1.27.0
 • Bộ đồ: lưu 3 bộ trang bị kèm điểm tiềm năng, đổi bộ một chạm.

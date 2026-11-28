@@ -3698,5 +3698,11 @@
  "Đánh thử {p0} giây, xem sát thương theo từng nguồn.": "{p0}초 동안 공격해 출처별 피해를 확인하세요.",
  "Không tốn lượt, không có thưởng.": "횟수 소모 없음, 보상 없음.",
  "Thể": "체질",
- "{p0}: đã mất": "{p0}: 없음"
+ "{p0}: đã mất": "{p0}: 없음",
+ "Thanh Đằng Lão Quái": "청등노괴",
+ "Xích Diễm Ma Tôn": "적염마존",
+ "Ngày mai": "내일",
+ "Ngày kia": "모레",
+ "{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)": "{day}: {boss} ({hanh} 계열, {strong} 계열 강함)",
+ "{n} ngày nữa": "{n}일 후"
 }

@@ -33,18 +33,28 @@ void main() {
     expect(goldBossSessionLabel(1), '21:00–21:30');
   });
 
-  test('the boss goes by the weekday', () {
-    // 2026-11-09 is a Monday.
-    expect(goldBossOf(vn(2026, 11, 9, 12, 0)).id, 'gbSpear');
-    expect(goldBossOf(vn(2026, 11, 10, 12, 0)).id, 'gbBandit');
-    expect(goldBossOf(vn(2026, 11, 13, 12, 0)).id, 'gbSpear');
-    expect(goldBossOf(vn(2026, 11, 14, 12, 0)).id, 'gbBandit');
-    expect(goldBossOf(vn(2026, 11, 15, 12, 0)).id, 'gbLady');
+  test('the boss goes round the five phases, one a day', () {
+    expect(goldBossOf(vn(2026, 11, 30, 12, 0)).id, 'gbSpear');
+    expect(goldBossOf(vn(2026, 11, 30, 23, 59)).id, 'gbSpear');
+    expect(goldBossOf(vn(2026, 12, 1, 0, 1)).id, 'gbWood');
+    expect(goldBossOf(vn(2026, 12, 2, 12, 0)).id, 'gbLady');
+    expect(goldBossOf(vn(2026, 12, 3, 12, 0)).id, 'gbFire');
+    expect(goldBossOf(vn(2026, 12, 4, 12, 0)).id, 'gbBandit');
+    expect(goldBossOf(vn(2026, 12, 5, 12, 0)).id, 'gbSpear');
+    expect(goldBossOf(vn(2026, 11, 29, 12, 0)).id, 'gbBandit'); // before the start too
+    expect(goldBossOf(vn(2026, 11, 15, 12, 0)).id, 'gbSpear');
+    // Every phase once in any five days, and every sect favoured once.
+    for (var d = 0; d < 12; d++) {
+      final five = goldBossSchedule(vn(2026, 11, 20 + d, 12, 0));
+      expect({for (final m in five) m.hanh}, Hanh.values.toSet());
+      expect({for (final m in five) m.hanh.overcomeBy}, Hanh.values.toSet());
+    }
     for (final m in goldBossMobs) {
       expect(mobById[m.id], same(m));
     }
-    expect(goldBossDef(vn(2026, 11, 15, 21, 0)).golden, isTrue);
-    expect(goldBossDef(vn(2026, 11, 15, 21, 0)).worldBoss, 'gbLady');
+    expect(goldBossDef(vn(2026, 12, 2, 21, 0)).golden, isTrue);
+    expect(goldBossDef(vn(2026, 12, 2, 21, 0)).worldBoss, 'gbLady');
+    expect(goldBossDef(vn(2026, 12, 3, 21, 0)).worldBoss, 'gbFire');
   });
 
   test('runs only in a session, five each, and joining pays once a session', () {

@@ -3698,5 +3698,11 @@
  "Đánh thử {p0} giây, xem sát thương theo từng nguồn.": "攻擊 {p0} 秒，查看各來源傷害。",
  "Không tốn lượt, không có thưởng.": "不耗次數，沒有獎勵。",
  "Thể": "體",
- "{p0}: đã mất": "{p0}：已遺失"
+ "{p0}: đã mất": "{p0}：已遺失",
+ "Thanh Đằng Lão Quái": "青藤老怪",
+ "Xích Diễm Ma Tôn": "赤焰魔尊",
+ "Ngày mai": "明天",
+ "Ngày kia": "後天",
+ "{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)": "{day}：{boss}（{hanh}系，{strong}系傷害較高）",
+ "{n} ngày nữa": "{n} 天後"
 }

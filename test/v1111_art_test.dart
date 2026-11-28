@@ -11,7 +11,7 @@ import 'package:kiem_hiep/core/mounts.dart';
 import 'package:kiem_hiep/core/pets.dart';
 import 'package:kiem_hiep/core/sects.dart';
 import 'package:kiem_hiep/ui/theme.dart' show itemIconPath, mapArtPath;
-import 'package:kiem_hiep/ui/world_boss_screen.dart' show bossArtIds;
+import 'package:kiem_hiep/ui/world_boss_screen.dart' show bossArtIds, bossArtPending;
 
 void main() {
   test('every painted boss and companion has its picture, and every boss has one', () {
@@ -23,7 +23,7 @@ void main() {
       expect(File('assets/art/${c.id}.webp').existsSync(), isTrue, reason: c.id);
     }
     final bosses = [for (final m in [...mobs, ...festMobs, ...goldBossMobs]) if (m.boss) m.id];
-    expect(bosses.where((id) => !bossArtIds.contains(id)), isEmpty);
+    expect(bosses.where((id) => !bossArtIds.contains(id) && !bossArtPending.contains(id)), isEmpty);
   });
 
   test('every item kind and tier has its painted icon', () {

@@ -13,7 +13,9 @@ import 'i18n.dart';
 /// fixed hours, for everyone at once. Like Boss Thế Giới it cannot die and
 /// the score is damage; every session a hero deals damage in pays a few
 /// Mảnh Hoàng Kim, and the day's damage board pays its top 50 the next
-/// day. Which boss comes goes by the weekday.
+/// day. Which boss comes goes round the five phases, one a day (1.28.0;
+/// until then by weekday, which never brought a Mộc or Hỏa boss, so Kim
+/// and Thủy heroes never had a day of their own).
 const int goldBossOpenLevel = 60;
 const double goldBossTime = 60;
 
@@ -26,7 +28,8 @@ const goldBossSessions = <(int, int, int)>[(12, 0, 30), (21, 0, 30)];
 /// Mảnh Hoàng Kim for dealing damage in a session.
 const int goldBossJoinShards = 3;
 
-/// Whose day it is: Mon/Wed/Fri, Tue/Thu/Sat, Sunday.
+/// The five bosses, one per phase. The first three are the 1.12.0 ones
+/// and keep their places (saved run logs and tests refer to them).
 const goldBossMobs = <MobDef>[
   MobDef(
       id: 'gbSpear', name: 'Kim Thương Bá Vương', hanh: Hanh.kim,
@@ -43,14 +46,38 @@ const goldBossMobs = <MobDef>[
       body: Body.human, c1: 0xFFE8F4FF, c2: 0xFF3A6AA8, c3: 0xFF9FE8FF,
       variant: 'gbLady', size: 1.7, hp: 20, atk: 1.8, def: 1.6,
       speed: 115, exp: 15, boss: true),
+  MobDef(
+      id: 'gbWood', name: 'Thanh Đằng Lão Quái', hanh: Hanh.moc,
+      body: Body.human, c1: 0xFF2E6B34, c2: 0xFF5A3A1E, c3: 0xFFB8F070,
+      variant: 'gbWood', size: 1.8, hp: 20, atk: 1.8, def: 1.7,
+      speed: 100, exp: 15, boss: true),
+  MobDef(
+      id: 'gbFire', name: 'Xích Diễm Ma Tôn', hanh: Hanh.hoa,
+      body: Body.human, c1: 0xFFB3261E, c2: 0xFF2A0E0A, c3: 0xFFFFB03A,
+      variant: 'gbFire', size: 1.85, hp: 20, atk: 1.85, def: 1.65,
+      speed: 110, exp: 15, boss: true),
 ];
 
-/// The boss on Vietnam date [vn] (by its weekday).
-MobDef goldBossOn(DateTime vn) => switch (vn.weekday) {
-      DateTime.sunday => goldBossMobs[2],
-      DateTime.monday || DateTime.wednesday || DateTime.friday => goldBossMobs[0],
-      _ => goldBossMobs[1],
-    };
+/// The order the bosses come in, by phase: each phase's boss is the one a
+/// different sect overcomes, so the favoured sect changes every day and
+/// over five days every sect has exactly one.
+const goldBossCycle = ['gbSpear', 'gbWood', 'gbLady', 'gbFire', 'gbBandit'];
+
+/// A Vietnam date the cycle starts from (its first boss, Kim).
+final _cycleStart = DateTime.utc(2026, 11, 30);
+
+/// The boss on Vietnam date [vn].
+MobDef goldBossOn(DateTime vn) {
+  final day = DateTime.utc(vn.year, vn.month, vn.day).difference(_cycleStart).inDays;
+  return mobById[goldBossCycle[day % goldBossCycle.length]]!;
+}
+
+/// The bosses of today and the next [days] - 1 days, Vietnam time.
+List<MobDef> goldBossSchedule([DateTime? now, int days = 5]) {
+  final vn = vnNow(now ?? GameClock.now());
+  final day = DateTime.utc(vn.year, vn.month, vn.day);
+  return [for (var i = 0; i < days; i++) goldBossOn(day.add(Duration(days: i)))];
+}
 
 MobDef goldBossOf([DateTime? now]) => goldBossOn(vnNow(now ?? GameClock.now()));
 
