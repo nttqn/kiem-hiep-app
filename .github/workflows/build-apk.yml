@@ -33,8 +33,10 @@ jobs:
         run: flutter analyze || true
 
       # Includes the balance simulation: every sect must level steadily.
+      # GitHub reporter: each failing test becomes an annotation, readable
+      # on the run page (and the public API) without opening the log.
       - name: Run tests
-        run: flutter test
+        run: flutter test --reporter github
 
       # With the four keystore secrets set, builds are signed with the real
       # upload key (needed for Google sign-in and the Play Store). Without
