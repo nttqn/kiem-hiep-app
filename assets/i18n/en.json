@@ -3655,5 +3655,16 @@
  "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "Legendary pieces bear one of {n} names (Overlord, Swan…). Each one picked up fills the cell of its name and slot, kept even after selling or salvaging. Golden pieces do not count. Fill all {slots} cells of a name for its reward.",
  "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "Complete legend compendium: title « {t} », {p0}",
  "Vạn thú": "Bestiary",
- "Kỳ ngộ": "Encounters"
+ "Kỳ ngộ": "Encounters",
+ "Chuyển sao": "Move stars",
+ "Đổi sao giữa {itName} (★{star}) và một món cùng loại đã +{maxPlus}. Hung Thú Tinh Phách đi theo sao, không mất viên nào; phí {p0}% Tinh Thạch và lượng đã dùng cho món nhiều sao hơn.": "Swap stars between {itName} (★{star}) and another +{maxPlus} piece of the same slot. Beast Souls move with the stars, none are lost; the fee is {p0}% of the Star Stones and gold spent on the higher-starred piece.",
+ "Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.": "Stars moved! This piece ★{p0}, the other ★{p1}.",
+ "{where} · Cấp {level} · ★{p0} thành ★{p1}": "{where} · Level {level} · ★{p0} becomes ★{p1}",
+ "Hộp Tinh Phách": "Beast Soul Box",
+ "Hộp Tinh Phách cho {hName}: {p0}": "Beast Soul Box for {hName}: {p0}",
+ "Tối đa {p0} hộp mỗi tuần cho {hName}:": "Up to {p0} boxes a week for {hName}:",
+ "{p0} Hung Thú Tinh Phách": "{p0} Beast Souls",
+ "Thăng Tinh từ 4 sao, hợp ngọc Thiên": "Star-ups from 4 stars, Heavenly gems",
+ "Tuần này còn {left}/{p0} hộp": "{left}/{p0} boxes left this week",
+ "Đã mua đủ tuần này": "Weekly limit reached"
 }

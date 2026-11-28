@@ -3655,5 +3655,16 @@
  "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "전설 장비는 {n}가지 이름 중 하나를 지닌다(패왕, 경홍…). 얻으면 그 이름과 부위 칸에 기록되며, 팔거나 분해해도 남는다. 황금 장비는 제외. 한 이름의 {slots}칸을 채우면 보상.",
  "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "전설보 완성: 칭호 « {t} », {p0}",
  "Vạn thú": "만수",
- "Kỳ ngộ": "기연"
+ "Kỳ ngộ": "기연",
+ "Chuyển sao": "별 이전",
+ "Đổi sao giữa {itName} (★{star}) và một món cùng loại đã +{maxPlus}. Hung Thú Tinh Phách đi theo sao, không mất viên nào; phí {p0}% Tinh Thạch và lượng đã dùng cho món nhiều sao hơn.": "{itName}(★{star})과 같은 부위의 다른 +{maxPlus} 장비의 별을 서로 바꿉니다. 흉수정백은 별과 함께 이동하며 하나도 잃지 않습니다. 수수료는 별이 더 많은 장비에 쓴 성석과 냥의 {p0}%입니다.",
+ "Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.": "별 이전 완료! 이 장비 ★{p0}, 다른 장비 ★{p1}.",
+ "{where} · Cấp {level} · ★{p0} thành ★{p1}": "{where} · 레벨 {level} · ★{p0}에서 ★{p1}(으)로",
+ "Hộp Tinh Phách": "흉수정백 상자",
+ "Hộp Tinh Phách cho {hName}: {p0}": "{hName}의 흉수정백 상자: {p0}",
+ "Tối đa {p0} hộp mỗi tuần cho {hName}:": "{hName} 주당 최대 {p0}개:",
+ "{p0} Hung Thú Tinh Phách": "흉수정백 {p0}개",
+ "Thăng Tinh từ 4 sao, hợp ngọc Thiên": "4성 이상 승성, 천 단계 보석 합성",
+ "Tuần này còn {left}/{p0} hộp": "이번 주 남은 수량 {left}/{p0}",
+ "Đã mua đủ tuần này": "이번 주 구매 한도 도달"
 }

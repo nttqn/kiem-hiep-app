@@ -379,7 +379,9 @@ class Leaderboard extends ChangeNotifier {
       // A floor out of reach of this lực chiến is not sent (see
       // tamMaPlausible); the board hides such rows from older apps.
       if (h.tmBest > 0 && tamMaPlausible(h.tmBest, h.power)) 'tm': h.tmBest,
-      'ts': soulsInvested(h.equip.values),
+      // Bought Tinh Phách (Hộp Tinh Phách) are left out, so boards on any
+      // app version keep the row under [soulCeiling].
+      'ts': math.max(0, soulsInvested(h.equip.values) - soulsBoughtFor(h.soulsBought, huntWeekOf(vnDayKey()))),
       if (h.maVucBoardValue > 0) 'mv': h.maVucBoardValue,
       if (h.beastBoardValue > 0) 'ht': h.beastBoardValue,
       if (h.fishBoardValue > 0) 'fw': h.fishBoardValue,

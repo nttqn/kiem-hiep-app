@@ -7,6 +7,7 @@ import 'gems.dart';
 import 'hanh.dart';
 import 'hero.dart';
 import 'items.dart';
+import 'ledger.dart';
 import 'mount_skins.dart';
 import 'newbie.dart';
 import 'weekly_hunt.dart';
@@ -33,7 +34,9 @@ const String skuGoldPack = 'kh_hom_ngan_luong';
 /// players, cheaper a lượng than the Hòm.
 const String skuGoldChest = 'kh_ruong_ngan_luong';
 const String skuGoldVault = 'kh_kho_ngan_luong';
-const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest, skuGoldPack, skuGoldChest, skuGoldVault};
+/// Hộp Tinh Phách (1.27.0): Hung Thú Tinh Phách, a few times a week a hero.
+const String skuSoulPack = 'kh_hop_tinh_phach';
+const Set<String> allSkus = {skuMonthCard, skuNoAds, skuStarter, skuStarPack, skuPass, skuFest, skuGoldPack, skuGoldChest, skuGoldVault, skuSoulPack};
 
 /// Hòms a Rương and a Kho hold (sold at about 4x and 8x a Hòm's price).
 const int goldChestMul = 6, goldVaultMul = 15;
@@ -186,7 +189,7 @@ extension Premium on HeroData {
   /// Anything bought for this hero; before 1.16.0 there was no [paidFlag],
   /// so what purchases left on the save counts too.
   bool get paidAny =>
-      paidFlag || starterBought || passPaidSeason > 0 || cardUntil.isNotEmpty || festPack || stPackWeek > 0;
+      paidFlag || starterBought || passPaidSeason > 0 || cardUntil.isNotEmpty || festPack || stPackWeek > 0 || soulsBought > 0;
 
   /// The gift is waiting; [adFree] is the account's Gói bỏ quảng cáo.
   bool firstPayReady(bool adFree) => !firstPayTaken && (paidAny || adFree);
@@ -226,6 +229,28 @@ extension Premium on HeroData {
     beastSouls += starPackSouls;
     stPackWeek = huntWeekOf(vnDayKey());
     return [tr('+{starPackStones} Tinh Thạch', {'starPackStones': starPackStones}), tr('+{starPackSouls} Hung Thú Tinh Phách', {'starPackSouls': starPackSouls})];
+  }
+
+  // -------------------------------------------------------- Hộp Tinh Phách
+
+  /// Boxes this hero may still buy this week.
+  int get soulPacksLeft {
+    final wk = huntWeekOf(vnDayKey());
+    return math.max(0, soulPackPerWeek - (soulPackWeek == wk ? soulPackN : 0));
+  }
+
+  /// Gives a box (a purchase always delivers, even past the weekly limit
+  /// the shop shows).
+  List<String> grantSoulPack() {
+    final wk = huntWeekOf(vnDayKey());
+    if (soulPackWeek != wk) {
+      soulPackWeek = wk;
+      soulPackN = 0;
+    }
+    soulPackN++;
+    beastSouls += soulPackSouls;
+    soulsBought += soulPackSouls;
+    return [tr('+{p0} Hung Thú Tinh Phách', {'p0': soulPackSouls})];
   }
 
   /// Hòm Ngân Lượng bought ([mul] Hòms for a Rương or a Kho).

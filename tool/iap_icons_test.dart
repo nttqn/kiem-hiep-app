@@ -548,6 +548,68 @@ void _pass(Canvas c) {
   }
 }
 
+/// A soul flame centred at [p], [h] tall.
+void _soulFlame(Canvas c, Offset p, double h) {
+  final w = h * 0.62;
+  _glow(c, p, h * 1.1, const Color(0x9960F0FF));
+  final flame = Path()
+    ..moveTo(p.dx, p.dy - h * 0.6)
+    ..quadraticBezierTo(p.dx + w * 0.75, p.dy - h * 0.05, p.dx + w * 0.42, p.dy + h * 0.3)
+    ..quadraticBezierTo(p.dx, p.dy + h * 0.48, p.dx - w * 0.42, p.dy + h * 0.3)
+    ..quadraticBezierTo(p.dx - w * 0.75, p.dy - h * 0.05, p.dx, p.dy - h * 0.6)
+    ..close();
+  c.drawPath(
+      flame,
+      Paint()
+        ..shader = ui.Gradient.linear(p + Offset(0, -h * 0.6), p + Offset(0, h * 0.45),
+            [const Color(0xFFF0FFFF), const Color(0xFF60D8F8), const Color(0xFF2070C8)], [0, 0.5, 1]));
+  final core = Path()
+    ..moveTo(p.dx, p.dy - h * 0.12)
+    ..quadraticBezierTo(p.dx + w * 0.3, p.dy + h * 0.12, p.dx, p.dy + h * 0.3)
+    ..quadraticBezierTo(p.dx - w * 0.3, p.dy + h * 0.12, p.dx, p.dy - h * 0.12)
+    ..close();
+  c.drawPath(core, Paint()..color = const Color(0xDDFFFFFF));
+}
+
+/// Hộp Tinh Phách: a red-lacquer box, beast-soul flames rising from it.
+void _soulPack(Canvas c) {
+  _frame(c, const Color(0xFF7A1E2A), const Color(0xFF1A060C));
+  _glow(c, const Offset(_s / 2, 230), 230, const Color(0x6650E0FF));
+  c.drawOval(Rect.fromCenter(center: const Offset(_s / 2, 445), width: 340, height: 40), Paint()..color = const Color(0x77000000));
+  // Flames.
+  _soulFlame(c, const Offset(_s / 2, 200), 190);
+  _soulFlame(c, const Offset(168, 225), 90);
+  _soulFlame(c, const Offset(346, 222), 96);
+  _soulFlame(c, const Offset(205, 120), 56);
+  _soulFlame(c, const Offset(318, 112), 60);
+  // Box body.
+  final body = RRect.fromRectAndRadius(const Rect.fromLTRB(118, 300, 394, 440), const Radius.circular(10));
+  c.drawRRect(
+      body,
+      Paint()
+        ..shader = ui.Gradient.linear(const Offset(0, 300), const Offset(0, 440), [const Color(0xFFC0303A), const Color(0xFF6A0E16)]));
+  c.drawRRect(body, Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 8
+    ..color = _gold);
+  c.drawRect(const Rect.fromLTRB(118, 318, 394, 330), Paint()..color = _goldDeep);
+  // Clasp.
+  c.drawCircle(const Offset(_s / 2, 372), 26, Paint()..color = _gold);
+  c.drawCircle(const Offset(_s / 2, 372), 26, Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 4
+    ..color = const Color(0xFF7A4A08));
+  c.drawCircle(const Offset(_s / 2, 372), 9, Paint()..color = const Color(0xFF7A4A08));
+  for (final (p, r) in [
+    (const Offset(96, 130), 20.0),
+    (const Offset(420, 160), 24.0),
+    (const Offset(430, 330), 14.0),
+    (const Offset(84, 330), 15.0),
+  ]) {
+    _sparkle(c, p, r, const Color(0xFFE0FFFF));
+  }
+}
+
 void main() {
   test('iap icons', () async {
     await _write('kh_lenh_bai', _pass);
@@ -559,5 +621,6 @@ void main() {
     await _write('kh_hom_ngan_luong', _goldPack);
     await _write('kh_ruong_ngan_luong', _goldChest);
     await _write('kh_kho_ngan_luong', _goldVault);
+    await _write('kh_hop_tinh_phach', _soulPack);
   });
 }

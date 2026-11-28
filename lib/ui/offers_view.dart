@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/costumes.dart';
 import '../core/hero.dart';
+import '../core/ledger.dart';
 import '../core/premium.dart';
 import '../core/world_boss.dart';
 import '../services/ads.dart';
@@ -79,7 +80,7 @@ class _OffersViewState extends State<OffersView> {
         return ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final card in [_firstPay(), _monthCard(), _goldPack(), _goldVault(), _goldChest(), _starPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
+            for (final card in [_firstPay(), _monthCard(), _goldPack(), _goldVault(), _goldChest(), _starPack(), if (h.beastSouls > 0 || h.rebirths > 0 || h.soulsBought > 0) _soulPack(), _starter(), _noAds(), _adChest()]) SizedBox(width: w, child: card),
           ],
         );
       },
@@ -294,6 +295,26 @@ class _OffersViewState extends State<OffersView> {
           _buy(skuStarPack, done: h.starPackThisWeek ? tr('Đã mua tuần này') : null),
         ],
       );
+
+  /// Hộp Tinh Phách (1.27.0): a few boxes a week a hero.
+  Widget _soulPack() {
+    final left = h.soulPacksLeft;
+    return _box(
+      title: tr('Hộp Tinh Phách'),
+      color: const Color(0xFFFF7A5A),
+      icon: Icons.local_fire_department,
+      children: [
+        Text(tr('Tối đa {p0} hộp mỗi tuần cho {hName}:', {'p0': soulPackPerWeek, 'hName': h.name}), style: small.copyWith(fontSize: 11.5)),
+        const SizedBox(height: 4),
+        _line(tr('{p0} Hung Thú Tinh Phách', {'p0': soulPackSouls})),
+        _line(tr('Thăng Tinh từ 4 sao, hợp ngọc Thiên')),
+        _line(tr('Tuần này còn {left}/{p0} hộp', {'left': left, 'p0': soulPackPerWeek})),
+        MatCount(Mat.soul, '${h.beastSouls}', style: small.copyWith(fontSize: 11, color: cream), size: 16),
+        const Spacer(),
+        _buy(skuSoulPack, done: left <= 0 ? tr('Đã mua đủ tuần này') : null),
+      ],
+    );
+  }
 
   Widget _noAds() {
     final owned = AdsService.instance.adFree.value;

@@ -620,15 +620,24 @@ class _ItemDialogState extends State<ItemDialog> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _statsBlock(it, rc, isWorn ? tr('Đang mặc') : tr('Trong hành trang'))),
+              // Scrolls: a high-level piece with every line, star and gem
+              // is taller than a small landscape phone.
+              Expanded(child: SingleChildScrollView(child: _statsBlock(it, rc, isWorn ? tr('Đang mặc') : tr('Trong hành trang')))),
               if (worn != null && !isWorn) ...[
                 const VerticalDivider(color: gold),
-                Expanded(child: _statsBlock(worn, Color(worn.color), tr('Đang mặc'))),
+                Expanded(child: SingleChildScrollView(child: _statsBlock(worn, Color(worn.color), tr('Đang mặc')))),
               ],
               const SizedBox(width: 12),
               SizedBox(
                 width: 170,
-                child: Column(
+                // Fills the height (the Spacer pushes forging down) and
+                // scrolls when a bag piece shows every button.
+                child: LayoutBuilder(
+                  builder: (context, box) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: box.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (!isWorn)
@@ -734,6 +743,10 @@ class _ItemDialogState extends State<ItemDialog> {
                         child: Text(_msg!, style: bold.copyWith(color: _msgColor, fontSize: 13)),
                       ),
                   ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -759,6 +772,96 @@ class _ItemDialogState extends State<ItemDialog> {
       _msg = ok ? tr('Thành công! +{plus}', {'plus': it.plus}) : tr('Thất bại, mất {p0} lượng', {'p0': fmt(cost)});
       _msgColor = ok ? const Color(0xFF8CE07A) : const Color(0xFFFF8A7A);
     });
+  }
+
+  /// Chuyển sao: pick the piece [it] swaps its stars with.
+  Future<void> _moveStars(Item it) async {
+    final targets = h.starMoveTargets(it)..sort((a, b) => b.star.compareTo(a.star));
+    final picked = await showDialog<Item>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        backgroundColor: lacquer,
+        title: Text(tr('Chuyển sao'), style: titleStyle(18)),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+                tr('Đổi sao giữa {itName} (★{star}) và một món cùng loại đã +{maxPlus}. '
+                    'Hung Thú Tinh Phách đi theo sao, không mất viên nào; phí {p0}% Tinh Thạch và lượng đã dùng cho món nhiều sao hơn.',
+                    {'itName': tr(it.name), 'star': it.star, 'maxPlus': maxPlus, 'p0': (starMoveFeePct * 100).round()}),
+                style: small.copyWith(fontSize: 12)),
+            const SizedBox(height: 8),
+            for (final o in targets) _moveRow(ctx, it, o),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Thôi')))],
+      ),
+    );
+    if (picked == null) return;
+    final from = it.star, to = picked.star;
+    if (!h.moveStars(it, picked)) return;
+    Analytics.instance.log('star_move', {'a': from, 'b': to, 'slot': it.slot.name});
+    SaveService.instance.save();
+    setState(() {
+      _msg = tr('Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.', {'p0': it.star, 'p1': picked.star});
+      _msgColor = const Color(0xFFFFD34A);
+    });
+  }
+
+  Widget _moveRow(BuildContext ctx, Item it, Item o) {
+    final block = h.starMoveBlock(it, o);
+    final rc = Color(o.color);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+      decoration: BoxDecoration(
+        color: lacquerDeep,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: rc.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tr(o.title), style: bold.copyWith(fontSize: 13, color: rc)),
+                Text(
+                    tr('{where} · Cấp {level} · ★{p0} thành ★{p1}', {
+                      'where': identical(h.equip[o.slot], o) ? tr('Đang mặc') : tr('Trong hành trang'),
+                      'level': o.level,
+                      'p0': o.star,
+                      'p1': it.star,
+                    }),
+                    style: small.copyWith(fontSize: 11)),
+                Wrap(
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    MatCount(Mat.stone, tr('{p0} (có {p1})', {'p0': starMoveStones(it, o), 'p1': fmt(h.starStones)}),
+                        style: small.copyWith(fontSize: 11, color: block == StarMoveBlock.stones ? const Color(0xFFFF8A7A) : null), size: 16),
+                    Text(tr('{p0} lượng', {'p0': fmt(starMoveGold(it, o))}),
+                        style: small.copyWith(fontSize: 11, color: block == StarMoveBlock.gold ? const Color(0xFFFF8A7A) : null)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 72,
+            child: LButton(
+              label: tr('Chuyển'),
+              small: true,
+              color: const Color(0xFF5A3A8A),
+              enabled: block == null,
+              onTap: () => Navigator.pop(ctx, o),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Thăng Tinh (1.8.0) for a +10 item: the next star's cost and button.
@@ -793,20 +896,43 @@ class _ItemDialogState extends State<ItemDialog> {
             style: small.copyWith(fontSize: 11, color: const Color(0xFFFFD34A))),
       ],
       const SizedBox(height: 4),
-      LButton(
-        label: maxed ? tr('Tối đa') : tr('Thăng ★{p0}', {'p0': it.star + 1}),
-        small: true,
-        color: const Color(0xFF8A2A6A),
-        enabled: block == null,
-        onTap: () {
-          if (!h.starUp(it)) return;
-          SaveService.instance.save();
-          setState(() {
-            _msg = tr('Thăng Tinh thành công! ★{star}'
-                '{p0}', {'star': it.star, 'p0': h.drillAllowed(it) > it.extraSockets ? tr(' Đã có thể đục thêm lỗ khảm.') : ''});
-            _msgColor = const Color(0xFFFFD34A);
-          });
-        },
+      Row(
+        children: [
+          Expanded(
+            child: LButton(
+              label: maxed ? tr('Tối đa') : tr('Thăng ★{p0}', {'p0': it.star + 1}),
+              small: true,
+              color: const Color(0xFF8A2A6A),
+              enabled: block == null,
+              onTap: () {
+                if (!h.starUp(it)) return;
+                SaveService.instance.save();
+                setState(() {
+                  _msg = tr('Thăng Tinh thành công! ★{star}'
+                      '{p0}', {'star': it.star, 'p0': h.drillAllowed(it) > it.extraSockets ? tr(' Đã có thể đục thêm lỗ khảm.') : ''});
+                  _msgColor = const Color(0xFFFFD34A);
+                });
+              },
+            ),
+          ),
+          // Chuyển sao: swap stars with another +max piece of this slot.
+          if (h.starMoveTargets(it).isNotEmpty) ...[
+            const SizedBox(width: 4),
+            Tooltip(
+              message: tr('Chuyển sao'),
+              child: Material(
+                color: const Color(0xFF5A3A8A),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: gold)),
+                child: InkWell(
+                  key: const ValueKey('starMove'),
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _moveStars(it),
+                  child: const SizedBox(width: 38, height: 34, child: Icon(Icons.swap_horiz, color: goldLight, size: 22)),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
       // Đục lỗ (1.8.0): a fourth socket at ★3, a fifth at ★5.
       if (h.drillAllowed(it) > it.extraSockets) ...[

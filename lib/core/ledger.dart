@@ -16,6 +16,18 @@ import 'tam_ma.dart';
 /// Lệnh Bài and Lễ hội a few.
 int soulCeiling(int week) => 15 + 14 * math.max(1, week - 1);
 
+/// Hộp Tinh Phách (1.27.0): [soulPackSouls] a box, at most
+/// [soulPackPerWeek] boxes a week a hero.
+const int soulPackSouls = 5;
+const int soulPackPerWeek = 2;
+
+/// Bought Tinh Phách the ceilings allow on top: what a hero could have
+/// bought if the box had been sold every week since week 1.
+int soulBuyCap(int week) => soulPackSouls * soulPackPerWeek * math.max(1, week);
+
+/// [bought] counted against [week]'s [soulBuyCap].
+int soulsBoughtFor(int bought, int week) => math.min(bought, soulBuyCap(week));
+
 /// Tinh Thạch: every Tâm Ma floor's first clear up to [tmBest], plus per
 /// week Ma Vực (~250 at floor 100), Hung Thú 105, gem refining 50, Gói
 /// Thăng Tinh 120, Lệnh Bài, bang and Hoàng Kim Các shops.

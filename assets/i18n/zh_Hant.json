@@ -3655,5 +3655,16 @@
  "Món Truyền thuyết mang một trong {n} danh hiệu (Bá Vương, Kinh Hồng…). Nhặt được món nào là ghi vào ô của danh hiệu và loại ấy, bán hay phân giải rồi vẫn giữ. Đồ Hoàng Kim không tính. Đủ {slots} ô một danh hiệu thì nhận thưởng.": "傳說裝備帶有 {n} 種名號之一（霸王、驚鴻…）。撿到即收錄於該名號與部位的格子，賣出或分解後仍保留。黃金裝備不計。一個名號集滿 {slots} 格即可領獎。",
  "Trọn Truyền thuyết phổ: danh hiệu « {t} », {p0}": "集齊傳說譜：稱號「{t}」，{p0}",
  "Vạn thú": "萬獸",
- "Kỳ ngộ": "奇遇"
+ "Kỳ ngộ": "奇遇",
+ "Chuyển sao": "轉移星級",
+ "Đổi sao giữa {itName} (★{star}) và một món cùng loại đã +{maxPlus}. Hung Thú Tinh Phách đi theo sao, không mất viên nào; phí {p0}% Tinh Thạch và lượng đã dùng cho món nhiều sao hơn.": "將{itName}(★{star})與另一件同部位、已+{maxPlus}的裝備互換星級。凶獸精魄隨星級轉移,一顆不失;費用為星級較高那件所耗星石與兩的{p0}%。",
+ "Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.": "星級已轉移!此件★{p0},另一件★{p1}。",
+ "{where} · Cấp {level} · ★{p0} thành ★{p1}": "{where} · 等級 {level} · ★{p0} 變為 ★{p1}",
+ "Hộp Tinh Phách": "凶獸精魄寶盒",
+ "Hộp Tinh Phách cho {hName}: {p0}": "{hName} 的凶獸精魄寶盒：{p0}",
+ "Tối đa {p0} hộp mỗi tuần cho {hName}:": "{hName} 每週最多 {p0} 盒：",
+ "{p0} Hung Thú Tinh Phách": "{p0} 凶獸精魄",
+ "Thăng Tinh từ 4 sao, hợp ngọc Thiên": "4 星起升星、合成天階寶石",
+ "Tuần này còn {left}/{p0} hộp": "本週剩餘 {left}/{p0} 盒",
+ "Đã mua đủ tuần này": "本週已達購買上限"
 }

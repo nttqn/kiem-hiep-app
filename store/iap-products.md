@@ -105,3 +105,15 @@ Tiêu hao (Consumable) · 399.000 ₫
 | en | Gold Vault | Best value: gold worth 15 Gold Chests for the current hero, plus 30 Star Stones. Grows with level and rebirths. | 15 Gold Chests of gold + 30 Star Stones |
 | zh-TW | 銀兩寶庫 | 最划算：為目前角色提供 15 個銀兩寶箱的銀兩，加贈 30 星石。隨等級與轉生提高，80 級或轉生後開放。 | 15 個銀兩寶箱 + 30 星石 |
 | ko | 냥 보물고 | 최고 가성비: 현재 캐릭터에게 냥 상자 15개 분량의 냥과 성석 30개 지급. 레벨과 환생에 따라 증가, 80레벨 또는 환생 후 개방. | 냥 상자 15개 분량 + 성석 30개 |
+
+## kh_hop_tinh_phach
+
+Tiêu hao, tối đa 2 lần mỗi tuần mỗi nhân vật (Consumable, 2 a week per hero) · 99.000 ₫ (đề xuất) · từ 1.27.0
+Hiện trong Ưu đãi khi nhân vật đã có Tinh Phách hoặc đã chuyển sinh.
+
+| | Tên | Mô tả (Play) | Mô tả (App Store) |
+|---|---|---|---|
+| vi | Hộp Tinh Phách | 5 Hung Thú Tinh Phách cho nhân vật đang chơi, để Thăng Tinh trang bị từ ★4 và hợp ngọc Thiên. Tối đa 2 hộp mỗi tuần cho mỗi nhân vật. | 5 Tinh Phách, tối đa 2 hộp mỗi tuần |
+| en | Beast Soul Box | 5 Beast Souls for the current hero, to raise gear from ★4 up and fuse Heavenly gems. Up to 2 boxes a week per hero. | 5 Beast Souls, up to 2 boxes a week |
+| zh-TW | 凶獸精魄寶盒 | 為目前角色提供 5 個凶獸精魄，用於裝備 ★4 以上升星與合成天階寶石。每個角色每週最多 2 盒。 | 5 凶獸精魄，每週最多 2 盒 |
+| ko | 흉수정백 상자 | 현재 캐릭터에게 흉수정백 5개 지급. ★4 이상 장비 승성과 천 단계 보석 합성에 사용. 캐릭터당 주 2개까지. | 흉수정백 5개, 주 2개까지 |

@@ -33,6 +33,7 @@ const _prices = {
   skuGoldChest: '199.000 ₫',
   skuGoldVault: '399.000 ₫',
   skuFest: '49.000 ₫',
+  skuSoulPack: '99.000 ₫',
 };
 
 Future<void> _fonts() async {
@@ -118,7 +119,8 @@ void main() {
     _prices.forEach((id, p) {
       iap.products[id] = ProductDetails(id: id, title: id, description: '', price: p, rawPrice: 0, currencyCode: 'VND');
     });
-    final h = HeroData(name: 'Lãng Khách', hanh: Hanh.kim)..level = 82; // lv80+ shows Rương/Kho Ngân Lượng
+    final h = HeroData(name: 'Lãng Khách', hanh: Hanh.kim)..level = 82 // lv80+ shows Rương/Kho Ngân Lượng
+      ..beastSouls = 12; // shows Hộp Tinh Phách
     h.recompute();
     SaveService.instance.slots[0] = h;
     SaveService.instance.active = 0;
@@ -132,6 +134,7 @@ void main() {
     skuStarPack: 'Gói Thăng Tinh',
     skuStarter: 'Gói tân thủ',
     skuNoAds: 'Bỏ quảng cáo',
+    skuSoulPack: 'Hộp Tinh Phách',
   };
   cards.forEach((sku, title) {
     testWidgets(sku, (tester) async {

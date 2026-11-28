@@ -285,6 +285,10 @@ class HeroData {
   /// Lượng bought with real money (Hòm/Rương/Kho Ngân Lượng), counted from
   /// 1.25 on; the hoard check lets a buyer spend that much more.
   int goldBought = 0;
+
+  /// Hộp Tinh Phách (1.27.0): the week of the last box, boxes bought that
+  /// week, and every Tinh Phách ever bought (the ceilings allow them).
+  int soulPackWeek = 0, soulPackN = 0, soulsBought = 0;
   int get gold => _gold;
   set gold(int v) {
     final d = v - _gold;
@@ -3628,6 +3632,7 @@ class HeroData {
         'gold': gold,
         'gl': [goldIn, goldOut],
         if (goldBought > 0) 'gbo': goldBought,
+        if (soulsBought > 0) 'spk': [soulPackWeek, soulPackN, soulsBought],
         'spent': spent,
         'free': freePoints,
         'sp': skillPoints,
@@ -3770,6 +3775,12 @@ class HeroData {
     }
     final gbo = m['gbo'];
     if (gbo is int && gbo > 0) h.goldBought = gbo;
+    final spk = m['spk'];
+    if (spk is List && spk.length >= 3) {
+      h.soulPackWeek = (spk[0] as num).toInt();
+      h.soulPackN = (spk[1] as num).toInt().clamp(0, soulPackPerWeek * 10);
+      h.soulsBought = math.max(0, (spk[2] as num).toInt());
+    }
     final sp = m['spent'] as List;
     for (var i = 0; i < 4; i++) {
       h.spent[i] = sp[i] as int;
@@ -4337,7 +4348,7 @@ class HeroData {
   void clampEdited([String? day]) {
     final wk = huntWeekOf(day ?? vnDayKey());
     starStones = math.min(starStones, stoneCeiling(wk, tmBest));
-    beastSouls = math.min(beastSouls, soulCeiling(wk));
+    beastSouls = math.min(beastSouls, soulCeiling(wk) + soulsBoughtFor(soulsBought, wk));
     tienJade = math.min(tienJade, jadeCeiling(wk, daoLv));
   }
 

@@ -73,3 +73,62 @@ extension StarUp on HeroData {
     return true;
   }
 }
+
+// ------------------------------------------------------------ Chuyển sao
+
+/// Chuyển sao (asked for by a top player who wanted to try other builds
+/// without hunting the Tinh Phách again): two +[maxPlus] pieces of one slot
+/// swap their stars. Tinh Phách move with the stars, nothing is lost; the
+/// fee is [starMoveFeePct] of the Tinh Thạch and gold the higher-starred
+/// piece took. Drilled sockets stay on their piece (paid in gems).
+const double starMoveFeePct = 0.10;
+
+int starStonesTo(int star) {
+  var n = 0;
+  for (var s = 0; s < star && s < starStoneCost.length; s++) {
+    n += starStoneCost[s];
+  }
+  return n;
+}
+
+int starGoldTo(int star) {
+  var n = 0;
+  for (var s = 0; s < star; s++) {
+    n += starGoldCost(s);
+  }
+  return n;
+}
+
+int starMoveStones(Item a, Item b) => (starStonesTo(math.max(a.star, b.star)) * starMoveFeePct).ceil();
+int starMoveGold(Item a, Item b) => (starGoldTo(math.max(a.star, b.star)) * starMoveFeePct).round();
+
+enum StarMoveBlock { same, slot, notMax, noStars, stones, gold }
+
+extension StarMove on HeroData {
+  /// Pieces [it]'s stars could swap with: same slot, +max, other stars.
+  List<Item> starMoveTargets(Item it) => [
+        if (equip[it.slot] case final w? when !identical(w, it)) w,
+        ...bag.where((b) => !identical(b, it) && b.slot == it.slot),
+      ].where((o) => o.plus >= maxPlus && o.star != it.star).toList();
+
+  StarMoveBlock? starMoveBlock(Item a, Item b) {
+    if (identical(a, b)) return StarMoveBlock.same;
+    if (a.slot != b.slot) return StarMoveBlock.slot;
+    if (a.plus < maxPlus || b.plus < maxPlus) return StarMoveBlock.notMax;
+    if (a.star == b.star) return StarMoveBlock.noStars;
+    if (starStones < starMoveStones(a, b)) return StarMoveBlock.stones;
+    if (gold < starMoveGold(a, b)) return StarMoveBlock.gold;
+    return null;
+  }
+
+  bool moveStars(Item a, Item b) {
+    if (starMoveBlock(a, b) != null) return false;
+    starStones -= starMoveStones(a, b);
+    gold -= starMoveGold(a, b);
+    final s = a.star;
+    a.star = b.star;
+    b.star = s;
+    recompute();
+    return true;
+  }
+}
