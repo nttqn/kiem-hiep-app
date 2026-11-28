@@ -107,6 +107,14 @@ void main() {
     });
   });
 
+  test('Song Bội Đan adds to an EXP event: x2 + x2 = x3', () {
+    expect(HeroData.expBoostMul(false, 1), 1);
+    expect(HeroData.expBoostMul(true, 1), 2);
+    expect(HeroData.expBoostMul(false, 2), 2);
+    expect(HeroData.expBoostMul(true, 2), 3);
+    expect(HeroData.expBoostMul(true, 1.5), 2.5);
+  });
+
   group('Đổi cả cường hóa', () {
     test('stars and + travel together to an unforged piece', () {
       final h = _hero(Hanh.thuy, 60)
@@ -116,7 +124,10 @@ void main() {
         ..plus = maxPlus
         ..star = 5;
       final b = makeItem(slot: Slot.weapon, level: 60, rarity: Rarity.legend, sect: h.sect, rng: math.Random(4))..plus = 2;
-      h.bag.add(b);
+      // Level-up gifts may have left random pieces in the bag.
+      h.bag
+        ..clear()
+        ..add(b);
       expect(h.starMoveTargets(a), isEmpty);
       expect(h.starMoveTargets(a, withPlus: true), [b]);
       expect(h.starMoveBlock(a, b), StarMoveBlock.notMax);

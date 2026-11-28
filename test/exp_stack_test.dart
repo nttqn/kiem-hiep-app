@@ -6,15 +6,16 @@ import 'package:kiem_hiep/core/live_event.dart';
 void main() {
   tearDown(() => liveEvents = const []);
 
-  test('Song Bội Đan and an EXP event do not stack: the better one counts', () {
+  // 1.27.0: they add up (players: a weekend x2 was no better than a pill).
+  test('Song Bội Đan and an EXP event add up: x2 + x2 = x3', () {
     final h = HeroData(name: 'T', hanh: Hanh.hoa);
     expect(h.expMul, 1);
     h.buffs['songboi'] = 600;
     expect(h.expMul, 2);
     liveEvents = [const LiveEvent(id: 'x2', exp: 2)];
-    expect(h.expMul, 2);
-    liveEvents = [const LiveEvent(id: 'x3', exp: 3)];
     expect(h.expMul, 3);
+    liveEvents = [const LiveEvent(id: 'x3', exp: 3)];
+    expect(h.expMul, 4);
     h.buffs.remove('songboi');
     liveEvents = [const LiveEvent(id: 'x15', exp: 1.5)];
     expect(h.expMul, 1.5);

@@ -894,7 +894,7 @@
  "Hồi Xuân Đan": "Spring Pill",
  "Luyện ra 10 Kim Sang Dược và 10 Ngưng Thần Đan.": "Brews 10 Wound Salves and 10 Spirit Pills.",
  "Song Bội Đan": "Double Pill",
- "Kinh nghiệm từ quái x2 trong 20 phút (không cộng dồn với sự kiện nhân kinh nghiệm).": "x2 monster EXP for 20 minutes (doesn't stack with EXP events).",
+ "Kinh nghiệm từ quái x2 trong 20 phút. Cộng thêm với sự kiện nhân kinh nghiệm: sự kiện x2 + đan = x3.": "x2 monster EXP for 20 minutes. Adds to EXP events: an x2 event + the pill = x3.",
  "Tụ Bảo Đan": "Fortune Pill",
  "Lượng rơi từ quái +50% trong 20 phút (không cộng dồn với sự kiện nhân lượng).": "+50% gold from monsters for 20 minutes (doesn't stack with gold events).",
  "Cuồng Lực Đan": "Fury Pill",

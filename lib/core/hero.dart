@@ -2048,11 +2048,12 @@ class HeroData {
     return true;
   }
 
-  /// Monster EXP: the better of Song Bội Đan and today's event (they do
-  /// not stack: together they took a new hero to the fifth rebirth in one
-  /// weekend), times the day's [fatigueMul].
+  /// Monster EXP: Song Bội Đan and today's event add up (1.27.0: x2 + x2
+  /// = x3; players found a weekend x2 no better than a pill any day). They
+  /// once multiplied, and took a new hero to the fifth rebirth in one
+  /// weekend. Times the day's [fatigueMul].
   double get expMul =>
-      math.max(buffLeft('songboi') > 0 ? expPillMul : 1.0, EventBoost(vnDayKey()).exp) *
+      expBoostMul(buffLeft('songboi') > 0, EventBoost(vnDayKey()).exp) *
       fatigueMul(fatigueSec) *
       (1 + guildPerk) *
       (1 + legacyExp) *
@@ -2060,6 +2061,9 @@ class HeroData {
       kyBlessMul *
       (comebackUntil.compareTo(vnDayKey()) >= 0 ? 1 + comebackExp : 1.0) *
       (newcomerOn(this, vnDayKey()) ? 1 + newcomerExp : 1.0);
+
+  /// Song Bội Đan and an EXP event added, not multiplied.
+  static double expBoostMul(bool pill, double event) => 1 + (pill ? expPillMul - 1 : 0) + math.max(0, event - 1);
 
   /// Starts a new Mệt mỏi day when the date changed.
   void fatigueRoll(String day) {

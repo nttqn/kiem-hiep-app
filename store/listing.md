@@ -61,6 +61,7 @@ Hỗ trợ: trungsmail@gmail.com
 • Bộ đồ: lưu 3 bộ trang bị kèm điểm tiềm năng, đổi bộ một chạm.
 • Mộc nhân luyện công (Thử thách): đánh thử 30 giây, xem sát thương mỗi giây theo từng nguồn.
 • Chuyển sao: đổi sao giữa hai món cùng loại, Hung Thú Tinh Phách giữ nguyên; có thể đổi cả cường hóa.
+• Song Bội Đan cộng thêm với sự kiện nhân kinh nghiệm: cuối tuần x2 + đan = x3.
 • Hộp Tinh Phách trong Ưu đãi: 5 Tinh Phách, tối đa 2 hộp mỗi tuần.
 • Sửa bảng xem đồ bị tràn trên màn nhỏ.
 
@@ -69,6 +70,7 @@ Hỗ trợ: trungsmail@gmail.com
 • Gear Sets: save 3 builds with their potential points, switch in one tap.
 • Training Dummy (Challenges): hit it for 30 s, see your damage per second by source.
 • Move stars: swap stars between two pieces of a slot, Beast Souls kept; enhancement can move too.
+• Double Pill now adds to EXP events: weekend x2 + pill = x3.
 • Beast Soul Box in Offers: 5 Beast Souls, up to 2 boxes a week.
 • Fixed the item panel overflowing on small screens.
 
@@ -77,6 +79,7 @@ Hỗ trợ: trungsmail@gmail.com
 • 裝備組：儲存 3 組裝備與潛能點，一鍵切換。
 • 練功木人（挑戰）：攻擊 30 秒，查看各來源每秒傷害。
 • 轉移星級：同部位兩件裝備互換星級，凶獸精魄完整保留；可一併互換強化。
+• 雙倍丹可與經驗活動疊加：週末 x2 + 丹藥 = x3。
 • 優惠新增凶獸精魄寶盒：5 凶獸精魄，每週最多 2 盒。
 • 修正小螢幕上裝備面板超出畫面的問題。
 
@@ -85,6 +88,7 @@ Hỗ trợ: trungsmail@gmail.com
 • 장비 세트: 장비와 잠재 포인트를 3세트까지 저장, 한 번에 교체.
 • 수련 목인(도전): 30초 공격 후 출처별 초당 피해 확인.
 • 별 이전: 같은 부위 장비 두 개의 별 교환, 흉수정백 유지; 강화도 함께 교환 가능.
+• 쌍배단이 경험치 이벤트와 합산: 주말 2배 + 단약 = 3배.
 • 혜택에 흉수정백 상자 추가: 흉수정백 5개, 주 2개까지.
 • 작은 화면에서 장비 창이 넘치던 문제 수정.
 
