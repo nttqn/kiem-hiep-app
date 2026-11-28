@@ -3704,5 +3704,10 @@
  "Ngày mai": "내일",
  "Ngày kia": "모레",
  "{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)": "{day}: {boss} ({hanh} 계열, {strong} 계열 강함)",
- "{n} ngày nữa": "{n}일 후"
+ "{n} ngày nữa": "{n}일 후",
+ "Hoàn sao": "별 환원",
+ "Tháo hết sao, nhận lại một phần:": "별을 모두 제거하고 일부 반환:",
+ "Tháo hết {star} sao của {itName} (món về ★0). Nhận lại {p0}% Hung Thú Tinh Phách và {p1}% Tinh Thạch đã dùng; lượng không hoàn. Lỗ khảm đã đục vẫn giữ.": "{itName}의 별 {star}개를 모두 제거합니다(★0으로). 사용한 흉수정백의 {p0}%와 성석의 {p1}%를 돌려받습니다. 냥은 반환되지 않으며 뚫은 소켓은 유지됩니다.",
+ "Đã hoàn sao: +{souls} Tinh Phách, +{stones} Tinh Thạch.": "별 환원 완료: 흉수정백 +{souls}, 성석 +{stones}.",
+ "Chuyển sao · Hoàn sao": "별 이전 · 별 환원"
 }

@@ -3704,5 +3704,10 @@
  "Ngày mai": "Tomorrow",
  "Ngày kia": "In 2 days",
  "{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)": "{day}: {boss} ({hanh}; {strong} hits hard)",
- "{n} ngày nữa": "In {n} days"
+ "{n} ngày nữa": "In {n} days",
+ "Hoàn sao": "Refund ★",
+ "Tháo hết sao, nhận lại một phần:": "Remove all stars, get part back:",
+ "Tháo hết {star} sao của {itName} (món về ★0). Nhận lại {p0}% Hung Thú Tinh Phách và {p1}% Tinh Thạch đã dùng; lượng không hoàn. Lỗ khảm đã đục vẫn giữ.": "Remove all {star} stars from {itName} (back to ★0). Get back {p0}% of the Beast Souls and {p1}% of the Star Stones used; gold is not refunded. Drilled sockets stay.",
+ "Đã hoàn sao: +{souls} Tinh Phách, +{stones} Tinh Thạch.": "Stars refunded: +{souls} Beast Souls, +{stones} Star Stones.",
+ "Chuyển sao · Hoàn sao": "Move stars · Refund ★"
 }

@@ -3704,5 +3704,10 @@
  "Ngày mai": "明天",
  "Ngày kia": "後天",
  "{day}: {boss} (hệ {hanh}, hệ {strong} đánh mạnh)": "{day}：{boss}（{hanh}系，{strong}系傷害較高）",
- "{n} ngày nữa": "{n} 天後"
+ "{n} ngày nữa": "{n} 天後",
+ "Hoàn sao": "退星",
+ "Tháo hết sao, nhận lại một phần:": "移除全部星級，返還部分材料：",
+ "Tháo hết {star} sao của {itName} (món về ★0). Nhận lại {p0}% Hung Thú Tinh Phách và {p1}% Tinh Thạch đã dùng; lượng không hoàn. Lỗ khảm đã đục vẫn giữ.": "移除{itName}的全部 {star} 星（回到 ★0）。返還已用凶獸精魄的 {p0}% 與星石的 {p1}%；銀兩不返還。已鑿的孔保留。",
+ "Đã hoàn sao: +{souls} Tinh Phách, +{stones} Tinh Thạch.": "已退星：+{souls} 凶獸精魄，+{stones} 星石。",
+ "Chuyển sao · Hoàn sao": "轉移星級 · 退星"
 }

@@ -159,3 +159,38 @@ extension StarMove on HeroData {
     return true;
   }
 }
+
+// ------------------------------------------------------------ Hoàn sao
+
+/// Hoàn sao (1.28.0): a piece's stars come off and part of what they took
+/// comes back: [starRefundSoulPct] of the Hung Thú Tinh Phách and
+/// [starRefundStonePct] of the Tinh Thạch, no gold. Asked for by a player
+/// who had starred a new set from nothing just before Chuyển sao came,
+/// leaving the old set's Tinh Phách stranded. Less comes back than went in,
+/// so starring and refunding never makes anything. Drilled sockets and the
+/// gems in them stay, as with Chuyển sao.
+const double starRefundSoulPct = 0.7;
+const double starRefundStonePct = 0.5;
+
+int starSoulsTo(int star) {
+  var n = 0;
+  for (var s = 0; s < star && s < starSoulCost.length; s++) {
+    n += starSoulCost[s];
+  }
+  return n;
+}
+
+int starRefundSouls(Item it) => (starSoulsTo(it.star) * starRefundSoulPct).floor();
+int starRefundStones(Item it) => (starStonesTo(it.star) * starRefundStonePct).floor();
+
+extension StarRefund on HeroData {
+  /// Takes every star off [it] and pays back its share; false if it had none.
+  bool refundStars(Item it) {
+    if (it.star <= 0) return false;
+    beastSouls += starRefundSouls(it);
+    starStones += starRefundStones(it);
+    it.star = 0;
+    recompute();
+    return true;
+  }
+}

@@ -780,7 +780,7 @@ class _ItemDialogState extends State<ItemDialog> {
   /// hóa swaps the + too, so the other piece need not be +10.
   Future<void> _moveStars(Item it) async {
     var withPlus = h.starMoveTargets(it).isEmpty;
-    final picked = await showDialog<(Item, bool)>(
+    final picked = await showDialog<Object>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) {
@@ -810,6 +810,7 @@ class _ItemDialogState extends State<ItemDialog> {
                 if (targets.isEmpty)
                   Text(tr('Không có món cùng loại phù hợp trong túi.'), style: small.copyWith(color: creamDim)),
                 for (final o in targets) _moveRow(ctx, it, o, withPlus),
+                if (it.star > 0) _refundRow(ctx, it),
               ],
             ),
             actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Thôi')))],
@@ -817,7 +818,8 @@ class _ItemDialogState extends State<ItemDialog> {
         },
       ),
     );
-    if (picked == null) return;
+    if (picked == 'refund') return _refundStars(it);
+    if (picked is! (Item, bool)) return;
     final (o, plus) = picked;
     final from = it.star, to = o.star;
     if (!h.moveStars(it, o, withPlus: plus)) return;
@@ -826,6 +828,95 @@ class _ItemDialogState extends State<ItemDialog> {
     SaveService.instance.save();
     setState(() {
       _msg = tr('Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.', {'p0': it.star, 'p1': o.star});
+      _msgColor = const Color(0xFFFFD34A);
+    });
+  }
+
+  /// Hoàn sao's place at the foot of the Chuyển sao dialog.
+  Widget _refundRow(BuildContext ctx, Item it) => Container(
+        margin: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+        decoration: BoxDecoration(
+          color: lacquerDeep,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFB0785A)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(tr('Hoàn sao'), style: bold.copyWith(fontSize: 13, color: const Color(0xFFFFB08A))),
+                  Text(tr('Tháo hết sao, nhận lại một phần:'), style: small.copyWith(fontSize: 11)),
+                  Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      MatCount(Mat.soul, '+${starRefundSouls(it)}', style: small.copyWith(fontSize: 11), size: 16),
+                      MatCount(Mat.stone, '+${starRefundStones(it)}', style: small.copyWith(fontSize: 11), size: 16),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 96,
+              child: LButton(
+                key: const ValueKey('starRefund'),
+                label: tr('Hoàn sao'),
+                small: true,
+                color: const Color(0xFF8A4A2A),
+                onTap: () => Navigator.pop(ctx, 'refund'),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  /// Hoàn sao (1.28.0): every star off [it], part of the Tinh Phách and
+  /// Tinh Thạch back, after a confirm.
+  Future<void> _refundStars(Item it) async {
+    final souls = starRefundSouls(it), stones = starRefundStones(it), star = it.star;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        backgroundColor: lacquer,
+        title: Text(tr('Hoàn sao'), style: titleStyle(18)),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+                tr('Tháo hết {star} sao của {itName} (món về ★0). Nhận lại {p0}% Hung Thú Tinh Phách và {p1}% Tinh Thạch đã dùng; lượng không hoàn. Lỗ khảm đã đục vẫn giữ.',
+                    {'star': star, 'itName': tr(it.name), 'p0': (starRefundSoulPct * 100).round(), 'p1': (starRefundStonePct * 100).round()}),
+                style: small.copyWith(fontSize: 12)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                MatCount(Mat.soul, '+$souls', style: bold.copyWith(fontSize: 13), size: 18),
+                MatCount(Mat.stone, '+$stones', style: bold.copyWith(fontSize: 13), size: 18),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Thôi'))),
+          TextButton(
+              key: const ValueKey('starRefundOk'),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(tr('Hoàn sao'), style: const TextStyle(color: Color(0xFFFF8A7A)))),
+        ],
+      ),
+    );
+    if (ok != true || !h.refundStars(it)) return;
+    Analytics.instance.log('star_refund', {'star': star, 'slot': it.slot.name, 'souls': souls});
+    SaveService.instance.save();
+    setState(() {
+      _msg = tr('Đã hoàn sao: +{souls} Tinh Phách, +{stones} Tinh Thạch.', {'souls': souls, 'stones': stones});
       _msgColor = const Color(0xFFFFD34A);
     });
   }
@@ -934,11 +1025,13 @@ class _ItemDialogState extends State<ItemDialog> {
               },
             ),
           ),
-          // Chuyển sao: swap stars with another +max piece of this slot.
-          if (h.starMoveTargets(it).isNotEmpty || h.starMoveTargets(it, withPlus: true).isNotEmpty) ...[
+          // Chuyển sao: swap stars with another +max piece of this slot;
+          // the same dialog holds Hoàn sao (1.28.0), so a starred piece
+          // always has the button.
+          if (it.star > 0 || h.starMoveTargets(it).isNotEmpty || h.starMoveTargets(it, withPlus: true).isNotEmpty) ...[
             const SizedBox(width: 4),
             Tooltip(
-              message: tr('Chuyển sao'),
+              message: tr('Chuyển sao · Hoàn sao'),
               child: Material(
                 color: const Color(0xFF5A3A8A),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: gold)),
