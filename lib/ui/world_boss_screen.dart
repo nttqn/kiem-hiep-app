@@ -582,12 +582,12 @@ const bossArtIds = {
   'banditBoss', 'snakeKing', 'zombieKing', 'scorpionKing', 'yetiKing', 'kylin', 'demonLord', //
   'whiteDragon', 'heavenDemon', 'seaDragon', 'tvKing', 'abyssLord', 'hhLord', 'fdDragon', //
   'mcKing', 'klKylin', //
-  'gbSpear', 'gbBandit', 'gbLady',
+  'gbSpear', 'gbBandit', 'gbLady', 'gbWood', 'gbFire',
 };
 
 /// Bosses whose portrait is still to be painted (drawn meanwhile); the art
 /// test lets these through until assets/art/{id}.webp lands.
-const bossArtPending = {'gbWood', 'gbFire'};
+const bossArtPending = <String>{};
 
 /// A boss's painted portrait, or a gently animated drawing of the monster
 /// for those without one yet.

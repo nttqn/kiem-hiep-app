@@ -243,7 +243,7 @@ trong **cùng cuộc chat** với các tấm cá trước, hoặc gửi kèm
 
 Mỗi khối là một ảnh chân dung toàn thân, cùng kiểu với `assets/art/gbSpear.webp`.
 Gửi kèm `gbSpear.webp` (hoặc `gbLady.webp`) và nói "match this style exactly".
-Bỏ PNG vào `art_in/`. Khi có ảnh, gỡ id khỏi `bossArtPending` và thêm vào
+Đã có ảnh (2026-11-28). Bỏ PNG vào `art_in/`. Khi có ảnh, gỡ id khỏi `bossArtPending` và thêm vào
 `bossArtIds` (lib/ui/world_boss_screen.dart).
 
 ### 7a – Lưu thành `gbWood.png`
