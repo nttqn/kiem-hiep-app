@@ -138,6 +138,8 @@ Item reforgedGold(Item it, int level) => Item(
       glow: it.glow,
       tien: it.tien,
       gems: it.gems,
+      locked: it.locked,
+      uid: it.uid,
     );
 
 /// Worn pieces per set id.

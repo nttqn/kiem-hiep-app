@@ -42,6 +42,7 @@ import 'auto_dialog.dart';
 import 'chat_screen.dart';
 import 'helper_picker.dart';
 import 'run_gate.dart';
+import '../core/dummy.dart';
 import '../core/i18n.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -150,7 +151,7 @@ class _PlayScreenState extends State<PlayScreen> {
         hero.currentMain?.target == d.id;
     final name = widget.dungeon?.name ?? widget.map!.name;
     _splash = !PlayScreen.debugHideHud &&
-        (d == null || !(d.isTower || d.isWorldBoss || d.isArena));
+        (d == null || !(d.isTower || d.isWorldBoss || d.isArena || d.isDummy));
     if (_splash) {
       game.halted = true;
     } else {
@@ -501,6 +502,14 @@ class _PlayScreenState extends State<PlayScreen> {
       case EvKind.heroDied:
         _resultAt = _now;
         setState(() => _dead = true);
+      case EvKind.cleared when widget.dungeon?.isDummy ?? false:
+        // Mộc nhân: no run log, no reward; the record and the report.
+        final dps = world.dummyReport.dps(dummyTime).round();
+        hero.dummyBest = math.max(hero.dummyBest, dps);
+        SaveService.instance.save();
+        Analytics.instance.log('dummy_run', {'dps': dps, 'level': hero.level});
+        _resultAt = _now;
+        setState(() => _cleared = true);
       case EvKind.cleared:
         _logRun(RunResult.won);
         SaveService.instance.save();
@@ -1373,6 +1382,7 @@ class _PlayScreenState extends State<PlayScreen> {
     final d = widget.dungeon!;
     if (d.isTower) return _towerResult(ok, d);
     if (d.isWorldBoss) return _bossResult();
+    if (d.isDummy) return _dummyResult();
     if (d.isTamMa) return _climbResult(ok, d);
     if (d.isMaVuc) return _climbResult(ok, d);
     if (d.isBeast) return _beastResult(ok, d);
@@ -1772,6 +1782,63 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   /// Hung Thú slain or not: the pay, the week's mark, back to its screen.
+  /// Mộc nhân luyện công (1.27.0): damage a second, by source, the record.
+  Widget _dummyResult() {
+    final r = world.dummyReport;
+    final total = r.total;
+    final dps = r.dps(dummyTime).round();
+    return _dim(
+      Panel(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(tr('Mộc nhân luyện công'), style: titleStyle(24)),
+                const SizedBox(height: 4),
+                Text(fmt(dps), style: titleStyle(38, color: const Color(0xFFFF9A5A))),
+                Text(tr('sát thương mỗi giây · kỷ lục {p0}', {'p0': fmt(hero.dummyBest)}), style: small),
+                const SizedBox(height: 6),
+                Text(tr('Tổng {p0} trong {p1} giây · chí mạng {p2}%', {'p0': fmt(total.round()), 'p1': dummyTime.round(), 'p2': (r.critRate * 100).round()}),
+                    style: bold.copyWith(color: cream, fontSize: 13)),
+                const SizedBox(height: 6),
+                for (var i = 0; i < dummyKinds.length; i++)
+                  if (r.dmg[i] > 0)
+                    Row(
+                      children: [
+                        Expanded(child: Text(tr(dummyKinds[i]), style: body.copyWith(fontSize: 13))),
+                        Text('${fmt(r.dmg[i].round())} · ${(r.dmg[i] / math.max(1, total) * 100).round()}%',
+                            style: bold.copyWith(fontSize: 13, color: goldLight)),
+                      ],
+                    ),
+                const SizedBox(height: 4),
+                Text(tr('Phòng thủ như Boss Thế Giới. Không tốn lượt, không có thưởng.'), style: small.copyWith(fontSize: 11)),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    LButton(label: tr('Về'), onTap: _leave),
+                    const SizedBox(width: 10),
+                    LButton(
+                      label: tr('Đánh lại'),
+                      color: jade,
+                      onTap: () {
+                        if (!RunGate.take()) return;
+                        Navigator.of(context).pushReplacement(fadeRoute(PlayScreen.dungeon(dummyDef())));
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _beastResult(bool ok, DungeonDef d) {
     return _dim(
       Panel(

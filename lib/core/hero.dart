@@ -53,6 +53,7 @@ import 'tang_bao.dart';
 import 'tower.dart';
 import 'treasure.dart';
 import 'week_goals.dart';
+import 'gear_sets.dart';
 import 'ledger.dart';
 import 'weekly_hunt.dart';
 import 'world_boss.dart';
@@ -289,6 +290,13 @@ class HeroData {
   /// Hộp Tinh Phách (1.27.0): the week of the last box, boxes bought that
   /// week, and every Tinh Phách ever bought (the ceilings allow them).
   int soulPackWeek = 0, soulPackN = 0, soulsBought = 0;
+
+  /// Mộc nhân luyện công (1.27.0): best damage a second.
+  int dummyBest = 0;
+
+  /// Bộ trang bị (1.27.0): the last [Item.uid] given, and the saved sets.
+  int itemUid = 0;
+  final List<GearSet?> gearSets = List.filled(gearSetCount, null);
   int get gold => _gold;
   set gold(int v) {
     final d = v - _gold;
@@ -3633,6 +3641,9 @@ class HeroData {
         'gl': [goldIn, goldOut],
         if (goldBought > 0) 'gbo': goldBought,
         if (soulsBought > 0) 'spk': [soulPackWeek, soulPackN, soulsBought],
+        if (dummyBest > 0) 'dmy': dummyBest,
+        if (itemUid > 0) 'iuid': itemUid,
+        if (gearSets.any((s) => s != null)) 'gsets': [for (final s in gearSets) s?.toJson()],
         'spent': spent,
         'free': freePoints,
         'sp': skillPoints,
@@ -3775,6 +3786,16 @@ class HeroData {
     }
     final gbo = m['gbo'];
     if (gbo is int && gbo > 0) h.goldBought = gbo;
+    final dmy = m['dmy'];
+    if (dmy is num && dmy > 0) h.dummyBest = dmy.toInt();
+    final iuid = m['iuid'];
+    if (iuid is num && iuid > 0) h.itemUid = iuid.toInt();
+    final gsets = m['gsets'];
+    if (gsets is List) {
+      for (var i = 0; i < gsets.length && i < gearSetCount; i++) {
+        h.gearSets[i] = GearSet.fromJson(gsets[i]);
+      }
+    }
     final spk = m['spk'];
     if (spk is List && spk.length >= 3) {
       h.soulPackWeek = (spk[0] as num).toInt();

@@ -99,35 +99,62 @@ int starGoldTo(int star) {
   return n;
 }
 
-int starMoveStones(Item a, Item b) => (starStonesTo(math.max(a.star, b.star)) * starMoveFeePct).ceil();
-int starMoveGold(Item a, Item b) => (starGoldTo(math.max(a.star, b.star)) * starMoveFeePct).round();
+int starMoveStones(Item a, Item b) => a.star == b.star ? 0 : (starStonesTo(math.max(a.star, b.star)) * starMoveFeePct).ceil();
+int starMoveGold(Item a, Item b) => a.star == b.star ? 0 : (starGoldTo(math.max(a.star, b.star)) * starMoveFeePct).round();
+
+/// Đổi cả cường hóa (1.27.0): the two pieces swap their + as well, so
+/// the one taking the stars need not be +[maxPlus] first. The fee is
+/// [plusMoveFeePct] of what forging the lower piece up to the higher +
+/// costs on average (failures counted).
+const double plusMoveFeePct = 0.3;
+
+int plusMoveGold(Item a, Item b) {
+  if (a.plus == b.plus) return 0;
+  final lo = a.plus < b.plus ? a : b;
+  final hi = math.max(a.plus, b.plus);
+  var g = 0.0;
+  for (var p = lo.plus; p < hi && p < maxPlus; p++) {
+    final cost = ((20 + lo.level * 8) * (1 + p * 0.6) * (1 + lo.rarity.index * 0.3)).roundToDouble();
+    g += cost / enhanceChance(p);
+  }
+  return (g * plusMoveFeePct).round();
+}
 
 enum StarMoveBlock { same, slot, notMax, noStars, stones, gold }
 
 extension StarMove on HeroData {
-  /// Pieces [it]'s stars could swap with: same slot, +max, other stars.
-  List<Item> starMoveTargets(Item it) => [
+  /// Pieces [it]'s stars could swap with: same slot and other stars; +max
+  /// unless [withPlus] swaps the + too (then a different + will do).
+  List<Item> starMoveTargets(Item it, {bool withPlus = false}) => [
         if (equip[it.slot] case final w? when !identical(w, it)) w,
         ...bag.where((b) => !identical(b, it) && b.slot == it.slot),
-      ].where((o) => o.plus >= maxPlus && o.star != it.star).toList();
+      ].where((o) => withPlus ? (o.star != it.star || o.plus != it.plus) : (o.plus >= maxPlus && o.star != it.star)).toList();
 
-  StarMoveBlock? starMoveBlock(Item a, Item b) {
+  int starMoveGoldTotal(Item a, Item b, {bool withPlus = false}) =>
+      starMoveGold(a, b) + (withPlus ? plusMoveGold(a, b) : 0);
+
+  StarMoveBlock? starMoveBlock(Item a, Item b, {bool withPlus = false}) {
     if (identical(a, b)) return StarMoveBlock.same;
     if (a.slot != b.slot) return StarMoveBlock.slot;
-    if (a.plus < maxPlus || b.plus < maxPlus) return StarMoveBlock.notMax;
-    if (a.star == b.star) return StarMoveBlock.noStars;
+    if (!withPlus && (a.plus < maxPlus || b.plus < maxPlus)) return StarMoveBlock.notMax;
+    if (a.star == b.star && (!withPlus || a.plus == b.plus)) return StarMoveBlock.noStars;
     if (starStones < starMoveStones(a, b)) return StarMoveBlock.stones;
-    if (gold < starMoveGold(a, b)) return StarMoveBlock.gold;
+    if (gold < starMoveGoldTotal(a, b, withPlus: withPlus)) return StarMoveBlock.gold;
     return null;
   }
 
-  bool moveStars(Item a, Item b) {
-    if (starMoveBlock(a, b) != null) return false;
+  bool moveStars(Item a, Item b, {bool withPlus = false}) {
+    if (starMoveBlock(a, b, withPlus: withPlus) != null) return false;
     starStones -= starMoveStones(a, b);
-    gold -= starMoveGold(a, b);
+    gold -= starMoveGoldTotal(a, b, withPlus: withPlus);
     final s = a.star;
     a.star = b.star;
     b.star = s;
+    if (withPlus) {
+      final p = a.plus;
+      a.plus = b.plus;
+      b.plus = p;
+    }
     recompute();
     return true;
   }

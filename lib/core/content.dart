@@ -574,6 +574,7 @@ class DungeonDef {
     this.affixes = const [],
     this.beast = 0,
     this.beastName = '',
+    this.dummy = false,
   });
 
   final String id;
@@ -650,6 +651,10 @@ class DungeonDef {
   final int beast;
   final String beastName;
   bool get isBeast => beast > 0;
+
+  /// Mộc nhân luyện công (1.27.0, dummy.dart).
+  final bool dummy;
+  bool get isDummy => dummy;
 
   MapDef get map => mapById[mapId]!;
 

@@ -187,6 +187,7 @@ class TopInfo extends StatelessWidget {
     // The world boss never drops; its damage is shown above instead.
     final showBoss = boss != null &&
         !(d?.isWorldBoss ?? false) &&
+        !(d?.isDummy ?? false) &&
         boss.alive &&
         (boss.state == MobState.chase ||
             (boss.x - world.player.x).abs() + (boss.y - world.player.y).abs() < 700);
@@ -222,8 +223,8 @@ class TopInfo extends StatelessWidget {
                       Text(tr(d.name), style: bold.copyWith(fontSize: 13, color: goldLight)),
                       const SizedBox(width: 10),
                       Text(
-                        d.isWorldBoss
-                            ? tr('Sát thương {p0}', {'p0': fmt(world.bossDamage.round())})
+                        d.isWorldBoss || d.isDummy
+                            ? tr('Sát thương {p0}', {'p0': fmt((d.isDummy ? world.dummyReport.total : world.bossDamage).round())})
                             : d.isRealm
                             ? tr('{p0}'
                                 ' · Rương {chestsOpened}/{realmChests} · {p1}%', {'p0': world.lairOpen ? tr('Đầu lĩnh') : tr('Trận nhãn {pillarsLit}/{realmPillars}', {'pillarsLit': world.pillarsLit, 'realmPillars': realmPillars}), 'chestsOpened': world.chestsOpened, 'realmChests': realmChests, 'p1': (world.explored * 100).floor()})
@@ -232,7 +233,7 @@ class TopInfo extends StatelessWidget {
                                 : world.bossWave
                                 ? tr('Đầu lĩnh')
                                 : tr('Đợt {p0}/{wavesLength} · còn {aliveMobs}', {'p0': math.max(1, world.wave + 1), 'wavesLength': d.waves.length, 'aliveMobs': world.aliveMobs}),
-                        style: d.isWorldBoss
+                        style: d.isWorldBoss || d.isDummy
                             ? bold.copyWith(fontSize: 13, color: const Color(0xFFFF9A5A))
                             : body.copyWith(fontSize: 12),
                       ),
@@ -244,7 +245,7 @@ class TopInfo extends StatelessWidget {
                               : ' ${world.timeLeft.ceil()}s',
                           style: bold.copyWith(fontSize: 13, color: world.timeLeft < 30 ? hpRed : cream)),
                       const SizedBox(width: 6),
-                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena || d.isRealm ? 0 : 3); i++)
+                      for (var i = 0; i < (d.isTower || d.isWorldBoss || d.isArena || d.isRealm || d.isDummy ? 0 : 3); i++)
                         Icon(
                           world.time <= (i == 0 ? d.timeLimit : (i == 1 ? d.twoStar : d.threeStar))
                               ? Icons.star

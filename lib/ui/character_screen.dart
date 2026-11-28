@@ -20,6 +20,7 @@ import 'body_tab.dart';
 import 'branch_dialog.dart';
 import 'divine_tab.dart';
 import 'engrave_tab.dart';
+import 'gear_sets_tab.dart';
 import 'gem_tab.dart';
 import 'gold_tab.dart';
 import 'manual_dialog.dart';
@@ -50,11 +51,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh', 'Luyện thể', 'Khắc ấn'];
+    const names = ['Thuộc tính', 'Kỹ năng', 'Hành trang', 'Khảm ngọc', 'Tẩy luyện', 'Ngoại trang', 'Hoàng Kim', 'Thần binh', 'Luyện thể', 'Khắc ấn', 'Bộ đồ'];
     return SubScreen(
       title: widget.forge && _tab >= 2 ? tr('Thợ rèn') : tr('Nhân vật'),
       actions: [
-        for (final i in widget.forge ? [2, 3, 4, if (h.goldOpen) 9, 6, 7] : [0, 1, 3, 5, if (h.rebirths > 0) 8])
+        for (final i in widget.forge ? [2, 3, 4, if (h.goldOpen) 9, 6, 7] : [0, 1, 10, 3, 5, if (h.rebirths > 0) 8])
           Padding(
             padding: const EdgeInsets.only(left: 6),
             child: TabChip(
@@ -80,6 +81,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
         7 => DivineTab(onChanged: () => setState(() {})),
         8 => BodyTab(onChanged: () => setState(() {})),
         9 => EngraveTab(onChanged: () => setState(() {})),
+        10 => GearSetsTab(onChanged: () => setState(() {})),
         _ => RefineTab(onChanged: () => setState(() {})),
       },
     );
@@ -774,44 +776,64 @@ class _ItemDialogState extends State<ItemDialog> {
     });
   }
 
-  /// Chuyển sao: pick the piece [it] swaps its stars with.
+  /// Chuyển sao: pick the piece [it] swaps its stars with; Đổi cả cường
+  /// hóa swaps the + too, so the other piece need not be +10.
   Future<void> _moveStars(Item it) async {
-    final targets = h.starMoveTargets(it)..sort((a, b) => b.star.compareTo(a.star));
-    final picked = await showDialog<Item>(
+    var withPlus = h.starMoveTargets(it).isEmpty;
+    final picked = await showDialog<(Item, bool)>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        scrollable: true,
-        backgroundColor: lacquer,
-        title: Text(tr('Chuyển sao'), style: titleStyle(18)),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-                tr('Đổi sao giữa {itName} (★{star}) và một món cùng loại đã +{maxPlus}. '
-                    'Hung Thú Tinh Phách đi theo sao, không mất viên nào; phí {p0}% Tinh Thạch và lượng đã dùng cho món nhiều sao hơn.',
-                    {'itName': tr(it.name), 'star': it.star, 'maxPlus': maxPlus, 'p0': (starMoveFeePct * 100).round()}),
-                style: small.copyWith(fontSize: 12)),
-            const SizedBox(height: 8),
-            for (final o in targets) _moveRow(ctx, it, o),
-          ],
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Thôi')))],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) {
+          final targets = h.starMoveTargets(it, withPlus: withPlus)..sort((a, b) => b.star.compareTo(a.star));
+          return AlertDialog(
+            scrollable: true,
+            backgroundColor: lacquer,
+            title: Text(tr('Chuyển sao'), style: titleStyle(18)),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                    tr('Đổi sao giữa {itName} (★{star}) và một món cùng loại đã +{maxPlus}. '
+                        'Hung Thú Tinh Phách đi theo sao, không mất viên nào; phí {p0}% Tinh Thạch và lượng đã dùng cho món nhiều sao hơn.',
+                        {'itName': tr(it.name), 'star': it.star, 'maxPlus': maxPlus, 'p0': (starMoveFeePct * 100).round()}),
+                    style: small.copyWith(fontSize: 12)),
+                CheckboxListTile(
+                  value: withPlus,
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: gold,
+                  title: Text(tr('Đổi cả cường hóa'), style: bold.copyWith(fontSize: 13)),
+                  subtitle: Text(tr('Món kia không cần +{maxPlus}; thêm phí lượng.', {'maxPlus': maxPlus}), style: small.copyWith(fontSize: 11)),
+                  onChanged: (v) => setD(() => withPlus = v ?? false),
+                ),
+                if (targets.isEmpty)
+                  Text(tr('Không có món cùng loại phù hợp trong túi.'), style: small.copyWith(color: creamDim)),
+                for (final o in targets) _moveRow(ctx, it, o, withPlus),
+              ],
+            ),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Thôi')))],
+          );
+        },
       ),
     );
     if (picked == null) return;
-    final from = it.star, to = picked.star;
-    if (!h.moveStars(it, picked)) return;
-    Analytics.instance.log('star_move', {'a': from, 'b': to, 'slot': it.slot.name});
+    final (o, plus) = picked;
+    final from = it.star, to = o.star;
+    if (!h.moveStars(it, o, withPlus: plus)) return;
+    h.bestPlus = math.max(h.bestPlus, math.max(it.plus, o.plus));
+    Analytics.instance.log('star_move', {'a': from, 'b': to, 'slot': it.slot.name, 'plus': plus ? 1 : 0});
     SaveService.instance.save();
     setState(() {
-      _msg = tr('Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.', {'p0': it.star, 'p1': picked.star});
+      _msg = tr('Đã chuyển sao! Món này ★{p0}, món kia ★{p1}.', {'p0': it.star, 'p1': o.star});
       _msgColor = const Color(0xFFFFD34A);
     });
   }
 
-  Widget _moveRow(BuildContext ctx, Item it, Item o) {
-    final block = h.starMoveBlock(it, o);
+  Widget _moveRow(BuildContext ctx, Item it, Item o, bool withPlus) {
+    final block = h.starMoveBlock(it, o, withPlus: withPlus);
     final rc = Color(o.color);
+    final where = identical(h.equip[o.slot], o) ? tr('Đang mặc') : tr('Trong hành trang');
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
@@ -828,12 +850,9 @@ class _ItemDialogState extends State<ItemDialog> {
               children: [
                 Text(tr(o.title), style: bold.copyWith(fontSize: 13, color: rc)),
                 Text(
-                    tr('{where} · Cấp {level} · ★{p0} thành ★{p1}', {
-                      'where': identical(h.equip[o.slot], o) ? tr('Đang mặc') : tr('Trong hành trang'),
-                      'level': o.level,
-                      'p0': o.star,
-                      'p1': it.star,
-                    }),
+                    withPlus
+                        ? tr('{where} · Cấp {level} · +{p0} ★{p1} thành +{p2} ★{p3}', {'where': where, 'level': o.level, 'p0': o.plus, 'p1': o.star, 'p2': it.plus, 'p3': it.star})
+                        : tr('{where} · Cấp {level} · ★{p0} thành ★{p1}', {'where': where, 'level': o.level, 'p0': o.star, 'p1': it.star}),
                     style: small.copyWith(fontSize: 11)),
                 Wrap(
                   spacing: 8,
@@ -841,7 +860,7 @@ class _ItemDialogState extends State<ItemDialog> {
                   children: [
                     MatCount(Mat.stone, tr('{p0} (có {p1})', {'p0': starMoveStones(it, o), 'p1': fmt(h.starStones)}),
                         style: small.copyWith(fontSize: 11, color: block == StarMoveBlock.stones ? const Color(0xFFFF8A7A) : null), size: 16),
-                    Text(tr('{p0} lượng', {'p0': fmt(starMoveGold(it, o))}),
+                    Text(tr('{p0} lượng', {'p0': fmt(h.starMoveGoldTotal(it, o, withPlus: withPlus))}),
                         style: small.copyWith(fontSize: 11, color: block == StarMoveBlock.gold ? const Color(0xFFFF8A7A) : null)),
                   ],
                 ),
@@ -856,7 +875,7 @@ class _ItemDialogState extends State<ItemDialog> {
               small: true,
               color: const Color(0xFF5A3A8A),
               enabled: block == null,
-              onTap: () => Navigator.pop(ctx, o),
+              onTap: () => Navigator.pop(ctx, (o, withPlus)),
             ),
           ),
         ],
@@ -916,7 +935,7 @@ class _ItemDialogState extends State<ItemDialog> {
             ),
           ),
           // Chuyển sao: swap stars with another +max piece of this slot.
-          if (h.starMoveTargets(it).isNotEmpty) ...[
+          if (h.starMoveTargets(it).isNotEmpty || h.starMoveTargets(it, withPlus: true).isNotEmpty) ...[
             const SizedBox(width: 4),
             Tooltip(
               message: tr('Chuyển sao'),

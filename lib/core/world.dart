@@ -14,6 +14,7 @@ import 'gold_sets.dart';
 import 'hanh.dart';
 import 'helper.dart';
 import 'hero.dart';
+import 'dummy.dart';
 import 'hung_thu.dart';
 import 'ky_ngo.dart';
 import 'items.dart';
@@ -1114,6 +1115,10 @@ class World {
         _spawnBeast(d);
         return;
       }
+      if (d.isDummy) {
+        _spawnDummy();
+        return;
+      }
       // A tower floor without a boss is done once the wave is down.
       if (!d.boss) return;
       final def = mobById[map.boss]!;
@@ -1168,6 +1173,43 @@ class World {
 
   /// Damage dealt to the Boss Thế Giới this run.
   double bossDamage = 0;
+
+  /// Mộc nhân luyện công (1.27.0): the tally, and where the hit being
+  /// dealt comes from (an index of [dummyKinds]).
+  final DummyReport dummyReport = DummyReport();
+  int _hitKind = 0;
+  bool _isDummy(Mob m) => m == boss && (dungeon?.isDummy ?? false);
+
+  void _spawnDummy() {
+    final def = MobDef(
+      id: 'mocnhan',
+      name: 'Mộc nhân',
+      hanh: hero.hanh, // no ngũ hành edge either way
+      body: Body.human,
+      c1: 0xFF9A6A3A,
+      c2: 0xFF5A3A1A,
+      c3: 0xFF3A2410,
+      size: 1.3,
+      speed: 0,
+      atk: 0,
+      attackCd: 9999,
+      boss: true,
+    );
+    final m = Mob(_uid++, def, 99, width * 0.62, height / 2);
+    m.maxHp = 1e15;
+    m.hp = m.maxHp;
+    m.atk = 0;
+    mobs.add(m);
+    boss = m;
+  }
+
+  void _endDummy() {
+    if (finished) return;
+    finished = true;
+    finishTime = math.min(time, dungeon!.timeLimit);
+    rewardLines = const [];
+    events.add(GameEvent(EvKind.cleared, value: 0));
+  }
 
   /// The day's boss: level 99 defence for a fair score, effectively endless
   /// HP, and an attack matched to the hero's level so anyone can last a while.
@@ -2194,6 +2236,10 @@ class World {
       _endWorldBoss();
       return;
     }
+    if (d.isDummy && time > d.timeLimit) {
+      _endDummy();
+      return;
+    }
     if (d.isArena && time > d.timeLimit) {
       _endArena(false);
       return;
@@ -3026,6 +3072,11 @@ class World {
     if (crit) dmg *= st.critDmg;
     dmg *= 1 - mitigation(m.defense, hero.level);
     dmg *= 0.9 + rng.nextDouble() * 0.2;
+    _hitKind = as != null ? 3 : skill ? 1 : 0;
+    if (_isDummy(m) && !finished) {
+      dummyReport.hits++;
+      if (crit) dummyReport.crits++;
+    }
     _damageMob(m, dmg, crit ? 0xFFFFD34A : 0xFFFFFFFF, big: crit);
     if (!m.alive) return;
     if (m.state != MobState.chase) _aggro(m);
@@ -3072,6 +3123,7 @@ class World {
     _lastHitAt = time;
     m.hp -= dmg;
     if (m == boss && (dungeon?.isWorldBoss ?? false)) bossDamage += dmg;
+    if (_isDummy(m) && !finished) dummyReport.dmg[_hitKind] += dmg;
     if (m == boss && m.hp > 0 && ((dungeon?.isNightmare ?? false) || (dungeon?.isBeast ?? false))) {
       _nightmareSummon(m);
     }
@@ -3392,6 +3444,7 @@ class World {
           final crit = rng.nextDouble() < st.crit;
           final mul = crit ? 1 + (st.critDmg - 1) * dotCritShare : 1.0;
           final before = dmgDealt;
+          _hitKind = 2;
           _damageMob(m, d.perTick * mul * (1 - mitigation(m.defense, hero.level)),
               crit ? 0xFFFFE08A : (d.kind == Status.poison ? 0xFF9CF06A : 0xFFFF9A4A),
               small: true);

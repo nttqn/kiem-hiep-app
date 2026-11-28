@@ -18,7 +18,7 @@ const int helpCallsPerDay = 3;
 /// is a board or a duel (tower, bosses, Tâm Ma, Ma Vực, Hung Thú, arenas),
 /// nor in a bí cảnh.
 bool helperAllowed(DungeonDef d) =>
-    !(d.isTower || d.isWorldBoss || d.isArena || d.isRealm || d.isTamMa || d.isMaVuc || d.isBeast);
+    !(d.isTower || d.isWorldBoss || d.isArena || d.isRealm || d.isTamMa || d.isMaVuc || d.isBeast || d.isDummy);
 
 /// How hard the ally hits next to the hero: their hits are worked out on
 /// the hero's attack (as a companion's), times this, from the two lực

@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kiem_hiep/core/hanh.dart';
+import 'package:kiem_hiep/core/gear_sets.dart';
 import 'package:kiem_hiep/core/hero.dart';
+import 'package:kiem_hiep/core/items.dart';
 import 'package:kiem_hiep/services/save.dart';
 import 'package:kiem_hiep/ui/alchemy_screen.dart';
 import 'package:kiem_hiep/ui/arena_screen.dart';
@@ -51,6 +54,7 @@ void main() {
     'Thuộc tính': () => const CharacterScreen(tab: 0),
     'Kỹ năng + Kinh mạch': () => const CharacterScreen(tab: 1),
     'Thần binh': () => const CharacterScreen(tab: 7),
+    'Bộ đồ': () => const CharacterScreen(tab: 10),
     'Túi đồ · Trang bị': () => const BagScreen(),
     'Túi đồ · Vật phẩm': () => const BagScreen(tab: 1),
     'Thợ rèn · Hành trang': () => const CharacterScreen(tab: 2, forge: true),
@@ -76,6 +80,19 @@ void main() {
             ..arenaCoins = 25000000
             ..pills['songboi'] = 3
             ..gemBag['2:4'] = 2;
+          if (e.key == 'Bộ đồ') {
+            // Two saved sets of long-named legend pieces, one piece gone.
+            final rng = math.Random(5);
+            for (final slot in Slot.values) {
+              h.equip[slot] = makeItem(slot: slot, level: lv, rarity: Rarity.legend, sect: h.sect, rng: rng)
+                ..plus = 10
+                ..star = 10;
+            }
+            h.saveGearSet(0);
+            h.saveGearSet(1);
+            h.gearSets[1]!.uids[Slot.ring] = 999;
+            h.dummyBest = 123456789;
+          }
           h.recompute();
           SaveService.instance.slots[0] = h;
           SaveService.instance.active = 0;

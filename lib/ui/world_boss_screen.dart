@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import '../core/arena.dart';
 import '../core/content.dart';
 import '../core/divine.dart';
+import '../core/dummy.dart';
 import '../core/gems.dart';
 import '../core/gold_boss.dart';
 import '../core/gold_sets.dart';
@@ -122,6 +123,24 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         enabled: arenaOpen,
         onTap: () => _go(const ArenaScreen()),
       ),
+      // 1.27.0: Mộc nhân luyện công, to try a build.
+      _card(
+        title: tr('Mộc nhân'),
+        icon: Icons.accessibility_new,
+        lines: [
+          tr('Kỷ lục: {p0} sát thương mỗi giây', {'p0': fmt(h.dummyBest)}),
+          tr('Đánh thử {p0} giây, xem sát thương theo từng nguồn.', {'p0': dummyTime.round()}),
+          tr('Không tốn lượt, không có thưởng.'),
+        ],
+        art: const Icon(Icons.accessibility_new, size: 110, color: Color(0xFFC89A5A)),
+        button: tr('Luyện công'),
+        enabled: true,
+        isNew: true,
+        onTap: () {
+          if (!RunGate.take()) return;
+          _go(PlayScreen.dungeon(dummyDef()));
+        },
+      ),
       // 1.8.0: the endgame.
       _card(
         title: tr('Tâm Ma'),
@@ -166,8 +185,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         onTap: () => _go(const MaVucScreen()),
       ),
     ];
-    // Thường ngày has four cards (Boss Hoàng Kim first); the row slides.
-    final shown = _tab == 0 ? cards.sublist(0, 4) : cards.sublist(4, 7);
+    // Thường ngày has five cards (Boss Hoàng Kim first, Mộc nhân last);
+    // the row slides.
+    final shown = _tab == 0 ? cards.sublist(0, 5) : cards.sublist(5, 8);
     Widget chip(int i, String label, {bool isNew = false}) => Padding(
           padding: const EdgeInsets.only(left: 6),
           child: GestureDetector(

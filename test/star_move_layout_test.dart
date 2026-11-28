@@ -74,6 +74,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
         expect(tester.takeException(), isNull);
         expect(find.text('Chuyển'), findsWidgets);
+        await tester.ensureVisible(find.text('Chuyển').first);
+        await tester.pump();
         await tester.tap(find.text('Chuyển').first);
         await tester.pump(const Duration(milliseconds: 400));
         expect(tester.takeException(), isNull);
